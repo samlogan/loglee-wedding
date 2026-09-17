@@ -112,45 +112,65 @@
   --body-default-font-weight: var(--font-weight-regular);
   --body-bold-font-weight: var(--font-weight-bold);
   --heading-default-font-weight: var(--font-weight-regular);
+  --display-default-font-weight: var(--font-weight-black);
+
+  // ------------------------------------
+  // Type Scale — fluid
+  // ------------------------------------
+  //
+  // Every size below is a single `clamp()` built by `fluid($narrow, $wide)` from
+  // `tools/sass/base/__fluid.scss`, which interpolates between the two anchors across the viewport
+  // range declared there (375px → 1440px). There is no `-mobile` counterpart and no breakpoint:
+  // `components/Text/styles.module.scss` sets each size once and the browser does the rest.
+  //
+  // The anchors are the two ends of the stepped scale this replaced — the old `-mobile` value is the
+  // narrow anchor and the old desktop value the wide one — so nothing renders smaller than it used
+  // to on a phone or larger than it used to on a desktop.
+
+  // Display Sizes — the oversized tier above the heading scale, Archivo Black.
+  //
+  // `--display-lg` reaches the 176px the home hero is set at in the design; `--display-md` is one
+  // step below it for oversized headings that are not the hero. Both compress harder towards the
+  // narrow anchor than the heading scale does (roughly 0.4× rather than 0.67×) because an oversized
+  // line still has to fit the ~327px measure a 375px viewport leaves after gutters. Both stay above
+  // `--heading-2xl` at every width, so the tiers never invert.
+  --display-lg: #{fluid(64px, 176px)};
+  --display-md: #{fluid(56px, 128px)};
+  --display-line-height: 1.05;
+  --display-letter-spacing: -0.03em;
 
   // Heading Sizes
-  --heading-2xl: 72px;
-  --heading-xl: 60px;
-  --heading-lg: 48px;
-  --heading-md: 40px;
-  --heading-sm: 32px;
-  --heading-xs: 24px;
+  --heading-2xl: #{fluid(48px, 72px)};
+  --heading-xl: #{fluid(40px, 60px)};
+  --heading-lg: #{fluid(32px, 48px)};
+  --heading-md: #{fluid(28px, 40px)};
+  --heading-sm: #{fluid(24px, 32px)};
+  --heading-xs: #{fluid(20px, 24px)};
   --heading-line-height: 1.2;
   --heading-letter-spacing: -0.02em;
 
-  // Heading Sizes — Mobile
-  --heading-2xl-mobile: 48px;
-  --heading-xl-mobile: 40px;
-  --heading-lg-mobile: 32px;
-  --heading-md-mobile: 28px;
-  --heading-sm-mobile: 24px;
-  --heading-xs-mobile: 20px;
-
-  // Body Sizes — Mobile
-  --body-2xl-mobile: 20px;
-  --body-xl-mobile: 18px;
-  --body-lg-mobile: 16px;
-  --body-md-mobile: 14px;
-  --body-sm-mobile: 12px;
-  --body-xs-mobile: 11px;
-
   // Body Sizes
-  --body-2xl: 22px;
-  --body-xl: 20px;
-  --body-lg: 18px;
-  --body-md: 16px;
-  --body-sm: 14px;
-  --body-xs: 12px;
+  --body-2xl: #{fluid(20px, 22px)};
+  --body-xl: #{fluid(18px, 20px)};
+  --body-lg: #{fluid(16px, 18px)};
+  --body-md: #{fluid(14px, 16px)};
+  --body-sm: #{fluid(12px, 14px)};
+  --body-xs: #{fluid(11px, 12px)};
+  // Unitless, so it stays a multiple of whatever the fluid size resolved to at the current width.
   --body-line-height: 1.5;
 
   // ------------------------------------
   // Spacing
   // ------------------------------------
+  //
+  // The cutoff is 32px: anything at or below `lg` (24px) stays fixed, `xl` and up go fluid.
+  //
+  // Below the cutoff these are component-internal gaps — the space between an icon and its label,
+  // between a field and its error — and that relationship does not change with the viewport. They
+  // are also small enough that interpolating them would spend most of the range on sub-pixel
+  // differences no one can see. At and above it they are layout gaps between blocks, which should
+  // breathe with the page; each starts the range at the step below it and grows to its nominal
+  // value, so the scale stays ordered at every width.
 
   --spacing-none: 0px;
   --spacing-xxs: 4px;
@@ -158,9 +178,9 @@
   --spacing-sm: 12px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-2xl: 48px;
-  --spacing-3xl: 64px;
+  --spacing-xl: #{fluid(24px, 32px)};
+  --spacing-2xl: #{fluid(32px, 48px)};
+  --spacing-3xl: #{fluid(48px, 64px)};
 
   // ------------------------------------
   // Border Radius
@@ -174,6 +194,9 @@
   // ------------------------------------
   // Container Widths
   // ------------------------------------
+  //
+  // Fixed, and not candidates for `fluid()`. These are caps, not sizes — a container is already
+  // fluid below its cap, so interpolating the cap itself would mean it never actually caps anything.
 
   --container-xs: 640px;
   --container-sm: 768px;
@@ -182,23 +205,27 @@
   --container-xl: 1440px;
 
   // ------------------------------------
-  // Section Spacing
+  // Section Spacing — fluid
   // ------------------------------------
+  //
+  // One token per step, replacing the `-desktop` / `-mobile` pair the `Section` component used to
+  // swap between at the `tablet` breakpoint. The anchors are that pair, so a section's padding at
+  // 375px and at 1440px is unchanged — it just gets there continuously now.
 
-  --section-spacing-xs-desktop: 32px;
-  --section-spacing-xs-mobile: 12px;
-  --section-spacing-sm-desktop: 48px;
-  --section-spacing-sm-mobile: 16px;
-  --section-spacing-md-desktop: 64px;
-  --section-spacing-md-mobile: 24px;
-  --section-spacing-lg-desktop: 80px;
-  --section-spacing-lg-mobile: 40px;
-  --section-spacing-xl-desktop: 96px;
-  --section-spacing-xl-mobile: 48px;
+  --section-spacing-xs: #{fluid(12px, 32px)};
+  --section-spacing-sm: #{fluid(16px, 48px)};
+  --section-spacing-md: #{fluid(24px, 64px)};
+  --section-spacing-lg: #{fluid(40px, 80px)};
+  --section-spacing-xl: #{fluid(48px, 96px)};
 
   // ------------------------------------
   // Button Sizing
   // ------------------------------------
+  //
+  // Deliberately fixed, not fluid. A button is a control before it is layout: its padding sets the
+  // tap target, and interpolating that downwards would shrink the target on exactly the small
+  // touchscreens where WCAG 2.5.8 needs it largest. The font sizes (14–16px) sit at the bottom of
+  // the type scale too, where a fluid range would be a couple of pixels wide for no benefit.
 
   --button-font-weight: var(--font-weight-semibold);
   --button-border-width: 2px;

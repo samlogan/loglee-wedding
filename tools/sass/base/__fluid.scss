@@ -1,0 +1,96 @@
+@use 'sass:math';
+@use 'sass:string';
+
+/*=============================================>>>>>
+= Fluid sizing =
+===============================================>>>>>*/
+
+/*
+ * One formula, one pair of viewport anchors, every fluid token in the system.
+ *
+ * `fluid($min, $max)` returns a `clamp()` that holds `$min` at or below the narrow viewport anchor,
+ * holds `$max` at or above the wide one, and interpolates linearly between them. Every fluid type,
+ * section-spacing and layout-gap token in `tools/sass/global/_variables.scss` is derived through
+ * this function — none is hand-written — so the whole scale stays internally consistent and moves
+ * together if the anchors ever change.
+ *
+ * Fluid sizing replaced a stepped scale that swapped a `-mobile` token for a desktop one at the
+ * `tablet` breakpoint (769px). The anchors below are the two ends of that old scale, so nothing
+ * renders larger than it used to at desktop width or smaller than it used to at phone width — this
+ * is a continuous interpolation between the existing values, not a new scale.
+ */
+
+/*
+ * The narrow anchor. 375px is the design's mobile frame and the width of the narrowest phone class
+ * still worth designing for; below it every token simply holds its minimum, so a 320px device is
+ * handled by the `clamp()` floor rather than by extrapolating the line further down.
+ */
+$fluid-min-viewport: 375px;
+
+/*
+ * The wide anchor. 1440px is `--container-xl` — the Figma desktop frame and the widest the layout
+ * ever measures. Above it the container is capped and the measure stops growing, so type and spacing
+ * should stop growing with it; the `desktop` breakpoint (1340px) would top the scale out slightly
+ * before the layout does.
+ */
+$fluid-max-viewport: 1440px;
+
+/*
+ * The browser default root size, used only to express the px anchors in `rem`.
+ *
+ * The bounds of every clamp are `rem`, so a reader who raises their browser's base font size scales
+ * the whole system with it — a `vw`-only formula would ignore that setting entirely and fail
+ * WCAG 1.4.4. The interpolating middle term keeps a `rem` component for the same reason.
+ */
+$fluid-root-font-size: 16px;
+
+/* Keeps the emitted `clamp()` readable rather than carrying full floating-point tails. */
+@function fluid-round($number, $places: 4) {
+  $factor: math.pow(10, $places);
+  @return math.div(math.round($number * $factor), $factor);
+}
+
+@function px-to-rem($value) {
+  @return fluid-round(math.div($value, $fluid-root-font-size)) * 1rem;
+}
+
+/*
+ * `fluid(48px, 72px)` → `clamp(3rem, 2.4718rem + 2.2535vw, 4.5rem)`
+ *
+ * The middle term is the line through (min viewport, $min) and (max viewport, $max):
+ *
+ *   slope     = ($max - $min) / ($max viewport - $min viewport)   … px of size per px of viewport
+ *   vw term   = slope × 100                                       … because 1vw is 1% of the viewport
+ *   rem term  = ($min - slope × $min viewport) / root font size    … the line's intercept at 0 width
+ *
+ * Both anchors must be `px`. They are absolute design values; accepting `rem` here would make the
+ * anchors themselves move with the user's font size and the intercept arithmetic meaningless.
+ */
+@function fluid($min, $max) {
+  @if math.unit($min) != 'px' or math.unit($max) != 'px' {
+    @error 'fluid() takes px anchors, got #{$min} and #{$max}.';
+  }
+
+  @if $min > $max {
+    @error 'fluid() expects the narrow anchor first, got #{$min} and #{$max}.';
+  }
+
+  // A pair that does not change across the range is a fixed token, not a degenerate clamp.
+  @if $min == $max {
+    @return px-to-rem($min);
+  }
+
+  $slope: math.div($max - $min, $fluid-max-viewport - $fluid-min-viewport);
+  $intercept: $min - $slope * $fluid-min-viewport;
+
+  $viewport-term: fluid-round($slope * 100);
+  $root-term: fluid-round(math.div($intercept, $fluid-root-font-size));
+
+  /*
+   * Built as a string rather than as a `clamp()` call with interpolated arguments. Sass evaluates
+   * the arguments of a plain function call as SassScript, and `+` between two unquoted strings
+   * concatenates them without a space — `2.4718rem + 2.2535vw` would emit `2.4718rem2.2535vw`,
+   * which is a valid-looking token the browser silently discards.
+   */
+  @return string.unquote('clamp(#{px-to-rem($min)}, #{$root-term}rem + #{$viewport-term}vw, #{px-to-rem($max)})');
+}

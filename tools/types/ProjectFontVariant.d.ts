@@ -1,1 +1,1 @@
-type ProjectFontVariant = 'heading' | 'body';
+type ProjectFontVariant = 'display' | 'heading' | 'body';

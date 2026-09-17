@@ -8,6 +8,13 @@
 
   // -------------------
   // Spacing
+  //
+  // One declaration per step, no breakpoint. Each `--section-spacing-*` token is a `clamp()` built
+  // by `fluid()` (see `tools/sass/base/__fluid.scss`), so padding interpolates continuously between
+  // the phone and desktop values instead of stepping at `tablet`. The `-desktop` / `-mobile` pair
+  // these classes used to swap between no longer exists.
+  //
+  // `none` has no token and resolves to a literal zero — a step, not a missing value.
   .spacing {
     &_top {
       &_none {
@@ -15,43 +22,23 @@
       }
 
       &_xs {
-        padding-top: var(--section-spacing-xs-mobile);
-
-        @include media-up(tablet) {
-          padding-top: var(--section-spacing-xs-desktop);
-        }
+        padding-top: var(--section-spacing-xs);
       }
 
       &_sm {
-        padding-top: var(--section-spacing-sm-mobile);
-
-        @include media-up(tablet) {
-          padding-top: var(--section-spacing-sm-desktop);
-        }
+        padding-top: var(--section-spacing-sm);
       }
 
       &_md {
-        padding-top: var(--section-spacing-md-mobile);
-
-        @include media-up(tablet) {
-          padding-top: var(--section-spacing-md-desktop);
-        }
+        padding-top: var(--section-spacing-md);
       }
 
       &_lg {
-        padding-top: var(--section-spacing-lg-mobile);
-
-        @include media-up(tablet) {
-          padding-top: var(--section-spacing-lg-desktop);
-        }
+        padding-top: var(--section-spacing-lg);
       }
 
       &_xl {
-        padding-top: var(--section-spacing-xl-mobile);
-
-        @include media-up(tablet) {
-          padding-top: var(--section-spacing-xl-desktop);
-        }
+        padding-top: var(--section-spacing-xl);
       }
     }
 
@@ -61,43 +48,23 @@
       }
 
       &_xs {
-        padding-bottom: var(--section-spacing-xs-mobile);
-
-        @include media-up(tablet) {
-          padding-bottom: var(--section-spacing-xs-desktop);
-        }
+        padding-bottom: var(--section-spacing-xs);
       }
 
       &_sm {
-        padding-bottom: var(--section-spacing-sm-mobile);
-
-        @include media-up(tablet) {
-          padding-bottom: var(--section-spacing-sm-desktop);
-        }
+        padding-bottom: var(--section-spacing-sm);
       }
 
       &_md {
-        padding-bottom: var(--section-spacing-md-mobile);
-
-        @include media-up(tablet) {
-          padding-bottom: var(--section-spacing-md-desktop);
-        }
+        padding-bottom: var(--section-spacing-md);
       }
 
       &_lg {
-        padding-bottom: var(--section-spacing-lg-mobile);
-
-        @include media-up(tablet) {
-          padding-bottom: var(--section-spacing-lg-desktop);
-        }
+        padding-bottom: var(--section-spacing-lg);
       }
 
       &_xl {
-        padding-bottom: var(--section-spacing-xl-mobile);
-
-        @include media-up(tablet) {
-          padding-bottom: var(--section-spacing-xl-desktop);
-        }
+        padding-bottom: var(--section-spacing-xl);
       }
     }
   }

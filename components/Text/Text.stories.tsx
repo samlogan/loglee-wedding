@@ -17,6 +17,19 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/**
+ * The oversized tier, above the heading scale. `lg` is what the home hero is set at — 176px at the
+ * 1440px design frame, scaling down to 64px on a phone. Only `md` and `lg` exist; the smaller steps
+ * of `ProjectFontSize` belong to `heading` and `body`.
+ */
+export const Display: Story = {
+  args: { as: 'h1', variant: 'display', size: 'lg', text: 'Sam & Lauren' }
+};
+
+export const DisplayMedium: Story = {
+  args: { as: 'h2', variant: 'display', size: 'md', text: 'Sam & Lauren' }
+};
+
 export const Heading: Story = {
   args: { as: 'h2', variant: 'heading', size: 'lg' }
 };
