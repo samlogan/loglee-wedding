@@ -129,15 +129,51 @@
 
   // Display Sizes — the oversized tier above the heading scale, Archivo Black.
   //
-  // `--display-lg` reaches the 176px the home hero is set at in the design; `--display-md` is one
-  // step below it for oversized headings that are not the hero. Both compress harder towards the
-  // narrow anchor than the heading scale does (roughly 0.4× rather than 0.67×) because an oversized
-  // line still has to fit the ~327px measure a 375px viewport leaves after gutters. Both stay above
-  // `--heading-2xl` at every width, so the tiers never invert.
+  // `--display-lg` reaches the 176px the home hero is set at in the design (node 1:65);
+  // `--display-md` reaches the 132px the three page headers are set at (1:309, 1:617, 16:123). Both
+  // wide anchors are the value the design states rather than a rounded step, which is the convention
+  // `--container-gutter` sets out below — `--display-md` was 128px, a round number nothing in the
+  // file is drawn at. Both compress harder towards the narrow anchor than the heading scale does
+  // (roughly 0.4× rather than 0.67×) because an oversized line still has to fit the ~327px measure a
+  // 375px viewport leaves after gutters. Both stay above `--heading-2xl` at every width, so the
+  // tiers never invert.
+  //
+  // The narrow anchor is one value against three drawn ones — 54px (Planner), 76px (Stay), 62px
+  // (The Lodge) — because the designer optically fitted each page's longest word to the measure, and
+  // a token cannot know the string. 56px is sized for the worst case: "WEEKEND" is the longest word
+  // of the three and is the one the design itself dropped to 54px for.
   --display-lg: #{fluid(64px, 176px)};
-  --display-md: #{fluid(56px, 128px)};
-  --display-line-height: 1.05;
-  --display-letter-spacing: -0.03em;
+  --display-md: #{fluid(56px, 132px)};
+
+  /*
+   * Measured off the design rather than chosen, and the previous 1.05 / -0.03em were neither.
+   *
+   * Every display heading in the file is set the same way, at both frame widths:
+   *
+   *   node    frame              size    leading   ratio   tracking   em
+   *   1:65    home hero          176px   147.84    0.84    -7.92px    -0.045
+   *   1:309   Planner desktop    132px   110.88    0.84    -5.94px    -0.045
+   *   1:617   Stay desktop       132px   110.88    0.84    -5.94px    -0.045
+   *   16:123  The Lodge desktop  132px   110.88    0.84    -5.94px    -0.045
+   *   1:466   Planner mobile      54px    46.44    0.86    -2.16px    -0.04
+   *   1:690   Stay mobile         76px    65.36    0.86    -3.04px    -0.04
+   *   16:279  The Lodge mobile    62px    53.32    0.86    -2.48px    -0.04
+   *
+   * At 1.05 a two-line 128px heading rendered 134.4px per line against the 110.88px drawn — 25%
+   * taller, which on a bottom-aligned header is not just loose leading: it is half a line of dead
+   * space under the glyphs, so the heading floats off the bottom edge it is meant to share with the
+   * meta block (see `sections/HeaderDisplaySection`).
+   *
+   * One value each, not a fluid pair. The desktop and mobile columns differ by 2% on the leading
+   * and 0.005em on the tracking, which at the sizes involved is ~1.2px per line and a third of a
+   * pixel per glyph. The desktop numbers win the tie because they are exact on four frames
+   * including the hero, and because they are where oversized type is actually oversized.
+   *
+   * Unitless leading, so it stays a multiple of whatever `--display-lg` / `--display-md` resolve to
+   * at the current width; tracking in `em` for the same reason.
+   */
+  --display-line-height: 0.84;
+  --display-letter-spacing: -0.045em;
 
   // Heading Sizes
   --heading-2xl: #{fluid(48px, 72px)};
@@ -156,8 +192,42 @@
   --body-md: #{fluid(14px, 16px)};
   --body-sm: #{fluid(12px, 14px)};
   --body-xs: #{fluid(11px, 12px)};
-  // Unitless, so it stays a multiple of whatever the fluid size resolved to at the current width.
+  /*
+   * Unitless, so it stays a multiple of whatever the fluid size resolved to at the current width.
+   *
+   * 1.5 is the design's own number and it is genuinely flat across the body scale — twelve of the
+   * file's fixed-leading Instrument Sans paragraphs land on exactly 1.50, spread over 14px/21px
+   * (nodes 1:1091, 1:274, 16:176, 16:292, 16:307), 15px/22.5px (1:335, 1:206, 1:666),
+   * 16px/24px (1:326, 1:433) and 18px/27px (1:779, 16:642). It is not a compromise between a
+   * tighter large step and a looser small one.
+   *
+   * The tighter 1.35/1.40 values on the page-header lede are a different *role*, not a smaller step
+   * on a size ramp — see `--body-lede-line-height` below. The evidence that settles it is 17px,
+   * which carries three different ratios in the same file: 1.40 as a lede (1:121), 1.55 in Stay's
+   * contribution copy (1:673) and 1.60 in the desktop FAQ answer (16:665). Leading here is keyed to
+   * the role, never to the size, so this token stays where it is.
+   */
   --body-line-height: 1.5;
+
+  /*
+   * The lede — the single large paragraph set beside a display heading.
+   *
+   * A role rather than a step on the scale above, which is why it gets its own pair instead of
+   * borrowing `--body-2xl` (fluid(20px, 22px), and shared with the mobile nav panel's links). The
+   * design draws it identically in five places: the home hero (1:73 desktop, 1:121 mobile) and the
+   * Stay and The Lodge page headers (1:620/1:692, 16:126/16:281).
+   *
+   *   frame     size    leading   ratio
+   *   mobile    17px    23.8px    1.40
+   *   desktop   22px    29.7px    1.35
+   *
+   * The leading is a fluid px pair rather than a unitless ratio, and that is the point: a single
+   * unitless value cannot be 1.40 at one end of the range and 1.35 at the other. Because both
+   * tokens interpolate on the same viewport anchors, the ratio glides between the two drawn values
+   * instead of stepping.
+   */
+  --body-lede: #{fluid(17px, 22px)};
+  --body-lede-line-height: #{fluid(23.8px, 29.7px)};
 
   // ------------------------------------
   // Spacing
