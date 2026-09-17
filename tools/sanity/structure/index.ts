@@ -5,6 +5,7 @@ import GlobalMenuItem from './global';
 import PageMenuItem from './pages';
 import RoutesMenuItem from './routes';
 import SettingsMenuItem from './settings';
+import WeddingSettingsMenuItem from './weddingSettings';
 
 const structure: StructureResolver = (S) =>
   S.list()
@@ -13,6 +14,7 @@ const structure: StructureResolver = (S) =>
       PageMenuItem(S),
       BlogMenuItem(S),
       S.divider(),
+      WeddingSettingsMenuItem(S),
       GlobalMenuItem(S),
       S.divider(),
       SettingsMenuItem(S),
