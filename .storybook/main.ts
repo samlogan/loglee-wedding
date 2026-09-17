@@ -187,6 +187,35 @@ const config: StorybookConfig = {
       })
     );
 
+    /**
+     * Pre-bundle the 3D stack up front instead of letting Vite discover it mid-run.
+     *
+     * `ModelViewer` reaches `@react-three/fiber` through a `next/dynamic` import, so nothing static
+     * references it and Vite's scanner does not find it at server start. The first story that
+     * mounts a canvas therefore triggers on-the-fly optimisation, Vite reloads the page mid-test,
+     * and the newly optimised chunk carries its **own copy of React** — the R3F reconciler then
+     * fails with "Invalid hook call … more than one copy of React in the same app", followed by
+     * `Cannot read properties of null (reading 'useMemo')`.
+     *
+     * Measured under `yarn test:stories`: a cold dep cache failed all ten `ModelViewer` stories with
+     * exactly that error and passed all ten on the next run, once the cache was warm. A gate that
+     * only fails on a fresh clone is the worst kind, so the deps are declared rather than
+     * discovered. Vitest prints this advice itself when the reload happens.
+     *
+     * `three-stdlib` is in the list because drei pulls `GLTFLoader`, `MeshoptDecoder` and
+     * `SkeletonUtils` from it, and it is CommonJS — it has to be pre-bundled either way.
+     */
+    viteConfig.optimizeDeps = {
+      ...viteConfig.optimizeDeps,
+      include: [
+        ...(viteConfig.optimizeDeps?.include ?? []),
+        '@react-three/drei',
+        '@react-three/fiber',
+        'three',
+        'three-stdlib'
+      ]
+    };
+
     viteConfig.resolve = viteConfig.resolve ?? {};
     viteConfig.resolve.alias = {
       ...viteConfig.resolve.alias,
