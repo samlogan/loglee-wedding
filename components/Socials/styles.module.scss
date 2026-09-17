@@ -1,4 +1,5 @@
 .container {
   display: flex;
-  gap: 24px;
+  // `--spacing-lg`, not a bare `24px`: same computed value, but a token the spacing scale can move.
+  gap: var(--spacing-lg);
 }

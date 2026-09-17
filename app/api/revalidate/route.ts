@@ -132,13 +132,28 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ revalidated: true });
     }
 
-    // if footerDocument revalidate everything but not the build hook
-    if (type === 'footerDocument') {
+    /*
+     * The footer's social icons. `components/Layout` fetches `SOCIAL_MEDIA_QUERY` alongside the
+     * header and the wedding singleton and hands the result to `Footer`, so this is a layout
+     * element and needs the same treatment they get.
+     *
+     * Without this branch the type fell through to the default below, which revalidates the `page`
+     * tag and *not* the layout — so an editor who changed a social link saw the old one in the
+     * footer until some unrelated header or settings edit happened to bring the layout back. It
+     * also logged the change as an `Unknown type` error, which is the sort of noise that trains
+     * people to ignore the log.
+     */
+    if (type === 'socialMediaDocument') {
       await revalidatePath('/', 'layout');
-      console.log(`${logPrefix}Footer changed. Root path with layout has been successfully revalidated.`);
+      console.log(`${logPrefix}Social media changed. Root path with layout has been successfully revalidated.`);
       return NextResponse.json({ revalidated: true });
     }
 
+    /*
+     * No `footerDocument` branch. The document is gone: `components/Footer` renders the header's own
+     * `navItems`, the date and venue from `weddingSettings`, and the icons from
+     * `socialMediaDocument` — so the three branches above are between them the whole of the footer.
+     */
     // Default case - revalidate page tag
     console.error(`${logPrefix}Unknown type "${type}". Defaulting to "page" tag`, { slug, type });
     await revalidateTag('page', 'max');

@@ -4,8 +4,9 @@ import globals from './fixtures/globals.json';
  * Look up a site-wide singleton pulled from Sanity by `yarn storybook:fixtures`.
  *
  * The companion to `sectionFixture`. Sections are per-page and covered by `sectionsProjection`;
- * these are the global documents — header, footer, socials, settings — that components read
- * directly.
+ * these are the global documents — header, socials, wedding settings — that components read
+ * directly. (There is no `footer` key: `footerDocument` was deleted with MAM-1888, and
+ * `components/Footer` now reads the header's own nav items plus the wedding singleton.)
  *
  * It exists because the components that read them are async server components. Storybook cannot
  * render those, so `.storybook/main.ts` swaps them for `index.mock.tsx` siblings, and those mocks

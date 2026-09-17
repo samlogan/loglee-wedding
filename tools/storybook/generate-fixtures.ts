@@ -29,12 +29,7 @@ import { fileURLToPath } from 'node:url';
 
 import { createClient } from '@sanity/client';
 
-import {
-  FOOTER_QUERY,
-  HEADER_QUERY,
-  SOCIAL_MEDIA_QUERY,
-  WEDDING_SETTINGS_QUERY
-} from '@/tools/sanity/lib/queries.groq';
+import { HEADER_QUERY, SOCIAL_MEDIA_QUERY, WEDDING_SETTINGS_QUERY } from '@/tools/sanity/lib/queries.groq';
 import sectionsProjection from '@/tools/sanity/projections/common/sections.groq';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -129,10 +124,10 @@ const query = `*[_type == "page" && defined(sections) && !(pathname in $excluded
 // from what production fetches, because they *are* what production fetches.
 const GLOBAL_QUERIES: Record<string, string> = {
   header: HEADER_QUERY,
-  footer: FOOTER_QUERY,
   socialMedia: SOCIAL_MEDIA_QUERY,
-  // The wedding singleton. `Header` reads `rsvpLabel` off it, and everything else site-wide that
-  // names the couple, the dates or the reply-by deadline will read the same document.
+  // The wedding singleton. `Header` reads `rsvpLabel` off it and `Footer` the dates and venue;
+  // everything else site-wide that names the couple or the reply-by deadline reads the same
+  // document. There is no `footer` key — see the note in `tools/sanity/lib/queries.groq.ts`.
   weddingSettings: WEDDING_SETTINGS_QUERY
 };
 
