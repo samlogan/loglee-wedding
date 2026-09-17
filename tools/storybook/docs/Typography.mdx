@@ -11,6 +11,11 @@ token names rather than listed here, and ordered by their resolved pixel value �
 `--heading-3xl` or a new weight to `tools/sass/global/_variables.scss` puts it on this page with
 nothing to update.
 
+The scale is **fluid**. Each size is a single `clamp()` that interpolates between a phone value and a
+desktop value across the viewport range, so type grows continuously with the page rather than jumping
+at a breakpoint. Each step below prints the expression and what it resolves to at the width you are
+reading at — drag the canvas and both the specimen and the number follow.
+
 ## Families
 
 The type roles, exposed as CSS custom properties by `next/font` and discovered from the running page.
@@ -19,10 +24,14 @@ Components should reference
 
 <Families />
 
-## Heading scale
+## Display scale
 
-Each step shows its desktop size and, where one exists, its mobile size. A step with no `-mobile`
-token says so rather than implying the two agree.
+The oversized tier, set in Archivo Black. It sits above the heading scale at every width and exists
+for the hero and hero-adjacent headings — reach for it deliberately, not as "one size bigger".
+
+<TypeScale family="display" />
+
+## Heading scale
 
 <TypeScale family="heading" />
 
@@ -36,13 +45,17 @@ token says so rather than implying the two agree.
 
 ## Line height
 
-Line heights are unitless — a multiple of the font size rather than a fixed pixel value. That way a
-heading that steps down on mobile keeps the same proportions instead of growing tight, and body copy
-set at any size stays evenly leaded.
+Line heights are unitless — a multiple of the font size rather than a fixed pixel value. That pairs
+with the fluid sizes: as a heading interpolates down towards its phone value its leading follows it,
+instead of growing tight against a pixel value chosen for the desktop end.
 
 ## Using these
 
-- Set type through the `Text` component's `size` and `weight` props rather than a raw `font-size`.
+- Set type through the `Text` component's `variant` and `size` props rather than a raw `font-size`.
   The props map to these tokens; a literal does not, and will not follow a change to the scale.
-- The mobile values are applied by the components themselves at the relevant breakpoint. There is no
-  need to reach for a media query to step type down.
+- There is no breakpoint to write. A size token already covers the whole viewport range, so a media
+  query that steps type down is re-solving a solved problem — and reintroduces the jump the fluid
+  scale removed.
+- The bounds of every clamp are expressed in `rem`, so a reader who raises their browser's base font
+  size scales the whole system with them. Keep it that way: a `vw`-only formula would ignore that
+  setting and fail WCAG 1.4.4.

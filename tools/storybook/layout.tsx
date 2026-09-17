@@ -1,5 +1,5 @@
 import { DOCS_FONT, DOCS_TEXT } from './docsChrome';
-import { px, useTokens } from './tokens';
+import { px, resolveLength, useTokens, useViewportWidth } from './tokens';
 
 /**
  * The layout system — spacing steps and container widths — read from the running page.
@@ -37,7 +37,12 @@ const bar = (value: number, max: number) => ({
 });
 
 /**
- * The section spacing scale, desktop and mobile.
+ * The section spacing scale.
+ *
+ * One token per step rather than a `-desktop` / `-mobile` pair: each is a `clamp()` that interpolates
+ * between the two across the viewport range (see `tools/sass/base/__fluid.scss`). The table therefore
+ * reports two things — the declared expression, which is the token, and what it resolves to at the
+ * current canvas width, which is what a reader is actually looking at.
  *
  * `Section` builds its classes dynamically (`styles[\`spacing_top_${x}\`]`), so a typo'd token yields
  * silently zero padding. The measured proof of that is the `Foundations/Section` → `Spacing Scale`
@@ -45,22 +50,24 @@ const bar = (value: number, max: number) => ({
  */
 export const SpacingScale = () => {
   const tokens = useTokens();
+  // Subscribed so the resolved column re-reads as the canvas is dragged, rather than reporting the
+  // width the page mounted at. See the same call in `./typography`.
+  useViewportWidth();
+
   if (!tokens) {
     return null;
   }
 
   const steps = tokens.root
-    .filter((name) => /^--section-spacing-.+-desktop$/.test(name))
-    .map((name) => {
-      const step = name.replace('--section-spacing-', '').replace('-desktop', '');
-      return {
-        step,
-        desktop: tokens.rootValues[name],
-        mobile: tokens.rootValues[`--section-spacing-${step}-mobile`]
-      };
-    })
-    .filter((row) => px(row.desktop) !== null)
-    .toSorted((a, b) => (px(a.desktop) ?? 0) - (px(b.desktop) ?? 0));
+    // A step is a single word: `--section-spacing-md`. Anything with a further dash is not one.
+    .filter((name) => /^--section-spacing-[^-]+$/.test(name))
+    .map((name) => ({
+      step: name.replace('--section-spacing-', ''),
+      declared: tokens.rootValues[name],
+      resolved: resolveLength(tokens.rootValues[name])
+    }))
+    .filter((row) => row.resolved !== null)
+    .toSorted((a, b) => (a.resolved ?? 0) - (b.resolved ?? 0));
 
   if (!steps.length) {
     return (
@@ -70,7 +77,7 @@ export const SpacingScale = () => {
     );
   }
 
-  const max = Math.max(...steps.map((s) => px(s.desktop) ?? 0));
+  const max = Math.max(...steps.map((s) => s.resolved ?? 0));
 
   return (
     <div className={`${DOCS_FONT} sb-unstyled`} style={block}>
@@ -78,21 +85,23 @@ export const SpacingScale = () => {
         <thead>
           <tr>
             <th style={cell}>Step</th>
-            <th style={cell}>Desktop</th>
-            <th style={cell}>Mobile</th>
+            <th style={cell}>At this width</th>
+            <th style={cell}>Token</th>
             <th style={cell} />
           </tr>
         </thead>
         <tbody>
-          {steps.map(({ step, desktop, mobile }) => (
+          {steps.map(({ step, declared, resolved }) => (
             <tr key={step}>
               <td style={cell}>
                 <code>{step}</code>
               </td>
-              <td style={cell}>{desktop}</td>
-              <td style={cell}>{mobile || '—'}</td>
+              <td style={cell}>{Math.round((resolved ?? 0) * 10) / 10}px</td>
               <td style={cell}>
-                <span style={bar(px(desktop) ?? 0, max)} />
+                <code>{declared}</code>
+              </td>
+              <td style={cell}>
+                <span style={bar(resolved ?? 0, max)} />
               </td>
             </tr>
           ))}
