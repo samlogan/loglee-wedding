@@ -1,121 +1,82 @@
-.navigation {
-  display: flex;
-  align-items: center;
-  gap: 37px;
-  z-index: 2;
-
-  @include media-down(small-desktop) {
-    display: none;
-  }
-}
-
-.buttons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.navItem {
-  position: relative;
-  font-weight: var(--font-weight-medium);
-  color: var(--fg-default);
-
-  &.isOpen {
-    .navLink {
-      .navLinkTitle {
-        @include underline(true, 2px);
-      }
-    }
-
-    .chevron {
-      transform: rotate(-180deg);
-    }
-
-    .dropdown {
-      opacity: 1;
-      pointer-events: all;
-
-      a {
-        pointer-events: all;
-      }
-    }
-
-    .wrapper {
-      pointer-events: all;
-      opacity: 1;
+/*
+ * The inline link list, and the "you are here" rule under the current one.
+ *
+ * Type is set on the list rather than on each link. `Link` renders through the shared button
+ * surface, whose base rule is `font: inherit` — a shorthand that resets family, size, weight and
+ * line-height in one go. Both that rule and anything here are single class selectors in
+ * `@layer defaults`, so which wins comes down to the order the bundler happens to emit two CSS
+ * modules in. Setting the type on the ancestor sidesteps the race entirely: `font: inherit` then
+ * does exactly what it says.
+ */
+@layer defaults {
+  .navigation {
+    /*
+     * The bar's own container query, not the viewport's. `.header` declares the `header` container;
+     * see the note there for why the switch is keyed to the bar's inline size.
+     */
+    @container header (width < 56.25rem) {
+      display: none;
     }
   }
-}
 
-.navLink {
-  font-weight: var(--font-weight-medium);
-  display: flex;
-  gap: 4px;
-  align-items: center;
-  color: var(--fg-default);
+  .list {
+    display: flex;
+    align-items: center;
+    /* 30px between links at 1280 in the design (node 1:48); `--spacing-xl` is 24 → 32 fluid. */
+    gap: var(--spacing-xl);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--fg-default);
+    font-size: var(--body-md);
+    font-weight: var(--font-weight-medium);
+  }
 
-  .navLinkTitle {
-    @include underline(false, 2px);
+  .item {
+    display: flex;
+  }
 
-    &.current {
-      @include underline(true, 2px);
+  /*
+   * Two classes, so these beat the shared `.button` base on the properties it also sets —
+   * `text-decoration`, and the hover rule that takes the underline back off. Same reason the type
+   * above lives on the list.
+   */
+  .item .link {
+    /* Not `underline(false)`: that mixin's rule is a bare `&:after`, which at one class would lose
+     * the same race. Written out here so the pseudo-element is declared at (0,2,0) alongside it. */
+    position: relative;
+    text-decoration: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      width: 100%;
+      height: 2px;
+      border-radius: 100px;
+      background-color: var(--fg-default);
+      transform: scaleX(0);
+      transform-origin: right center;
+      transition: transform 0.3s ease-in-out;
+    }
+
+    &:hover::after {
+      transform: scaleX(1);
+      transform-origin: left center;
     }
   }
-}
 
-.subNavLink {
-  display: block !important;
-  padding: 12px 24px !important;
-  white-space: pre;
-  color: var(--fg-default) !important;
-
-  &:hover,
-  &.current {
-    background-color: var(--bg-accent);
-    text-decoration: underline;
+  // After `.item .link` and at the same specificity, so the current page's rule is drawn and stays
+  // drawn under the pointer.
+  .item .current::after {
+    transform: scaleX(1);
+    transform-origin: left center;
   }
-}
 
-.chevron {
-  transition: all 0.2s ease-in-out;
-
-  svg {
-    path {
-      fill: var(--fg-icon);
+  @media (prefers-reduced-motion: reduce) {
+    .item .link::after {
+      transition: none;
     }
-  }
-}
-
-.wrapper {
-  pointer-events: none;
-  transition: all 0.2s ease-in-out;
-  position: absolute;
-  bottom: 0;
-  left: -24px;
-  transform: translateY(100%);
-  padding-top: 16px;
-  opacity: 0;
-  max-height: none;
-}
-
-.dropdown {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-width: 200px;
-  opacity: 0;
-  pointer-events: none;
-  background-color: var(--bg-default);
-  border: 1px solid var(--stroke-cards);
-  box-shadow: 0px 4px 36px 0px rgba(87, 86, 108, 0.13);
-  border-radius: var(--radius-lg);
-  isolation: isolate;
-  overflow: hidden;
-  &:focus-within {
-    overflow: unset;
-  }
-
-  a {
-    pointer-events: none;
   }
 }

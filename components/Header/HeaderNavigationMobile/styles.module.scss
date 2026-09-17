@@ -1,88 +1,133 @@
-.container {
-  overflow: auto;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  height: calc(100dvh - 85px);
-  display: block;
-  background: var(--bg-default);
-  color: var(--fg-default);
-  opacity: 0;
-  padding: 0 24px min(40vh, 180px);
-  transition: opacity 0.3s ease;
-
-  &:not(.open) {
-    pointer-events: none;
-    * {
-      pointer-events: none;
-    }
-  }
-
-  &.open {
-    opacity: 1;
-    pointer-events: all;
-
-    .dropdownTrigger {
-      &.noDropdown {
-        * {
-          pointer-events: auto;
-        }
-      }
-    }
-  }
-
-  @include media-up(small-desktop) {
-    display: none;
-  }
-}
-
-.dropdownTrigger {
-  position: relative;
-  padding: 16px 0 !important;
-
-  &.current {
-    color: var(--fg-accent);
-
-    svg {
-      path {
-        fill: var(--fg-accent);
-      }
-    }
-  }
-}
-
-.dropdownLinks {
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 16px;
-}
-
-.dropdownLink {
-  display: block !important;
-  padding: 10px 0 !important;
-
-  &.current {
-    color: var(--fg-accent);
-  }
-}
-
-.buttonContainer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 16px 24px;
-  background: var(--bg-default);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  z-index: 3;
-  border-top: 1px solid var(--stroke-cards);
-
-  .button {
+/*
+ * The disclosed mobile menu.
+ *
+ * Positioned against the `<header>` rather than the viewport: the bar declares a query container,
+ * and `container-type` brings layout containment with it, which makes the header the containing
+ * block for absolutely *and* fixed positioned descendants. `position: fixed` here would therefore
+ * be measured from the bar, not the window — so `absolute` is used deliberately and says what it
+ * means.
+ */
+@layer defaults {
+  .panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--spacing-2xl);
     width: 100%;
+    /*
+     * `--header-height` is published on the root element by the header itself and re-measured on
+     * resize. The fallback matters on the first paint before that effect has run, and in any story
+     * that mounts the panel without the bar.
+     */
+    height: calc(100dvh - var(--header-height, 4rem));
+    padding: var(--spacing-xl) 24px var(--spacing-2xl);
+    overflow-y: auto;
+    /*
+     * The bar's own rule is painted before its descendants, so an opaque panel butted up against
+     * `top: 100%` would cover it. Drawing the same hairline on the panel keeps the line continuous
+     * at the moment the menu is open.
+     */
+    border-top: 1px solid var(--stroke-cards);
+    background: var(--bg-default);
+    color: var(--fg-default);
+    opacity: 0;
+    /*
+     * `visibility`, not just `opacity`, and switched with a zero-length transition rather than
+     * interpolated alongside it. Three separate reasons, all load-bearing.
+     *
+     * It is what actually removes the closed panel from the tab order and the accessibility tree —
+     * `opacity: 0` alone leaves every link focusable and announced — and unlike `display: none` it
+     * can be transitioned at all, so the fade still runs.
+     *
+     * And it must apply *immediately* on the way in. A transition only starts on the style recalc
+     * **after** the one that changed the value, so a panel interpolating `hidden → visible` still
+     * computes as `hidden` for the rest of the current task; the header focuses the panel in the
+     * effect that runs on that very task, and `focus()` on a `visibility: hidden` element is a
+     * silent no-op. Measured: the menu opened with focus left on `<body>`. Zero duration and zero
+     * delay means the value simply applies. On the way out the 0.3s delay holds it visible until
+     * the fade has finished.
+     */
+    visibility: hidden;
+    transition:
+      opacity 0.3s ease,
+      visibility 0s linear 0.3s;
+
+    &.open {
+      opacity: 1;
+      visibility: visible;
+      transition:
+        opacity 0.3s ease,
+        visibility 0s linear;
+    }
+
+    // Above the bar's breakpoint there is no disclosure at all — the links are in the bar.
+    @container header (width >= 56.25rem) {
+      display: none;
+    }
+  }
+
+  /*
+   * The panel is a scripted focus destination, not a control.
+   *
+   * It is focused when the menu opens so the next Tab starts inside the menu rather than back at
+   * the top of the document — the WAI-ARIA dialog pattern — and there is nothing on it to operate.
+   * Chrome matches `:focus-visible` on a programmatically focused `tabindex="-1"` container, so the
+   * site-wide 3px ring from `_reset.scss` was being drawn around the whole panel: a ring around
+   * the entire screen, which says nothing a reader cannot already see. Suppressed here and only
+   * here — every actual control inside keeps its own.
+   *
+   * `@layer defaults` beats `@layer global`, where the reset lives, so this wins without a
+   * specificity fight.
+   */
+  .panel:focus {
+    outline: none;
+  }
+
+  // Type on the list, so `Link`'s `font: inherit` resolves to it. See the note in the desktop
+  // module for why this cannot safely live on the link's own class.
+  .list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--body-2xl);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .item {
+    border-bottom: 1px solid var(--stroke-divider);
+  }
+
+  /*
+   * Two classes, to beat the shared `.button` base on the four properties it also sets:
+   * `display: inline-flex`, `justify-content: center`, `text-align: center` and its padding
+   * locals. A row here is a full-width target, left aligned.
+   */
+  .item .link {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+    padding-block: var(--spacing-md);
+    color: var(--fg-default);
+    text-align: left;
+    text-decoration: none;
+  }
+
+  // The current page, stated visually as well as through `aria-current`. Ink plus a rule, not
+  // colour alone (WCAG 1.4.1).
+  .item .current {
+    color: var(--fg-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .navigation {
+    // The list is the panel's own scrolling content; the action below is pinned by the flex layout.
+    flex-grow: 1;
   }
 }

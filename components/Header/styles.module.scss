@@ -1,123 +1,146 @@
-.header {
-  position: sticky;
-  top: 0;
-  width: 100%;
-  z-index: 20;
-  background: var(--bg-default);
-  isolation: isolate;
-  box-shadow: 0px 4px 36px 0px rgba(0, 0, 0, 0.13);
-  padding: 24px 0;
-  transition:
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/*
+ * The bar.
+ *
+ * Its one layout change — inline links or a hamburger — is a **container** query, not a viewport
+ * one. In the app the header is a child of `<body>`, so its inline size *is* the viewport width and
+ * the two are equivalent; keying it to the container is what makes the switch testable, since a
+ * story can render the bar in a 375px column and get the phone layout without owning the window.
+ * That is the same distinction that bit `FieldCheckbox`. Everything else that changes with width is
+ * a `fluid()` interpolation, so there is exactly one breakpoint in this component.
+ *
+ * 900px is the switch point, and it is measured rather than inherited from the breakpoint map: the
+ * bar's widest content is the 116px lockup, ~403px of links, and a ~183px "RSVP BY 01.12.26" pill,
+ * which is ~700px before the gutters. 900 leaves headroom for a longer reply-by line without
+ * leaving a tablet holding a hamburger it does not need.
+ */
+@layer defaults {
+  .header {
+    container: header / inline-size;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    width: 100%;
+    /*
+     * Full-bleed, so the rule spans the frame the way the design draws it rather than stopping at
+     * the container gutters. `--stroke-cards` and not `--stroke-divider`: the design's nav rule is
+     * full-strength ink (#131412, the light theme's `--fg-default`), and `--stroke-divider` is the
+     * faint stone/300 used between rows inside a block.
+     */
+    border-bottom: 1px solid var(--stroke-cards);
+    background: var(--bg-default);
+    color: var(--fg-default);
+    isolation: isolate;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-  &.hidden {
-    transform: translateY(-100%);
-    box-shadow: none;
-  }
-
-  &.atTop {
-    box-shadow: none;
-  }
-}
-
-.container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.headerNavDesktop {
-  @include media-down(small-desktop) {
-    display: none;
-  }
-}
-
-.headerNavMobile {
-  @include media-up(small-desktop) {
-    display: none;
-  }
-}
-
-@keyframes nav-toggle-top-bar-active {
-  0% {
-    transform: translateY(calc(-50% - 5px));
-  }
-  50% {
-    transform: translateY(-50%);
-  }
-  100% {
-    transform: translateY(-50%) rotate(45deg);
-  }
-}
-
-@keyframes nav-toggle-middle-bar-active {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 1;
-  }
-  51% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes nav-toggle-bottom-bar-active {
-  0% {
-    transform: translateY(calc(-50% + 5px));
-  }
-  50% {
-    transform: translateY(-50%);
-  }
-  100% {
-    transform: translateY(-50%) rotate(-45deg);
-  }
-}
-
-.mobileNavToggle {
-  position: relative;
-  appearance: none;
-  background: transparent;
-  border: 0;
-  width: 24px;
-  height: 24px;
-
-  @include media-up(small-desktop) {
-    display: none;
-  }
-
-  span {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    width: calc(100% - 4px);
-    height: 2px;
-    border-radius: 4px;
-    background: var(--fg-icon);
-    transform: translateY(-50%);
-    &:nth-child(1) {
-      transform: translateY(calc(-50% - 5px));
-    }
-    &:nth-child(3) {
-      transform: translateY(calc(-50% + 5px));
+    // Slides away on a downward scroll. `useHeaderState` refuses to set this while the menu is
+    // open — the bar carries the only control that closes it.
+    &.hidden {
+      transform: translateY(-100%);
     }
   }
 
-  &.active {
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    /*
+     * 20/21 at 1280 and 16/17 at 390 in the design (nodes 1:45, 1:103). The asymmetry is the
+     * design's: the rule sits a pixel further from the type than the bar's top edge does.
+     * Horizontal inset comes from `Container`, which is the site-wide gutter.
+     */
+    padding-block: fluid(16px, 20px) fluid(17px, 21px);
+  }
+
+  /*
+   * The wordmark is `assets/logo/logo.svg` — "S&L / 12.02.27" as outlined type, 115×13 in its own
+   * viewBox. `Logo` reads its height from this custom property, which is how the header sizes the
+   * mark without having to out-specify a rule in another component's stylesheet: a custom property
+   * resolves wherever it is declared, regardless of source order or cascade layer.
+   *
+   * Sized by *width*, which is the number the design actually states — 116px at 1280 (node 1:46)
+   * and 107px at 390 (node 1:104) — worked back through the mark's 115:13 ratio. The extra 2px is
+   * the transparent border box every control on the shared button surface carries, which sits
+   * between this height and the SVG inside it: 116 × 13/115 + 2 ≈ 15, and 107 × 13/115 + 2 ≈ 14.
+   */
+  .wordmark {
+    --logo-height: #{fluid(14px, 15px)};
+
+    flex-shrink: 0;
+  }
+
+  .actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+
+  // The pill never wraps mid-label; it is the one element in the bar allowed to set its own width.
+  .action {
+    white-space: nowrap;
+  }
+
+  /*
+   * One control, two labels. `display: none` (rather than a visually-hidden technique) is what
+   * keeps the hidden one out of the accessible name, so the pill announces the words it shows.
+   */
+  .actionLong {
+    @container header (width < 56.25rem) {
+      display: none;
+    }
+  }
+
+  .actionShort {
+    @container header (width >= 56.25rem) {
+      display: none;
+    }
+  }
+
+  /*
+   * The two-bar mark from node 1:109: 22×2 rules, 5px apart, in 8px of padding — 38×25 overall,
+   * which clears the 24px WCAG 2.5.8 target on both axes without a spacer.
+   */
+  .toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    padding: var(--spacing-xs);
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+
+    @container header (width < 56.25rem) {
+      display: flex;
+    }
+
     span {
-      &:nth-child(1) {
-        animation: nav-toggle-top-bar-active 0.6s ease-in-out forwards;
+      display: block;
+      width: 22px;
+      height: 2px;
+      border-radius: 2px;
+      background-color: var(--fg-default);
+      transition: transform 0.3s ease;
+    }
+
+    // Two bars close to an X by meeting in the middle: each is 3.5px from centre (half the 5px gap
+    // plus half the 2px rule), so the translation is the same number in opposite directions.
+    &.toggleOpen span {
+      &:first-child {
+        transform: translateY(3.5px) rotate(45deg);
       }
-      &:nth-child(2) {
-        animation: nav-toggle-middle-bar-active 0.6s ease-in-out forwards;
+
+      &:last-child {
+        transform: translateY(-3.5px) rotate(-45deg);
       }
-      &:nth-child(3) {
-        animation: nav-toggle-bottom-bar-active 0.6s ease-in-out forwards;
-      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .header,
+    .toggle span {
+      transition: none;
     }
   }
 }

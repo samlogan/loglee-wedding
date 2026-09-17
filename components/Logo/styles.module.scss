@@ -1,11 +1,32 @@
+/*
+ * Deliberately unlayered, like the rest of this file always has been.
+ *
+ * `Logo` renders a `Link`, which carries the shared button surface from `@layer defaults` — and
+ * that base sets `display`. An unlayered rule beats a layered one outright, so leaving this here is
+ * what keeps the mark a block rather than an `inline-flex`. Moving it into the layer would put the
+ * two at the same weight and hand the decision to whichever CSS module the bundler happens to emit
+ * last.
+ */
 .logo {
   display: block;
-  user-select: none;
   position: relative;
-  background-size: cover;
-  height: 45px;
+  /*
+   * Read through a custom property so a consumer can size the mark without out-specifying this
+   * rule from another stylesheet — custom properties resolve wherever they are declared, whatever
+   * the layer or the source order. The header sets it to the design's 107–116px wide lockup; 45px
+   * is the boilerplate default the footer still uses.
+   */
+  height: var(--logo-height, 45px);
+  user-select: none;
+
   svg {
-    width: 100%;
+    display: block;
+    /*
+     * `width: auto`, not `100%`. The wordmark is outlined type at roughly 9:1, and stretching it to
+     * the width of a block-level parent distorted it by whatever that parent happened to be.
+     * Letting the height drive the width renders it at its own proportions.
+     */
+    width: auto;
     height: 100%;
     fill: currentColor;
   }

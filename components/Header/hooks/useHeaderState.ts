@@ -1,76 +1,74 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import useScrollDirection from '@/tools/hooks/useScrollDirection';
 
-interface HeaderState {
-  showSearch: boolean;
-  setShowSearch: (showSearch: boolean) => void;
-  mobileNavOpen: boolean;
-  setMobileNavOpen: (mobileNavOpen: boolean) => void;
+/** Pixels of scroll before the bar is allowed to lift off the page or slide away. */
+const SCROLL_THRESHOLD = 100;
+
+export interface HeaderState {
+  menuOpen: boolean;
+  closeMenu: () => void;
+  toggleMenu: () => void;
+  /** The bar has slid out of view on a downward scroll. */
   hidden: boolean;
-  atTop: boolean;
 }
 
+/**
+ * The header bar's own state: is the mobile menu open, and is the bar visible.
+ *
+ * The search half of this hook is gone with the search UI it drove — `showSearch` had no consumer
+ * anywhere in the app, and the mutual-exclusion setters existed only to keep it away from the menu.
+ */
 const useHeaderState = (): HeaderState => {
   const pathname = usePathname();
-  const [showSearch, setShowSearchState] = useState<boolean>(false);
-  const [mobileNavOpen, setMobileNavOpenState] = useState<boolean>(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
-  const [atTop, setAtTop] = useState(true);
   const scrollDir = useScrollDirection();
-  const [prevPathname, setPrevPathname] = useState(pathname);
+  const [previousPathname, setPreviousPathname] = useState(pathname);
 
-  // Reset on pathname change (React pattern for adjusting state from changed props)
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    setShowSearchState(false);
-    setMobileNavOpenState(false);
+  // Navigating closes the menu. Adjusting state during render rather than in an effect is React's
+  // documented pattern for "reset when a prop changes", and avoids a second paint with the menu
+  // still open over the new page.
+  if (pathname !== previousPathname) {
+    setPreviousPathname(pathname);
+    setMenuOpen(false);
   }
 
-  // Setters that handle mutual exclusion (replaces cross-setting effects)
-  const setShowSearch = useCallback((show: boolean) => {
-    setShowSearchState(show);
-    if (show) {
-      setMobileNavOpenState(false);
-    }
-  }, []);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const toggleMenu = useCallback(() => setMenuOpen((open) => !open), []);
 
-  const setMobileNavOpen = useCallback((open: boolean) => {
-    setMobileNavOpenState(open);
-    if (open) {
-      setShowSearchState(false);
-    }
-  }, []);
-
-  // Hide header on scroll down
   useEffect(() => {
     const handleScroll = () => {
-      const scrollingUp = scrollDir === 'up';
-      const THRESHOLD = 100;
-      const scrolledPastThreshold = window.scrollY > THRESHOLD;
-      setHidden(scrolledPastThreshold && !scrollingUp);
-      setAtTop(!scrolledPastThreshold);
+      setHidden(window.scrollY > SCROLL_THRESHOLD && scrollDir !== 'up');
     };
     handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [scrollDir]);
 
-  // Prevent scrolling while search or mobile nav is open
+  // The page behind the menu does not scroll. Restored to whatever it was rather than to `''`, so
+  // this cannot clear a lock some other component (the modal) is holding at the same time.
   useEffect(() => {
-    document.body.style.overflow = showSearch || mobileNavOpen ? 'hidden' : '';
-  }, [showSearch, mobileNavOpen]);
+    if (!menuOpen) {
+      return;
+    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
 
   return {
-    atTop,
-    hidden,
-    mobileNavOpen,
-    setMobileNavOpen,
-    setShowSearch,
-    showSearch
+    // The bar carries the only control that closes the menu, so it must not slide away underneath
+    // an open one — which a scroll inside the panel would otherwise do.
+    hidden: hidden && !menuOpen,
+    closeMenu,
+    menuOpen,
+    toggleMenu
   };
 };
 
