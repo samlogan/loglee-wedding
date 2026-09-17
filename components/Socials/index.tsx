@@ -1,5 +1,3 @@
-import type { FC } from 'react';
-
 import type { IconProps } from '@/components/Icon';
 import Icon from '@/components/Icon';
 import classNames from '@/helpers/classNames';
@@ -17,7 +15,8 @@ export interface SocialsProps {
   }[];
 }
 
-const Socials: FC<SocialsProps> = (props) => {
+// Not `FC<SocialsProps>`: `FC<>` is reserved for section components in this project.
+const Socials = (props: SocialsProps) => {
   const { socials, className, size = 'fluid' } = props;
 
   if (!socials?.[0]) {

@@ -60,7 +60,16 @@ const navLink = defineType({
 const header = defineType({
   fields: [
     {
-      description: 'The links in the middle of the bar, and the same list inside the mobile menu.',
+      /*
+       * This is the only place the "one list, rendered twice" decision surfaces to a human.
+       *
+       * `components/Footer` renders this same array — deliberately, so the bar and the foot cannot
+       * disagree about what the site's pages are (see `components/Layout`, which passes the one
+       * object to both). Without saying so here, an editor removing a link intending a bar-only
+       * change removes it from the footer too and nothing in the Studio tells them.
+       */
+      description:
+        'The links in the middle of the bar, the same list inside the mobile menu, and the same list in the footer. Removing one removes it from all three.',
       name: 'navItems',
       of: [{ type: 'navLink' }],
       title: 'Nav Items',

@@ -50,17 +50,61 @@ describe('formatDateRange', () => {
    * that is worse than an off-by-one, because the *compression* is decided by comparing the two
    * dates' month and year. Read locally, "31 May → 01 Jun" becomes "30 May → 31 May" in Los Angeles
    * and the range collapses into a single-month form that names the wrong month.
+   *
+   * Three pairs, not one, because the helper makes three separate zone-sensitive decisions and a
+   * single pair only covers one of them. Verified by reverting each pin in turn and watching this
+   * test fail:
+   *
+   * - **the cross-month pair** catches `timeZone: 'UTC'` coming off `partial()`/`formatDate` (in
+   *   Pacific/Midway the range renders as "30 May – 31 May 2026") and `getUTCMonth()` becoming
+   *   `getMonth()` (in America/Los_Angeles both dates read as May and the range collapses to the
+   *   closed form);
+   * - **the cross-year pair** is the only one that can catch `getUTCFullYear()` — in
+   *   Pacific/Kiritimati (UTC+14) both dates read as January 2027, so "31 Dec 2026 – 01 Jan 2027"
+   *   collapses to "31–01 Jan 2027". With only the first pair that regression passed silently;
+   * - **the same-month pair** is the only one that reaches `partial(earlier, DAY)`, the day-only
+   *   branch, which nothing else in this sweep executes.
    */
   it('renders the entered calendar dates regardless of the reader timezone', () => {
     const original = process.env.TZ;
 
+    const cases: [string, string, string][] = [
+      ['2026-05-31', '2026-06-01', '31 May – 01 Jun 2026'],
+      ['2026-12-31', '2027-01-01', '31 Dec 2026 – 01 Jan 2027'],
+      ['2026-05-29', '2026-05-31', '29–31 May 2026']
+    ];
+
     try {
       for (const tz of ['Pacific/Kiritimati', 'Australia/Sydney', 'UTC', 'America/Los_Angeles', 'Pacific/Midway']) {
         process.env.TZ = tz;
-        expect(formatDateRange('2026-05-31', '2026-06-01'), `wrong range in ${tz}`).toBe('31 May – 01 Jun 2026');
+
+        /*
+         * The sweep asserts on its own instrument first.
+         *
+         * Setting `process.env.TZ` only moves the ambient zone because Node re-reads it per call in
+         * the default forked-process pool. Under `pool: 'threads'` a worker's `process.env` is a
+         * copy and nothing calls `tzset`, so every iteration below would silently re-run in the same
+         * zone and five assertions would collapse into one — a sweep that passes while testing
+         * nothing is worse than no sweep.
+         */
+        expect(Intl.DateTimeFormat().resolvedOptions().timeZone, 'the ambient timezone did not move').toBe(tz);
+
+        for (const [start, end, expected] of cases) {
+          expect(formatDateRange(start, end), `wrong range for ${start}..${end} in ${tz}`).toBe(expected);
+        }
       }
     } finally {
-      process.env.TZ = original;
+      /*
+       * `delete`, not assignment. `process.env` coerces its values to strings, so when `TZ` was
+       * never set — the normal case; nothing in `.env.development` or `vitest.config.ts` sets it —
+       * `process.env.TZ = undefined` writes the literal string `'undefined'` and pins the worker to
+       * an invalid zone for every test that runs after this one in the same file.
+       */
+      if (original === undefined) {
+        delete process.env.TZ;
+      } else {
+        process.env.TZ = original;
+      }
     }
   });
 });

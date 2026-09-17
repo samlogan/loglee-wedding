@@ -39,6 +39,21 @@ $footer-inline-switch: 40rem;
     border-top: 1px solid var(--stroke-cards);
     background: var(--bg-default);
     color: var(--fg-default);
+
+    /*
+     * The landmark is the target of `AccessibilityMenu`'s "Footer navigation" skip link, so it
+     * carries `tabindex="-1"` and can hold focus. Keep the shared ring — a sighted keyboard user
+     * needs to see where the jump landed, and the screen-reader announcement only helps the readers
+     * who get one — but turn the offset inwards.
+     *
+     * The global rule (`_reset.scss`) offsets the ring 3px *outwards*, which is right for a control
+     * sitting inside a layout and wrong for a full-bleed element: measured, the left and right edges
+     * fell outside the viewport and the ring read as two unexplained heavy rules across the top and
+     * bottom of the page. Negated, all four edges land on the footer's own background.
+     */
+    &:focus-visible {
+      outline-offset: calc(-1 * var(--button-focus-ring-offset, 3px));
+    }
   }
 
   .inner {
@@ -137,8 +152,10 @@ $footer-inline-switch: 40rem;
    * of either string, and `wrap` keeps the line honest at 375px where "29–31 May 2026 · Kangaroo
    * Valley" does not fit on one.
    *
-   * `--fg-muted` because this is the quietest thing in the frame: stone/600 on the light theme's
-   * stone/50 page measures 5.2:1, clear of the 4.5:1 WCAG 1.4.3 asks for body copy at this size.
+   * `--fg-muted` because this is the quietest thing in the frame: stone/600 (#65635c) on the light
+   * theme's stone/50 page (#f3f1ea) measures 5.32:1, clear of the 4.5:1 WCAG 1.4.3 asks for body
+   * copy at this size. Measured off the rendered footer with `getComputedStyle`, not off the
+   * swatch names — the footer pins `data-theme="light"`, so these are the values it always gets.
    */
   .details {
     display: flex;

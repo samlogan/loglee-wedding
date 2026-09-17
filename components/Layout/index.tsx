@@ -20,27 +20,32 @@ import '@/sass/global/styles.scss';
 
 const Layout = async (props: { children: ReactNode }) => {
   const { children } = props;
-  const headerDocument = await sanityFetch<IHeaderDocument>({ query: HEADER_QUERY });
+
   /*
-   * Typed as `Socials` consumes it rather than as a bare `{ name: string }`.
+   * Three singletons, fetched together rather than one after another.
    *
-   * The Studio constrains `socialMediaItem.name` to the five platform values, which are the icon
-   * keys — so the narrow type is the true one and stating it here is what retired the `as any` the
-   * footer used to spread through. An unrecognised value is still handled rather than assumed away:
-   * `Icon` renders nothing for a key it does not have.
+   * None of them reads the previous one's result, so awaiting them in sequence bought nothing and
+   * cost two round trips of TTFB on every render. It is not only a draft-mode concern: `sanityFetch`
+   * drops to the live API with `revalidate: 0` in development *and* in drafts perspective, so in
+   * both of those this was three uncached calls to api.sanity.io before a byte of the page streamed.
+   *
+   * The types, in order:
+   *
+   * - `socialMediaDocument` is typed as `Socials` consumes it rather than as a bare
+   *   `{ name: string }`. The Studio constrains `socialMediaItem.name` to the five platform values,
+   *   which are the icon keys — so the narrow type is the true one, and stating it here is what
+   *   retired the `as any` the footer used to spread through. An unrecognised value is still
+   *   handled rather than assumed away: `Icon` renders nothing for a key it does not have.
+   * - `weddingSettings` is `Partial<>` because `WEDDING_SETTINGS_QUERY` is a projection, not the
+   *   document: it returns a shaped object with null leaves for every field an editor has left
+   *   blank, and the interface declares several of them required. The header reads one field off it
+   *   — `rsvpLabel` — and the footer three more; both are built to render without them.
    */
-  const socialMediaDocument = await sanityFetch<{ socials?: SocialsProps['socials'] }>({
-    query: SOCIAL_MEDIA_QUERY
-  });
-  /*
-   * `Partial<>` because `WEDDING_SETTINGS_QUERY` is a projection, not the document: it returns a
-   * shaped object with null leaves for every field an editor has left blank, and the interface
-   * declares several of them required. The header reads one field off it — `rsvpLabel` — and the
-   * footer three more; both are built to render without them.
-   */
-  const weddingSettings = await sanityFetch<Partial<IWeddingSettingsDocument> | null>({
-    query: WEDDING_SETTINGS_QUERY
-  });
+  const [headerDocument, socialMediaDocument, weddingSettings] = await Promise.all([
+    sanityFetch<IHeaderDocument>({ query: HEADER_QUERY }),
+    sanityFetch<{ socials?: SocialsProps['socials'] }>({ query: SOCIAL_MEDIA_QUERY }),
+    sanityFetch<Partial<IWeddingSettingsDocument> | null>({ query: WEDDING_SETTINGS_QUERY })
+  ]);
 
   /*
    * One list, rendered twice.
