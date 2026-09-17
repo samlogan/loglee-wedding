@@ -55,11 +55,17 @@ $schedule-inline-switch: 60rem;
 /*
  * 32rem (512px) — the event row's reorder, and the ceiling on it is not arbitrary.
  *
- * It has to be **at or below the event column's width at the band switch** (960rem container −
- * 25rem summary − the 40px gap ≈ 520px), or there would be a band of widths where the band has
- * split into two columns while the rows inside it are still stacked — a discontinuity the design
- * never draws. 512px also leaves ~250px of title column after the gutter, the gaps and a typical
- * chip, which is where a two-word event title stops fitting on one line.
+ * It has to be **at or below the event column's width at the band switch** — 60rem (960px)
+ * container − 25rem (400px) summary − the 40px gap = 520px — or there would be a band of widths
+ * where the band has split into two columns while the rows inside it are still stacked, a
+ * discontinuity the design never draws. Measured rather than left as arithmetic: sweeping the
+ * container from 300px to 1400px, the row switch fires at an events column of exactly 512px and the
+ * band switch at 520.02px, and there is no width at which the band is split while its rows are not.
+ * The margin is 8px, and it narrows as the root font size *falls* rather than rises, because the
+ * 40px gap is the one term in that subtraction that is not in `rem`.
+ *
+ * 512px also leaves ~250px of title column after the gutter, the gaps and a typical chip, which is
+ * where a two-word event title stops fitting on one line.
  */
 $schedule-event-inline-switch: 32rem;
 
@@ -74,8 +80,14 @@ $schedule-summary-width: 25rem;
 /*
  * The time gutter, at the design's 110px (node 1:329 and every sibling). A fixed track, because the
  * requirement is that the times line up down the column: sizing it to content would give each row
- * its own gutter, since each row is its own grid. `.time` carries `min-width: 0` so an over-long
- * time wraps inside the gutter rather than widening the row past it.
+ * its own gutter, since each row is its own grid.
+ *
+ * What keeps an over-long time inside the gutter is `.time`'s own `overflow-wrap`. It is *not*
+ * `min-width: 0`, which this note used to credit: a grid item's automatic minimum applies only when
+ * it spans a track whose **min** sizing function is `auto` (CSS Grid §6.6), and this track's is a
+ * fixed 6.875rem. `min-width: auto` therefore already computes to 0 here, which is why the
+ * declaration was removed rather than kept — verified by toggling it at 375px and 1440px with a
+ * deliberately over-long day name, and measuring no change to any box.
  */
 $schedule-time-gutter: 6.875rem;
 
@@ -91,17 +103,16 @@ $schedule-time-gutter: 6.875rem;
 $schedule-intro-measure: 20rem;
 
 @layer defaults {
-  .days {
-    /*
-     * The bands butt directly against each other — the rule *is* the separator, so any gap here
-     * would leave it floating in the middle of one. Stated rather than left to the reset, which
-     * zeroes `ol` margin and padding in `@layer global`, a layer this module already overrides.
-     */
-    margin: 0;
-    padding: 0;
-  }
-
   /*
+   * There is deliberately no `.days` rule, and the list of days carries no class at all.
+   *
+   * It held `margin: 0; padding: 0`, on the stated reasoning that the bands butt directly against
+   * each other — the rule *is* the separator, so any gap would leave it floating in the middle of
+   * one. True, and already true without it: `tools/sass/global/_reset.scss` zeroes `margin`,
+   * `padding` and the marker on every `ol` in `@layer global`, and nothing in `@layer defaults`
+   * puts them back. A restatement that can only ever agree with the reset is not insurance, it is
+   * a second place to look.
+   *
    * The page-spanning rule. `--stroke-cards` is the strong-stroke role: `--stone-900` on the light
    * theme, which is the `#131412` every band is drawn with, and `--stone-50` on dark, so the rule
    * inverts with the page instead of disappearing into it. `--stroke-divider` is the *hairline*
@@ -154,9 +165,14 @@ $schedule-intro-measure: 20rem;
   /*
    * The two-column band, applied only when the day has events to put in the second column.
    *
-   * Mirrors `HeaderDisplaySection`'s `.row_split`: the modifier gates the whole wide branch, so a
+   * Mirrors `HeaderDisplaySection`'s `.row_split`: the modifier gates the *two-column* branch, so a
    * day with no events keeps the single-column layout at every width and its summary runs the full
    * content measure instead of hugging a 400px column with two thirds of the band empty.
+   *
+   * "The two-column branch" and not "the whole wide branch", which is what this said and is not
+   * true: `.intro`'s measure cap below is keyed to the same container query but sits outside this
+   * modifier, so an event-less day above the switch gets a full-width summary containing a 320px
+   * paragraph. That is deliberate — see the note there — and `DayWithoutEvents` now pins it.
    */
   .dayInner_split {
     @container schedule (width >= #{$schedule-inline-switch}) {
@@ -208,9 +224,16 @@ $schedule-intro-measure: 20rem;
      */
 
     /*
-     * A flex item's automatic minimum is its `min-content` width, and an abbreviated day at
-     * ~88px type is wider than a phone. Without this the summary would push the band past the
-     * viewport rather than letting the heading wrap.
+     * The one live `min-width: 0` in this module, and it earns its place in exactly one state: the
+     * `.dayInner_split` row branch above, where this becomes a **row** flex item with
+     * `flex: 0 0 25rem`. There its automatic minimum is its `min-content` width — a long day name at
+     * the 88px wide anchor, which `overflow-wrap: break-word` does not reduce — so without this the
+     * column would floor above 400px and push the events beside it off the band.
+     *
+     * Note what it does *not* do, since that is what the rest of the module used to claim. On a
+     * phone `.dayInner` is a **column**, so `min-width` is the cross axis and `min-width: auto`
+     * computes to 0 there anyway. Every other `min-width: 0` in this file was of that kind, or a
+     * grid item in a `minmax(0, …)` track, and all six measured inert and were deleted.
      */
     min-width: 0;
   }
@@ -228,9 +251,11 @@ $schedule-intro-measure: 20rem;
    * token's narrow anchor is already this label's drawn 11px, but its wide anchor is a pixel short
    * of the 13 drawn here, and the shortfall is *not* the 1280-against-1440 undershoot every fluid
    * token pays: measured at a 1440px viewport, where the token is at its wide anchor by definition,
-   * it renders 12.00 against the drawn 13. `--body-xs` is the floor of the shared body scale and
-   * also sizes `HeaderDisplaySection.metaItem` and the location chip below, so it cannot move at
-   * source for one label's sake.
+   * it renders 12.00 against the drawn 13. `--body-xs` is the floor of the shared body scale and has
+   * four consumers — `Text.size_xs`, `HeaderDisplaySection.metaItem`, `FieldCheckbox` and
+   * `FieldNumber` — so it cannot move at source for one label's sake. (It does **not** size the
+   * location chip below, as this note used to say; that is `--body-2xs`, the step under the scale's
+   * floor, and the note on `.location` sets out why.)
    *
    * Tracking in `em` (2.6px on 13px and 2.2px on 11px are both 0.2em) so it stays proportional as
    * the fluid size moves — fixing the size therefore fixes the tracking with it.
@@ -244,7 +269,6 @@ $schedule-intro-measure: 20rem;
     letter-spacing: 0.2em;
     line-height: var(--body-line-height);
     margin: 0;
-    min-width: 0;
     text-transform: uppercase;
   }
 
@@ -275,7 +299,6 @@ $schedule-intro-measure: 20rem;
   .dayTitle {
     --display-md: #{fluid(56px, 88px)};
 
-    min-width: 0;
     overflow-wrap: break-word;
     /*
      * The separation above the heading: 5px on the mobile frame (`pt-[5px]` on 1:472), 8px on the
@@ -325,6 +348,13 @@ $schedule-intro-measure: 20rem;
        * Only above the switch: the mobile frames set the intro to the full 350px content width, and
        * capping it there would leave a ragged 30px of unused measure on a phone. See
        * `$schedule-intro-measure` for the value's provenance.
+       *
+       * Keyed to the container query alone and **not** nested inside `.dayInner_split`, which makes
+       * it the one wide-branch declaration a day with no events still gets. Chosen rather than
+       * inherited: a cap is a measure, and a measure is a property of the paragraph, not of whether
+       * something happens to sit beside it. The alternative is a single line of body copy running
+       * the full 1200px band, which is worse typography than a narrow column with space to its
+       * right. `DayWithoutEvents` asserts the cap so the choice stays visible.
        */
       max-width: $schedule-intro-measure;
     }
@@ -339,9 +369,6 @@ $schedule-intro-measure: 20rem;
      * zeroes the min-content contribution, which is what that declaration would have been for.
      */
     container: scheduleEvents / inline-size;
-
-    margin: 0;
-    padding: 0;
   }
 
   /*
@@ -367,10 +394,14 @@ $schedule-intro-measure: 20rem;
      * `minmax(0, …)` on both tracks, not `1fr auto`.
      *
      * A grid item's automatic minimum is its `min-content` width, and the inherited
-     * `overflow-wrap: break-word` does *not* reduce `min-content`. So a single unbreakable
-     * location — an editor pasting a venue name with no spaces — would size the second track past
-     * the container and give the page horizontal scroll at 320px (WCAG 1.4.10). A `0` minimum lets
-     * both tracks shrink and the text wrap instead.
+     * `overflow-wrap: break-word` (from `body` in `tools/sass/global/_typography.scss`, under its
+     * legacy `word-wrap` alias) does *not* reduce `min-content`. So a single unbreakable location —
+     * an editor pasting a venue name with no spaces — would size the second track past the
+     * container at 320px. A `0` minimum lets both **tracks** shrink.
+     *
+     * That is only half the job, and the missing half was a real defect rather than a theoretical
+     * one — see `.location`'s `overflow-wrap` below for what shrinking the track alone does to the
+     * item sitting in it.
      */
     grid-template-columns: minmax(0, 1fr) minmax(0, auto);
     align-items: baseline;
@@ -441,7 +472,8 @@ $schedule-intro-measure: 20rem;
     font-weight: var(--font-weight-medium);
     line-height: var(--body-line-height);
     margin: 0;
-    min-width: 0;
+    // What actually keeps a long time inside the fixed 110px gutter — see `$schedule-time-gutter`,
+    // which used to credit a `min-width: 0` that never applied to this track.
     overflow-wrap: break-word;
   }
 
@@ -452,11 +484,19 @@ $schedule-intro-measure: 20rem;
    * one.** A bordered uppercase mono pill is generic enough to belong in `components/`, and there
    * is no `Tag` / `Chip` / `Badge` there today — `Button` is the only chip-shaped thing in the repo
    * and is the wrong reuse, because this is not interactive and `Button`/`Link` render a `<button>`
-   * or an `<a>`, which would put a fake control in the tab order. One instance is not a component,
-   * though: the second section that needs a pill should extract `components/Tag` (a presentational
-   * `<span>` taking `label`, `size` and `theme`, owning the border, radius, padding and type) and
-   * leave this rule holding only `grid-area`, `justify-self` and the container-query re-placement.
-   * Copying the block below into a second module instead is the outcome this note exists to prevent.
+   * or an `<a>`, which would put a fake control in the tab order. Verified rather than assumed:
+   * `border(-color): currentColor` has exactly two callers repo-wide, this rule and
+   * `components/SocialsShare`, and that one is an icon *button*.
+   *
+   * Name the near-miss, though, because "one instance" is doing a lot of work above:
+   * `components/ModelViewer`'s `.badge` is the same object in the other treatment — `mono-font()`,
+   * `--radius-sm`, `--fg-accent`, a `fluid()` padding pair, `width: fit-content`, even the same
+   * `overflow-wrap: anywhere` for the same intrinsic-sizing reason — differing only in fill versus
+   * stroke. It is arguably already the second. So the trigger is **the third**, and what it should
+   * produce is `components/Tag`, a presentational `<span>` taking `label`, `size`, `theme` and a
+   * `variant: 'outline' | 'filled'` covering both, owning the border, radius, padding and type, and
+   * leaving this rule holding only `grid-area`, `justify-self` and the container-query re-placement.
+   * Copying the block below into a third module instead is the outcome this note exists to prevent.
    *
    * `border-color: currentColor` rather than a second token: the design draws the stroke and the
    * label in the same ink (`#1e4632`, which is `--fg-accent` on the light theme), so tying them
@@ -475,12 +515,10 @@ $schedule-intro-measure: 20rem;
    *
    * - `--body-xs` is fluid(11px, 12px) against the drawn 10/11px (1:483, 1:337) — a pixel over at
    *   both ends, and at the wide anchor that is a genuine miss rather than the 1280-against-1440
-   *   undershoot. `fluid(10px, 11px)` is the step below the floor of the body scale, which is
-   *   exactly the gap `PlayerCard`, `StatMeter` and `FieldCheckbox` already fill by computing this
-   *   same pair under three local names; this is the **fourth** caller, past the threshold
-   *   `StatMeter`'s note sets for promoting it to one shared token or a `mono` variant on `Text`.
-   *   That is a design-system change rather than a section one, so it stays local — but it is now
-   *   overdue, and this is the fourth line of evidence for it.
+   *   undershoot. The step below the floor of the body scale is now `--body-2xs`, promoted for
+   *   exactly this: `PlayerCard`, `StatMeter` and `FieldCheckbox` had each computed
+   *   `fluid(10px, 11px)` under a local name, and this rule being the fourth is the threshold
+   *   `StatMeter`'s note named. One token, four callers, one place to retune.
    * - `--body-line-height` is 1.5, the paragraph ratio. Figma sets `leading-[normal]` on every mono
    *   run in the file, which for JetBrains Mono is 1.32 — so 1.5 inflated the pill by ~2px at each
    *   end and rendered it **30px tall against the drawn 27** at 1440. `normal` rather than a hard
@@ -488,8 +526,14 @@ $schedule-intro-measure: 20rem;
    *   fallback stack in `mono-font()` then carries its own.
    *
    * Only the chip takes this. `.eyebrow` and `.time` keep `--body-line-height` — their line box is
-   * surrounding rhythm rather than a drawn edge, and every mono micro-label in the repo
-   * (`HeaderDisplaySection.metaItem`, `PlayerCard`, `StatMeter`) is set that way.
+   * surrounding rhythm rather than a drawn edge, which is how `HeaderDisplaySection.metaItem`,
+   * `PlayerCard` and `StatMeter` set theirs.
+   *
+   * Not "how every mono label in the repo is set", which this note used to claim and which is 5-of-11
+   * false: `FieldCheckbox` (×3) and `ModelViewer` (×3) use a hard `1.3`. Eleven call sites and three
+   * answers for one type role is a missing `--mono-line-height` token rather than eleven local
+   * judgements — logged alongside MAM-1927, since the `mono` variant on `Text` is what would consume
+   * it.
    */
   .location {
     @include mono-font();
@@ -502,12 +546,36 @@ $schedule-intro-measure: 20rem;
     border: 1px solid currentColor;
     border-radius: var(--radius-sm);
     color: var(--fg-accent);
-    font-size: #{fluid(10px, 11px)};
+    font-size: var(--body-2xs);
     font-weight: var(--font-weight-medium);
     letter-spacing: 0.1em;
     line-height: normal;
     margin: 0;
-    min-width: 0;
+    /*
+     * `anywhere`, not the `break-word` every sibling here declares, and the difference is the whole
+     * point: **only `anywhere` reduces `min-content`**. `ModelViewer`'s `.badge` had already reached
+     * the same conclusion from the same corner — a `fit-content` chip whose cap resolves against the
+     * longest unbreakable run unless the wrap rule participates in intrinsic sizing — and this rule
+     * missed the precedent. Both break a long word once a line box is
+     * too narrow for it, but `break-word` leaves the element's intrinsic minimum at the width of
+     * the unbroken word, and this is the one item in the row whose box is sized from its own
+     * intrinsic width rather than from its track — `justify-self: end` above makes it `fit-content`
+     * instead of `stretch`.
+     *
+     * So the `minmax(0, …)` on `.event` shrinks the *track* and, with `break-word`, the *item*
+     * ignores it. Measured at 320px with a 57-character unbreakable location: the track resolved to
+     * 216px, the chip's border box to 466.59px, and because it is `justify-self: end` the 226px of
+     * overflow went **left, off the container** — content silently lost rather than scrolled to,
+     * which is why no reflow check caught it (`scrollWidth` never moved). With `anywhere` the chip
+     * takes the 216px it is given and wraps to two lines.
+     *
+     * Costs nothing in the normal case, which was measured too: every box in a populated row is
+     * byte-identical either way, because nothing wraps until it has to.
+     *
+     * `location` is also capped in the schema (`Rule.max`) — belt and braces, and the cap is the
+     * content-model half of the same argument: this is a short place label, not a sentence.
+     */
+    overflow-wrap: anywhere;
     padding: #{fluid(4px, 5px)} #{fluid(7px, 9px)};
     text-transform: uppercase;
 
@@ -541,7 +609,6 @@ $schedule-intro-measure: 20rem;
 
     grid-area: 2 / 1 / auto / -1;
 
-    min-width: 0;
     overflow-wrap: break-word;
     /*
      * Tops the 4px `row-gap` up to the 8px the stacked row is drawn with: the mobile frame separates
@@ -549,17 +616,31 @@ $schedule-intro-measure: 20rem;
      * the title from the description by the `gap-[5px]` alone. One `row-gap` cannot be both numbers,
      * so the larger of the two is carried here.
      *
-     * Safe only because the title is the *sole* item in its row at this width. `align-items` is
-     * `baseline`, and padding above a baseline-aligned item shifts its baseline — which is exactly
-     * why the wide branch below has to take it off again, where the title shares row 1 with the time
-     * and the chip.
+     * It reads as separation only because the title is the *sole* item in its row at this width. It
+     * is padding, not margin, so what it actually does is grow the title's own box downwards from a
+     * fixed top edge — which is indistinguishable from separation while nothing shares the row, and
+     * is not what it looks like once something does. See the wide branch below.
      */
     padding-top: var(--spacing-xxs);
 
     @container scheduleEvents (width >= #{$schedule-event-inline-switch}) {
       // Up onto the time's line, in the middle column.
       grid-area: 1 / 2;
-      // See above: it would push this title's baseline 4px below the time's and the chip's.
+      /*
+       * Off again, and the reason is not the one you would guess from `align-items: baseline`.
+       *
+       * Baseline alignment does not let this title's baseline drift below the time's and the chip's
+       * — that is the one thing it exists to prevent. An item's baseline *offset* is measured from
+       * its own box start and therefore includes its `padding-top`, and the largest offset in the
+       * row decides where the shared baseline sits. This title already has the largest (it is the
+       * biggest type in the row), so the padding is added to the number that wins.
+       *
+       * Measured at 1440 with it forced back on: the title's box top does not move, the time and the
+       * chip are pushed down 4px to keep the baseline shared, and the row grows 4px taller. So the
+       * cost is 4px of dead space above all three and a row 4px over the drawn height — a silent
+       * mis-measure of the whole column rather than a visible misalignment of one item, which is
+       * why it would not have been caught by eye.
+       */
       padding-top: 0;
     }
   }
@@ -591,7 +672,6 @@ $schedule-intro-measure: 20rem;
 
     grid-area: 3 / 1 / auto / -1;
 
-    min-width: 0;
     overflow-wrap: break-word;
 
     @container scheduleEvents (width >= #{$schedule-event-inline-switch}) {

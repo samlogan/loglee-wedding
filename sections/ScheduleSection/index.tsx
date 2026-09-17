@@ -81,7 +81,7 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
        * but duplicates CMS copy into the accessibility tree, where it drifts from the visible
        * heading the moment an editor renames the day.
        */}
-      <ol className={styles.days} role="list" aria-label="Schedule by day">
+      <ol role="list" aria-label="Schedule by day">
         {days.map((day) => {
           /*
            * An event with neither a time nor a title is a row an editor added and abandoned. Both
@@ -89,6 +89,20 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
            * but a blank row still draws a hairline and 40px of padding, which reads as a rendering
            * bug rather than as missing content. Filtered here rather than in the projection so a
            * story passing raw mock data behaves exactly like the CMS.
+           *
+           * `||` and not `&&`: a half-filled row is kept, because an editor mid-way through typing
+           * one should see it in the Presentation preview rather than watch it vanish. The two
+           * renders below are guarded individually so that a kept half-row is still well-formed —
+           * that is the other half of this decision, not a separate one.
+           *
+           * There is deliberately **no** matching filter on the day itself, though the same
+           * argument would produce one. A day with a blank `title` renders no `<h2>` (`TextTitle`
+           * self-guards) while its events still render `<h3>`s, so the outline skips a level — and
+           * the inner list loses the heading the note below relies on for its context. Left as is
+           * because the cure is worse: the day would disappear from the editor's own preview while
+           * they were building it, and unlike an abandoned event row, a titled day is the thing
+           * they are working *on*. `min(1)` plus `required()` plus the blank-string custom rule on
+           * `title` mean published content cannot reach this state.
            */
           const events = day.events?.filter((event) => Boolean(event?.time?.trim() || event?.title?.trim())) ?? [];
           const hasEvents = events.length > 0;
@@ -183,11 +197,25 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
                          * and the `Desktop` story asserts the painted order explicitly so the swap
                          * stays a decision rather than becoming a surprise.
                          *
-                         * Nothing here is focusable, so WCAG 2.4.3 (Focus Order) has nothing to
-                         * disagree with; 1.3.2 (Meaningful Sequence) is satisfied by the order
-                         * above. `MobileReadingOrder` in the stories asserts both halves — that the
-                         * DOM order is this, and that on a phone it is also what a sighted reader
-                         * sees.
+                         * 1.3.2 (Meaningful Sequence) is satisfied by the order above.
+                         * `MobileReadingOrder` in the stories asserts both halves — that the DOM
+                         * order is this, and that on a phone it is also what a sighted reader sees.
+                         *
+                         * 2.4.3 (Focus Order) is satisfied too, but *not* because nothing here is
+                         * focusable — that is a tempting reading of this markup and it is false.
+                         * `description` is `blockContentSimple`, which carries a `link` annotation
+                         * (`tools/sanity/schema/objects/blockContent.ts`), the projection resolves
+                         * `markDefs`, and `TextBlock` renders the mark as a real `<a>`. An editor
+                         * can put a focusable element in this row today.
+                         *
+                         * What actually satisfies 2.4.3 is that the two children which *can* hold a
+                         * link — the day intro and this description — are each last in their
+                         * container in the source **and** last in the paint at both widths. The two
+                         * children whose positions genuinely diverge are `.time` and `.location`,
+                         * and neither holds anything focusable. So if a control is ever added to
+                         * either of those, this stops being true above the switch: focus would run
+                         * time → location → title while the eye reads time → title → location. Add
+                         * a `userEvent.tab()` assertion to the `Desktop` story at that point.
                          */
                         <li className={styles.event} key={event._key}>
                           {/*
@@ -201,12 +229,20 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
                            * clean DOM for "left bracket from 2pm right bracket". This way the
                            * rendered text still equals the stored value plus visible decoration,
                            * which is what the stories assert on.
+                           *
+                           * Guarded on the field, like every other one in this component, because
+                           * the decoration is unconditional: an event that survived the filter above
+                           * on its title alone would otherwise paint a bare `[]` — punctuation with
+                           * nothing between it, and, since both spans are `aria-hidden`, a `<p>` with
+                           * no accessible text at all.
                            */}
-                          <p className={styles.time}>
-                            <span aria-hidden="true">[</span>
-                            {event.time}
-                            <span aria-hidden="true">]</span>
-                          </p>
+                          {Boolean(event.time?.trim()) && (
+                            <p className={styles.time}>
+                              <span aria-hidden="true">[</span>
+                              {event.time}
+                              <span aria-hidden="true">]</span>
+                            </p>
+                          )}
                           {Boolean(event.location?.trim()) && <p className={styles.location}>{event.location}</p>}
                           {/*
                            * `Text` rather than `TextTitle`, because the field is a plain string and
@@ -215,15 +251,37 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
                            * no `weight` prop to carry that (it forwards variant/size/colour/
                            * transform only), and it would add a `stripTitleTags` pass to a value
                            * that never holds a tag. `TextTitle` delegates to `Text` anyway.
+                           *
+                           * Guarded, and this is the one of the two that is a conformance failure
+                           * rather than a blemish: `Text` renders `createElement(as, …, undefined)`
+                           * for an absent `text`, so an event filtered in on its *time* alone would
+                           * emit an empty `<h3>` — a nameless stop for anyone navigating by heading,
+                           * and what axe reports as `empty-heading`. `TextTitle` self-guards on
+                           * `!title`; `Text` does not, so the caller has to.
+                           *
+                           * The time is knowingly *outside* the heading, and the cost is worth
+                           * stating: heading navigation is a jump rather than a linear read, so
+                           * pressing `H` down a three-day schedule yields "Arrivals & check in",
+                           * "Arrival dinner", "Ceremony"… and no times at all, on a section whose
+                           * subject is when things happen. Sighted readers get the time free, from
+                           * the gutter beside the title. Folding it in — `<h3 style="display:
+                           * contents">` around the time and the title, so the heading keeps both in
+                           * its accessible name while its children stay direct grid items — is the
+                           * shape that would fix it without touching the `grid-area` model. Not
+                           * done here because it changes the announced name of every event on a
+                           * structure the design review has already signed off; raise it as its own
+                           * ticket rather than smuggling it into a review.
                            */}
-                          <Text
-                            className={styles.eventTitle}
-                            as="h3"
-                            text={event.title}
-                            variant="body"
-                            size="2xl"
-                            weight="semibold"
-                          />
+                          {Boolean(event.title?.trim()) && (
+                            <Text
+                              className={styles.eventTitle}
+                              as="h3"
+                              text={event.title}
+                              variant="body"
+                              size="2xl"
+                              weight="semibold"
+                            />
+                          )}
                           {hasBlockContent(event.description) && (
                             <TextBlock
                               className={styles.description}

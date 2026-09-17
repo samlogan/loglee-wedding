@@ -23,6 +23,15 @@ import internalLabelField from '../common/internalLabelField';
  * costing an editor a second place to look. `faqSection.faqItems` sets the same precedent.
  */
 interface IScheduleSectionEvent {
+  /*
+   * Required here while every sibling is optional, and that asymmetry is an **authoring contract
+   * rather than a GROQ guarantee**. Verified against groq-js with a hand-built dataset: an array
+   * member created without a `_key` — a script import, a raw mutation — projects `_key: null` at
+   * both levels, exactly as the blank fields do. What the type buys is that a story or fixture
+   * cannot omit one, which is where the missing key would otherwise first appear; what it cannot
+   * do is make the CMS promise one. The Studio always writes one, so the gap is theoretical for
+   * hand-authored content and the strict type is the more useful lie.
+   */
   _key: string;
   time?: string;
   title?: string;
@@ -94,13 +103,26 @@ const scheduleEventFields: FieldDefinition[] = [
    * draw one — the chip on every row is a place ("Reception", "Tree Cathedral", "Firepits") and
    * dress code appears once, as a page-level statement in the closing band (node 1:430). Adding the
    * field "because the brief said so" would put an empty control on every event forever.
+   *
+   * Capped, and the number is measured rather than a round one picked for tidiness.
+   *
+   * The chip shares its grid row with the time and is sized from its own content, so a long value
+   * takes width from the time gutter before it wraps. At 320px the row has ~216px for it; the
+   * design's longest ("Tree Cathedral", 14) uses under half of that, and 40 characters is the point
+   * where the chip has taken the whole row and the time column has been squeezed to nothing.
+   *
+   * `warning()` rather than an error: 40 characters is a legibility threshold, not a data integrity
+   * one. `.location`'s `overflow-wrap: anywhere` means a longer value still wraps inside the row
+   * rather than escaping it, so the worst case is ugly, and blocking a publish over ugly is the
+   * wrong trade for a wedding site an editor updates the week of.
    */
   {
     description:
-      'Where it happens — shown as a bordered chip at the right of the row. Type it in normal sentence case; it is displayed in uppercase mono automatically.',
+      'Where it happens — shown as a bordered chip at the right of the row. Type it in normal sentence case; it is displayed in uppercase mono automatically. Keep it to a place name.',
     name: 'location',
     title: 'Location',
-    type: 'string'
+    type: 'string',
+    validation: (Rule) => Rule.max(40).warning('A place name this long squeezes the time out of the row on a phone.')
   }
 ];
 

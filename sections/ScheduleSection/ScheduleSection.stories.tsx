@@ -159,8 +159,25 @@ const DAYS: IScheduleSectionDay[] = [
  */
 const data = sectionFixture<IScheduleSection>('scheduleSection') ?? { days: DAYS };
 
-/** Walk from a heading to the boxes the layout assertions are about, without naming a hashed class. */
-const dayInnerOf = (heading: HTMLElement) => heading.closest('li')?.firstElementChild?.firstElementChild as HTMLElement;
+/**
+ * Walk from a heading to the boxes the layout assertions are about, without naming a hashed class.
+ *
+ * Asserted rather than cast. These helpers are deliberately coupled to the DOM shape, so the shape
+ * changing is the thing they exist to notice — and a bare `as HTMLElement` turns that into
+ * `getComputedStyle(null)` several lines later, which names the wrong function in the failure.
+ */
+const found = <T,>(node: T | null | undefined, what: string): T => {
+  if (!node) {
+    throw new Error(`ScheduleSection stories: expected ${what}`);
+  }
+  return node;
+};
+
+const dayInnerOf = (heading: HTMLElement) =>
+  found(
+    heading.closest('li')?.firstElementChild?.firstElementChild as HTMLElement | null | undefined,
+    'li > Container > dayInner'
+  );
 
 /** The four children of an event row, in source order: time, location, title, description. */
 const partsOf = (row: HTMLElement) => [...row.children] as HTMLElement[];
@@ -168,7 +185,29 @@ const partsOf = (row: HTMLElement) => [...row.children] as HTMLElement[];
 const textOf = (elements: HTMLElement[]) => elements.map((element) => element.textContent?.trim());
 
 const rowFor = (canvas: ReturnType<typeof within>, name: string) =>
-  canvas.getByRole('heading', { level: 3, name }).closest('li') as HTMLElement;
+  found(canvas.getByRole('heading', { level: 3, name }).closest('li'), `the row for “${name}”`) as HTMLElement;
+
+/**
+ * The four boxes sorted by where they are actually painted — top to bottom, left to right within a
+ * line. Two boxes are on the same line when they overlap vertically.
+ *
+ * Hoisted because two stories run it and assert **opposite** outcomes from it: `MobileReadingOrder`
+ * requires it to come back equal to the source order and `Desktop` requires it to differ. That only
+ * proves anything if both are provably the same comparator.
+ *
+ * `toSorted` and not `sort`, and not by choice: the caller's array is the source order being
+ * compared against, so it must not be mutated — and oxlint's `unicorn/prefer-array-sort` is an
+ * auto-fix rule, so `yarn fix` rewrites a defensive `[...parts].sort(…)` to this anyway. Same
+ * standoff between the linter and the ES2017 target that `tools/helpers/stripTitleTags.ts`
+ * documents at length; this runs in headless chromium, where `toSorted` has shipped since 2023.
+ */
+const paintedOrder = (parts: HTMLElement[]) =>
+  parts.toSorted((a, b) => {
+    const first = a.getBoundingClientRect();
+    const second = b.getBoundingClientRect();
+    const sameLine = first.top < second.bottom && second.top < first.bottom;
+    return sameLine ? first.left - second.left : first.top - second.top;
+  });
 
 /**
  * The distance between the lowest thing painted in a row and the row's own bottom edge — i.e. the
@@ -269,15 +308,14 @@ export const Desktop: Story = {
      * an accident; pinned here it is a decision, and `MobileReadingOrder`'s identical sort proves
      * the narrow branch — the one a screen reader's first paint gets — still agrees with the DOM.
      *
-     * Not a WCAG 1.3.2 failure. Both sequences are meaningful readings of a calendar entry, and
-     * nothing in a row is focusable, so 2.4.3 (Focus Order) is not engaged either.
+     * Not a WCAG 1.3.2 failure: both sequences are meaningful readings of a calendar entry. Nor a
+     * 2.4.3 one — but not for the reason the markup suggests. A row *can* contain a focusable
+     * element (`description` is `blockContentSimple`, which carries a link annotation); what keeps
+     * focus order and paint order in step is that the description is last in both, while the two
+     * children this sort proves are swapped — `.time` and `.location` — hold nothing focusable. See
+     * the note in `index.tsx`.
      */
-    const painted = partsOf(row).toSorted((a, b) => {
-      const first = a.getBoundingClientRect();
-      const second = b.getBoundingClientRect();
-      const sameLine = first.top < second.bottom && second.top < first.bottom;
-      return sameLine ? first.left - second.left : first.top - second.top;
-    });
+    const painted = paintedOrder(partsOf(row));
 
     await expect(textOf(painted)).toEqual([
       '[from 2pm]',
@@ -366,8 +404,9 @@ export const Mobile: Story = {
  * unconditional default, and a container query cannot resolve before its container is laid out, so
  * the first paint must already be right.
  *
- * Nothing in a row is focusable, so WCAG 2.4.3 has nothing to disagree with; this is 1.3.2,
- * Meaningful Sequence.
+ * This is 1.3.2, Meaningful Sequence. It is not 2.4.3 — and note that "nothing in a row is
+ * focusable" would be the wrong reason to say so, since an editor can put a link in `description`
+ * via its `blockContentSimple` annotation. See the note in `index.tsx`.
  */
 export const MobileReadingOrder: Story = {
   args: { days: [DAYS[1]] },
@@ -385,24 +424,8 @@ export const MobileReadingOrder: Story = {
       'An outdoor ceremony space among the trees beside the river.'
     ]);
 
-    /*
-     * Painted order. Two boxes are on the same line when they overlap vertically, in which case the
-     * leftmost comes first; otherwise the higher one does.
-     *
-     * `toSorted` and not `sort`, and not by choice: `parts` is the source order being compared
-     * against, so it must not be mutated — and oxlint's `unicorn/prefer-array-sort` is an auto-fix
-     * rule, so `yarn fix` rewrites a defensive `[...parts].sort(…)` to this anyway. Same standoff
-     * between the linter and the ES2017 target that `tools/helpers/stripTitleTags.ts` documents at
-     * length; this runs in headless Chromium, where `toSorted` has shipped since 2023.
-     */
-    const painted = parts.toSorted((a, b) => {
-      const first = a.getBoundingClientRect();
-      const second = b.getBoundingClientRect();
-      const sameLine = first.top < second.bottom && second.top < first.bottom;
-      return sameLine ? first.left - second.left : first.top - second.top;
-    });
-
-    await expect(textOf(painted)).toEqual(textOf(parts));
+    // The same comparator `Desktop` proves reorders — here it must come back unchanged.
+    await expect(textOf(paintedOrder(parts))).toEqual(textOf(parts));
 
     /*
      * The brackets are a type treatment and are kept out of the accessibility tree — real
@@ -464,8 +487,18 @@ export const DayWithoutEvents: Story = {
     const [summary] = [...dayInner.children] as HTMLElement[];
     await expect(summary.getBoundingClientRect().width).toBeCloseTo(dayInner.getBoundingClientRect().width, 0);
 
+    /*
+     * The one wide-branch declaration an event-less day still gets: `.intro`'s 320px measure cap is
+     * keyed to the container query alone, not nested inside the `dayInner_split` modifier. Pinned
+     * here because it is the single place the modifier does *not* gate, so it reads as a leak
+     * unless a test says it is a choice. See the note on `.intro` in the module.
+     */
+    const intro = found(summary.lastElementChild, 'the intro block') as HTMLElement;
+    await expect(getComputedStyle(intro).maxWidth).toBe('320px');
+    await expect(intro.getBoundingClientRect().width).toBeLessThan(summary.getBoundingClientRect().width);
+
     // The band still draws its rule — an event-less day is a day, not a gap.
-    const band = emptyDay.closest('li') as HTMLElement;
+    const band = found(emptyDay.closest('li'), 'the day band') as HTMLElement;
     await expect(getComputedStyle(band).borderTopWidth).toBe('1px');
   }
 };
@@ -512,6 +545,58 @@ export const EventWithoutDescription: Story = {
     // No phantom row: the space below the lowest painted child is the row's own bottom padding in
     // both cases. A third grid track for the missing description would add a `row-gap` here.
     await expect(tailOf(bare)).toBeCloseTo(tailOf(described), 0);
+  }
+};
+
+/**
+ * Half-filled event rows — a time with no title, and a title with no time.
+ *
+ * Both are unreachable in published content (`time` and `title` are each `required()`), so this is
+ * about the draft an editor is halfway through in the Presentation preview, and about legacy or
+ * imported rows. The row-level filter keeps them on purpose — a row vanishing while you type into it
+ * is worse than a row that is visibly incomplete — which puts the burden on the two renders to stay
+ * well-formed on their own.
+ *
+ * Both used to fail that. `Text` renders `createElement(as, …, undefined)` for an absent `text`, so
+ * a time-only row shipped an empty `<h3>`: a nameless stop for anyone navigating by heading, and
+ * what axe reports as `empty-heading`. And the brackets around the time are unconditional
+ * decoration, so a title-only row painted a bare `[]` — punctuation with nothing in it, and, since
+ * both bracket spans are `aria-hidden`, a paragraph with no accessible text at all.
+ *
+ * The assertions are therefore about what is *absent*: the heading count must not grow with a
+ * time-only row, and no row may render an empty-looking time.
+ */
+export const HalfFilledEvents: Story = {
+  args: {
+    days: [
+      {
+        ...DAYS[0],
+        content: undefined,
+        events: [
+          scheduleEvent({ _key: 'time-only', time: '2pm', location: 'Reception' }),
+          scheduleEvent({ _key: 'title-only', title: 'Arrival dinner', location: 'Lulu’s' }),
+          scheduleEvent({ _key: 'blank', location: 'Nowhere' })
+        ]
+      }
+    ]
+  },
+  decorators: [atWidth('80rem')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const rows = [...found(canvasElement.querySelector('ol ol'), 'the events list').children] as HTMLElement[];
+
+    // The fully blank row is filtered out; the two half-filled ones are kept.
+    await expect(rows).toHaveLength(2);
+
+    // One heading, from the row that has a title. The time-only row contributes no empty `<h3>`.
+    const headings = canvas.getAllByRole('heading', { level: 3 });
+    await expect(headings).toHaveLength(1);
+    await expect(headings[0].textContent).toBe('Arrival dinner');
+    await expect(canvasElement.querySelectorAll('h3')).toHaveLength(1);
+
+    // And no row paints a bracket pair with nothing between it.
+    await expect(textOf(partsOf(rows[0]))).toEqual(['[2pm]', 'Reception']);
+    await expect(textOf(partsOf(rows[1]))).toEqual(['Lulu’s', 'Arrival dinner']);
   }
 };
 
