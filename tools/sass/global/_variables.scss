@@ -219,33 +219,47 @@
   --section-spacing-xl: #{fluid(48px, 96px)};
 
   // ------------------------------------
-  // Button Sizing — fluid font size and gutters, fixed vertical padding
+  // Button Sizing — fluid throughout, with a fixed vertical padding at `md` and `lg`
   // ------------------------------------
   //
-  // The asymmetry is deliberate rather than an oversight.
+  // Two things to know before changing a number here.
   //
-  // A control's height is `2 × (padding-y + border) + line box`, and the line box is already fluid
-  // because the font size is. At `md` that lands the button on 44.8px at a 375px viewport and 46px
-  // at 1440px — so the height does track the viewport, and it never crosses below the 44px target
-  // WCAG 2.5.5 asks for. A fluid `padding-y` would shrink the target on exactly the small
-  // touchscreens that need it largest, which is the objection that kept this whole block fixed
-  // before; making the font carry the range answers it without freezing the control.
+  // 1. Every anchor is the design's inset *minus the border*. A control's border box is always
+  //    drawn (see `components/Button/styles.module.scss`), so a 22px gutter in Figma is 21px of
+  //    padding here. The consequence is worth stating: the rendered box matches the design's
+  //    *filled* control exactly, and sits 1px tighter than its *outlined* one — Figma hangs a
+  //    stroke outside the padding box, we put it inside, which is what keeps a row of mixed filled
+  //    and outlined controls on the same baseline. The design does not: its `md` outline is 48px
+  //    against a 46px fill, while its `sm` outline and fill are both 38px.
   //
-  // Horizontal padding has no such floor and a range the design actually draws — the nav RSVP pill
-  // is 16px of gutter on the 1440px frame and 12px on the 375px one — so it interpolates.
+  // 2. `padding-y` is fixed at `md` and `lg`, fluid at `sm`, and that split is the point.
+  //    A control's height is `2 × (padding-y + border) + line box`, and the line box is already
+  //    fluid because the font size is. Freezing `padding-y` at `md` lands the button on 44.8px at
+  //    375px and 46px at 1440px — it still tracks the viewport, and it never crosses below the
+  //    44px target WCAG 2.5.5 asks for; `lg` clears it by a wider margin still. That argument buys
+  //    nothing at `sm`, which is 33–38px tall and cannot reach 44px whatever the padding does, so
+  //    freezing it there only made the control 4px fatter than drawn on a phone. `sm` interpolates
+  //    like everything else and clears the 24px WCAG 2.5.8 AA target at both ends.
   //
-  // Every anchor below is read off the Figma frames: the `md` pill is 15px type on 22×14 at 1440,
-  // the `sm` UI control 12px on 16×10, and `lg` is the full-width "PRESS START" action at 20×18.
+  // Anchors, read off the Figma frames — `Design items` (node 1:977) and the page frames it is
+  // drawn from. `md` is the hero pill: 15px type on 22×14 at 1440 (node 1:978). `sm` is the nav
+  // RSVP pill: 12px on 16×10 at 1440 (node 1:982) and 11px on 12×9 at 392 (node 1:107). `lg` has
+  // no counterpart in the design at all — the full-width "PRESS START" submit (node 1:869) is a
+  // bespoke 96px bar with 44px display type, not this component — so `lg` is an extrapolated step
+  // above `md` for full-width actions rather than a measurement.
 
   // Instrument Sans is loaded at 400 and 500 only (see `config/fonts.ts`), and the design sets every
   // button label in Medium. Asking for 600 here bought a synthesised weight, not a bolder one.
   --button-font-weight: var(--font-weight-medium);
 
-  // The mono label — JetBrains Mono Bold, uppercase, widely tracked. Used by the UI-chrome controls
-  // ("ACCENT / UI", "GHOST / UI", the nav RSVP pill, the switch-player button).
+  // The mono label, in its loud register — JetBrains Mono Bold, uppercase, widely tracked. Used by
+  // the UI-chrome controls ("ACCENT / UI", "GHOST / UI", the nav RSVP pill, the switch-player
+  // button). The design has a second, quieter mono register — Medium and untracked, which is what
+  // it sets "← BACK" in; `.variant_bare` selects it by overriding the two locals these feed.
   --button-mono-font-weight: var(--font-weight-bold);
   // 0.96px on 12px in the design. Held in `em` so it stays proportional as the fluid size moves.
   --button-mono-letter-spacing: 0.08em;
+  --button-mono-quiet-font-weight: var(--font-weight-medium);
 
   --button-border-width: 1px;
   --button-gap: var(--spacing-xs);
@@ -255,10 +269,11 @@
   --button-focus-ring-width: 3px;
   --button-focus-ring-offset: 3px;
 
-  // Small — the mono UI controls: the nav RSVP pill, the switch-player button, compact chips.
+  // Small — the mono UI controls: the nav RSVP pill, the switch-player button. Not the room chips,
+  // which the design sets in 15px body type on a 44px box — that is `md`, not this.
   --button-sm-font-size: #{fluid(11px, 12px)};
-  --button-sm-padding-y: 11px;
-  --button-sm-padding-x: #{fluid(12px, 16px)};
+  --button-sm-padding-y: #{fluid(9px, 11px)};
+  --button-sm-padding-x: #{fluid(11px, 15px)};
   --button-sm-icon-size: #{fluid(14px, 16px)};
 
   // Medium — the default. The hero's "The Weekend" / "RSVP by 01.12.26" pills, every form control.
@@ -267,10 +282,11 @@
   --button-md-padding-x: #{fluid(18px, 21px)};
   --button-md-icon-size: #{fluid(16px, 18px)};
 
-  // Large — the full-width primary action, e.g. "PRESS START" on the RSVP form.
+  // Large — the full-width primary action. Extrapolated, not measured; see the note above.
   --button-lg-font-size: #{fluid(15px, 17px)};
   --button-lg-padding-y: 17px;
-  --button-lg-padding-x: #{fluid(18px, 24px)};
+  // Narrow anchor 20px rather than `md`'s 18px, so the size ladder still separates at 375px.
+  --button-lg-padding-x: #{fluid(20px, 24px)};
   --button-lg-icon-size: #{fluid(18px, 20px)};
 }
 

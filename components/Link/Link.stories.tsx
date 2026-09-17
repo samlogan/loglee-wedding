@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { expect } from 'storybook/test';
 
 import Link from '.';
 
@@ -68,12 +69,20 @@ export const Bare: Story = {
   args: { variant: 'bare', size: 'sm', mono: true, arrow: 'left', text: 'Back' }
 };
 
+/**
+ * "Chip · selected" — a filled ink chip, the selected state of a chip row.
+ *
+ * `md`, not `sm`: the design sets a chip in 15px body type on a 44px box (the RSVP form's room
+ * preference row, node 1:833), which is the `md` step. `sm` is the 12px mono UI register and would
+ * render this a fifth smaller.
+ */
 export const ChipSelected: Story = {
-  args: { theme: 'secondary', variant: 'pill', size: 'sm', text: 'King Room' }
+  args: { theme: 'secondary', variant: 'pill', size: 'md', text: 'King Room' }
 };
 
+/** "Chip" — the same control unselected. */
 export const Chip: Story = {
-  args: { theme: 'secondary', variant: 'pill', size: 'sm', outline: true, text: 'Twin Double' }
+  args: { theme: 'secondary', variant: 'pill', size: 'md', outline: true, text: 'Twin Double' }
 };
 
 /*=============================================>>>>>
@@ -115,7 +124,21 @@ export const VariantContent: Story = {
         like any other run of text.
       </p>
     )
-  ]
+  ],
+  /*
+   * Asserted on the behaviour rather than on `display`, because the behaviour is the point and the
+   * property is only how it is currently bought: an element that wraps mid-paragraph occupies more
+   * than one client rect. Reverting `.variant_content` to the `inline-flex` base fails here, which
+   * nothing caught before — the story rendered identically either way, just one line wider.
+   *
+   * Note this guards `Link` specifically. `Button` cannot pass it: CSS blockifies `<button>`, so
+   * `display: inline` computes to `inline-block` there and an in-prose `<Button variant="content">`
+   * still refuses to wrap. See the note in `Button/styles.module.scss`.
+   */
+  play: async ({ canvas }) => {
+    const link = canvas.getByRole('link', { name: 'a link inside a paragraph' });
+    await expect(link.getClientRects().length).toBeGreaterThan(1);
+  }
 };
 
 /*=============================================>>>>>

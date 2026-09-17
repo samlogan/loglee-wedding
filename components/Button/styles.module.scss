@@ -39,6 +39,16 @@
     --button-padding-y: 0px;
     --button-padding-x: 0px;
 
+    /*
+     * The mono label's weight and tracking, read through locals for the same reason as the padding
+     * above. The design has two mono registers, not one: Bold and tracked 0.08em for the UI-chrome
+     * controls, Medium and untracked for "← BACK". `.variant_bare` picks the quiet one by
+     * overriding these, which it could not do by out-specifying `.mono` — both are single class
+     * selectors.
+     */
+    --button-mono-weight: var(--button-mono-font-weight);
+    --button-mono-tracking: var(--button-mono-letter-spacing);
+
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -272,6 +282,10 @@
     &_bare {
       --button-padding-y: 0px;
       --button-padding-x: 0px;
+      // The quiet mono register: the design sets "← BACK" in Medium with no tracking, not in the
+      // Bold 0.08em the boxed UI controls use.
+      --button-mono-weight: var(--button-mono-quiet-font-weight);
+      --button-mono-tracking: normal;
 
       background-color: transparent;
       border-color: transparent;
@@ -297,6 +311,12 @@
      * link a single unbreakable box, so a long link in a paragraph refuses to wrap and pushes the
      * measure out. It is underlined rather than colour-only, so it does not rely on hue alone to
      * announce itself (WCAG 1.4.1).
+     *
+     * It only takes on `Link`, though, and that is a browser rule rather than a bug here: CSS
+     * blockifies `<button>`, so this computes to `inline-block` on `Button` and an in-prose
+     * `<Button variant="content">` still refuses to wrap. There is no CSS that changes that. This
+     * variant is what `TextBlock` passes for a rich-text link mark, which is always a `Link`; an
+     * in-prose *action* wants `Link` with an `onClick` rather than `Button`.
      */
     &_content {
       --button-padding-y: 0px;
@@ -327,8 +347,8 @@
   .mono {
     @include mono-font();
 
-    font-weight: var(--button-mono-font-weight);
-    letter-spacing: var(--button-mono-letter-spacing);
+    font-weight: var(--button-mono-weight);
+    letter-spacing: var(--button-mono-tracking);
     text-transform: uppercase;
   }
 

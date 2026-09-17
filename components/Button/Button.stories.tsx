@@ -73,14 +73,20 @@ export const Bare: Story = {
   args: { variant: 'bare', size: 'sm', mono: true, arrow: 'left', text: 'Back' }
 };
 
-/** "Chip · selected" — a filled ink chip, the selected state of a chip row. */
+/**
+ * "Chip · selected" — a filled ink chip, the selected state of a chip row.
+ *
+ * `md`, not `sm`: the design sets a chip in 15px body type on a 44px box (the RSVP form's room
+ * preference row, node 1:833), which is the `md` step. `sm` is the 12px mono UI register and would
+ * render this a fifth smaller.
+ */
 export const ChipSelected: Story = {
-  args: { theme: 'secondary', variant: 'pill', size: 'sm', text: 'King Room' }
+  args: { theme: 'secondary', variant: 'pill', size: 'md', text: 'King Room' }
 };
 
 /** "Chip" — the same control unselected. */
 export const Chip: Story = {
-  args: { theme: 'secondary', variant: 'pill', size: 'sm', outline: true, text: 'Twin Double' }
+  args: { theme: 'secondary', variant: 'pill', size: 'md', outline: true, text: 'Twin Double' }
 };
 
 /*=============================================>>>>>
