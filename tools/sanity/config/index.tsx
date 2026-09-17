@@ -25,6 +25,11 @@ const singletonTypes = new Set([
   'weddingSettings'
 ]);
 
+// Written only by the RSVP server action and read-only in the Studio, so creating one by hand would
+// produce an empty document nobody can then fill in. Document-level readOnly does not hide the
+// "Create new" entry on its own.
+const serverWrittenTypes = new Set(['rsvp']);
+
 const SANITY_STUDIO_PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
 const SANITY_STUDIO_PROJECT_DATASET = process.env.NEXT_PUBLIC_SANITY_DATASET;
 const SANITY_STUDIO_PROJECT_NAME = process.env.NEXT_PUBLIC_SANITY_PROJECT_NAME;
@@ -34,7 +39,10 @@ export default defineConfig({
   dataset: SANITY_STUDIO_PROJECT_DATASET || '',
   document: {
     actions: [PreviewAction],
-    newDocumentOptions: (prev) => prev.filter((template) => !singletonTypes.has(template.templateId))
+    newDocumentOptions: (prev) =>
+      prev.filter(
+        (template) => !(singletonTypes.has(template.templateId) || serverWrittenTypes.has(template.templateId))
+      )
   },
   icon: () => (
     // eslint-disable-next-line @next/next/no-img-element
