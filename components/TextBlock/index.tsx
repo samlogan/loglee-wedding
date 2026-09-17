@@ -275,6 +275,13 @@ const TextBlock = (props: TextBlockProps) => {
             externalLink={externalLink}
             phone={phone}
             email={email}
+            /*
+             * `content` is the variant for a link inside prose, and this mark had no variant at all
+             * — so it inherited the button base's `inline-flex` and became an unbreakable box that
+             * refused to wrap mid-paragraph. It also gets the underline that stops the link relying
+             * on colour alone.
+             */
+            variant="content"
             className={styles.link}
           >
             {children}

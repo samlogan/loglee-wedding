@@ -40,7 +40,7 @@ const CarouselNavigation: FC<CarouselNavigationProps> = (props) => {
         className={styles.button}
         disabled={!carousel.scrollPrevAllowed}
         icon="arrowLeft"
-        aria-label="Previous Slide"
+        ariaLabel="Previous Slide"
         tabIndex={-1}
         {...button}
       />
@@ -49,7 +49,7 @@ const CarouselNavigation: FC<CarouselNavigationProps> = (props) => {
         className={styles.button}
         disabled={!carousel.scrollNextAllowed}
         icon="arrowRight"
-        aria-label="Next Slide"
+        ariaLabel="Next Slide"
         tabIndex={-1}
         {...button}
       />
