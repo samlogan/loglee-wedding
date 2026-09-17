@@ -1,0 +1,338 @@
+/*
+ * The multi-select card group — the RSVP comp's "02 · ATTENDING" question (Figma node 1:798
+ * desktop, 1:892 mobile).
+ *
+ * Colour is not invented here. The comp draws all three cards in the *selected* state, so the
+ * unselected treatment is taken from the design system's own selection pair on the `Design items`
+ * board (node 1:977): `Chip · selected` is ink fill + ink border + off-white label, and `Chip` is
+ * the same box with no fill and the ink moved to the border and the text. Those are exactly the
+ * filled and `outline` forms of `theme="secondary"` in `components/Button`, so this reads the same
+ * `--button-secondary-*` tokens rather than adding a parallel set. Confirmed against the comp: the
+ * card is `#131412` on `#131412` with `#f3f1ea` text, which is `--button-secondary-bg` /
+ * `--button-secondary-fg` in the light theme.
+ *
+ * Selected and unselected therefore differ by three things, only one of which is colour:
+ *
+ *   fill      transparent → ink            (colour)
+ *   marker    hollow ring → filled disc    (shape)
+ *   word      OUT → IN                     (text)
+ *
+ * so the state survives greyscale, a colour-vision deficiency and a forced-colours stylesheet.
+ */
+
+@layer defaults {
+  /*
+   * `display: block`, not `flex`, and that is not an oversight.
+   *
+   * A `<legend>` is laid out by the fieldset itself rather than as an ordinary child, and browsers
+   * disagree about what happens to it when the fieldset is a flex or grid container. Keeping the
+   * fieldset a block box leaves the legend on its documented path and puts the layout on the
+   * `.options` wrapper below, where it is ordinary.
+   *
+   * `min-width: 0` overrides the UA's `min-inline-size: min-content` on `fieldset`, which otherwise
+   * refuses to shrink below its widest card and overflows a narrow column.
+   */
+  .fieldset {
+    display: block;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  /*
+   * The design's section label — JetBrains Mono Bold, uppercase, tracked, in the accent ink
+   * (`--fg-accent` is pine/600 on the light theme, which is the `#1e4632` the comp uses, and
+   * signal/300 on the dark one).
+   *
+   * `--body-xs` is `fluid(11px, 12px)`, which is the comp's mobile and desktop sizes exactly.
+   * Tracking is held in `em` (1.68px on 12px, 1.54px on 11px — both 0.14em) so it stays proportional
+   * as the fluid size moves.
+   *
+   * Note this is *not* what `FieldCommon/FieldLabel` draws, and the comp sets every field label in
+   * this same treatment ("01 · PLAYER NAME", "03 · DIETARY REQUIREMENTS"). Bringing `FieldLabel`
+   * into line is a change to ten other fields and belongs in its own ticket.
+   */
+  .legend {
+    @include mono-font();
+
+    display: block;
+    width: 100%;
+    margin-bottom: var(--spacing-sm);
+    padding: 0;
+    color: var(--fg-accent);
+    font-size: var(--body-xs);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.3;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .required {
+    color: var(--system-error-500);
+  }
+
+  /*
+   * A grid rather than the wrapping flex row the comp is drawn with, and this is the deliberate
+   * departure from the mobile frame.
+   *
+   * Figma hugs each card to its own content there, which gives the three options three visibly
+   * different widths (169 / 166 / 215) stacked down the page — an artefact of auto-layout
+   * "hug contents", not a decision: the options are peers, and the width of one is just how long its
+   * title happens to be. `auto-fit` keeps them equal at every width, three across where 224px each
+   * fits (which is exactly the desktop frame's 696px column) and one full-width column below that.
+   *
+   * `min(224px, 100%)` rather than a bare `224px`: a grid track with a fixed minimum cannot shrink,
+   * so `minmax(224px, 1fr)` overflows any container narrower than 224px instead of wrapping.
+   */
+  .options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(224px, 100%), 1fr));
+    gap: var(--spacing-sm);
+  }
+
+  .option {
+    position: relative;
+    display: flex;
+    cursor: pointer;
+  }
+
+  /*
+   * Present, focusable and announced — just not painted.
+   *
+   * Stretched over the whole card so a press anywhere on it is a press on the checkbox, which is
+   * what makes the card's entire area the hit target without a single event handler. `opacity: 0`
+   * rather than `display: none` (both siblings) or `visibility: hidden`, either of which would take
+   * it out of the tab order and out of the accessibility tree.
+   *
+   * `box-sizing` is stated because the reset's list covers `div`, `span`, `label` and friends but
+   * not `input`, so this would otherwise be a content box and `inset: 0` plus a border would not
+   * agree on where the edges are.
+   */
+  .input {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    appearance: none;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  /*
+   * The unselected card: `Chip` from the design system board — no fill, ink border, ink label.
+   *
+   * Padding is the comp's inset minus the border (18px desktop, 16px mobile), matching the
+   * convention the button tokens are built on: the border box is always drawn, so a 18px gutter in
+   * Figma is 17px of padding here.
+   */
+  .card {
+    display: flex;
+    flex-direction: column;
+    /*
+     * 14px — the comp's gap, and it sits exactly between `--spacing-sm` (12) and `--spacing-md` (16)
+     * with no token of its own. Fixed rather than fluid on purpose: it is a component-internal gap,
+     * which is the same cut the spacing scale makes at 32px.
+     */
+    gap: 0.875rem;
+    width: 100%;
+    padding: #{fluid(15px, 17px)};
+    border: var(--button-border-width) solid var(--button-secondary-bg);
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--button-secondary-bg);
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+
+    /*
+     * The comp turns the card on its side on a phone: the eyebrow and title stack on the left and
+     * the indicator moves to the right edge. A direction change is the one thing `fluid()` cannot
+     * interpolate, so it is a breakpoint — the only one in this file.
+     */
+    @include media-down(tablet) {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-md);
+    }
+  }
+
+  /*
+   * Selected: `Chip · selected`. Fill and label swap; the border does not move, so the card does not
+   * shift by a pixel and a row of mixed states lines up.
+   */
+  .input:checked + .card {
+    background-color: var(--button-secondary-bg);
+    color: var(--button-secondary-fg);
+  }
+
+  /*
+   * Hover on an *unselected* card deliberately does not preview the selected fill.
+   *
+   * `components/Button`'s `.outline:hover` completes the fill, which is right for an action — press
+   * it and something happens. It is wrong for a selection control, where "filled" is the state
+   * itself: a hovered-but-unselected card that looks identical to a selected one cannot be read.
+   * `--bg-accent` is the quiet surface tint, clearly not the ink fill.
+   */
+  .input:not(:disabled):hover + .card {
+    background-color: var(--bg-accent);
+  }
+
+  .input:checked:not(:disabled):hover + .card {
+    background-color: var(--button-secondary-bg-hover);
+    border-color: var(--button-secondary-bg-hover);
+    color: var(--button-secondary-fg-hover);
+  }
+
+  /*
+   * The same ring the rest of the site draws — `tools/sass/global/_reset.scss` for everything
+   * generic, `components/Button` for the controls — rather than a third treatment. Width, offset and
+   * ink all come from the same three tokens.
+   *
+   * On the card rather than the input, because the input is transparent and a ring around an
+   * invisible box is an invisible ring. The offset gap shows the page behind the card, so only
+   * ring-against-page contrast has to hold, and `--fg-default` is by construction the theme's
+   * AA-safe ink on its own surface.
+   */
+  .input:focus-visible + .card {
+    outline: var(--button-focus-ring-width) solid var(--fg-default);
+    outline-offset: var(--button-focus-ring-offset);
+  }
+
+  .input:disabled + .card {
+    border-color: var(--button-secondary-bg-disabled);
+    color: var(--button-secondary-fg-disabled);
+  }
+
+  .input:disabled:checked + .card {
+    background-color: var(--button-secondary-bg-disabled);
+  }
+
+  // Set from the render prop's `hasError`, not from `Field`'s own container class — `Field`'s module
+  // declares `.container` and nothing else, so the `styles.error` it composes is `undefined` and
+  // never reaches the DOM.
+  .card.error {
+    border-color: var(--input-error-border);
+  }
+
+  /*
+   * The eyebrow and title travel together: they are one block on a phone, where the indicator sits
+   * beside them, and three evenly spaced rows on desktop. Matching the card's own gap at desktop is
+   * what makes the second true without a second layout.
+   */
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    min-width: 0;
+
+    @include media-down(tablet) {
+      gap: var(--spacing-xxs);
+    }
+  }
+
+  /*
+   * Below the floor of the body scale (`--body-xs` is 11→12px) and mono rather than body type, so it
+   * is a `fluid()` pair of its own rather than a token. Tracking in `em` again: 1.32px on 11px and
+   * 1.2px on 10px are both 0.12em.
+   *
+   * `opacity` is the comp's own treatment. It costs contrast, which was checked rather than assumed:
+   * at 0.8 the eyebrow resolves to roughly 9:1 on the unselected card and 11:1 on the selected one,
+   * both clear of the 4.5:1 that 1.4.3 asks of text this size.
+   */
+  .eyebrow {
+    @include mono-font();
+
+    font-size: #{fluid(10px, 11px)};
+    font-weight: var(--font-weight-medium);
+    line-height: 1.3;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+
+  /*
+   * `--body-xl` is `fluid(18px, 20px)` against the comp's 17→20px — a pixel at the narrow end, in
+   * exchange for staying on the type scale.
+   *
+   * Weight 500, not the 600 Figma reports: `config/fonts.ts` loads Instrument Sans at 400 and 500
+   * only, so asking for 600 buys a synthesised face rather than a bolder one. The same call is
+   * already made for `--button-font-weight`.
+   *
+   * `line-height` and `font-size` are set here rather than through `Text`'s `size` prop, because
+   * `.variant_body.size_xl` also pins `line-height` to `--body-line-height` (1.5) at a specificity
+   * this rule cannot beat, and the comp sets these at `normal` (~1.2).
+   */
+  .title {
+    font-size: var(--body-xl);
+    line-height: 1.2;
+  }
+
+  .indicator {
+    @include mono-font();
+
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.45em;
+    font-size: #{fluid(10px, 11px)};
+    font-weight: var(--font-weight-bold);
+    line-height: 1.3;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /*
+   * Drawn rather than typed. The comp sets the marker as a literal "●" inside the mono text run, and
+   * its unselected counterpart would be "○" — a glyph JetBrains Mono does not carry, so it would
+   * fall back to whatever the system offers at a different size and baseline. A bordered box gives
+   * the same two shapes with the ring weight under control.
+   *
+   * `rem`, so it tracks the reader's own font size rather than freezing at 8 CSS px.
+   */
+  .marker {
+    flex-shrink: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 2px solid currentColor;
+    border-radius: var(--radius-full);
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+  }
+
+  .input:checked + .card .marker {
+    background-color: currentColor;
+  }
+
+  // Both words are always in the DOM and CSS picks which is painted, which is what keeps the swap
+  // working without the component knowing whether it is checked. See the `aria-hidden` note in
+  // `index.tsx` for why that costs nothing at the accessibility layer.
+  .stateSelected {
+    display: none;
+  }
+
+  .input:checked + .card .stateUnselected {
+    display: none;
+  }
+
+  .input:checked + .card .stateSelected {
+    display: inline;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card,
+    .marker {
+      transition: none;
+    }
+  }
+}

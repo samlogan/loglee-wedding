@@ -1,3 +1,4 @@
+import FieldCheckbox from './FieldCheckbox';
 import FieldEmail from './FieldEmail';
 import FieldFile from './FieldFile';
 import FieldNumber from './FieldNumber';
@@ -10,6 +11,7 @@ import FieldToggle from './FieldToggle';
 import FieldUrl from './FieldUrl';
 
 const Field = {
+  Checkbox: FieldCheckbox,
   Email: FieldEmail,
   File: FieldFile,
   Number: FieldNumber,
