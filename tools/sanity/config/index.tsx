@@ -14,6 +14,17 @@ import schemas from '../schema';
 import structure from '../structure';
 import theme from './theme';
 
+// Singletons are pinned in the desk structure against a fixed document ID, so they must not be
+// creatable a second time from the global "Create new" menu.
+const singletonTypes = new Set([
+  'blogLandingPage',
+  'footerDocument',
+  'headerDocument',
+  'settings',
+  'socialMediaDocument',
+  'weddingSettings'
+]);
+
 const SANITY_STUDIO_PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID;
 const SANITY_STUDIO_PROJECT_DATASET = process.env.NEXT_PUBLIC_SANITY_DATASET;
 const SANITY_STUDIO_PROJECT_NAME = process.env.NEXT_PUBLIC_SANITY_PROJECT_NAME;
@@ -22,7 +33,8 @@ export default defineConfig({
   basePath: '/studio',
   dataset: SANITY_STUDIO_PROJECT_DATASET || '',
   document: {
-    actions: [PreviewAction]
+    actions: [PreviewAction],
+    newDocumentOptions: (prev) => prev.filter((template) => !singletonTypes.has(template.templateId))
   },
   icon: () => (
     // eslint-disable-next-line @next/next/no-img-element

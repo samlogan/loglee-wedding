@@ -12,6 +12,7 @@ import page from './documents/page';
 import route from './documents/route';
 import settings from './documents/settings';
 import { socialMediaDocument, socialMediaItem } from './documents/socialMediaDocument';
+import weddingSettings from './documents/weddingSettings';
 import buttonElement from './elements/button';
 // Common
 import icon from './elements/icon';
@@ -49,6 +50,7 @@ const schema: SchemaTypeDefinition[] = [
   route,
   settings,
   socialMediaDocument,
+  weddingSettings,
 
   // Objects
   blockContentSimple,
