@@ -39,6 +39,7 @@ import seo from './objects/seo';
 import { faqSection } from './sections/faqSection';
 import { headerDisplaySection } from './sections/headerDisplaySection';
 import { scheduleSection } from './sections/scheduleSection';
+import { twoColumnListSection } from './sections/twoColumnListSection';
 
 const schema: SchemaTypeDefinition[] = [
   // Documents
@@ -86,7 +87,8 @@ const schema: SchemaTypeDefinition[] = [
   // Sections
   faqSection,
   headerDisplaySection,
-  scheduleSection
+  scheduleSection,
+  twoColumnListSection
 ];
 
 export default schema;

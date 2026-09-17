@@ -10,6 +10,7 @@ import Image from '@/components/Image';
 import Link from '@/components/Link';
 import Text from '@/components/Text';
 import Video from '@/components/Video';
+import { AMOUNT_MARK } from '@/helpers/amountToken';
 import classNames from '@/helpers/classNames';
 import useElementHeight from '@/tools/hooks/useElementHeight';
 import type { ILinkElement } from '@/tools/sanity/schema/elements/link';
@@ -313,6 +314,30 @@ const TextBlock = (props: TextBlockProps) => {
           </Link>
         );
       },
+      /*
+       * The highlighted inline token — a run of prose lifted out of the sentence it sits in without
+       * leaving it.
+       *
+       * Produced by `tools/helpers/amountToken`, which splits the Portable Text child holding a
+       * `{amount}` placeholder and hangs this decorator on the substituted figure. Today
+       * `sections/TwoColumnListSection` is its only route onto a page.
+       *
+       * ## Why the renderer lives here and not in the section
+       *
+       * A mark renderer is a React *component*, and `TextBlock` is a client component that server
+       * sections render. A function prop does not cross that boundary — passing
+       * `marks={{ amountToken: … }}` from a section would be a serialisation error, not a styling
+       * choice — so the only place this can be registered is inside the component that owns the
+       * `PortableText` call. The alternative, leaving the mark unregistered, renders
+       * `<span class="unknown__pt__mark__amountToken">` from the library's fallback and logs a
+       * warning: the figure appears as plain text and nothing looks broken.
+       *
+       * The key is computed from the shared constant rather than written out, so a rename moves
+       * both ends at once. The treatment itself is written entirely in `currentColor` and theme
+       * tokens (see `styles.module.scss`), so it reads correctly on a light section and on a dark
+       * one without either end knowing which it is on.
+       */
+      [AMOUNT_MARK]: ({ children }: ComponentProps) => <span className={styles.amountToken}>{children}</span>,
       markerFont: ({ children }: ComponentProps) => <span className={styles.markerFont}>{children}</span>,
       strong: ({ children }: ComponentProps) => <strong>{children}</strong>
     },
