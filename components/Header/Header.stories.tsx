@@ -61,11 +61,23 @@ const Column = ({ children, width }: { children: ReactNode; width: string }) => 
   <div style={{ width, minHeight: '32rem' }}>{children}</div>
 );
 
+/** The phone page frame (node 1:102), whose nav is node 1:103. */
+const MOBILE_DESIGN = {
+  type: 'figma',
+  url: 'https://www.figma.com/design/KxvsJuCNaG4n2QVp3iD4jd/Wedding?node-id=1-102'
+};
+
 const meta = {
   title: 'Navigation/Header',
   component: Header,
   tags: ['autodocs'],
   parameters: {
+    /*
+     * The desktop page frame, which is what the unqualified stories are compared against. The two
+     * phone-width stories override this with the mobile frame — bound per story rather than once
+     * here, so `/review-design` measures each against the frame it was actually built from instead
+     * of holding a 375px bar up against a 1280px drawing.
+     */
     design: {
       type: 'figma',
       url: 'https://www.figma.com/design/KxvsJuCNaG4n2QVp3iD4jd/Wedding?node-id=1-44'
@@ -176,6 +188,7 @@ export const MobileClosed: Story = {
       </Column>
     )
   ],
+  parameters: { design: MOBILE_DESIGN },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const toggle = await toggleOf(canvasElement);
@@ -212,7 +225,7 @@ export const MobileOpen: Story = {
       </Column>
     )
   ],
-  parameters: { nextjs: { appDirectory: true, navigation: { pathname: '/stay/' } } },
+  parameters: { design: MOBILE_DESIGN, nextjs: { appDirectory: true, navigation: { pathname: '/stay/' } } },
   play: async ({ canvasElement, step }) => {
     const toggle = await toggleOf(canvasElement);
     const panel = panelOf(toggle);
@@ -278,6 +291,74 @@ export const MobileOpen: Story = {
       await expect(panel).toHaveAttribute('inert');
       await waitFor(async () => {
         await expect(toggle).toHaveFocus();
+      });
+    });
+  }
+};
+
+/**
+ * The menu open, and then the layout grows out from under it.
+ *
+ * This is a regression test with a nasty failure mode behind it. Above the switch the CSS takes both
+ * halves of the disclosure away — the toggle is `display: none` and so is the panel — while
+ * `menuOpen` stayed true, because nothing cleared it. The page was left with `overflow: hidden` and
+ * no scroll, and the focus trap stayed active over the two controls still in the bar, cycling
+ * between them with the rest of the document unreachable: a keyboard trap under WCAG 2.1.2, reached
+ * by nothing more exotic than rotating a phone.
+ *
+ * The column is resized directly rather than the window, because the switch is a container query and
+ * the bar's inline size is what it reads — which is the same reason `useHeaderState` watches the bar
+ * with a `ResizeObserver` instead of calling `matchMedia`.
+ */
+export const MobileOpenThenWidened: Story = {
+  decorators: [
+    (Story) => (
+      <Column width="23.4375rem">
+        <Story />
+      </Column>
+    )
+  ],
+  parameters: { design: MOBILE_DESIGN },
+  play: async ({ canvasElement, step }) => {
+    const toggle = await toggleOf(canvasElement);
+    const panel = panelOf(toggle);
+    const column = canvasElement.querySelector('header')?.parentElement as HTMLElement;
+
+    await step('The menu opens and locks the page behind it', async () => {
+      await userEvent.click(toggle);
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(document.body.style.overflow).toBe('hidden');
+    });
+
+    await step('Widening past the switch closes it and gives the page back', async () => {
+      column.style.width = '75rem';
+
+      /*
+       * All three assertions inside the `waitFor`, including the two that look like they could
+       * follow it. `aria-expanded` flips during the commit, but the scroll lock is released by a
+       * `useEffect` cleanup — a passive effect, which React flushes *after* paint. Read straight
+       * after the attribute settles, `body.style.overflow` is still `'hidden'` for that gap.
+       */
+      await waitFor(async () => {
+        await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        // The two things the lockup actually cost: a scrollable page, and a panel out of the tab order.
+        await expect(document.body.style.overflow).toBe('');
+        await expect(panel).toHaveAttribute('inert');
+      });
+    });
+
+    await step('…and the disclosure still works on the way back down', async () => {
+      column.style.width = '23.4375rem';
+
+      const reopened = await toggleOf(canvasElement);
+      await userEvent.click(reopened);
+      await expect(reopened).toHaveAttribute('aria-expanded', 'true');
+
+      // Left closed, because `document.body` outlives the story and the next one would inherit the
+      // scroll lock.
+      await userEvent.keyboard('{Escape}');
+      await waitFor(async () => {
+        await expect(document.body.style.overflow).toBe('');
       });
     });
   }

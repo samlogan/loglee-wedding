@@ -26,10 +26,12 @@ export interface HeaderNavigationMobileProps {
  * The panel the hamburger discloses: the same five links stacked, and the RSVP action full width
  * beneath them.
  *
- * The design system board (Figma node 1:968) draws the closed mobile bar and the button set but
- * **not** the open menu, so the panel is composed from the vocabulary the rest of the design uses
- * — the off-white surface, a hairline between rows, and the accent UI pill for the action — rather
- * than invented.
+ * No frame anywhere in the Figma file draws this state — not the design system board (node 1:968),
+ * which the ticket claimed had it and which in fact draws only the two *closed* bars, and not any
+ * page frame; confirmed by walking all 1568 nodes over the REST API. So the panel is composed from
+ * the vocabulary the rest of the design uses — the off-white surface, ink type, a hairline between
+ * rows and never after the last, and the 4px-radius accent UI pill for the action — rather than
+ * invented. Every value here traces to a token the drawn frames do use.
  *
  * Closed, it is hidden two ways on purpose. `visibility: hidden` takes it out of the tab order and
  * the accessibility tree while still allowing the opacity transition (unlike `display: none`), and
@@ -69,6 +71,10 @@ const HeaderNavigationMobile = (props: HeaderNavigationMobileProps) => {
                     {...navItem?.link}
                     aria-current={current ? 'page' : undefined}
                     className={classNames(styles.link, { [styles.current]: current })}
+                    // A row is a full-width target. The prop rather than `width: 100%` in the
+                    // stylesheet: the shared base sets no width, so `.fullWidth` wins with nothing
+                    // to out-specify.
+                    fullWidth
                   >
                     {navItem?.title}
                   </Link>

@@ -1,13 +1,12 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useId, useRef } from 'react';
+import { useId, useRef } from 'react';
 
 import Container from '@/components/Container';
 import Link from '@/components/Link';
 import Logo from '@/components/Logo';
 import classNames from '@/helpers/classNames';
-import useElementHeight from '@/tools/hooks/useElementHeight';
 import type { IHeaderObject } from '@/tools/sanity/schema/objects/header';
 
 import HeaderNavigationDesktop from './HeaderNavigationDesktop';
@@ -45,18 +44,21 @@ const Header = (props: HeaderProps) => {
   const { className, header, rsvpLabel } = props;
   const { navItems, addButton, button } = header || {};
   const pathname = usePathname();
-  const { menuOpen, toggleMenu, closeMenu, hidden } = useHeaderState();
 
   const menuId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-
-  // Publishes the bar's height as `--header-height` on the root element, re-measured on resize.
-  // The mobile panel sizes itself against it, and so does anything else that has to clear the bar.
-  const [headerRef, headerHeight] = useElementHeight({});
-  useEffect(() => {
-    document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
-  }, [headerHeight]);
+  /*
+   * The bar itself — the focus trap's container, and the element `useHeaderState` watches to know
+   * when the layout has crossed the switch.
+   *
+   * It used to come from `useElementHeight`, which existed only to publish the bar's height as
+   * `--header-height` for the mobile panel to size itself against. The panel now says
+   * `calc(100dvh - 100%)` instead, which layout re-resolves on its own; see the note there for the
+   * three ways the measured version was wrong.
+   */
+  const headerRef = useRef<HTMLElement>(null);
+  const { menuOpen, toggleMenu, closeMenu, hidden } = useHeaderState(headerRef);
 
   useFocusTrap({
     active: menuOpen,
@@ -75,6 +77,19 @@ const Header = (props: HeaderProps) => {
    * strings come from the CMS — only the *date* has a single home, which is the part that could
    * drift. Each span is `display: none` at the width it is not wanted, which removes it from the
    * accessible name as well as from the page, so the control announces exactly what it reads.
+   *
+   * Two known, deliberate departures from the nav frames, both recorded here so they read as
+   * decisions rather than misses:
+   *
+   * - Figma's *desktop* nav pill is a bare "RSVP →" at 80×38 (node 1:61); the reply-by line appears
+   *   in the bar only on the RSVP page, and there as quiet pine text rather than a pill (node
+   *   1:753). MAM-1887 asks for the reply-by label on the action, so the pill carries it and grows
+   *   to ~178px. That width is *the* reason the switch is at 900px — re-derive it if the label ever
+   *   goes back to "RSVP →".
+   * - Figma's *mobile* pill has no arrow (nodes 1:107, 1:1018); this one does, because `arrow` is a
+   *   prop on a single element rendered at both widths and the alternative is a stylesheet here
+   *   reaching into `Button`'s markup to hide it. The arrow is `aria-hidden` decoration, it costs
+   *   ~15px on a bar with ~100px of slack at 375px, and it keeps one affordance at both widths.
    */
   const longLabel = rsvpLabel || action?.label;
   const shortLabel = action?.label || rsvpLabel;
@@ -115,8 +130,8 @@ const Header = (props: HeaderProps) => {
                 theme="accent"
                 variant="ui"
               >
-                <span className={styles.actionLong}>{longLabel}</span>
-                <span className={styles.actionShort}>{shortLabel}</span>
+                <span className={styles.action_long}>{longLabel}</span>
+                <span className={styles.action_short}>{shortLabel}</span>
               </Link>
             )}
 
@@ -125,7 +140,7 @@ const Header = (props: HeaderProps) => {
                 aria-controls={menuId}
                 aria-expanded={menuOpen}
                 aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-                className={classNames(styles.toggle, { [styles.toggleOpen]: menuOpen })}
+                className={classNames(styles.toggle, { [styles.toggle_open]: menuOpen })}
                 onClick={toggleMenu}
                 ref={toggleRef}
                 type="button"

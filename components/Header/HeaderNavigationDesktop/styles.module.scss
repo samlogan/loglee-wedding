@@ -14,7 +14,7 @@
      * The bar's own container query, not the viewport's. `.header` declares the `header` container;
      * see the note there for why the switch is keyed to the bar's inline size.
      */
-    @container header (width < 56.25rem) {
+    @container header (width < #{$header-inline-switch}) {
       display: none;
     }
   }
@@ -24,10 +24,12 @@
     align-items: center;
     /* 30px between links at 1280 in the design (node 1:48); `--spacing-xl` is 24 → 32 fluid. */
     gap: var(--spacing-xl);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    color: var(--fg-default);
+    /*
+     * Only the type. `margin`, `padding` and `list-style` are already zeroed on every `ul` by
+     * `tools/sass/global/_reset.scss`, and `color` already inherits — `.button`'s base sets
+     * `color: currentColor`, which is inherit-equivalent, so repeating `--fg-default` here
+     * overrode nothing.
+     */
     font-size: var(--body-md);
     font-weight: var(--font-weight-medium);
   }
@@ -47,14 +49,39 @@
     position: relative;
     text-decoration: none;
 
+    /*
+     * The rule is measured against the design's underline, not chosen.
+     *
+     * Figma draws the current page as a plain `text-decoration: underline` in the same ink (node
+     * 1:753, the RSVP page's nav — the one frame in the file that draws an active state). Measured
+     * off that export: 2px thick, spanning the word, with its centre 3.5px below the baseline on
+     * 15px type — 0.233em. The thickness and the span already matched; the offset did not.
+     *
+     * `calc(100% + 4px)` measured from the padding box, which the 1.2 line box already holds clear
+     * of the baseline, so the rule landed 0.5em down — more than twice the drawn distance — and read
+     * as a detached indicator bar rather than as an underline.
+     *
+     * Dropping the `+ 4px` is the whole fix. `100%` is the bottom of the line box, which measures
+     * 0.25em below the baseline against the design's 0.21–0.23em (the range is the measurement's,
+     * not the design's — Figma exports at 0.8 scale, so where the antialiased ink "ends" is worth a
+     * few hundredths of an em either way). A correction term to close 0.02em would be fitting to
+     * that noise. It is also proportional by construction: a percentage of the line box tracks the
+     * fluid `--body-md` across the whole range, where a px nudge would drift against it.
+     *
+     * Square ends, like the underline it stands in for — the previous `border-radius: 100px` rounded
+     * a 2px bar the design does not round.
+     *
+     * A pseudo-element rather than `text-decoration` because the hover wipe below needs something
+     * to animate, and the design — being static — specifies no hover state, so this is additive
+     * rather than contradictory.
+     */
     &::after {
       content: '';
       position: absolute;
-      top: calc(100% + 4px);
+      top: 100%;
       left: 0;
       width: 100%;
       height: 2px;
-      border-radius: 100px;
       background-color: var(--fg-default);
       transform: scaleX(0);
       transform-origin: right center;

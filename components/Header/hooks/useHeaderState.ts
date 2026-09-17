@@ -2,11 +2,22 @@
 
 import { usePathname } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import type { RefObject } from 'react';
 
 import useScrollDirection from '@/tools/hooks/useScrollDirection';
 
 /** Pixels of scroll before the bar is allowed to lift off the page or slide away. */
 const SCROLL_THRESHOLD = 100;
+
+/**
+ * The bar's one layout switch, in px — the TypeScript twin of `$header-inline-switch`
+ * (`tools/sass/base/__media.scss`), which is the same 900px written as `56.25rem`.
+ *
+ * Compared against the header's *inline size* rather than the window's, because that is what the
+ * CSS keys on. A `matchMedia` would agree with it in the app, where the bar is a child of `<body>`,
+ * and disagree the moment the bar is rendered in a column — which is exactly what the stories do.
+ */
+const HEADER_INLINE_SWITCH = 900;
 
 export interface HeaderState {
   menuOpen: boolean;
@@ -21,8 +32,11 @@ export interface HeaderState {
  *
  * The search half of this hook is gone with the search UI it drove — `showSearch` had no consumer
  * anywhere in the app, and the mutual-exclusion setters existed only to keep it away from the menu.
+ *
+ * `barRef` is the `<header>` element. The hook needs it to know when the layout has crossed the
+ * switch; see the effect below for why that matters.
  */
-const useHeaderState = (): HeaderState => {
+const useHeaderState = (barRef: RefObject<HTMLElement | null>): HeaderState => {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -39,6 +53,34 @@ const useHeaderState = (): HeaderState => {
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
   const toggleMenu = useCallback(() => setMenuOpen((open) => !open), []);
+
+  /*
+   * Growing past the switch closes the menu, and this is a keyboard trap fix rather than tidiness.
+   *
+   * Above the switch the CSS takes both halves of the disclosure away: the toggle is `display: none`
+   * and so is the panel. Nothing else clears `menuOpen` — not the toggle, which is gone; not
+   * Escape, which no longer has a visible affordance pointing at it. So a menu opened on a phone and
+   * then widened (rotate the device, drag the window, resize the story's column) left the page with
+   * `overflow: hidden` and no way to scroll it, and left the focus trap active over the two controls
+   * still in the bar, cycling between them with the rest of the document unreachable — WCAG 2.1.2.
+   *
+   * A `ResizeObserver` on the bar rather than a resize listener on the window, for the same reason
+   * the CSS is a container query: it observes the box the layout actually depends on. It also fires
+   * once on observe, so a menu that is somehow already open at desktop width is closed on mount.
+   */
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) {
+      return;
+    }
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width >= HEADER_INLINE_SWITCH) {
+        setMenuOpen(false);
+      }
+    });
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [barRef]);
 
   useEffect(() => {
     const handleScroll = () => {

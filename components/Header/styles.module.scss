@@ -11,7 +11,8 @@
  * 900px is the switch point, and it is measured rather than inherited from the breakpoint map: the
  * bar's widest content is the 116px lockup, ~403px of links, and a ~183px "RSVP BY 01.12.26" pill,
  * which is ~700px before the gutters. 900 leaves headroom for a longer reply-by line without
- * leaving a tablet holding a hamburger it does not need.
+ * leaving a tablet holding a hamburger it does not need. It is `$header-inline-switch` in
+ * `tools/sass/base/__media.scss` so the two navs cannot drift from it.
  */
 @layer defaults {
   .header {
@@ -30,7 +31,7 @@
     background: var(--bg-default);
     color: var(--fg-default);
     isolation: isolate;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s var(--ease-in-out-quad);
 
     // Slides away on a downward scroll. `useHeaderState` refuses to set this while the menu is
     // open — the bar carries the only control that closes it.
@@ -84,15 +85,26 @@
   /*
    * One control, two labels. `display: none` (rather than a visually-hidden technique) is what
    * keeps the hidden one out of the accessible name, so the pill announces the words it shows.
+   *
+   * Written mobile-first — short shown by default, long swapped in above the switch — rather than as
+   * two symmetrical `display: none` rules, and that asymmetry is load-bearing. A container query
+   * cannot be evaluated before its container has been laid out, so on the first style pass *neither*
+   * query matches; with a rule each, both spans were visible for that frame and the pill painted
+   * "RSVP BY 01.12.26RSVP". One unconditional default means the pre-layout frame shows exactly one
+   * label, and the wrong-width frame is a swap rather than a doubling.
    */
-  .actionLong {
-    @container header (width < 56.25rem) {
-      display: none;
+  .action_long {
+    display: none;
+
+    @container header (width >= #{$header-inline-switch}) {
+      display: inline;
     }
   }
 
-  .actionShort {
-    @container header (width >= 56.25rem) {
+  .action_short {
+    display: inline;
+
+    @container header (width >= #{$header-inline-switch}) {
       display: none;
     }
   }
@@ -100,39 +112,58 @@
   /*
    * The two-bar mark from node 1:109: 22×2 rules, 5px apart, in 8px of padding — 38×25 overall,
    * which clears the 24px WCAG 2.5.8 target on both axes without a spacer.
+   *
+   * These four numbers are fixed px on purpose, and the note is here so the next reviewer does not
+   * re-flag them against the project's fluid rule: Figma draws exactly one hamburger, at one width,
+   * and the control only exists below the switch. Interpolating it would be extrapolating a value
+   * the design never states twice.
+   *
+   * The reset on `border`/`background`/`color`/`cursor` is deliberate too. A `<Button>` with no
+   * appearance props would give the same bare surface, but it also brings `inline-flex`, `center`
+   * alignment, `--button-gap` and a 1px transparent border, all of which would have to be undone to
+   * land the 38×25 box. The focus ring is not lost by going raw — `_reset.scss` applies the same
+   * `--button-focus-ring-*` tokens to any `:focus-visible`.
    */
   .toggle {
+    --toggle-bar-height: 2px;
+    --toggle-bar-gap: 5px;
+
     display: none;
     flex-direction: column;
-    gap: 5px;
+    gap: var(--toggle-bar-gap);
     padding: var(--spacing-xs);
     border: 0;
     background: transparent;
     color: inherit;
     cursor: pointer;
 
-    @container header (width < 56.25rem) {
+    @container header (width < #{$header-inline-switch}) {
       display: flex;
     }
 
     span {
       display: block;
       width: 22px;
-      height: 2px;
-      border-radius: 2px;
+      height: var(--toggle-bar-height);
+      // No radius: Figma's two rules (nodes 1:110, 1:111) carry no corner radius at all.
       background-color: var(--fg-default);
       transition: transform 0.3s ease;
     }
 
-    // Two bars close to an X by meeting in the middle: each is 3.5px from centre (half the 5px gap
-    // plus half the 2px rule), so the translation is the same number in opposite directions.
-    &.toggleOpen span {
+    /*
+     * Two bars close to an X by meeting in the middle: each travels half the gap plus half its own
+     * thickness, in opposite directions. Derived from the locals rather than hand-computed to 3.5px,
+     * so changing either number keeps the X meeting in the middle instead of silently missing.
+     */
+    &.toggle_open span {
+      $travel: calc((var(--toggle-bar-gap) + var(--toggle-bar-height)) / 2);
+
       &:first-child {
-        transform: translateY(3.5px) rotate(45deg);
+        transform: translateY($travel) rotate(45deg);
       }
 
       &:last-child {
-        transform: translateY(-3.5px) rotate(-45deg);
+        transform: translateY(calc(#{$travel} * -1)) rotate(-45deg);
       }
     }
   }
