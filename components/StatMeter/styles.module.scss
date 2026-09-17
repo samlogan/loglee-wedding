@@ -101,13 +101,13 @@
 
     color: var(--fg-accent);
     /*
-     * The two mono micro-labels, below `--body-xs` (11→12px) which is the floor of the body scale,
-     * so there is no token — the same call `FieldCheckbox` makes for its `--micro-font-size`, and
-     * for the same reason: a new rung on the shared scale would show up in the client-facing type
-     * documentation on the strength of a handful of labels. (Three components now compute the same
-     * `fluid(10px, 11px)` under three names, which is the threshold at which that trade is worth
-     * re-opening — as one token, or as a `mono` variant on `Text`. Noted rather than done here: it
-     * is a design-system change and this is a component.)
+     * The mono micro-label, below `--body-xs` (11→12px) which is the floor of the body scale.
+     *
+     * This note used to say there was no token and to name the threshold at which there should be:
+     * three components computing the same `fluid(10px, 11px)` under three names. `ScheduleSection`
+     * made it four, and `--body-2xs` is the result. The concern raised here — that a new rung shows
+     * up in the client-facing type documentation — stands and was accepted: see the token's own note
+     * in `_variables.scss`.
      *
      * The comp sets the desktop meter label at 11px; the narrow anchor is the player card's own
      * label step (10px, node 1:252), since the two are the same type role in the same card and
@@ -123,7 +123,7 @@
      * card moved the stat label to 40px and left the meter label at 11px. Left undeclared, the
      * property inherits through when a consumer sets one and falls back to this when nobody does.
      */
-    font-size: var(--meter-label-size, #{fluid(10px, 11px)});
+    font-size: var(--meter-label-size, var(--body-2xs));
     font-weight: var(--font-weight-regular);
     line-height: var(--body-line-height);
     letter-spacing: 0.1em;

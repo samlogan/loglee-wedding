@@ -203,6 +203,27 @@
   --body-sm: #{fluid(12px, 14px)};
   --body-xs: #{fluid(11px, 12px)};
   /*
+   * The step below the floor of the body scale: the mono micro-label — a meter label, a stat
+   * caption, a location chip.
+   *
+   * It exists because four components had computed the same `fluid(10px, 11px)` independently,
+   * under four different local names, each with a note saying a shared token would be better and
+   * this was not yet the moment. `StatMeter` set the threshold at three; `ScheduleSection.location`
+   * was the fourth, which is where four copies of one number stops being restraint and starts being
+   * the drift those notes were worried about — a retune of the pair now has one place to happen
+   * rather than four places to be forgotten.
+   *
+   * The objection those notes raised was that a new rung would appear on the client-facing type
+   * page for the sake of a handful of labels. It will, and it should: `Foundations/Design System/
+   * Typography` reads the CSSOM, so the page needs no maintenance, and a step four components share
+   * is exactly what that page is for.
+   *
+   * Not a `ProjectFontSize`: none of the four callers goes through `Text`, so this is a CSS token
+   * and not a prop value. When `Text` gains the `mono` variant (MAM-1927), this is the size it
+   * should read.
+   */
+  --body-2xs: #{fluid(10px, 11px)};
+  /*
    * Unitless, so it stays a multiple of whatever the fluid size resolved to at the current width.
    *
    * 1.5 is the design's own number and it is genuinely flat across the body scale — twelve of the
@@ -348,8 +369,10 @@
   // bespoke 96px bar with 44px display type, not this component — so `lg` is an extrapolated step
   // above `md` for full-width actions rather than a measurement.
 
-  // Instrument Sans is loaded at 400 and 500 only (see `config/fonts.ts`), and the design sets every
-  // button label in Medium. Asking for 600 here bought a synthesised weight, not a bolder one.
+  // Medium because the design sets every button label in Medium — and only that, now. This used to
+  // read "Instrument Sans is loaded at 400 and 500 only, so 600 bought a synthesised weight"; that
+  // second reason retired when `config/fonts.ts` added the 600 and 700 faces, so `semibold` here
+  // would now be a real face. It is still not what the buttons are drawn at.
   --button-font-weight: var(--font-weight-medium);
 
   // The mono label, in its loud register — JetBrains Mono Bold, uppercase, widely tracked. Used by
