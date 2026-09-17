@@ -1,0 +1,286 @@
+/*
+ * The monospace stat card on the player pages (Figma node 1:175 desktop, 1:243 mobile).
+ *
+ * Every measurement below is a pair — the desktop frame's value and the mobile frame's — fed to
+ * `fluid()` so the card interpolates between the two comps rather than stepping at a breakpoint.
+ * Where only one number is quoted, the two frames agree.
+ *
+ * Three colours are worth stating up front, because each is an exact token match rather than an
+ * approximation:
+ *
+ *   card border   #131412  stone/900   → `--stroke-cards`
+ *   header fill   #131412  stone/900   → `--button-secondary-bg`
+ *   header ink    #f3f1ea  stone/50    → `--button-secondary-fg`
+ *
+ * The header is the repo's usual way of inverting, taken the way `FieldCheckbox` takes it: the
+ * design system's ink-chip pair, which is stone/900-under-stone/50 on the light theme and flips to
+ * stone/50-under-pine/600 on the dark one. It is deliberately *not* `data-theme="dark"` on the band.
+ * That attribute paints `--bg-default`, which is pine/600 — a green band, not the ink one the comp
+ * draws — and the two places this repo does pin `data-theme` (`Header`, `Footer`) pin it to `light`
+ * to hold a subtree steady, not to invert it.
+ */
+
+@layer defaults {
+  .card {
+    /*
+     * The gutter every band shares, so the header, the stat grid and the meter band cannot drift
+     * apart. 18px desktop (node 1:181), 14px mobile (node 1:249).
+     */
+    --card-inline-padding: #{fluid(14px, 18px)};
+    /*
+     * The mono micro-label above each value, and on each meter. 11px desktop (node 1:184), 10px
+     * mobile (node 1:252) — below `--body-xs` (11→12px), the floor of the body scale, so there is no
+     * token to reach for. Same call, and same reasoning, as `StatMeter`'s `--meter-label-size` and
+     * `FieldCheckbox`'s `--micro-font-size`.
+     */
+    --card-label-size: #{fluid(10px, 11px)};
+    /*
+     * The mono value, and the two runs in the header band. 13px desktop (nodes 1:178, 1:186), 12px
+     * mobile (nodes 1:246, 1:254). Also just off the body scale: `--body-xs` tops out at 12px and
+     * `--body-sm` starts at 12px, so neither pair is these two numbers.
+     */
+    --card-value-size: #{fluid(12px, 13px)};
+
+    /*
+     * The query container for the card's one layout switch — see `.stats`.
+     *
+     * `inline-size` and not `size`: the card's width comes from the column it is placed in, but its
+     * height is its content, and containing that would collapse it.
+     *
+     * The cost of inline-size containment is worth knowing: the contents no longer contribute to
+     * this element's own intrinsic width, so an ancestor that sizes to fit — a flex item with no
+     * basis, a float, an `inline-block` — has nothing to measure and the card folds. As a block box
+     * in an ordinary column it takes its width from the containing block and is unaffected. If a
+     * shrink-to-fit parent ever becomes necessary, give it a definite width rather than swapping
+     * this for a viewport media query: the width genuinely is the container's, which is the whole
+     * reason this is a container query.
+     */
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    /*
+     * Clips the header band's square corners to the card's radius, which is why no band declares a
+     * radius of its own. Figma reports 6px on the band inside an 8px box with a 1px border — a
+     * number that is neither the outer radius nor the outer minus the border, and which would have
+     * to be maintained alongside both. Nothing here is focusable, so there is no ring to clip.
+     */
+    overflow: hidden;
+    /*
+     * 1px inside the border box, not outside it. The design's gutters are therefore one pixel less
+     * of padding on each band, following the convention the button tokens are built on
+     * (`_variables.scss`) — it is what keeps a row of bordered and unbordered boxes on one baseline.
+     */
+    border: 1px solid var(--stroke-cards);
+    border-radius: var(--radius-md);
+  }
+
+  /*
+   * The inverted band. `baseline` so the title and the level sit on one line however their lengths
+   * differ; `--spacing-md` is a floor for the `space-between`, not a measured value.
+   *
+   * 12px block padding desktop (node 1:176), 10px mobile (node 1:244).
+   */
+  .header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    padding: #{fluid(10px, 12px)} var(--card-inline-padding);
+    background-color: var(--button-secondary-bg);
+    color: var(--button-secondary-fg);
+  }
+
+  /*
+   * JetBrains Mono Bold, uppercase, tracked — the comp's UI-chrome register, the same one
+   * `--button-mono-*` describes for the controls. Declared here rather than taken through `Text`
+   * because `Text` has no `mono` variant; that is a known gap and this is the accepted workaround.
+   *
+   * Tracking in `em`: 1.3px on 13px is 0.1em, so it stays proportional as the fluid size moves.
+   */
+  .title,
+  .level {
+    @include mono-font();
+
+    font-size: var(--card-value-size);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  // The level is the shorter run and the one that must stay whole; the title gives way first.
+  .level {
+    flex-shrink: 0;
+  }
+
+  /*
+   * The text stats: two columns on the desktop comp, one on the mobile one.
+   *
+   * This is the card's only layout switch, and the only thing here that legitimately needs a query
+   * — `fluid()` interpolates sizes, and a track count is not a size. It asks the *card* how wide it
+   * is rather than the window, because that is where the width actually comes from: a card in a
+   * sidebar at a 1440px viewport is a narrow card, and a viewport rule would give it the desktop
+   * grid. (The same mistake, made against a viewport, is what put three `FieldCheckbox` cards in a
+   * row inside a column that still held three.)
+   *
+   * 460px is derived rather than chosen. A column has to seat the comp's longest label,
+   * "FAVOURITE DRINK AT FIN'S" — 24 characters of JetBrains Mono, whose cell is 0.6em plus 0.1em of
+   * tracking, so 0.7em × 11px × 24 ≈ 185px — and 200px rounds that up with room for a longer one.
+   * Two of those plus the 24px column gap plus both 18px gutters is 460px of content box, which is
+   * what a size container query measures. Both comps clear it by a wide margin in their own
+   * direction: the desktop card's content box is 622px and the mobile card's is 348px.
+   *
+   * `repeat(2, …)` rather than an `auto-fit` track list, which is what `FieldCheckbox` uses: an
+   * `auto-fit` grid would keep adding columns as the card grew, and the comp's stat grid is two
+   * columns, not "as many as fit". `minmax(0, 1fr)` because a grid item's automatic minimum is
+   * `min-content`, so an unbreakable value would otherwise push its track past its share.
+   *
+   * 8px block padding desktop, 4px mobile (nodes 1:181, 1:249). `margin: 0` because `dl` is not in
+   * the reset's element list and the UA gives it a 1em block margin.
+   */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    column-gap: var(--spacing-lg);
+    margin: 0;
+    padding: #{fluid(4px, 8px)} var(--card-inline-padding);
+
+    @container (min-width: 460px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /*
+   * A cell: label over value, with the rule along the bottom.
+   *
+   * The comp's rule is `rgba(19, 20, 18, 0.15)`, which composites to `#d1d0ca` on the off-white
+   * page; `--stroke-divider` is stone/300 (`#dcd9cf`), four values lighter per channel and
+   * indistinguishable in place. Taking the token buys the dark theme (pine/500) and keeps one
+   * divider ink across the card rather than a translucent ink here and an opaque one on the meter
+   * track, which the comp already draws as the same colour.
+   *
+   * 12px over 13px desktop (node 1:182), 10px over 11px mobile (node 1:250) — the comp's rows are
+   * very slightly bottom-heavy and that is reproduced rather than averaged away.
+   */
+  .stat {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding-block: #{fluid(10px, 12px)} #{fluid(11px, 13px)};
+    border-bottom: 1px solid var(--stroke-divider);
+  }
+
+  /*
+   * The closing stat: spans the grid and drops its rule.
+   *
+   * `1 / -1` resolves against the explicit track list, so it is the full width at one column and at
+   * two without knowing which is current.
+   */
+  .fullWidth {
+    grid-column: 1 / -1;
+    border-bottom: 0;
+  }
+
+  .statLabel {
+    @include mono-font();
+
+    color: var(--fg-accent);
+    font-size: var(--card-label-size);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  // `margin: 0` for the same reason `.stats` carries it — `dd` is not in the reset's list and the UA
+  // indents it by 40px.
+  .statValue {
+    @include mono-font();
+
+    margin: 0;
+    color: var(--fg-default);
+    font-size: var(--card-value-size);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  /*
+   * The one value the comp sets in the body face rather than the mono — 15px Instrument Sans
+   * desktop (node 1:206), 14px mobile (node 1:274). `--body-md` is `fluid(14px, 16px)`: the narrow
+   * anchor is exact and the wide one is a pixel over, which is the trade `FieldCheckbox` already
+   * makes for its title in exchange for staying on the type scale.
+   *
+   * Stated here as well as on the `<Text>` inside, and the two agree by construction because they
+   * name the same token. The family is the part that has to be here: `.statValue` above sets the
+   * mono face on the `<dd>`, and an inline `<Text>` would inherit it.
+   */
+  .fullWidth .statValue {
+    @include body-font();
+
+    font-size: var(--body-md);
+    line-height: var(--body-line-height);
+  }
+
+  /*
+   * The meter band.
+   *
+   * **The mobile comp has no meter band at all** — node 1:243 ends at the "HOW WE MET" stat — so the
+   * narrow form is inferred rather than measured, and is flagged for design review. It follows the
+   * text stats: one meter per row once the card is too narrow for a second column, which is the same
+   * collapse and the same threshold, so the two bands never disagree about how wide the card is.
+   *
+   * Above that threshold the track list *is* `auto-fit`, unlike `.stats`, and the difference is
+   * deliberate. The comp draws its three meters as equal flexible columns across one row, so the
+   * band's column count follows the number of meters rather than being fixed at three — six meters
+   * on a 624px card would each be 87px wide and unreadable. 180px is pinned by both frames: at the
+   * desktop card's 588px of band content, three 180px tracks plus two 18px gaps is 576px and a
+   * fourth does not fit, which reproduces the comp's three-across; at the mobile card's 320px a
+   * second track would need 378px, so it stacks. Empty tracks collapse and the survivors are `1fr`,
+   * so three meters in a wider card still share the row equally, as the comp's `flex: 1` does.
+   *
+   * 18px gap, 15px over 18px block padding (node 1:207).
+   */
+  .meters {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.125rem;
+    padding: #{fluid(12px, 15px)} var(--card-inline-padding) #{fluid(14px, 18px)};
+
+    @container (min-width: 460px) {
+      grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+    }
+  }
+
+  /*
+   * The full-width rule the comp draws between the two bands — and only there.
+   *
+   * An adjacent-sibling selector rather than a flat `border-top`, so a card with no text stats does
+   * not draw a stray hairline immediately under the inverted band, where there is nothing to
+   * separate it from.
+   */
+  .stats + .meters {
+    border-top: 1px solid var(--stroke-divider);
+  }
+
+  /*
+   * Forced colours — Windows High Contrast Mode and the like.
+   *
+   * Forced colours flattens every author background to `Canvas`, which takes the header band with
+   * it: the one thing that makes it a band rather than a first row is its fill, and it has no border
+   * of its own. `forced-color-adjust: none` opts it back out so the system's own inverted pair can
+   * be painted deliberately — `CanvasText` under `Canvas` is guaranteed to contrast, which is
+   * exactly the property the band needs and the only one it needs.
+   *
+   * Nothing else in the card needs a rule: the rules and the card border are `border-color`, which
+   * forced colours maps to `CanvasText` rather than erasing, and every text run is already reading
+   * against the page. `StatMeter` handles its own bar, where the same flattening is fatal.
+   */
+  @media (forced-colors: active) {
+    .header {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+      color: Canvas;
+    }
+  }
+}
