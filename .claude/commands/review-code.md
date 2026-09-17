@@ -41,6 +41,28 @@ The command auto-detects whether the target is a section or component:
 /review-code Badge
 ```
 
+**Optional flags:**
+
+- `--story={export-kebab}` — Story export to review (default `default`)
+- `--storybook-port={N}` — Storybook port to render against (default 6006)
+- `--browser=mcp|bash` — Browser driver (default mcp)
+
+---
+
+### Render target — `{PORT}` and the browser
+
+Every URL in this file is written `http://localhost:{PORT}`. Resolve `{PORT}` once, here:
+
+- `--storybook-port={N}` — default **6006**. `/batch-parallel` passes a distinct port per worktree,
+  because one Storybook instance serves one checkout: N concurrent reviews against a shared 6006 all
+  measure whichever worktree owns it and return confidently wrong numbers without erroring.
+- `--browser=mcp|bash` — default **mcp**. Use `bash` when several reviews run concurrently: the
+  Playwright MCP is a single browser shared across the session, so parallel `browser_navigate` calls
+  interleave in one tab. In `bash` mode drive a one-off Playwright Node script instead (`playwright`
+  is a devDependency), which gives this review its own browser process.
+
+Both default to today's behaviour, so a plain invocation is unchanged.
+
 ---
 
 ## Phase 0: Prerequisites & Setup
@@ -64,14 +86,14 @@ Same detection logic as `/review-design`:
 ### 0c: Verify Storybook is running
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:6006/iframe.html 2>/dev/null || echo "DOWN"
+curl -s -o /dev/null -w "%{http_code}" http://localhost:{PORT}/iframe.html 2>/dev/null || echo "DOWN"
 ```
 
 If down, start it in the background and wait until it's responding:
 
 ```bash
-yarn storybook > /tmp/storybook.log 2>&1 &
-until curl -s -o /dev/null http://localhost:6006/iframe.html; do sleep 1; done
+yarn storybook --port {PORT} > /tmp/storybook-{PORT}.log 2>&1 &
+until curl -s -o /dev/null http://localhost:{PORT}/iframe.html; do sleep 1; done
 ```
 
 The Next.js dev server (port 3000) is **not** required.
@@ -80,7 +102,7 @@ The Next.js dev server (port 3000) is **not** required.
 
 **Look the story ID up — do not build it from the folder name.** Story titles group by what a thing _is_ (`Foundations/`, `Content/`, `Surfaces/`, `Navigation/`, `Forms/`, `Sections/`), so `{Name}` no longer maps to an ID by formula: `FaqSection` lives at `Sections/FAQ` → `sections-faq--default`.
 
-Fetch `http://localhost:6006/index.json` and resolve against it:
+Fetch `http://localhost:{PORT}/index.json` and resolve against it:
 
 ```
 norm(s)  = s.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -127,8 +149,8 @@ Read all files for the target:
 The story is the fixture — there is no temporary review page, and the Next.js dev server is not
 involved at any point in this command.
 
-1. Confirm the story ID resolved in Phase 0d is present in `http://localhost:6006/index.json`.
-2. Navigate Playwright to `http://localhost:6006/iframe.html?id={story-id}&viewMode=story` and wait
+1. Confirm the story ID resolved in Phase 0d is present in `http://localhost:{PORT}/index.json`.
+2. Navigate Playwright to `http://localhost:{PORT}/iframe.html?id={story-id}&viewMode=story` and wait
    2 seconds for Storybook init and CSS animations to settle.
 3. Screenshot to confirm it renders. If it errors, fix the story's `args` to match the component's
    actual prop shape and retry.
@@ -181,7 +203,7 @@ Provide:
 
 ## Phase 5: Browser Testing
 
-Navigate Playwright to the Storybook iframe URL (`http://localhost:6006/iframe.html?id={story-id}&viewMode=story`) and test interactively:
+Navigate Playwright to the Storybook iframe URL (`http://localhost:{PORT}/iframe.html?id={story-id}&viewMode=story`) and test interactively:
 
 ### 5a: Visual check at key breakpoints
 
@@ -238,7 +260,7 @@ At each breakpoint (1440, 769, 414):
 
 Stories are permanent fixtures, so nothing is removed. If `/review-code` started Storybook itself in
 Phase 0c you may leave it running for follow-up reviews, or free the port with
-`lsof -ti:6006 | xargs kill`.
+`lsof -ti:{PORT} | xargs kill`.
 
 ### 7b: Run final checks
 

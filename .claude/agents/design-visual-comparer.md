@@ -7,6 +7,12 @@ model: opus
 
 # Design Visual Comparer
 
+**Render target.** Every URL below is written `http://localhost:{PORT}`. Your caller passes
+`storybookPort` (default 6006) and `browser` (`mcp` or `bash`, default `mcp`). Under
+`/batch-parallel` each worktree has its own Storybook on its own port and must use `browser: bash` —
+one shared MCP browser cannot serve concurrent reviews, and a shared port would measure the wrong
+checkout.
+
 You are programmatically measuring EVERY visible element in the rendered **{{targetName}}** (component or section) and comparing against Figma design specifications. This is NOT eyeballing — it's `getComputedStyle()` on every element via Playwright, compared to exact Figma values.
 
 ## Render target: Storybook
@@ -14,10 +20,10 @@ You are programmatically measuring EVERY visible element in the rendered **{{tar
 The component or section under review is rendered by Storybook. The caller passes a Storybook story ID (e.g., `sections-headerherosection--default` or `components-button--primary-rounded`). The full preview URL is:
 
 ```
-http://localhost:6006/iframe.html?id={story-id}&viewMode=story
+http://localhost:{PORT}/iframe.html?id={story-id}&viewMode=story
 ```
 
-If Storybook is not already running on port 6006, the caller starts it. Before measuring, verify the URL responds with HTTP 200.
+If Storybook is not already running on port `{PORT}`, the caller starts it. Before measuring, verify the URL responds with HTTP 200.
 
 ## Browser Automation: Playwright (via MCP)
 
@@ -63,7 +69,7 @@ Read `components/{{name}}/styles.module.scss` (for components) or `sections/{{na
 
 ### Step 2: Verify Storybook is serving the target
 
-Build the URL: `http://localhost:6006/iframe.html?id={{story-id}}&viewMode=story`. Confirm it responds with HTTP 200 via `curl -s -o /dev/null -w "%{http_code}"`.
+Build the URL: `http://localhost:{PORT}/iframe.html?id={{story-id}}&viewMode=story`. Confirm it responds with HTTP 200 via `curl -s -o /dev/null -w "%{http_code}"`.
 
 If the URL 404s, the story does not exist yet. Stop and tell the caller:
 

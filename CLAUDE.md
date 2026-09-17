@@ -561,34 +561,35 @@ Optional:
 
 Available in `.claude/commands/`:
 
-| Command                   | Description                                                                                                                                                     |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/branch`                 | Create a Gitflow branch with optional Linear issue                                                                                                              |
-| `/create-component`       | Scaffold a new reusable UI component                                                                                                                            |
-| `/create-section`         | Scaffold a new Sanity section (5 files incl. story + 4 regs)                                                                                                    |
-| `/batch-tickets`          | Autonomous pipeline: generate manifest from Linear + action all tickets (sections, components, or other). `--parallel` fans implementation across git worktrees |
-| `/project-brief`          | Generate Linear milestones and tickets from a proposal                                                                                                          |
-| `/project-setup`          | Replace placeholders with project branding                                                                                                                      |
-| `/commit`                 | Commit changes with conventional messages                                                                                                                       |
-| `/pr`                     | Create a PR with auto-generated description                                                                                                                     |
-| `/check`                  | Run lint, format, and type checks                                                                                                                               |
-| `/update-docs`            | Update CLAUDE.md and README.md                                                                                                                                  |
-| `/audit-a11y`             | Accessibility audit on a component/section                                                                                                                      |
-| `/audit-code-quality`     | Code quality / reusability audit                                                                                                                                |
-| `/audit-content`          | CMS content audit                                                                                                                                               |
-| `/audit-psi`              | PageSpeed Insights audit (performance, a11y, best practices, SEO)                                                                                               |
-| `/audit-redirects`        | Redirect audit                                                                                                                                                  |
-| `/audit-schema`           | Sanity schema audit                                                                                                                                             |
-| `/design-system-import`   | Import design tokens from Figma or JSON into SCSS                                                                                                               |
-| `/design-system-export`   | Export SCSS tokens to DTCG JSON + Figma format                                                                                                                  |
-| `/sanity-create`          | Create/update a Sanity page from Figma design                                                                                                                   |
-| `/review-design`          | Compare section or component against Figma design                                                                                                               |
-| `/review-code`            | Code quality, accessibility, and browser review — one target, in isolation                                                                                      |
-| `/consolidate`            | Cross-cutting DRY pass over several targets at once; extracts shared patterns, opens a PR without merging                                                       |
-| `/ticket`                 | Fetch or create a Linear ticket and action it                                                                                                                   |
-| `/checklist-pre-handover` | Pre-handover checklist                                                                                                                                          |
-| `/checklist-pre-launch`   | Pre-launch checklist                                                                                                                                            |
-| `/checklist-post-launch`  | Post-launch checklist                                                                                                                                           |
+| Command                   | Description                                                                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `/branch`                 | Create a Gitflow branch with optional Linear issue                                                                                     |
+| `/create-component`       | Scaffold a new reusable UI component                                                                                                   |
+| `/create-section`         | Scaffold a new Sanity section (5 files incl. story + 4 regs)                                                                           |
+| `/batch-tickets`          | Autonomous pipeline: generate manifest from Linear + action all tickets (sections, components, or other), one at a time                |
+| `/batch-parallel`         | Same, run concurrently in git worktrees — shared-surface pre-pass, parallel build, serial integration train, closing sweep. Unattended |
+| `/project-brief`          | Generate Linear milestones and tickets from a proposal                                                                                 |
+| `/project-setup`          | Replace placeholders with project branding                                                                                             |
+| `/commit`                 | Commit changes with conventional messages                                                                                              |
+| `/pr`                     | Create a PR with auto-generated description                                                                                            |
+| `/check`                  | Run lint, format, and type checks                                                                                                      |
+| `/update-docs`            | Update CLAUDE.md and README.md                                                                                                         |
+| `/audit-a11y`             | Accessibility audit on a component/section                                                                                             |
+| `/audit-code-quality`     | Code quality / reusability audit                                                                                                       |
+| `/audit-content`          | CMS content audit                                                                                                                      |
+| `/audit-psi`              | PageSpeed Insights audit (performance, a11y, best practices, SEO)                                                                      |
+| `/audit-redirects`        | Redirect audit                                                                                                                         |
+| `/audit-schema`           | Sanity schema audit                                                                                                                    |
+| `/design-system-import`   | Import design tokens from Figma or JSON into SCSS                                                                                      |
+| `/design-system-export`   | Export SCSS tokens to DTCG JSON + Figma format                                                                                         |
+| `/sanity-create`          | Create/update a Sanity page from Figma design                                                                                          |
+| `/review-design`          | Compare section or component against Figma design                                                                                      |
+| `/review-code`            | Code quality, accessibility, and browser review — one target, in isolation                                                             |
+| `/consolidate`            | Cross-cutting DRY pass over several targets at once; extracts shared patterns, opens a PR without merging                              |
+| `/ticket`                 | Fetch or create a Linear ticket and action it                                                                                          |
+| `/checklist-pre-handover` | Pre-handover checklist                                                                                                                 |
+| `/checklist-pre-launch`   | Pre-launch checklist                                                                                                                   |
+| `/checklist-post-launch`  | Post-launch checklist                                                                                                                  |
 
 ### MCP Integrations
 
