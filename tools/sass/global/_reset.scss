@@ -49,7 +49,26 @@ html {
   scroll-behavior: auto;
 }
 
+/*
+ * The focus ring for everything that is not a `Button` or a `Link`.
+ *
+ * This used to read `outline: 2px solid var(--primary-500)`, and `--primary-500` is defined nowhere
+ * in this project — it is a token name left over from the boilerplate's old palette. An undefined
+ * `var()` with no fallback makes the whole declaration invalid at computed-value time, which
+ * resolves to `unset`; `outline-style` does not inherit, so it fell back to its initial value,
+ * `none`. The author rule still beat the UA stylesheet, so this did not merely fail to draw a ring —
+ * it deleted the browser's own. Measured: a plain `<button>` under the old rule reported
+ * `outline-style: "none"`.
+ *
+ * Nothing caught it because `Button` and `Link` carry their own `:focus-visible` in `@layer
+ * defaults`, which wins — so the two components anyone looks at were always fine while the accordion
+ * trigger, every form input and the skip link had no visible focus at all (WCAG 2.4.7).
+ *
+ * Now mirrors the Button surface rather than inventing a second treatment: same width, same offset,
+ * same ink. Literal fallbacks because this file is loaded before the token layer in some contexts,
+ * and a ring that silently disappears is the bug being fixed.
+ */
 :focus-visible {
-  outline: 2px solid var(--primary-500);
-  outline-offset: 2px;
+  outline: var(--button-focus-ring-width, 3px) solid var(--fg-default, currentColor);
+  outline-offset: var(--button-focus-ring-offset, 3px);
 }
