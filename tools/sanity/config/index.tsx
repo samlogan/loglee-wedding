@@ -18,7 +18,6 @@ import theme from './theme';
 // creatable a second time from the global "Create new" menu.
 const singletonTypes = new Set([
   'blogLandingPage',
-  'footerDocument',
   'headerDocument',
   'settings',
   'socialMediaDocument',

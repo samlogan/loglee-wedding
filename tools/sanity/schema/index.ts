@@ -5,7 +5,6 @@ import author from './documents/author';
 import blogLandingPage from './documents/blogLandingPage';
 import blogPost from './documents/blogPost';
 import blogPostCategory from './documents/blogPostCategory';
-import footerDocument from './documents/footerDocument';
 import headerDocument from './documents/headerDocument';
 // Documents
 import page from './documents/page';
@@ -32,7 +31,6 @@ import {
   blockContentButtons
 } from './objects/blockContent';
 import divider from './objects/divider';
-import { footer, linkGroup } from './objects/footer';
 import { header, navLink } from './objects/header';
 import redirect from './objects/redirect';
 import { sectionFields, spacingOptions, themeOptions } from './objects/sectionFields';
@@ -46,7 +44,6 @@ const schema: SchemaTypeDefinition[] = [
   blogLandingPage,
   blogPost,
   blogPostCategory,
-  footerDocument,
   headerDocument,
   page,
   player,
@@ -64,8 +61,6 @@ const schema: SchemaTypeDefinition[] = [
   blockContentVideo,
   blockContentButtons,
   divider,
-  footer,
-  linkGroup,
   header,
   navLink,
   playerTextStat,

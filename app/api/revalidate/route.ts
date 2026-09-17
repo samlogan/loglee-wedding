@@ -132,13 +132,11 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ revalidated: true });
     }
 
-    // if footerDocument revalidate everything but not the build hook
-    if (type === 'footerDocument') {
-      await revalidatePath('/', 'layout');
-      console.log(`${logPrefix}Footer changed. Root path with layout has been successfully revalidated.`);
-      return NextResponse.json({ revalidated: true });
-    }
-
+    /*
+     * No `footerDocument` branch. The document is gone: `components/Footer` renders the header's own
+     * `navItems` and the date and venue from `weddingSettings`, so both of the two branches above
+     * already bring the footer back with the layout.
+     */
     // Default case - revalidate page tag
     console.error(`${logPrefix}Unknown type "${type}". Defaulting to "page" tag`, { slug, type });
     await revalidateTag('page', 'max');
