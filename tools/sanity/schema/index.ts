@@ -37,6 +37,7 @@ import { sectionFields, spacingOptions, themeOptions } from './objects/sectionFi
 import seo from './objects/seo';
 // Sections
 import { faqSection } from './sections/faqSection';
+import { headerDisplaySection } from './sections/headerDisplaySection';
 
 const schema: SchemaTypeDefinition[] = [
   // Documents
@@ -82,7 +83,8 @@ const schema: SchemaTypeDefinition[] = [
   slugElement,
 
   // Sections
-  faqSection
+  faqSection,
+  headerDisplaySection
 ];
 
 export default schema;

@@ -1,1 +1,1 @@
-export const pageSections = [{ type: `faqSection` }];
+export const pageSections = [{ type: `faqSection` }, { type: `headerDisplaySection` }];

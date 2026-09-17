@@ -19,7 +19,16 @@ import styles from './styles.module.scss';
 type TextSpacing = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 interface TextBlockComponentConfig {
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /*
+   * `ProjectFontSize`, not a hand-copied union.
+   *
+   * Every value here is spread straight onto `Text`, whose `size` is `ProjectFontSize` — so this was
+   * a duplicate of that type that had fallen one step behind it. `2xl` exists on the scale and in
+   * `components/Text/styles.module.scss` (`--body-2xl`), and was the only step a caller could not
+   * ask for: `config={{ p: { size: '2xl' } }}` was a type error rather than the largest body step.
+   * Widening only, so no existing caller changes.
+   */
+  size?: ProjectFontSize;
   color?: ProjectColor;
   spacing?: TextSpacing | [TextSpacing, TextSpacing];
   className?: string;
@@ -62,6 +71,15 @@ const TextBlock = (props: TextBlockProps) => {
   const {
     blocks,
     className,
+    /*
+     * Threaded into every handler below, which it was not.
+     *
+     * Each config entry hardcoded `color: 'themeFgDefault'`, so this prop reached only the read-more
+     * label at the bottom of the file and a caller writing `<TextBlock color="themeFgMuted">` saw
+     * nothing happen — while the sibling `alignment` prop was threaded correctly, which is what
+     * makes it an oversight rather than a design. The destructured default preserves the previous
+     * value, so no existing caller changes; none passes `color` today.
+     */
     color = 'themeFgDefault',
     alignment,
     readMore = false,
@@ -80,56 +98,64 @@ const TextBlock = (props: TextBlockProps) => {
   const config: TextBlockProps['config'] = {
     block: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'md',
       spacing: 'sm',
       ...providedConfig?.block
     },
+    /*
+     * `providedConfig?.blockquote`, not `providedConfig?.p`.
+     *
+     * This spread the `p` config, so the `blockquote` key declared on `TextBlockProps['config']`
+     * could never take effect and a caller's `p` overrides silently leaked into blockquotes.
+     * Unreachable today — no `blockContent*` schema offers a blockquote style — so this is a
+     * correction to declared API rather than a behaviour change.
+     */
     blockquote: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'md',
       spacing: 'lg',
-      ...providedConfig?.p
+      ...providedConfig?.blockquote
     },
     h1: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'lg',
       spacing: ['xl', 'lg'],
       ...providedConfig?.h1
     },
     h2: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'md',
       spacing: ['lg', 'md'],
       ...providedConfig?.h2
     },
     h3: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'sm',
       spacing: ['md', 'sm'],
       ...providedConfig?.h3
     },
     h4: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'xs',
       spacing: ['sm', 'xs'],
       ...providedConfig?.h4
     },
     h5: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'lg',
       spacing: ['sm', 'xs'],
       ...providedConfig?.h5
     },
     h6: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'lg',
       spacing: ['sm', 'xs'],
       variant: 'heading',
@@ -137,42 +163,42 @@ const TextBlock = (props: TextBlockProps) => {
     },
     listBullet: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'md',
       spacing: 'md',
       ...providedConfig?.listBullet
     },
     listItemBullet: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'md',
       spacing: 'sm',
       ...providedConfig?.listItemBullet
     },
     listItemNumber: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'md',
       spacing: 'md',
       ...providedConfig?.listItemNumber
     },
     listNumber: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'md',
       spacing: 'md',
       ...providedConfig?.listNumber
     },
     p: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'md',
       spacing: 'md',
       ...providedConfig?.p
     },
     span: {
       alignment,
-      color: 'themeFgDefault',
+      color,
       size: 'md',
       spacing: 'md',
       ...providedConfig?.p
