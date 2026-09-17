@@ -10,6 +10,15 @@
   font-family: var(--body-font), sans-serif;
 }
 
+/*
+ * The third type role. Used for stats, times, tags, filenames and the game-style prompts —
+ * "SELECT PLAYER", the player chips, the wordmark. Almost always uppercase with wide tracking
+ * in the design, but that is per-use rather than baked in here.
+ */
+@mixin mono-font() {
+  font-family: var(--mono-font), ui-monospace, monospace;
+}
+
 @mixin default-type-styles() {
   @include body-font();
   font-size: 16px;

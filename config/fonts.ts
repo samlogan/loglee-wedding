@@ -1,4 +1,4 @@
-import { Instrument_Sans as HeadingFont, Inter as BodyFont } from 'next/font/google';
+import { Archivo as HeadingFont, Instrument_Sans as BodyFont, JetBrains_Mono as MonoFont } from 'next/font/google';
 import localFont from 'next/font/local';
 
 // NextJS Fonts
@@ -10,39 +10,59 @@ import localFont from 'next/font/local';
  * If the font is not variable, you will have to specify the font weights and styles you want to use.
  */
 
-// Primary font (Google Font)
+/*
+ * Three type roles, taken from the Figma frames rather than the token export — Figma variables
+ * do not carry font families.
+ *
+ *   Display  Archivo         oversized headings. The home page hero is Archivo Black at 176px,
+ *                            which is why 900 is loaded and why --font-weight-black exists.
+ *   Body     Instrument Sans navigation, body copy, buttons.
+ *   Mono     JetBrains Mono  stats, times, tags, filenames and the game-style prompts —
+ *                            "SELECT PLAYER", the player chips, the wordmark.
+ *
+ * Weights are only those the design actually uses. Loading more costs bytes for nothing.
+ */
+
+// Display font (Google Font)
 const headingFont = HeadingFont({
   adjustFontFallback: false,
   display: 'swap',
   style: ['normal'],
   subsets: ['latin'],
   variable: '--heading-font',
-  weight: ['400', '700']
+  weight: ['500', '700', '900']
 });
 
-// Secondary Font (Google Font)
+// Body font (Google Font)
 const bodyFont = BodyFont({
   adjustFontFallback: false,
   display: 'swap',
   style: ['normal'],
   subsets: ['latin'],
   variable: '--body-font',
-  weight: ['400', '700']
+  weight: ['400', '500']
 });
 
-// Tertiary Font (Local font)
-// const tertiaryFont = localFont({
+// Monospace UI font (Google Font)
+const monoFont = MonoFont({
+  adjustFontFallback: false,
+  display: 'swap',
+  style: ['normal'],
+  subsets: ['latin'],
+  variable: '--mono-font',
+  weight: ['400', '500', '700']
+});
+
+// Reference for a font that is not on Google Fonts — drop the .woff into assets/fonts and
+// add its variable to the array below. All three roles above are Google Fonts, so this is unused.
+// const localExample = localFont({
 //   src: '../assets/fonts/helvetica-now-text.woff',
 //   weight: '400',
 //   style: 'normal',
 //   display: 'swap',
-//   variable: '--tertiary-font'
+//   variable: '--local-font'
 // });
 
-const fonts = [
-  headingFont.variable,
-  bodyFont.variable
-  // tertiaryFont.variable
-].join(' ');
+const fonts = [headingFont.variable, bodyFont.variable, monoFont.variable].join(' ');
 
 export default fonts;

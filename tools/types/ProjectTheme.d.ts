@@ -1,1 +1,1 @@
-type ProjectTheme = 'light' | 'dark' | 'primary' | 'secondary' | 'tertiary';
+type ProjectTheme = 'light' | 'dark';

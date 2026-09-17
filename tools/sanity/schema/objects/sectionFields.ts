@@ -53,10 +53,7 @@ const themeOptions = defineType({
         layout: 'radio' as const,
         list: [
           { value: 'light', title: 'Light' },
-          { value: 'dark', title: 'Dark' },
-          { value: 'primary', title: 'Primary' },
-          { value: 'secondary', title: 'Secondary' },
-          { value: 'tertiary', title: 'Tertiary' }
+          { value: 'dark', title: 'Dark' }
         ]
       },
       title: 'Theme',

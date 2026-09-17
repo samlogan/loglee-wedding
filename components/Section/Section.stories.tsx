@@ -21,9 +21,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Light: Story = { args: { theme: 'light' } };
 export const Dark: Story = { args: { theme: 'dark' } };
-export const Primary: Story = { args: { theme: 'primary' } };
-export const Secondary: Story = { args: { theme: 'secondary' } };
-export const Tertiary: Story = { args: { theme: 'tertiary' } };
 
 export const FullWidth: Story = { args: { theme: 'light', full: true } };
 

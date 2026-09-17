@@ -72,10 +72,7 @@ const preview: Preview = {
     withThemeByDataAttribute<ReactRenderer>({
       themes: {
         light: 'light',
-        dark: 'dark',
-        primary: 'primary',
-        secondary: 'secondary',
-        tertiary: 'tertiary'
+        dark: 'dark'
       },
       defaultTheme: 'light',
       attributeName: 'data-theme',

@@ -6,57 +6,44 @@
   --shades-black: #000000;
   --shades-white: #ffffff;
 
-  // Gray
-  --gray-25: #fcfcfd;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d2d6db;
-  --gray-400: #9da4ae;
-  --gray-500: #6c737f;
-  --gray-600: #4d5761;
-  --gray-700: #384250;
-  --gray-800: #1f2a37;
-  --gray-900: #111927;
+  // Stone — warm neutral, the base
+  --stone-25: #f8f7f2;
+  --stone-50: #f3f1ea;
+  --stone-100: #edebe3;
+  --stone-200: #e8e5dc;
+  --stone-300: #dcd9cf;
+  --stone-400: #b9b6ac;
+  --stone-500: #8e8b82;
+  --stone-600: #65635c;
+  --stone-700: #45443f;
+  --stone-800: #2a2a26;
+  --stone-900: #131412;
 
-  // Primary
-  --primary-25: #fafaff;
-  --primary-50: #f4f3ff;
-  --primary-100: #ebe9fe;
-  --primary-200: #d9d6fe;
-  --primary-300: #bdb4fe;
-  --primary-400: #9b8afb;
-  --primary-500: #7a5af8;
-  --primary-600: #6938ef;
-  --primary-700: #5925dc;
-  --primary-800: #4a1fb8;
-  --primary-900: #3e1c96;
+  // Pine — brand green, drawn from the venue
+  --pine-25: #f1f6f2;
+  --pine-50: #e3ede6;
+  --pine-100: #c7dbcd;
+  --pine-200: #a2c2ae;
+  --pine-300: #78a489;
+  --pine-400: #4f8466;
+  --pine-500: #33654a;
+  --pine-600: #1e4632;
+  --pine-700: #173827;
+  --pine-800: #112a1e;
+  --pine-900: #0b1c14;
 
-  // Secondary
-  --secondary-25: #fef6fb;
-  --secondary-50: #fdf2fa;
-  --secondary-100: #fce7f6;
-  --secondary-200: #fcceee;
-  --secondary-300: #faa7e0;
-  --secondary-400: #f670c7;
-  --secondary-500: #ee46bc;
-  --secondary-600: #dd2590;
-  --secondary-700: #c11574;
-  --secondary-800: #9e165f;
-  --secondary-900: #851651;
-
-  // Tertiary
-  --tertiary-25: #ecfaf4;
-  --tertiary-50: #d9f6e9;
-  --tertiary-100: #c6f2de;
-  --tertiary-200: #a3e5cd;
-  --tertiary-300: #80d8bb;
-  --tertiary-400: #5dcba9;
-  --tertiary-500: #3abe97;
-  --tertiary-600: #31987a;
-  --tertiary-700: #27715d;
-  --tertiary-800: #1e4b3f;
-  --tertiary-900: #142524;
+  // Signal — bright accent, reserved for interactive states
+  --signal-25: #fbffe8;
+  --signal-50: #f5ffc9;
+  --signal-100: #ecff9e;
+  --signal-200: #e2ff6f;
+  --signal-300: #d6ff3b;
+  --signal-400: #c3ed2a;
+  --signal-500: #a8d01a;
+  --signal-600: #88ab12;
+  --signal-700: #66820e;
+  --signal-800: #47590b;
+  --signal-900: #2e3a08;
 
   // System — Error
   --system-error-25: #fffbfa;
@@ -120,6 +107,7 @@
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
+  --font-weight-black: 900;
 
   --body-default-font-weight: var(--font-weight-regular);
   --body-bold-font-weight: var(--font-weight-bold);
@@ -236,316 +224,127 @@
 }
 
 // ------------------------------------
-// Theme — Light (white background)
+// Theme — Light (off-white base)
 // ------------------------------------
 
 [data-theme='light'] {
   /* Surface */
-  --bg-default: var(--shades-white);
-  --bg-accent: var(--gray-50);
-  --bg-raised: var(--shades-white);
+  --bg-default: var(--stone-50);
+  --bg-accent: var(--stone-100);
+  --bg-raised: var(--stone-25);
 
   /* Text */
-  --fg-default: var(--gray-900);
-  --fg-muted: var(--gray-600);
-  --fg-subtle: var(--gray-400);
-  --fg-link: var(--primary-500);
-  --fg-icon: var(--gray-600);
-  --fg-accent: var(--primary-500);
+  --fg-default: var(--stone-900);
+  --fg-muted: var(--stone-600);
+  --fg-subtle: var(--stone-400);
+  --fg-link: var(--stone-900);
+  --fg-icon: var(--pine-600);
+  --fg-accent: var(--pine-600);
 
   /* Stroke */
-  --stroke-cards: var(--gray-300);
-  --stroke-divider: var(--gray-200);
+  --stroke-cards: var(--stone-900);
+  --stroke-divider: var(--stone-300);
 
   /* Button - Primary */
-  --button-primary-bg: var(--primary-500);
-  --button-primary-bg-hover: var(--primary-600);
-  --button-primary-bg-active: var(--primary-700);
-  --button-primary-bg-disabled: var(--gray-300);
-  --button-primary-fg: var(--shades-white);
-  --button-primary-fg-hover: var(--shades-white);
-  --button-primary-fg-active: var(--shades-white);
-  --button-primary-fg-disabled: var(--gray-500);
-  --button-primary-focus-ring: var(--primary-500);
+  --button-primary-bg: var(--pine-600);
+  --button-primary-bg-hover: var(--stone-900);
+  --button-primary-bg-active: var(--pine-800);
+  --button-primary-bg-disabled: var(--stone-300);
+  --button-primary-fg: var(--stone-50);
+  --button-primary-fg-hover: var(--stone-50);
+  --button-primary-fg-active: var(--stone-50);
+  --button-primary-fg-disabled: var(--stone-500);
+  --button-primary-focus-ring: var(--signal-300);
 
   /* Button - Secondary */
-  --button-secondary-bg: var(--gray-900);
-  --button-secondary-bg-hover: var(--gray-800);
-  --button-secondary-bg-active: var(--gray-700);
-  --button-secondary-bg-disabled: var(--gray-300);
-  --button-secondary-fg: var(--shades-white);
-  --button-secondary-fg-hover: var(--shades-white);
-  --button-secondary-fg-active: var(--shades-white);
-  --button-secondary-fg-disabled: var(--gray-500);
-  --button-secondary-focus-ring: var(--gray-900);
+  --button-secondary-bg: var(--stone-900);
+  --button-secondary-bg-hover: var(--stone-800);
+  --button-secondary-bg-active: var(--stone-700);
+  --button-secondary-bg-disabled: var(--stone-300);
+  --button-secondary-fg: var(--stone-50);
+  --button-secondary-fg-hover: var(--stone-50);
+  --button-secondary-fg-active: var(--stone-50);
+  --button-secondary-fg-disabled: var(--stone-500);
+  --button-secondary-focus-ring: var(--signal-300);
 
   /* Input */
-  --input-bg: var(--gray-25);
-  --input-fg: var(--gray-500);
-  --input-border: var(--gray-300);
-  --input-icon: var(--gray-600);
-  --input-active-bg: var(--shades-white);
-  --input-active-fg: var(--gray-900);
-  --input-active-border: var(--primary-500);
-  --input-active-icon: var(--primary-500);
-  --input-disabled-bg: var(--gray-200);
-  --input-disabled-fg: var(--gray-400);
-  --input-disabled-border: var(--gray-200);
-  --input-disabled-icon: var(--gray-400);
-  --input-error-bg: var(--gray-25);
-  --input-error-fg: var(--gray-900);
+  --input-bg: var(--stone-50);
+  --input-fg: var(--stone-500);
+  --input-border: var(--stone-900);
+  --input-icon: var(--pine-600);
+  --input-active-bg: var(--stone-50);
+  --input-active-fg: var(--stone-900);
+  --input-active-border: var(--pine-600);
+  --input-active-icon: var(--pine-600);
+  --input-disabled-bg: var(--stone-200);
+  --input-disabled-fg: var(--stone-400);
+  --input-disabled-border: var(--stone-300);
+  --input-disabled-icon: var(--stone-400);
+  --input-error-bg: var(--stone-50);
+  --input-error-fg: var(--stone-900);
   --input-error-border: var(--system-error-500);
   --input-error-icon: var(--system-error-500);
 }
 
 // ------------------------------------
-// Theme — Dark
+// Theme — Dark (pine base)
 // ------------------------------------
 
 [data-theme='dark'] {
   /* Surface */
-  --bg-default: var(--gray-900);
-  --bg-accent: var(--gray-800);
-  --bg-raised: var(--gray-800);
+  --bg-default: var(--pine-600);
+  --bg-accent: var(--pine-700);
+  --bg-raised: var(--pine-500);
 
   /* Text */
-  --fg-default: var(--shades-white);
-  --fg-muted: var(--gray-400);
-  --fg-subtle: var(--gray-500);
-  --fg-link: var(--primary-200);
-  --fg-icon: var(--gray-400);
-  --fg-accent: var(--primary-200);
+  --fg-default: var(--stone-50);
+  --fg-muted: var(--pine-100);
+  --fg-subtle: var(--pine-200);
+  --fg-link: var(--stone-50);
+  --fg-icon: var(--pine-100);
+  --fg-accent: var(--signal-300);
 
   /* Stroke */
-  --stroke-cards: var(--gray-700);
-  --stroke-divider: var(--gray-700);
+  --stroke-cards: var(--stone-50);
+  --stroke-divider: var(--pine-500);
 
   /* Button - Primary */
-  --button-primary-bg: var(--primary-500);
-  --button-primary-bg-hover: var(--primary-400);
-  --button-primary-bg-active: var(--primary-300);
-  --button-primary-bg-disabled: var(--gray-700);
-  --button-primary-fg: var(--shades-white);
-  --button-primary-fg-hover: var(--shades-white);
-  --button-primary-fg-active: var(--gray-900);
-  --button-primary-fg-disabled: var(--gray-500);
-  --button-primary-focus-ring: var(--primary-400);
+  --button-primary-bg: var(--stone-50);
+  --button-primary-bg-hover: var(--signal-300);
+  --button-primary-bg-active: var(--signal-400);
+  --button-primary-bg-disabled: var(--pine-400);
+  --button-primary-fg: var(--pine-600);
+  --button-primary-fg-hover: var(--stone-900);
+  --button-primary-fg-active: var(--stone-900);
+  --button-primary-fg-disabled: var(--pine-200);
+  --button-primary-focus-ring: var(--signal-300);
 
   /* Button - Secondary */
-  --button-secondary-bg: var(--shades-white);
-  --button-secondary-bg-hover: var(--gray-100);
-  --button-secondary-bg-active: var(--gray-200);
-  --button-secondary-bg-disabled: var(--gray-700);
-  --button-secondary-fg: var(--gray-900);
-  --button-secondary-fg-hover: var(--gray-900);
-  --button-secondary-fg-active: var(--gray-900);
-  --button-secondary-fg-disabled: var(--gray-500);
-  --button-secondary-focus-ring: var(--shades-white);
+  --button-secondary-bg: var(--stone-50);
+  --button-secondary-bg-hover: var(--stone-200);
+  --button-secondary-bg-active: var(--stone-300);
+  --button-secondary-bg-disabled: var(--pine-400);
+  --button-secondary-fg: var(--pine-600);
+  --button-secondary-fg-hover: var(--pine-600);
+  --button-secondary-fg-active: var(--pine-600);
+  --button-secondary-fg-disabled: var(--pine-200);
+  --button-secondary-focus-ring: var(--signal-300);
 
   /* Input */
-  --input-bg: var(--gray-800);
-  --input-fg: var(--gray-400);
-  --input-border: var(--gray-700);
-  --input-icon: var(--gray-400);
-  --input-active-bg: var(--gray-900);
-  --input-active-fg: var(--shades-white);
-  --input-active-border: var(--primary-400);
-  --input-active-icon: var(--primary-400);
-  --input-disabled-bg: var(--gray-700);
-  --input-disabled-fg: var(--gray-500);
-  --input-disabled-border: var(--gray-700);
-  --input-disabled-icon: var(--gray-500);
-  --input-error-bg: var(--gray-800);
-  --input-error-fg: var(--shades-white);
-  --input-error-border: var(--system-error-500);
-  --input-error-icon: var(--system-error-500);
-}
-
-// ------------------------------------
-// Theme — Primary
-// ------------------------------------
-
-[data-theme='primary'] {
-  /* Surface */
-  --bg-default: var(--primary-500);
-  --bg-accent: var(--primary-600);
-  --bg-raised: var(--primary-400);
-
-  /* Text */
-  --fg-default: var(--shades-white);
-  --fg-muted: var(--primary-200);
-  --fg-subtle: var(--primary-300);
-  --fg-link: var(--shades-white);
-  --fg-icon: var(--primary-200);
-  --fg-accent: var(--shades-white);
-
-  /* Stroke */
-  --stroke-cards: var(--primary-400);
-  --stroke-divider: var(--primary-400);
-
-  /* Button - Primary */
-  --button-primary-bg: var(--shades-white);
-  --button-primary-bg-hover: var(--gray-100);
-  --button-primary-bg-active: var(--gray-200);
-  --button-primary-bg-disabled: var(--primary-300);
-  --button-primary-fg: var(--primary-500);
-  --button-primary-fg-hover: var(--primary-600);
-  --button-primary-fg-active: var(--primary-700);
-  --button-primary-fg-disabled: var(--primary-200);
-  --button-primary-focus-ring: var(--shades-white);
-
-  /* Button - Secondary */
-  --button-secondary-bg: var(--primary-700);
-  --button-secondary-bg-hover: var(--primary-800);
-  --button-secondary-bg-active: var(--primary-900);
-  --button-secondary-bg-disabled: var(--primary-300);
-  --button-secondary-fg: var(--shades-white);
-  --button-secondary-fg-hover: var(--shades-white);
-  --button-secondary-fg-active: var(--shades-white);
-  --button-secondary-fg-disabled: var(--primary-200);
-  --button-secondary-focus-ring: var(--shades-white);
-
-  /* Input */
-  --input-bg: var(--primary-600);
-  --input-fg: var(--primary-200);
-  --input-border: var(--primary-400);
-  --input-icon: var(--primary-200);
-  --input-active-bg: var(--primary-700);
-  --input-active-fg: var(--shades-white);
-  --input-active-border: var(--shades-white);
-  --input-active-icon: var(--shades-white);
-  --input-disabled-bg: var(--primary-300);
-  --input-disabled-fg: var(--primary-200);
-  --input-disabled-border: var(--primary-300);
-  --input-disabled-icon: var(--primary-200);
-  --input-error-bg: var(--primary-600);
-  --input-error-fg: var(--shades-white);
-  --input-error-border: var(--system-error-300);
-  --input-error-icon: var(--system-error-300);
-}
-
-// ------------------------------------
-// Theme — Secondary
-// ------------------------------------
-
-[data-theme='secondary'] {
-  /* Surface */
-  --bg-default: var(--secondary-500);
-  --bg-accent: var(--secondary-600);
-  --bg-raised: var(--secondary-400);
-
-  /* Text */
-  --fg-default: var(--shades-white);
-  --fg-muted: var(--secondary-200);
-  --fg-subtle: var(--secondary-300);
-  --fg-link: var(--shades-white);
-  --fg-icon: var(--secondary-200);
-  --fg-accent: var(--shades-white);
-
-  /* Stroke */
-  --stroke-cards: var(--secondary-400);
-  --stroke-divider: var(--secondary-400);
-
-  /* Button - Primary */
-  --button-primary-bg: var(--shades-white);
-  --button-primary-bg-hover: var(--gray-100);
-  --button-primary-bg-active: var(--gray-200);
-  --button-primary-bg-disabled: var(--secondary-300);
-  --button-primary-fg: var(--secondary-500);
-  --button-primary-fg-hover: var(--secondary-600);
-  --button-primary-fg-active: var(--secondary-700);
-  --button-primary-fg-disabled: var(--secondary-200);
-  --button-primary-focus-ring: var(--shades-white);
-
-  /* Button - Secondary */
-  --button-secondary-bg: var(--secondary-700);
-  --button-secondary-bg-hover: var(--secondary-800);
-  --button-secondary-bg-active: var(--secondary-900);
-  --button-secondary-bg-disabled: var(--secondary-300);
-  --button-secondary-fg: var(--shades-white);
-  --button-secondary-fg-hover: var(--shades-white);
-  --button-secondary-fg-active: var(--shades-white);
-  --button-secondary-fg-disabled: var(--secondary-200);
-  --button-secondary-focus-ring: var(--shades-white);
-
-  /* Input */
-  --input-bg: var(--secondary-600);
-  --input-fg: var(--secondary-200);
-  --input-border: var(--secondary-400);
-  --input-icon: var(--secondary-200);
-  --input-active-bg: var(--secondary-700);
-  --input-active-fg: var(--shades-white);
-  --input-active-border: var(--shades-white);
-  --input-active-icon: var(--shades-white);
-  --input-disabled-bg: var(--secondary-300);
-  --input-disabled-fg: var(--secondary-200);
-  --input-disabled-border: var(--secondary-300);
-  --input-disabled-icon: var(--secondary-200);
-  --input-error-bg: var(--secondary-600);
-  --input-error-fg: var(--shades-white);
-  --input-error-border: var(--system-error-300);
-  --input-error-icon: var(--system-error-300);
-}
-
-// ------------------------------------
-// Theme — Tertiary
-// ------------------------------------
-
-[data-theme='tertiary'] {
-  /* Surface */
-  --bg-default: var(--tertiary-500);
-  --bg-accent: var(--tertiary-600);
-  --bg-raised: var(--tertiary-400);
-
-  /* Text */
-  --fg-default: var(--shades-white);
-  --fg-muted: var(--tertiary-200);
-  --fg-subtle: var(--tertiary-300);
-  --fg-link: var(--shades-white);
-  --fg-icon: var(--tertiary-200);
-  --fg-accent: var(--shades-white);
-
-  /* Stroke */
-  --stroke-cards: var(--tertiary-400);
-  --stroke-divider: var(--tertiary-400);
-
-  /* Button - Primary */
-  --button-primary-bg: var(--shades-white);
-  --button-primary-bg-hover: var(--gray-100);
-  --button-primary-bg-active: var(--gray-200);
-  --button-primary-bg-disabled: var(--tertiary-300);
-  --button-primary-fg: var(--tertiary-500);
-  --button-primary-fg-hover: var(--tertiary-600);
-  --button-primary-fg-active: var(--tertiary-700);
-  --button-primary-fg-disabled: var(--tertiary-200);
-  --button-primary-focus-ring: var(--shades-white);
-
-  /* Button - Secondary */
-  --button-secondary-bg: var(--tertiary-700);
-  --button-secondary-bg-hover: var(--tertiary-800);
-  --button-secondary-bg-active: var(--tertiary-900);
-  --button-secondary-bg-disabled: var(--tertiary-300);
-  --button-secondary-fg: var(--shades-white);
-  --button-secondary-fg-hover: var(--shades-white);
-  --button-secondary-fg-active: var(--shades-white);
-  --button-secondary-fg-disabled: var(--tertiary-200);
-  --button-secondary-focus-ring: var(--shades-white);
-
-  /* Input */
-  --input-bg: var(--tertiary-600);
-  --input-fg: var(--tertiary-200);
-  --input-border: var(--tertiary-400);
-  --input-icon: var(--tertiary-200);
-  --input-active-bg: var(--tertiary-700);
-  --input-active-fg: var(--shades-white);
-  --input-active-border: var(--shades-white);
-  --input-active-icon: var(--shades-white);
-  --input-disabled-bg: var(--tertiary-300);
-  --input-disabled-fg: var(--tertiary-200);
-  --input-disabled-border: var(--tertiary-300);
-  --input-disabled-icon: var(--tertiary-200);
-  --input-error-bg: var(--tertiary-600);
-  --input-error-fg: var(--shades-white);
+  --input-bg: var(--pine-600);
+  --input-fg: var(--pine-200);
+  --input-border: var(--stone-50);
+  --input-icon: var(--pine-100);
+  --input-active-bg: var(--pine-600);
+  --input-active-fg: var(--stone-50);
+  --input-active-border: var(--signal-300);
+  --input-active-icon: var(--signal-300);
+  --input-disabled-bg: var(--pine-700);
+  --input-disabled-fg: var(--pine-300);
+  --input-disabled-border: var(--pine-400);
+  --input-disabled-icon: var(--pine-300);
+  --input-error-bg: var(--pine-600);
+  --input-error-fg: var(--stone-50);
   --input-error-border: var(--system-error-300);
   --input-error-icon: var(--system-error-300);
 }

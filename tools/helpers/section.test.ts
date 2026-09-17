@@ -16,7 +16,7 @@ describe('getSectionTheme', () => {
   it('prefers the selection over the fallback', () => {
     // This is what makes the Storybook theme toolbar work: `sectionStory.tsx` injects the toolbar
     // theme as the selection, and a section's own fallback must not override it.
-    expect(getSectionTheme({ sectionFields: { themeOptions: { theme: 'primary' } } }, 'light')).toBe('primary');
+    expect(getSectionTheme({ sectionFields: { themeOptions: { theme: 'dark' } } }, 'light')).toBe('dark');
   });
 
   it('returns undefined when there is neither a selection nor a fallback', () => {

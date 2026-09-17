@@ -446,8 +446,8 @@ Available mixins: `media-up($bp)`, `media-down($bp)`, `media-between($min, $max)
 
 Defined in `tools/sass/global/_variables.scss`:
 
-- **Base colors**: `var(--primary-500)`, `var(--gray-500)`, `var(--shades-black)`, `var(--shades-white)`
-- **Theme-aware** (change with `[data-theme]`): `var(--bg-default)`, `var(--bg-accent)`, `var(--bg-raised)`, `var(--fg-default)`, `var(--fg-link)`, `var(--fg-icon)`, `var(--fg-accent)`, `var(--stroke-cards)`, `var(--stroke-divider)`
+- **Base colors**: three ramps, each `25`–`900` — `var(--stone-500)` (warm neutral base), `var(--pine-500)` (brand green), `var(--signal-300)` (bright accent, reserved for interactive states) — plus `var(--shades-black)`, `var(--shades-white)` and the `var(--system-*)` ramps. Prefer the theme-aware tokens below; no component currently references a primitive directly.
+- **Theme-aware** (change with `[data-theme]`): `var(--bg-default)`, `var(--bg-accent)`, `var(--bg-raised)`, `var(--fg-default)`, `var(--fg-link)`, `var(--fg-icon)`, `var(--fg-accent)`, `var(--stroke-cards)`, `var(--stroke-divider)`. **Two themes only** — `light` and `dark`.
 - **Section spacing**: `var(--section-spacing-sm-desktop)`, `var(--section-spacing-md-desktop)`, `var(--section-spacing-lg-desktop)`, `var(--section-spacing-xl-desktop)` (+ `-mobile` variants)
 - **Button tokens**: `var(--button-primary-bg)`, `var(--button-primary-fg)`, `var(--button-secondary-bg)`, `var(--button-secondary-fg)` (+ `-hover` variants). Outline styling is derived from theme fill colors in SCSS.
 - **Container widths**: `var(--container-xs)` (640px), `var(--container-sm)` (768px), `var(--container-md)` (1024px), `var(--container-lg)` (1280px), `var(--container-xl)` (1440px). Use the `Container` component `width` prop instead of manual `max-width` where possible.
