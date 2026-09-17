@@ -1,0 +1,52 @@
+/*
+ * The thank-you page's own layout.
+ *
+ * Short, because almost everything here is already a component's job: `Section` owns the vertical
+ * rhythm and the theme, `Container` the width, `Text` the type scale. What is left is the one thing
+ * none of them can know — how the words and the scene sit relative to each other.
+ */
+
+@layer defaults {
+  .thankYou {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /*
+   * The mono micro-label above the heading.
+   *
+   * `--body-2xs` consumed directly, and the comment is required by the convention rather than
+   * decorative: it is the step below the body scale's floor and has no `Text` `size` value, because
+   * `Text` has no `mono` variant yet. `PlayerCard` and `ModelViewer` take the same workaround for
+   * the same reason.
+   */
+  .eyebrow {
+    @include mono-font();
+
+    color: var(--fg-accent);
+    font-size: var(--body-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /*
+   * The stage.
+   *
+   * `ModelDuet` caps its own width at 520px and centres itself, so this sets spacing and nothing
+   * else — a `width` or a `max-width` here would be a second opinion about a measured framing, and
+   * the component is the one that knows what shape the scene fits in.
+   */
+  .scene {
+    margin-block: var(--spacing-xl);
+  }
+
+  .signoff {
+    /*
+     * Tighter to the scene than the scene is to the copy above it, so the sign-off reads as
+     * belonging to the picture rather than starting a new thought. `.scene`'s own bottom margin
+     * supplies the rest.
+     */
+    margin-block-start: calc(var(--spacing-xl) * -0.5);
+  }
+}
