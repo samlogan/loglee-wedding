@@ -46,8 +46,8 @@ const atWidth =
  *
  * The copy, the item counts and the four-item meta row are Stay's (node 1:615) verbatim. The one
  * deliberate departure is the heading's case: Figma types "STAY" in capitals, and this passes "Stay"
- * so the section's own `text-transform: uppercase` is the thing under test rather than the mock's
- * shift key. It renders identically to the comp.
+ * so the section's `textTransform="uppercase"` is the thing under test rather than the mock's shift
+ * key. It renders identically to the comp.
  */
 const data = sectionFixture<IHeaderDisplaySection>('headerDisplaySection') ?? {
   title: '<h1>Stay</h1>',
@@ -154,6 +154,20 @@ export const WithoutLede: Story = {
     // Hugging the right edge: the aside's right sits on the row's, and it is nowhere near half wide.
     await expect(aside.getBoundingClientRect().right).toBeCloseTo(row.getBoundingClientRect().right, 0);
     await expect(aside.getBoundingClientRect().width).toBeLessThan(row.getBoundingClientRect().width / 2);
+
+    /*
+     * Planner draws its two meta lines stacked, not side by side (node 1:311). The two assertions
+     * above are both satisfied by a single over-wide line too, so this is the one that actually
+     * pins the drawn shape — same technique `LongMeta` uses, counting distinct item offsets.
+     */
+    const items = within(canvas.getByRole('list')).getAllByRole('listitem');
+    const lines = new Set(items.map((item) => Math.round(item.getBoundingClientRect().top)));
+    await expect(lines.size).toBe(2);
+
+    // Right-aligned, as the comp sets them: every line ends on the aside's right edge.
+    for (const item of items) {
+      await expect(item.getBoundingClientRect().right).toBeCloseTo(aside.getBoundingClientRect().right, 0);
+    }
   }
 };
 

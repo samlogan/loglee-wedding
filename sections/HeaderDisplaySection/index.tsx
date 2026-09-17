@@ -33,11 +33,15 @@ const HeaderDisplaySection: FC<IHeaderDisplaySection> = (props) => {
        * before the spread is overwritten and silently dead — `yarn audit:layout` reports exactly
        * that ordering.
        *
-       * `sm` rather than the helper's `lg`: the design draws 43–44px above this header on every one
-       * of the three desktop frames (nodes 1:307, 1:615, 16:121) and `--section-spacing-sm` resolves
-       * to 43.8px at the 1280px frame. `lg` would be 74px. The trade is at the narrow end, where
-       * `sm` gives 16px against the 28px the mobile frames draw; `md` reverses that miss and lands
-       * 15px over at desktop, which is the more visible of the two on a page-opening header.
+       * `sm` rather than the helper's `lg`: the design draws 43.19px (1:615), 43.44px (16:121) and
+       * 44px (1:307) above this header, and `--section-spacing-sm` measures 43.19px at a 1280px
+       * viewport — exact on the frame it was read from. `lg` measures 74px there. The trade is at
+       * the narrow end, where `sm` gives 16px against the 28px all three mobile frames draw; `md`
+       * reverses that miss (24px narrow, −4px) but measures 58px at 1280 against the drawn 43.4,
+       * and +14.6px at the top of a page-opening header is the more visible of the two. Left as
+       * `sm` and raised at design review: no step on the scale carries the design's 28 → 43.4 ramp,
+       * because the narrow anchors are inherited from the pre-fluid stepped scale rather than
+       * measured from these comps.
        */
       spacing="sm"
     >
@@ -49,20 +53,37 @@ const HeaderDisplaySection: FC<IHeaderDisplaySection> = (props) => {
          *
          * `variant="display"` is the Archivo Black tier added above `--heading-*`; `size="md"`
          * resolves `--display-md` = fluid(56px, 128px) against the 132px the three desktop frames
-         * are set at. See the note in styles.module.scss about the leading, which is the one place
-         * the token and the comp disagree.
+         * are set at. The leading and tracking that go with it were wrong at the token — 1.05 and
+         * -0.03em against the 0.84 and -0.045em every display heading in the design is drawn at —
+         * and were fixed there rather than here; see `--display-line-height` in `_variables.scss`.
          */}
-        <TextTitle className={styles.heading} title={title} as="h1" variant="display" size="md" />
+        <TextTitle
+          className={styles.heading}
+          title={title}
+          as="h1"
+          variant="display"
+          size="md"
+          textTransform="uppercase"
+        />
         {(hasLede || hasMeta) && (
           <div className={styles.aside}>
             {hasLede && (
               /*
-               * `config.p` rather than a font-size in the module: `--body-2xl` = fluid(20px, 22px)
-               * is the scale step the comp's 22px lede sits on. TextBlock maps a Portable Text
-               * `normal` block through `config.span`, which itself spreads `config.p`, so the one
-               * override covers both.
+               * `size="2xl"` keeps the paragraph on the body scale; `styles.ledeText` re-points the
+               * two tokens that step reads to the lede role's own pair — 17→22px on 23.8→29.7px,
+               * which is what the design draws here and on the home hero. See the note on
+               * `.ledeText` in styles.module.scss for why that is a token re-point rather than a
+               * `font-size` in the module.
+               *
+               * `config.p` reaches both handlers: TextBlock maps a Portable Text `normal` block
+               * through `config.span`, which itself spreads `config.p`, so the one override covers
+               * `normal` and `p` alike.
                */
-              <TextBlock className={styles.lede} blocks={content} config={{ p: { size: '2xl' } }} />
+              <TextBlock
+                className={styles.lede}
+                blocks={content}
+                config={{ p: { className: styles.ledeText, size: '2xl' } }}
+              />
             )}
             {hasMeta && (
               /*
@@ -71,9 +92,14 @@ const HeaderDisplaySection: FC<IHeaderDisplaySection> = (props) => {
                * claim it back, so VoiceOver would announce these as loose text. Same reasoning as
                * `components/Footer`.
                */
-              <ul className={styles.meta} role="list">
-                {metaItems?.map((item, index) => (
-                  <li className={styles.metaItem} key={index}>
+              <ul className={styles.meta} role="list" aria-label="Key facts">
+                {metaItems?.map((item) => (
+                  /*
+                   * Keyed by the item, not its index. These are short unique facts an editor
+                   * reorders in place in a Sanity tag input, and an index key makes React keep the
+                   * old text in the old node on a reorder.
+                   */
+                  <li className={styles.metaItem} key={item}>
                     {item}
                   </li>
                 ))}

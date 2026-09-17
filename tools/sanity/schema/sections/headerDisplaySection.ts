@@ -35,12 +35,19 @@ const headerDisplaySection = defineType({
       readOnly: true,
       group: 'internal'
     },
+    /*
+     * Required, unlike the two fields below it. `TextTitle` returns `null` for an empty title while
+     * the aside renders regardless, so a blank one publishes a page whose only header is a lede and
+     * a meta row — and a page with no `<h1>` at all. The field description already promises the
+     * opposite.
+     */
     {
       description: 'The page heading. Rendered as the page’s <h1> and set in the display type scale.',
       group: 'data',
       name: `title`,
       title: `Title`,
-      type: `title`
+      type: `title`,
+      validation: (Rule) => Rule.required()
     },
     /*
      * Named `content` rather than `lede` to match the field-naming rule in CLAUDE.md (`content` /

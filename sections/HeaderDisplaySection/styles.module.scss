@@ -19,7 +19,8 @@
  *
  * 60rem (960px) is the switch, and it is measured against what the two columns have to hold rather
  * than taken from the breakpoint map. At a 960px container each column is ~460px: enough for roughly
- * 45 characters of the 20px lede, and enough for a five- or six-letter display word at the ~95px
+ * 45 characters of the lede at the ~20px it resolves to there, and enough for a five- or
+ * six-letter display word at the ~95px
  * `--display-md` resolves to around there. Below that the lede's measure collapses and the heading
  * starts breaking mid-word, so the column layout stops being better than the stacked one.
  *
@@ -98,18 +99,12 @@ $stack-switch: 60rem;
 
       .meta {
         justify-content: flex-start;
+        text-align: left;
       }
     }
   }
 
   .heading {
-    /*
-     * All six frames type the heading in capitals. Applied here rather than left to the editor so
-     * the treatment holds whatever case somebody types, and applied as a section rule rather than
-     * pushed into `Text` because it is this header's typographic register, not the display tier's.
-     */
-    text-transform: uppercase;
-
     /*
      * A flex item's automatic minimum is its `min-content` width, which for a single long word at
      * ~120px type is wider than half the row — left alone "WEEKEND" would push the aside out of the
@@ -121,15 +116,11 @@ $stack-switch: 60rem;
     overflow-wrap: break-word;
 
     /*
-     * Known divergence, deliberately not corrected here. The comps set every display heading at
-     * 0.84 leading and -0.045em tracking — the home hero (node 1:65, 176px/147.84px/-7.92px) and all
-     * three of these headers (132px/110.88px/-5.94px) agree exactly. The tokens
-     * `--display-line-height` and `--display-letter-spacing` are 1.05 and -0.03em, so a two-line
-     * heading renders about 25% taller here than it is drawn.
-     *
-     * Overriding it in this one section would make this heading disagree with every other use of the
-     * display tier and hide the mismatch rather than resolve it. It belongs in
-     * `tools/sass/global/_variables.scss` if design confirms 0.84 is the intent — raised at review.
+     * No type declared here on purpose. The leading and tracking this header needs are the display
+     * tier's, not this section's: `--display-line-height` and `--display-letter-spacing` were 1.05
+     * and -0.03em against the 0.84 and -0.045em every display heading in the design is drawn at, so
+     * the fix went to `tools/sass/global/_variables.scss` where the home hero gets it too. Overriding
+     * it here would have desynced this heading from the tier and hidden the mismatch.
      */
   }
 
@@ -164,12 +155,26 @@ $stack-switch: 60rem;
     column-gap: #{fluid(18px, 28px)};
     margin: 0;
     padding: 0;
-    // Between wrapped lines. Fixed, per the scale's rule below the 32px cutoff.
-    row-gap: var(--spacing-xs);
+    /*
+     * Between wrapped lines. Fixed, per the scale's rule below the 32px cutoff.
+     *
+     * `xxs` (4px) and not `xs` (8px), measured: Planner draws its two meta lines on a 20.8px pitch
+     * (node 1:311, 13px on 1.6). A wrapped line here is a 17.77px line box, so 4px of gap lands on
+     * 21.77px — within a pixel — where 8px overshot by 5px. The comp sets its two lines as one text
+     * node and gets the pitch from leading alone; these are separate flex items and need the gap,
+     * so the gap has to make up the difference rather than add to it.
+     */
+    row-gap: var(--spacing-xxs);
 
     @container headerDisplay (width >= #{$stack-switch}) {
       // Meta-only: wrapped lines stack against the right edge, as Planner's two lines do.
       justify-content: flex-end;
+      /*
+       * Figma sets `text-right` on Planner's meta node, and `justify-content` alone does not
+       * reproduce it: it right-aligns each *item*, so an item long enough to wrap inside itself
+       * would left-align its own second line inside a right-aligned block. Inherited by the items.
+       */
+      text-align: right;
     }
   }
 
@@ -207,11 +212,35 @@ $stack-switch: 60rem;
   }
 
   /*
-   * Size and colour come from `TextBlock`'s `config` prop (see index.tsx) and the measure comes from
-   * the column, so the only thing left is the guard against an unbreakable run — a pasted URL — and
+   * Colour comes from `TextBlock`'s `config` prop (see index.tsx) and the measure comes from the
+   * column, so all this rule carries is the guard against an unbreakable run — a pasted URL — and
    * the hook a design review measures against.
    */
   .lede {
     overflow-wrap: break-word;
+  }
+
+  /*
+   * The lede's type, re-pointed rather than re-declared.
+   *
+   * `Text` already writes `font-size` and `line-height` onto the paragraph through
+   * `.variant_body.size_2xl`, at a specificity a single class in this module cannot beat. Setting
+   * the two custom properties those declarations read, on the same element, re-points them instead
+   * of fighting them — the rule that owns the properties is still `Text`'s, and this only says what
+   * they resolve to for this one paragraph. `FieldCheckbox`'s `.title` documents the same
+   * specificity wall; `Button`'s `.variant_bare` re-points its locals the same way.
+   *
+   * Why it needs re-pointing at all: `--body-2xl` is `fluid(20px, 22px)` and exact at the wide end,
+   * but the design's lede is 17px at its mobile frame, and `--body-line-height` (1.5) is the flat
+   * ratio the rest of the body scale is genuinely drawn at — the lede is the one role drawn tighter
+   * (1.40 → 1.35). Both tokens are shared: `--body-2xl` also sizes the mobile nav panel's links, so
+   * neither could be moved at source. See `--body-lede` in `_variables.scss` for the measurements.
+   *
+   * On the `<p>` and not the wrapper, so it reaches the paragraph and its inline children — a
+   * `<strong>` or an inline link inside the lede should take the lede's leading — and nothing else.
+   */
+  .ledeText {
+    --body-2xl: var(--body-lede);
+    --body-line-height: var(--body-lede-line-height);
   }
 }
