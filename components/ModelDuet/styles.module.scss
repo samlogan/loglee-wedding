@@ -1,0 +1,184 @@
+/*
+ * The duet stage — the block Lauren and Sam dance in.
+ *
+ * ## The shape, and why it is capped in both directions
+ *
+ * `aspect-ratio` is 0.94, which is `DUET_NATURAL_ASPECT` in `duet.ts`: the ratio at which the pair
+ * exactly fills the frame in both axes. That file has the measurements and the table; the one thing
+ * worth repeating here, because it is the opposite of the intuition a portrait layout encourages,
+ * is which direction is dangerous. A three.js `fov` is vertical, so the visible world *height* is
+ * fixed whatever shape this box takes and vertical fit is never in question. Width is the only
+ * thing this stylesheet can take away, so **wider is safe and taller is not**, with the floor at
+ * 0.68 — below which a hand leaves the frame at the one moment both loops peak together.
+ *
+ * The ratio alone is not enough, because it has no idea how big the column is. Unbounded, a 1280px
+ * content column would make this 1359px tall — a scene you have to scroll to see. So it is capped
+ * twice, for two different failures:
+ *
+ *   `max-width`   stops the block growing into a wall on a desktop column. 520px is roughly where
+ *                 the two figures stop gaining presence from extra size and start just being big.
+ *   `max-height`  the landscape-phone case, where `svh` is small and the viewport is wide — the
+ *                 aspect ratio alone would happily fill the whole screen and push the page's words
+ *                 off it. `aspect-ratio` then derives the width back down from the capped height,
+ *                 which keeps the ratio intact rather than squashing the scene.
+ *
+ * ## The surface
+ *
+ * Deliberately plainer than `ModelViewer`'s arch. That component is a panel from a comp with a
+ * dashed frame, a dome, corner chrome and a file chip; this is a celebration on a thank-you page
+ * with nothing else on it, so the box gets out of the way and the characters are the whole picture.
+ * The hatch is kept, because it is doing a real job — see `.placeholder`.
+ */
+
+@layer defaults {
+  .duet {
+    /*
+     * The query container for the hatch below. `inline-size` rather than `size`: the height here
+     * comes from `aspect-ratio`, and containing the block axis as well would make that circular.
+     */
+    container-type: inline-size;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .stage {
+    /*
+     * One bar of the hatch, measured perpendicular to the stripes — the same density
+     * `ModelViewer`'s arch uses at a comparable size, so the loading state of the two surfaces is
+     * recognisably the same material rather than two unrelated textures.
+     */
+    --duet-hatch-step: 2.6cqw;
+
+    position: relative;
+    /* See the file header: 0.94 is the natural ratio, floor 0.68, and wider is the safe direction. */
+    aspect-ratio: 0.94;
+    width: 100%;
+    max-width: 520px;
+    /*
+     * `svh` and not `vh`: on a mobile browser `vh` is the viewport with the toolbars *retracted*,
+     * so a stage sized in `vh` is taller than the screen on arrival — which is exactly when the
+     * reader is deciding whether the page has finished loading.
+     */
+    max-height: 70svh;
+    border-radius: var(--radius-md);
+    /* Clips the canvas, the fallback image and the hatch to the rounded box. */
+    overflow: hidden;
+    background-color: var(--bg-raised);
+  }
+
+  /*
+   * The loading placeholder, and the stage's empty state — one element, because they are one thing.
+   *
+   * Always in the DOM and always behind whatever else is in the stage, so the block has its size
+   * and its surface before a single byte of `three` has been requested. That is what keeps the page
+   * from reflowing when eight megabytes of character finally lands: the space was never missing.
+   *
+   * Hidden by opacity rather than unmounted, so the pair appears *through* it rather than after a
+   * swap.
+   */
+  .placeholder {
+    /*
+     * The stripe's alpha lives in the colour rather than on the element, because the element's
+     * `opacity` is the fade-out and the breathe, and the ground has to stay at full strength
+     * underneath both.
+     */
+    --duet-hatch-ink: color-mix(in srgb, var(--fg-subtle) 34%, transparent);
+
+    position: absolute;
+    inset: 0;
+    background-color: var(--bg-accent);
+    /*
+     * Both hard stops sit on the same position, so there is no interpolation into `transparent`
+     * and none of the grey-out that premultiplied alpha produces across a soft gradient.
+     */
+    background-image: repeating-linear-gradient(
+      135deg,
+      var(--duet-hatch-ink) 0,
+      var(--duet-hatch-ink) var(--duet-hatch-step),
+      transparent var(--duet-hatch-step),
+      transparent calc(var(--duet-hatch-step) * 2)
+    );
+    opacity: 1;
+    transition: opacity 400ms ease;
+
+    /*
+     * Reads as "still working" without a spinner, a layout shift or anything that moves. Worth more
+     * here than on a player card: this scene is two four-megabyte files, so the wait it covers is
+     * genuinely long on a phone connection and a still hatch would read as a broken image.
+     */
+    animation: model-duet-breathe 2.4s ease-in-out infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+      transition: none;
+    }
+  }
+
+  @keyframes model-duet-breathe {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.78;
+    }
+  }
+
+  /*
+   * Nothing is on its way any more — so the breathe stops, whether or not the hatch goes with it.
+   *
+   * `.resting` covers the case `.settled` cannot: a stage whose final render *is* the placeholder,
+   * because this browser has no WebGL and no fallback image was given either. There the hatch has
+   * to stay — it is the empty ground, not a spinner — but pulsing it says "still working" about
+   * something that has finished, forever, with no pause or stop mechanism, which fails WCAG 2.2.2.
+   *
+   * Declared at the same specificity as the `prefers-reduced-motion` override nested in
+   * `.placeholder`, which also resolves to `animation: none`, so the two cannot disagree whichever
+   * way the cascade falls.
+   */
+  .resting,
+  .settled {
+    .placeholder {
+      animation: none;
+    }
+  }
+
+  /* The stage holds its final content — both characters on the floor, or the fallback image. */
+  .settled {
+    .placeholder {
+      opacity: 0;
+    }
+  }
+
+  /*
+   * The canvas holder and the fallback image share one box.
+   *
+   * `role="img"` lives on the holder rather than on the `<canvas>` R3F creates: R3F owns that
+   * element and exposes no way to put attributes on it, and a container with `role="img"` presents
+   * its subtree as a single named image — right for a canvas, whose contents are not in the
+   * accessibility tree to begin with.
+   */
+  .canvasHolder,
+  .image {
+    position: absolute;
+    inset: 0;
+  }
+
+  /*
+   * Forced colours flattens every background, which would take the hatch with it and leave the
+   * stage as an unmarked hole in the page. An outline is drawn instead, so the block survives as a
+   * block. Matches what `ModelViewer` does for its arch.
+   */
+  @media (forced-colors: active) {
+    .stage {
+      outline: 1px solid CanvasText;
+      outline-offset: -1px;
+    }
+
+    .placeholder {
+      background-image: none;
+    }
+  }
+}

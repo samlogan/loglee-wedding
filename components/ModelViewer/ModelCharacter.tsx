@@ -46,7 +46,27 @@ export interface ModelCharacterProps {
    * reading pixels back off the canvas.
    */
   onClip?: (clip?: string) => void;
+  /**
+   * Where the character stands, in metres, as `[x, y, z]`. Defaults to the world origin.
+   *
+   * Applied to a wrapping `<group>` rather than to the `<primitive>` itself, so the clone's own
+   * transform stays at identity. That matters because `groundClips` reasons about the root bone's
+   * translation track in the character's *own* space: pinning X and Z to zero keeps a travelling
+   * clip on its mark, and a mark moved by mutating the model would make "zero" mean two different
+   * places depending on where the character was standing.
+   */
+  position?: [number, number, number];
+  /**
+   * Yaw, in radians, applied about the character's own vertical axis.
+   *
+   * Turns the figure on the spot without moving its mark, which is what lets two characters face
+   * slightly inward without either of them drifting off the position they were measured at.
+   */
+  rotationY?: number;
 }
+
+/** Hoisted so the default is one array rather than a fresh one per render for R3F to diff. */
+const ORIGIN: [number, number, number] = [0, 0, 0];
 
 /**
  * Play `next`, fading `previous` out under it.
@@ -142,7 +162,7 @@ const groundClips = (animations: AnimationClip[], root: Object3D | null) => {
  * Everything here that looks like ceremony is load-bearing; the notes say which.
  */
 const ModelCharacter = (props: ModelCharacterProps) => {
-  const { src, clips, restClip, animate, hoverSignal, onClip } = props;
+  const { src, clips, restClip, animate, hoverSignal, onClip, position = ORIGIN, rotationY = 0 } = props;
 
   const invalidate = useThree((state) => state.invalidate);
 
@@ -352,7 +372,11 @@ const ModelCharacter = (props: ModelCharacterProps) => {
     return () => target.removeEventListener('finished', onFinished);
   }, [actions, animate, mixer, onClip, rest]);
 
-  return <primitive object={model} />;
+  return (
+    <group position={position} rotation-y={rotationY}>
+      <primitive object={model} />
+    </group>
+  );
 };
 
 /** Warm the GLB cache before a viewer mounts. See `preload.ts` for the only caller that matters. */

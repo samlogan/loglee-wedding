@@ -34,6 +34,7 @@
     "sections:check": "tsx tools/sanity/register-sections.ts --check",
     "----- 3D -----": "",
     "model:optimise": "bash tools/3d/optimise-model.sh",
+    "duet:measure": "tsx tools/3d/measure-duet.ts",
     "----- FIGMA -----": "",
     "figma:tokens:sync": "echo 'Use /sync-design-system command in Claude Code instead'",
     "check": "ultracite check .",
