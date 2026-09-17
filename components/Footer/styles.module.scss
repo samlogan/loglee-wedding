@@ -1,14 +1,160 @@
-.footer {
-  padding: 24px 0;
-}
+/*
+ * The closing mark, composed rather than measured — there is no footer frame in the Figma file.
+ *
+ * Everything that could be borrowed from the bar is: the same `--stroke-cards` hairline, the same
+ * `Container width="xl"` and site gutter, the same link type, the same `fluid()` idiom for the
+ * block padding. The two differ in exactly one deliberate place — the vertical padding is roughly
+ * double the bar's, because a bar is a rule you pass under and a footer is a block you stop at.
+ *
+ * One breakpoint, and it is a **container** query on the footer's own inline size for the same
+ * reason the header's is: in the app the element is a child of `<body>` so its inline size *is* the
+ * viewport, and keying it to the container is what makes the switch testable — a story can render
+ * the footer in a 375px column and get the stacked layout without owning the window. Everything else
+ * that changes with width is a `fluid()` interpolation.
+ *
+ * The switch is local to this file rather than a shared `$…-switch` in `__media.scss`. The header's
+ * lives there because three CSS modules had to agree on one number; this one is read once, by the
+ * rule three lines below it, and a shared constant with a single consumer is indirection rather than
+ * coordination.
+ *
+ * 40rem is measured, not picked. Rendered at a 640px viewport the row holds a 130px wordmark and
+ * 377px of links inside 590px of gutter-inset container — 83px of slack, which is the headroom for a
+ * sixth link or a longer label before the list starts wrapping beside the wordmark instead of below
+ * it. `rem` rather than `px`, so a reader who has raised their root font size gets the stacked
+ * layout at the width the type actually needs it (WCAG 1.4.4).
+ */
+$footer-inline-switch: 40rem;
 
-.container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 48px;
+@layer defaults {
+  .footer {
+    container: footer / inline-size;
+    /*
+     * The bar's rule, mirrored. `--stroke-cards` and not `--stroke-divider` for the same reason:
+     * the design's chrome rule is full-strength ink, where `--stroke-divider` is the faint stone
+     * used between rows inside a block.
+     *
+     * Full-bleed, spanning the frame rather than stopping at the container gutters — the inset lives
+     * on `.inner`, which is the `Container`.
+     */
+    border-top: 1px solid var(--stroke-cards);
+    background: var(--bg-default);
+    color: var(--fg-default);
+  }
 
-  @include media-down(large-tablet) {
+  .inner {
+    display: flex;
     flex-direction: column;
+    gap: var(--spacing-xl);
+    padding-block: fluid(32px, 48px);
+  }
+
+  /*
+   * Wordmark and links: the one place in this component where the direction changes, which is the
+   * one thing `fluid()` cannot interpolate.
+   *
+   * Stacked below the switch rather than squeezed. The alternative — letting the list shrink beside
+   * the wordmark — is what a plain `flex-wrap` gives you, because the list's `min-content` width is
+   * only its widest single link, so it wraps *itself* into three ragged rows next to a 107px mark
+   * long before it ever drops to a line of its own.
+   */
+  .primary {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-lg);
+
+    @container footer (width >= #{$footer-inline-switch}) {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-xl);
+    }
+  }
+
+  /*
+   * `Logo` reads its height from this custom property — a custom property resolves wherever it is
+   * declared, whatever the layer or source order, which is how a consumer sizes the mark without
+   * out-specifying a rule in another component's stylesheet.
+   *
+   * One step above the bar's `fluid(14px, 15px)`, so the footer reads as the closing mark rather
+   * than as the header repeated. The arithmetic is the bar's: the mark is 115×13 in its own viewBox
+   * and sits inside the 1px transparent border box every control on the shared button surface
+   * carries, so the rendered width is `(height - 2) × 115/13` — ~124px at the narrow anchor and
+   * ~142px at the wide one, against the bar's 107 and 116.
+   */
+  .wordmark {
+    --logo-height: #{fluid(16px, 18px)};
+
+    flex-shrink: 0;
+  }
+
+  /*
+   * Type on the list, not on each link — `Link` renders through the shared button surface whose base
+   * rule is `font: inherit`, a shorthand that resets family, size, weight and line-height in one go.
+   * Both that rule and one here are single class selectors in `@layer defaults`, so which won would
+   * come down to the order the bundler happened to emit two CSS modules in. Setting it on the
+   * ancestor sidesteps the race: `font: inherit` then does exactly what it says.
+   *
+   * Matches the bar's nav (`--body-md`, medium, `--spacing-xl` between items) so the two lists are
+   * the same list to look at as well as in the CMS. The row gap is the smaller step: when the list
+   * wraps onto two lines the links should read as one block, not as two rows.
+   */
+  .list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm) var(--spacing-xl);
+    font-size: var(--body-md);
+    font-weight: var(--font-weight-medium);
+  }
+
+  .item {
+    display: flex;
+  }
+
+  /*
+   * Two classes, so this beats the shared `.button`'s own `&:hover { text-decoration: none }` on
+   * specificity rather than on source order.
+   *
+   * A plain underline, not the bar's animated rule. That rule is the header's "you are here"
+   * indicator, measured off the one Figma frame that draws an active state, and it doubles as the
+   * hover affordance; the footer marks no current page, so copying forty lines of measured CSS to
+   * get only the hover half of it would be duplication with none of the meaning.
+   */
+  .item .link {
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+      text-underline-offset: 0.25em;
+    }
+  }
+
+  /*
+   * The date and venue line.
+   *
+   * Flex rather than a text run, so the `column-gap` provides the space either side of the
+   * `aria-hidden` separator — the two halves are separate elements precisely so the dot is not part
+   * of either string, and `wrap` keeps the line honest at 375px where "29–31 May 2026 · Kangaroo
+   * Valley" does not fit on one.
+   *
+   * `--fg-muted` because this is the quietest thing in the frame: stone/600 on the light theme's
+   * stone/50 page measures 5.2:1, clear of the 4.5:1 WCAG 1.4.3 asks for body copy at this size.
+   */
+  .details {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--spacing-xs);
+    color: var(--fg-muted);
+  }
+
+  .separator {
+    // Punctuation standing in for a line break, so it is left out of a selection the same way it is
+    // left out of the accessible name: selecting the line copies "29–31 May 2026 Kangaroo Valley".
+    user-select: none;
+  }
+
+  .socials {
+    color: var(--fg-icon);
   }
 }

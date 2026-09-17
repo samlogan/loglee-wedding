@@ -7,7 +7,7 @@ import stringClean from '@/tools/helpers/stringClean';
 
 import styles from './styles.module.scss';
 
-interface SocialsProps {
+export interface SocialsProps {
   className?: string;
   size?: IconProps['size'];
   socials?: {
