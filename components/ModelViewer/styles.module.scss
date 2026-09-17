@@ -7,45 +7,102 @@
  *   panel stroke  #1e4632  pine/600   → `--fg-accent`       exact
  *   chrome ink    #1e4632  pine/600   → `--fg-accent`       exact
  *   chip fill     #f3f1ea  stone/50   → `--bg-default`      exact
- *   hatch stripe  #dcd9cf  stone/300  → `--fg-subtle` at 0.38  composites to #e0dcd5
+ *   empty arch    #e8e5dc  stone/200  → `--bg-accent`       reads 5 points light; see below
+ *   hatch stripe  #dcd9cf  stone/300  → `--fg-subtle` at 34%   composites to #dbd9d0
  *
- * The one reading rather than a match is the arch's own surface. The comp fills it with stone/200
- * under a diagonal hatch, and stone/200 has no theme-aware token — but the hatch is Figma's "3D
- * goes here", not a designed surface, so the two are separated here: the arch is `--bg-raised`, the
- * token for a lit surface something sits *on*, and the hatch is drawn over it while the arch is
- * empty. Empty, the two together read darker than the panel exactly as the comp does; filled, the
- * hatch is gone and the character stands on a raised surface. Both themes work the same way round,
- * because `--bg-raised` is the lighter of the pair on light *and* dark.
+ * `--fg-accent` is pine/600 on the light theme — the `#1e4632` the comp sets the stroke and all
+ * three chrome runs in — and **signal/300 on the dark one**, so the frame and the labels both go
+ * lime there. That was raised as an open question and settled as: keep it. `_variables.scss`
+ * reserves the *signal ramp* for interactive states, but the theme layer is where a primitive is
+ * given a semantic role, and `[data-theme='dark']` maps `--fg-accent` to it deliberately. Every
+ * static accent in the system already inherits that mapping — `Text color="accent"`,
+ * `StatMeter`'s `.label`/`.score`, `PlayerCard`'s `.statLabel`, all of them mono micro-labels off
+ * the same comp ink. Splitting the frame off onto `--fg-icon` would make this the only component
+ * that reads `--fg-accent` as two inks depending on whether the thing is text. If the lime is
+ * wrong it is wrong for the whole dark theme, which is a `_variables.scss` decision and not this
+ * component's to take unilaterally.
+ *
+ * ## The arch's surface, which is two surfaces
+ *
+ * The comp fills the empty arch with stone/200 under an opaque stone/300 hatch, and neither has a
+ * theme-aware token. They are split here by **state** rather than approximated by one value:
+ *
+ *   loading / empty  the placeholder paints it, in `--bg-accent` — the panel's own ground, which
+ *                    is what makes the arch read *darker* than the panel exactly as the comp does
+ *   loaded           the placeholder fades out and the arch's own `--bg-raised` is revealed: the
+ *                    token for a lit surface something sits *on*, which is what the stage becomes
+ *                    the moment a character is standing on it
+ *
+ * Painting the empty state on the placeholder rather than on the arch is what lets both be right.
+ * The arch alone cannot: `--bg-raised` is the *lighter* of the pair on light and on dark, so an
+ * empty arch left to it reads level with the panel (measured: mean 236 against the panel's 237,
+ * where the comp's is 226) and the dome barely shows at all.
  *
  * The stripe is `--fg-subtle` rather than the exact-matching `--stroke-divider`, and this was a
  * measured correction: on the dark theme `--stroke-divider` and `--bg-raised` are **both**
  * `--pine-500`, so the hatch was drawn in the arch's own colour and the loading state had no
  * placeholder at all. `--fg-subtle` is stone/400 on light and pine/200 on dark, which separates
- * from the arch on both. The 0.38 the placeholder is drawn at is where the two themes meet: on
- * light, stone/400 over stone/25 composites to #e0dcd5 against the comp's #dcd9cf — within four
- * points on every channel — and on dark it is the strongest the pine/200 stripe can be before it
- * stops reading as a hatch and starts reading as a pattern.
+ * from the ground on both. 34% is where it lands the comp: stone/400 over stone/100 composites to
+ * #dbd9d0 against the drawn #dcd9cf, within one point on every channel.
  *
  * ## Why the sizing is in `cqw` rather than `vw`
  *
- * Every dimension below scales with the **panel**, not the viewport, and that is not a stylistic
- * preference: the same component renders at ~520px beside the player card and at roughly half that
- * as one of two cards on the select screen, at identical viewport widths. `fluid()` would size the
- * two-up arch as though it had the whole page. Each `cqw` figure is a straight line through the two
- * comps — the same arithmetic `fluid()` does, against the container instead of the window.
+ * Every dimension inside the arch scales with the **panel**, not the viewport, and that is not a
+ * stylistic preference: the same component renders at ~520px beside the player card and at roughly
+ * half that as one of two cards on the select screen, at identical viewport widths. `fluid()` would
+ * size the two-up arch as though it had the whole page. Each `cqw` figure is a straight line through
+ * the two comps — the same arithmetic `fluid()` does, against the container instead of the window.
+ *
+ * **Every one of those lines is stated against the panel's content box, not its width.** A query
+ * length resolves against the container's content box, and this container carries a 1px border, so
+ * `1cqw` is a percent of 518px on the 520px comp and of 348px on the 350px one. The anchors below
+ * are written in those terms and land on the drawn values to within a tenth of a pixel; derived
+ * from the border-box figures they miss both comps by 1.5px, which is how they were first written.
+ *
+ * Two things deliberately stay on `fluid()`, and they are the two that are **not** arch geometry:
+ * the chrome's font size and the corner insets that position it. Type in `cqw` would ignore the
+ * reader's browser font setting outright — `fluid()` keeps a `rem` component for exactly that
+ * reason (WCAG 1.4.4), and see the note in `tools/sass/base/__fluid.scss`. The insets have to move
+ * in step with the type they inset, or an 11px label ends up sitting in a corner sized for a 9px
+ * one; a corner inset is an optical distance rather than a share of the panel, and should not grow
+ * with it.
  */
 
 @layer defaults {
   .viewer {
-    /* Chrome insets. The comp draws 14/12px inline and ~12/10px block; these round to one pair. */
+    /*
+     * Chrome insets, measured from the panel's padding box — which is what `inset-*` resolves
+     * against on an absolutely positioned child, so the comp's border-box figures are 1px larger
+     * than these throughout.
+     *
+     * The comp does not state one pair. The desktop readout (node 1:167) sits at 15.2/13, the
+     * desktop label (1:166) at 14/12, and the mobile label (1:281) — the only chrome the mobile
+     * panel carries — at 12/10. These take the readout at the wide end and the label at the narrow
+     * one, which puts the desktop label 1px further in than drawn. A second pair of tokens to
+     * recover a pixel on one corner of one element is not worth the reading.
+     */
     --viewer-gutter-inline: #{fluid(12px, 15px)};
     --viewer-gutter-block: #{fluid(10px, 13px)};
     /* 11px desktop (node 1:166), 9px mobile (node 1:281) — below `--body-xs`, so there is no token. */
     --viewer-chrome-size: #{fluid(9px, 11px)};
     /* 0.66px on 11px and 0.54px on 9px are both exactly 0.06em, so one `em` value covers both. */
     --viewer-chrome-tracking: 0.06em;
-    /* One hatch bar. 6px at the desktop stage's width, 5px at the mobile one. */
-    --viewer-hatch-step: #{fluid(5px, 6px)};
+    /*
+     * One hatch bar, measured perpendicular to the stripes.
+     *
+     * 12px on the desktop comp and 10px on the mobile one. Both were read off the rendered frames
+     * rather than off the gradient stops: Figma exports the hatch as a `linear-gradient` whose
+     * stops are percentages of the *gradient line*, which on a 135° gradient is
+     * `0.7071 × (w + h)` — 673px for the desktop arch — so the 1.78% between stops is 12px and not
+     * anything you can read straight off. Taking the stop spacing for the bar width is how this
+     * ended up at half the drawn density.
+     *
+     * `cqw` and not `fluid()`, because this is arch geometry: a two-up panel at desktop width would
+     * otherwise get desktop-scale stripes on a mobile-scale arch. Substituted where it is *used*,
+     * on `.placeholder`, so the query length resolves against `.viewer` rather than circularly
+     * against this element.
+     */
+    --viewer-hatch-step: clamp(2.3166cqw, 1.1765cqw + 5.9059px, 2.8736cqw);
 
     /*
      * The query container for every `cqw` below.
@@ -75,29 +132,37 @@
     /*
      * The arch's width, interpolated against the panel's.
      *
-     * The two comps state (350 → 200) and (520 → 330), a line of slope 0.7647 and intercept
-     * -67.65px; both anchors land on the drawn value to the pixel. The clamp bounds are
-     * proportions rather than lengths so the arch keeps its share of a panel outside the comps'
-     * range instead of freezing at a fixed size — 57% is the mobile proportion, 63.5% the desktop
-     * one, and the line runs between them.
+     * The two comps state (350 → 200) and (520 → 330); in content-box terms, which is what a query
+     * length measures, that is (348 → 200) and (518 → 330) — a line of slope 0.7647 and intercept
+     * -66.118px, and both anchors land on the drawn value to three decimal places. The clamp bounds
+     * are proportions rather than lengths so the arch keeps its share of a panel outside the comps'
+     * range instead of freezing at a fixed size: 57.4713% is the mobile proportion (200 of 348),
+     * 63.7066% the desktop one (330 of 518), and the line runs between them.
      */
-    width: clamp(57cqw, 76.4706cqw - 67.647px, 63.5cqw);
+    width: clamp(57.4713cqw, 76.4706cqw - 66.1176px, 63.7066cqw);
     /*
      * 330 × 622 desktop, 200 × 374 mobile — 0.5305 and 0.5348, the same shape to within half a
      * percent. One ratio, and the panel's height falls out of it plus the margins below.
+     *
+     * The desktop figure is the one it is pinned to, so the mobile arch comes out 377 tall against
+     * the drawn 374 and the mobile panel 444.9 against 442 — 0.8% and 0.7%. Two comps that disagree
+     * by half a percent about the shape of the same dome are two frames drawn by hand, not two
+     * shapes; a second clamp to split three pixels between them would cost the one-line statement
+     * of what the arch *is*.
      */
     aspect-ratio: 330 / 622;
     /*
-     * The gap above and below the arch, which is what gives the panel its height. 50px on a 520
-     * panel and 34px on a 350 one are 9.62% and 9.71% — near enough one number that a line through
-     * them would be fitting noise.
+     * The gap above and below the arch, which is what gives the panel its height. In content-box
+     * terms the comps draw 49px on a 518 panel and 33px on a 348 one — 9.4595% and 9.4828%, near
+     * enough one number that a line through them would be fitting noise. At 9.47% the desktop panel
+     * measures 722.1 against the drawn 722.
      *
      * Margin rather than padding on `.viewer`, and that is load-bearing: a container query length
      * used on the container *itself* would be circular, so the spec resolves it against the next
      * container out (or the viewport). Putting the space on the child keeps `cqw` meaning "percent
      * of this panel".
      */
-    margin-block: 9.65cqw;
+    margin-block: 9.47cqw;
 
     position: relative;
     /*
@@ -128,23 +193,41 @@
    * after a swap, and so nothing reflows at the moment the GLB finishes decoding.
    */
   .placeholder {
+    /*
+     * The stripe's alpha lives in the colour rather than on the element, because the element's
+     * `opacity` is the fade-out and the breathe and it has to leave the ground at full strength.
+     * 34% is the measured match against the comp's stone/300 stripe; see the top of this file.
+     */
+    --viewer-hatch-ink: color-mix(in srgb, var(--fg-subtle) 34%, transparent);
+
     position: absolute;
     inset: 0;
-    background-image: repeating-linear-gradient(
-      135deg,
-      var(--fg-subtle) 0,
-      var(--fg-subtle) var(--viewer-hatch-step),
-      transparent var(--viewer-hatch-step),
-      transparent calc(var(--viewer-hatch-step) * 2)
-    );
+    /*
+     * The comp's empty-arch ground, opaque — so this element carries the whole of the empty state
+     * and the arch's own `--bg-raised` is what is revealed when it goes, rather than something that
+     * has to show through it. See the note at the top of this file on why the two are split.
+     */
+    background-color: var(--bg-accent);
     /*
      * Both hard stops sit on the same position, so there is no interpolation into `transparent` and
      * none of the grey-out that premultiplied alpha produces across a soft gradient.
      */
-    opacity: 0.38;
+    background-image: repeating-linear-gradient(
+      135deg,
+      var(--viewer-hatch-ink) 0,
+      var(--viewer-hatch-ink) var(--viewer-hatch-step),
+      transparent var(--viewer-hatch-step),
+      transparent calc(var(--viewer-hatch-step) * 2)
+    );
+    /* Full strength at rest: the ground is this element's, and the breathe below is what moves. */
+    opacity: 1;
     transition: opacity 400ms ease;
 
-    /* Reads as "still working" without a spinner, a layout shift or anything that moves. */
+    /*
+     * Reads as "still working" without a spinner, a layout shift or anything that moves. The whole
+     * ground lifts towards the arch's lit surface and settles back, which keeps the hatch legible
+     * throughout — fading the stripes alone made the arch flicker between "empty" and "blank".
+     */
     animation: model-viewer-breathe 2.4s ease-in-out infinite;
 
     @media (prefers-reduced-motion: reduce) {
@@ -156,15 +239,23 @@
   @keyframes model-viewer-breathe {
     0%,
     100% {
-      opacity: 0.38;
+      opacity: 1;
     }
 
     50% {
-      opacity: 0.2;
+      opacity: 0.78;
     }
   }
 
-  .loaded {
+  /*
+   * The arch has its final content — a character on the stage, or the fallback image.
+   *
+   * Both, and not just the canvas: the image *is* the settled render for a browser with no WebGL,
+   * so leaving the placeholder up behind it would pulse a loading hatch through the letterbox of a
+   * `contain`-fitted picture that had finished loading. The canvas branch shows a clean
+   * `--bg-raised` surround once it is up, and the fallback is only a fallback if it stands in.
+   */
+  .settled {
     .placeholder {
       opacity: 0;
       animation: none;

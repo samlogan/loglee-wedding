@@ -3,8 +3,8 @@
 import { useAnimations, useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { LoopOnce, LoopRepeat } from 'three';
-import type { AnimationAction, AnimationMixer } from 'three';
+import { LoopOnce, LoopRepeat, PropertyBinding } from 'three';
+import type { AnimationAction, AnimationClip, AnimationMixer, Bone, Object3D } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 
 import { matchModelClip, resolveModelClip } from '@/helpers/modelClips';
@@ -62,6 +62,69 @@ const crossFade = (next: AnimationAction, previous: AnimationAction | null) => {
 };
 
 /**
+ * Hold the character on its mark.
+ *
+ * Meshy exports Mixamo animations with their **root motion intact**, so a clip that travels moves
+ * the hips through world space rather than cycling on the spot. Measured off the hips translation
+ * track in `public/sam.glb`, `Excited_Walk_M` covers **1.02m in X**; at this camera and the arch's
+ * 0.53:1 aspect the frame is roughly **1.28m across**, so the character walks four fifths of the way
+ * out of a stage the design draws with `overflow: hidden` and is clipped at the edge — hand first,
+ * then shoulder. Every other clip in the file stays under 0.34m, which is why this reads as a clip
+ * choice going wrong rather than as a systematic problem, and why it will keep happening: the
+ * authored names come from the CMS and nothing in the Studio says which of them travel.
+ *
+ * The fix is the standard in-place conversion — pin the root bone's X and Z to zero, which is the
+ * camera's own axis and where the rest pose already sits (`restpose` holds X 0.003, Z -0.013). Y is
+ * untouched, so jumps and crouches survive: `Gangnam_Groove` rises 0.12m and `FunnyDancing_03`
+ * drops 0.26m, and both are the clip doing its job.
+ *
+ * Zero rather than each clip's first frame or its mean, and that choice is about the crossfade: one
+ * shared mark means the character does not slide sideways when one clip hands over to the next.
+ *
+ * What it costs is the *horizontal* component of a clip's sway — at most 0.19m on the dance clips,
+ * about 15% of the frame. Hips **rotation** and every limb are untouched, so a dance still reads as
+ * a dance and a walk reads as walking on the spot, which is what the comp's "DANCE LOOP" means for
+ * a fixed arch.
+ *
+ * Clips are cloned rather than edited in place. `useGLTF` hands every viewer the same cached
+ * `animations` array, so writing to those tracks would reach through to every other character on
+ * the page — and, the second time this ran, to already-flattened data.
+ */
+const groundClips = (animations: AnimationClip[], root: Object3D | null) => {
+  if (!root) {
+    return animations;
+  }
+
+  /*
+   * Bindings are keyed by the *sanitised* node name: three strips `:` and `.` from it, so
+   * `mixamorig:Hips` is bound as `mixamorigHips` and comparing against `root.name` raw would match
+   * nothing at all — silently, leaving the walk-off in place with no way to tell from the outside.
+   */
+  const trackName = `${PropertyBinding.sanitizeNodeName(root.name)}.position`;
+
+  return animations.map((clip) => {
+    if (!clip.tracks.some((track) => track.name === trackName)) {
+      return clip;
+    }
+
+    const grounded = clip.clone();
+
+    for (const track of grounded.tracks) {
+      if (track.name !== trackName) {
+        continue;
+      }
+      // A `.position` track is always VEC3, so the stride is three and Y is the middle component.
+      for (let i = 0; i < track.values.length; i += 3) {
+        track.values[i] = 0;
+        track.values[i + 2] = 0;
+      }
+    }
+
+    return grounded;
+  });
+};
+
+/**
  * One character in the scene.
  *
  * Everything here that looks like ceremony is load-bearing; the notes say which.
@@ -95,7 +158,25 @@ const ModelCharacter = (props: ModelCharacterProps) => {
    */
   const model = useMemo(() => SkeletonUtils.clone(scene), [scene]);
 
-  const { actions, mixer, names } = useAnimations(animations, model);
+  /**
+   * The rig's root bone — `mixamorig:Hips` on these characters, but **found rather than named**, so
+   * the rule survives a character exported through a different pipeline. `traverse` is depth-first
+   * pre-order, so the first bone it reaches is the topmost one.
+   */
+  const rootBone = useMemo(() => {
+    const bones: Object3D[] = [];
+    model.traverse((object) => {
+      if ((object as Bone).isBone) {
+        bones.push(object);
+      }
+    });
+    return bones.at(0) ?? null;
+  }, [model]);
+
+  /** See `groundClips` — without this a travelling clip walks the character out of the arch. */
+  const grounded = useMemo(() => groundClips(animations, rootBone), [animations, rootBone]);
+
+  const { actions, mixer, names } = useAnimations(grounded, model);
 
   const rest = resolveModelClip(restClip, clips, names);
   /*

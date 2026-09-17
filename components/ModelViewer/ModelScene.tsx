@@ -21,6 +21,12 @@ import type { ModelEnvironmentPreset } from './ModelLighting';
  * harness's 3.4 the visible width here is around a metre, which crops a dancing character at the
  * elbows. 4.2 gives roughly 1.3m across and 2.4m up, so a 1.8m figure sits inside the dome with air
  * above its head and its arms in frame.
+ *
+ * Reviewed against the comp and kept. The comp cannot arbitrate it directly — nodes 1:163 and
+ * 1:278 draw the arch as an empty hatched placeholder, so there is no drawn framing to match — so
+ * it was judged on what the arch can hold: measured on the feature clip at a 520px panel, the
+ * figure spans 78% of the arch's height and 55% of its width at full arm extension, with the raised
+ * hand inside the dome and the feet on the stage. The arithmetic and the picture agree.
  */
 const CAMERA = { fov: 32, position: [0, 1, 4.2] } as const;
 

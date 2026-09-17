@@ -256,6 +256,16 @@ const ModelViewer = (props: ModelViewerProps) => {
 
   const placeholderIsContent = render === 'placeholder';
 
+  /*
+   * The arch is holding its final content, and the loading placeholder should be gone.
+   *
+   * Not the same question as `data-model-loaded`, which stays canvas-only because it reports
+   * whether *the model* is in the scene. The fallback image is a settled render too — it is what
+   * this browser is going to show — so leaving the hatch pulsing behind the letterbox of a
+   * `contain`-fitted picture would say "still working" about something that had finished.
+   */
+  const settled = model.loaded || render === 'image';
+
   return (
     <div
       className={classNames(styles.viewer, className)}
@@ -267,7 +277,7 @@ const ModelViewer = (props: ModelViewerProps) => {
       {label ? <span className={styles.label}>{label}</span> : null}
 
       <div
-        className={classNames(styles.stage, { [styles.loaded]: model.loaded })}
+        className={classNames(styles.stage, { [styles.settled]: settled })}
         onPointerDown={canHover ? triggerHover : undefined}
         onPointerEnter={canHover ? triggerHover : undefined}
       >
