@@ -1,0 +1,501 @@
+/*
+ * The multi-select card group — the RSVP comp's "02 · ATTENDING" question (Figma node 1:798
+ * desktop, 1:892 mobile).
+ *
+ * Colour is not invented here. The comp draws all three cards in the *selected* state, so the
+ * unselected treatment is taken from the design system's own selection pair on the `Design items`
+ * board (node 1:977): `Chip · selected` is ink fill + ink border + off-white label, and `Chip` is
+ * the same box with no fill and the ink moved to the border and the text. Those are exactly the
+ * filled and `outline` forms of `theme="secondary"` in `components/Button`, so this reads the same
+ * `--button-secondary-*` tokens rather than adding a parallel set. Confirmed against the comp: the
+ * card is `#131412` on `#131412` with `#f3f1ea` text, which is `--button-secondary-bg` /
+ * `--button-secondary-fg` in the light theme.
+ *
+ * Selected and unselected therefore differ by three things, only one of which is colour:
+ *
+ *   fill      transparent → ink            (colour)
+ *   marker    hollow ring → filled disc    (shape)
+ *   word      OUT → IN                     (text)
+ *
+ * so the state survives greyscale, a colour-vision deficiency and a forced-colours stylesheet.
+ */
+
+@layer defaults {
+  /*
+   * `display: block`, not `flex`, and that is not an oversight.
+   *
+   * A `<legend>` is laid out by the fieldset itself rather than as an ordinary child, and browsers
+   * disagree about what happens to it when the fieldset is a flex or grid container. Keeping the
+   * fieldset a block box leaves the legend on its documented path and puts the layout on the
+   * `.options` wrapper below, where it is ordinary.
+   *
+   * `min-width: 0` overrides the UA's `min-inline-size: min-content` on `fieldset`, which otherwise
+   * refuses to shrink below its widest card and overflows a narrow column.
+   */
+  .fieldset {
+    /*
+     * The one gap the group is spaced on, set here so the legend's margin and the grid's row gap
+     * cannot drift apart — the comp gives them the same value at both ends of the range.
+     */
+    --group-gap: #{fluid(10px, 12px)};
+
+    display: block;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  /*
+   * The design's section label — JetBrains Mono Bold, uppercase, tracked, in the accent ink
+   * (`--fg-accent` is pine/600 on the light theme, which is the `#1e4632` the comp uses, and
+   * signal/300 on the dark one).
+   *
+   * `--body-xs` is `fluid(11px, 12px)`, which is the comp's mobile and desktop sizes exactly.
+   * Tracking is held in `em` (1.68px on 12px, 1.54px on 11px — both 0.14em) so it stays proportional
+   * as the fluid size moves.
+   *
+   * The gap below it is `--group-gap`, not `--spacing-sm` (a flat 12px). The comp steps it to 10px on
+   * the phone frame, in step with every other value there (18→16 padding, 12→11 here, 11→10 eyebrow,
+   * 20→17 title) — a proportional step-down across the whole frame is intent, not noise, so it
+   * interpolates like everything else here.
+   *
+   * That is a deliberate departure from the spacing scale's own policy, which holds everything at or
+   * below `--spacing-lg` fixed on the grounds that those are component-internal gaps whose
+   * "relationship does not change with the viewport" (`_variables.scss`). True of an icon-to-label
+   * gap; not true of this one, which is a layout gap between blocks — the legend and the group, and
+   * one card and the next — and which the design does in fact change with the viewport.
+   *
+   * Note this is *not* what `FieldCommon/FieldLabel` draws, and the comp sets every field label in
+   * this same treatment ("01 · PLAYER NAME", "03 · DIETARY REQUIREMENTS"). Bringing `FieldLabel`
+   * into line is a change to ten other fields and belongs in its own ticket.
+   */
+  .legend {
+    @include mono-font();
+
+    display: block;
+    width: 100%;
+    margin-bottom: var(--group-gap);
+    padding: 0;
+    color: var(--fg-accent);
+    font-size: var(--body-xs);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.3;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .required {
+    color: var(--system-error-500);
+  }
+
+  /*
+   * A grid rather than the wrapping flex row the comp is drawn with, and this is the deliberate
+   * departure from the mobile frame.
+   *
+   * Figma hugs each card to its own content there, which gives the three options three visibly
+   * different widths (169 / 166 / 215) stacked down the page — an artefact of auto-layout
+   * "hug contents", not a decision: the options are peers, and the width of one is just how long its
+   * title happens to be. `auto-fit` keeps them equal at every width, three across where 224px each
+   * fits (which is exactly the desktop frame's 696px column) and one full-width column below that.
+   *
+   * `min(224px, 100%)` rather than a bare `224px`: a grid track with a fixed minimum cannot shrink,
+   * so `minmax(224px, 1fr)` overflows any container narrower than 224px instead of wrapping.
+   *
+   * This is also the query container for the card's one direction change — see the note on `.card`.
+   * `inline-size` and not `size`: the group's width comes from the column it sits in and never from
+   * its contents, but its height is the content, and containing that would collapse it. Nothing is
+   * clipped by it: `container-type` implies layout, style and inline-size containment, not `paint`,
+   * so the focus ring still draws outside the card — measured, not assumed.
+   *
+   * The one thing inline-size containment does cost: the contents no longer contribute to this
+   * element's own intrinsic width, so a shrink-to-fit ancestor has nothing to size against and the
+   * group collapses to the legend. `Form`'s `grid` (a `1fr` track) and `normal` (a stretched column)
+   * layouts both give it a definite width, but `layout="flex"` is `flex-direction: row` with no
+   * `flex` basis set, which is shrink-to-fit — measured there, the whole group folds to ~114px and
+   * the cards overflow. Nothing uses that layout today. If something does, give the field container
+   * a definite width rather than reaching for a viewport media query here; the width genuinely is
+   * the grid track's, which is the whole reason this is a container query.
+   *
+   * The gap splits by axis so the grid's own wrap point is a number the query can name exactly.
+   * `column-gap` only ever applies once there are two tracks, which needs 448px of group before the
+   * gap is even counted — so it is never a phone, and 12px is the only value the design gives for
+   * it. `row-gap` is the one the phone frame sets, where the cards are a single stacked column.
+   */
+  .options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(224px, 100%), 1fr));
+    row-gap: var(--group-gap);
+    column-gap: 12px;
+    container-type: inline-size;
+  }
+
+  // `min-width: 0` for the same reason `.fieldset` and `.body` carry it: a grid item's automatic
+  // minimum is `min-content`, so an unbreakable title would push the card past its own track.
+  .option {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    cursor: pointer;
+  }
+
+  /*
+   * Present, focusable and announced — just not painted.
+   *
+   * Stretched over the whole card so a press anywhere on it is a press on the checkbox, which is
+   * what makes the card's entire area the hit target without a single event handler. `opacity: 0`
+   * rather than `display: none` (both siblings) or `visibility: hidden`, either of which would take
+   * it out of the tab order and out of the accessibility tree.
+   *
+   * `box-sizing` is stated because the reset's list covers `div`, `span`, `label` and friends but
+   * not `input`, so this would otherwise be a content box and `inset: 0` plus a border would not
+   * agree on where the edges are.
+   */
+  .input {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    appearance: none;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  /*
+   * The unselected card: `Chip` from the design system board — no fill, ink border, ink label.
+   *
+   * Padding is the comp's inset minus the border, matching the convention the button tokens are
+   * built on: the border box is always drawn, so the design's gutter is one pixel less of padding
+   * here.
+   *
+   * The inset is read off the frame geometry rather than off the generated Tailwind, because the two
+   * disagree by exactly the border. Figma reports the card at 224×122 with its first child at
+   * (19, 19) and 19px of slack below the last (node 1:802), and the mobile card at 169×72 with its
+   * child at (17, 17) — so the gutter from the painted edge is 19px desktop and 17px mobile, and the
+   * padding is 18/16. The `p-[18px]` in the code export is that same 19 with the border already
+   * taken off; subtracting it a second time is what put every card a pixel tight on all four sides.
+   */
+  .card {
+    /*
+     * 14px — the comp's gap between the card's three rows, and it sits exactly between
+     * `--spacing-sm` (12) and `--spacing-md` (16) with no token of its own. Fixed rather than fluid
+     * on purpose: it is a component-internal gap, which is the same cut the spacing scale makes at
+     * 32px. Named here because `.body` has to match it for the three rows to space evenly, and a
+     * relationship asserted only in a comment is one that drifts.
+     */
+    --card-gap: 0.875rem;
+    /*
+     * The two mono micro-labels. Below `--body-xs` (11→12px), the floor of the body scale, so there
+     * is no token — and this stays a local rather than becoming one, because a new rung on the
+     * shared scale would show up in the client-facing type documentation on the strength of two
+     * labels in one component.
+     */
+    --micro-font-size: #{fluid(10px, 11px)};
+
+    display: flex;
+    /*
+     * The phone form, and the base: the eyebrow and title stack on the left and the indicator sits
+     * against the right edge, along the card's length.
+     */
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    // A floor, not a measurement: the comp's phone card hugs its content, so its `space-between` has
+    // no slack to distribute and it gives no gap value. This keeps the indicator off the title when
+    // a long one does fill the row.
+    gap: var(--spacing-md);
+    width: 100%;
+    padding: #{fluid(16px, 18px)};
+    /*
+     * Routed through a local rather than set directly, so the error ink cannot be out-cascaded.
+     * `.card.error` is (0,2,0) and loses to `.input:disabled + .card` (0,3,0) and
+     * `.input:checked:not(:disabled):hover + .card` (0,5,0), which both set `border-color` — so a
+     * disabled invalid field, and a hovered selected one, silently dropped the red border. A custom
+     * property set by the lower-specificity rule still wins, because every site resolves *through*
+     * it; escalating specificity instead would just restart the same race on the next state added.
+     */
+    border: var(--button-border-width) solid var(--card-border-color, var(--button-secondary-bg));
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--button-secondary-bg);
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+
+    /*
+     * The desktop form: three rows down the card. A direction change is the one thing `fluid()`
+     * cannot interpolate, so it stays a discrete switch — the only one in this file.
+     *
+     * It asks the *group* how wide it is, not the viewport, and not the card either.
+     *
+     * Not the viewport, because nothing about the card's width comes from the viewport: `.options`
+     * is an `auto-fit` grid, so the width is the track's. A viewport rule gets the middle of the
+     * range backwards — inside the 696px form column the grid still holds three 224px tracks at a
+     * 768px viewport, below `tablet`, so `media-down(tablet)` flipped three narrow cards to `row`
+     * and took 15px off each at a width where the comp draws them stacked.
+     *
+     * Not the card either, though that is the tempting one: a card is ~224px wide when it is one of
+     * several and ~272px when it is a full-width one on a 320px phone, and a two-track group on a
+     * 660px container makes tracks wider than that. Those two ranges overlap, so no threshold on the
+     * card's own width can separate them — measured, a 280px one put the 320px phone back into the
+     * stacked desktop form.
+     *
+     * The group's width has no such overlap, because it is the same quantity the grid itself wraps
+     * on: two tracks need 2 × 224px plus the 12px column gap. So `460px` is not a chosen number —
+     * it is the grid's own wrap point, and the rule is exactly "stacked once the cards are side by
+     * side, along its length while one card is the whole row", which is what the two frames draw.
+     */
+    @container (min-width: 460px) {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: var(--card-gap);
+    }
+  }
+
+  /*
+   * Selected: `Chip · selected`. Fill and label swap; the border does not move, so the card does not
+   * shift by a pixel and a row of mixed states lines up.
+   */
+  .input:checked + .card {
+    background-color: var(--button-secondary-bg);
+    color: var(--button-secondary-fg);
+  }
+
+  /*
+   * Hover on an *unselected* card deliberately does not preview the selected fill.
+   *
+   * `components/Button`'s `.outline:hover` completes the fill, which is right for an action — press
+   * it and something happens. It is wrong for a selection control, where "filled" is the state
+   * itself: a hovered-but-unselected card that looks identical to a selected one cannot be read.
+   * `--bg-accent` is the quiet surface tint, clearly not the ink fill.
+   */
+  .input:not(:disabled):hover + .card {
+    background-color: var(--bg-accent);
+  }
+
+  .input:checked:not(:disabled):hover + .card {
+    background-color: var(--button-secondary-bg-hover);
+    border-color: var(--card-border-color, var(--button-secondary-bg-hover));
+    color: var(--button-secondary-fg-hover);
+  }
+
+  /*
+   * The same ring the rest of the site draws — `tools/sass/global/_reset.scss` for everything
+   * generic, `components/Button` for the controls — rather than a third treatment. Width, offset and
+   * ink all come from the same three tokens.
+   *
+   * On the card rather than the input, because the input is transparent and a ring around an
+   * invisible box is an invisible ring. The offset gap shows the page behind the card, so only
+   * ring-against-page contrast has to hold, which is the property each theme's ring token is picked
+   * for.
+   *
+   * `--button-secondary-focus-ring` specifically, and not the `--fg-default` fallback `Button` keeps
+   * for unthemed controls: this card takes every other colour it has from the `--button-secondary-*`
+   * family, so it is a secondary-themed control and should ring like one. Identical in the light
+   * theme (both resolve to stone/900); in the dark one it is the signal the rest of the site's
+   * secondary controls ring with, rather than a second treatment only this component uses.
+   */
+  .input:focus-visible + .card {
+    outline: var(--button-focus-ring-width) solid var(--button-secondary-focus-ring);
+    outline-offset: var(--button-focus-ring-offset);
+  }
+
+  .input:disabled + .card {
+    border-color: var(--card-border-color, var(--button-secondary-bg-disabled));
+    color: var(--button-secondary-fg-disabled);
+  }
+
+  .input:disabled:checked + .card {
+    background-color: var(--button-secondary-bg-disabled);
+  }
+
+  /*
+   * Set from the render prop's `hasError`, not from `Field`'s own container class. `Field`'s module
+   * declares an empty `.container` and nothing else, which Sass drops, so both `styles.container`
+   * and `styles.error` are `undefined` there and neither can be styled from this file.
+   *
+   * Worth knowing what that actually produces upstream, because it is not nothing: `Field` composes
+   * the error class as an *object key* — `classNames(styles.container, { [styles.error]: !!error })`
+   * — and an `undefined` key stringifies, so an invalid field renders `<div class="undefined">` on
+   * its container. Harmless today, and a selector accident waiting for whoever writes `.undefined`.
+   * Its own ticket; do not chase it from here.
+   */
+  .card.error {
+    --card-border-color: var(--input-error-border);
+  }
+
+  /*
+   * The eyebrow and title travel together: they are one block on a phone, where the indicator sits
+   * beside them, and three evenly spaced rows on desktop. Matching the card's own gap at desktop is
+   * what makes the second true without a second layout.
+   */
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xxs);
+    min-width: 0;
+
+    @container (min-width: 460px) {
+      gap: var(--card-gap);
+    }
+  }
+
+  /*
+   * Set in `--micro-font-size` on the card — see the note there. Tracking in `em` again: 1.32px on
+   * 11px and 1.2px on 10px are both 0.12em.
+   *
+   * `opacity` is the comp's own treatment. It costs contrast, which was checked rather than assumed:
+   * at 0.8 the eyebrow resolves to roughly 9:1 on the unselected card and 11:1 on the selected one,
+   * both clear of the 4.5:1 that 1.4.3 asks of text this size.
+   */
+  .eyebrow {
+    @include mono-font();
+
+    font-size: var(--micro-font-size);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.3;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+
+  /*
+   * `--body-xl` is `fluid(18px, 20px)` against the comp's 17→20px — a pixel at the narrow end, in
+   * exchange for staying on the type scale.
+   *
+   * Weight 500, not the 600 Figma reports: `config/fonts.ts` loads Instrument Sans at 400 and 500
+   * only, so asking for 600 buys a synthesised face rather than a bolder one. The same call is
+   * already made for `--button-font-weight`.
+   *
+   * `line-height` and `font-size` are set here rather than through `Text`'s `size` prop, because
+   * `.variant_body.size_xl` also pins `line-height` to `--body-line-height` (1.5) at a specificity
+   * this rule cannot beat, and the comp sets these at `normal` (~1.2).
+   */
+  .title {
+    font-size: var(--body-xl);
+    line-height: 1.2;
+  }
+
+  .indicator {
+    @include mono-font();
+
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    /*
+     * The mono space the comp types between the marker and the word, in the units it is typed in:
+     * JetBrains Mono advances 0.6em per cell and the run is tracked at 0.1em, which falls on both
+     * sides of that space. Measured, the comp's "● IN" is 30px wide at 11px and this reproduces it
+     * to a third of a pixel; the 0.45em it replaces came out 4px narrow.
+     */
+    gap: 0.8em;
+    padding-bottom: 2px;
+    font-size: var(--micro-font-size);
+    font-weight: var(--font-weight-bold);
+    line-height: 1.3;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /*
+   * Drawn rather than typed. The comp sets the marker as a literal "●" inside the mono text run, and
+   * its unselected counterpart would be "○". Measured through the canvas text metrics, neither is
+   * in JetBrains Mono — both advance 0.6021em against the font's exact 0.6em cell, so both are
+   * already coming from a fallback face, at whatever size and baseline that face happens to use. A
+   * bordered box gives the same two shapes with the size and the ring weight under control.
+   *
+   * `em` and not `rem`, and the distinction is the whole point: the run this sits in is
+   * `--micro-font-size`, a `clamp()` whose bounds are `rem`, so an `em` marker inherits the reader's
+   * root size *through* it and scales with the viewport as well. A `rem` marker gets the first and
+   * drops the second, which is the one thing this build is not allowed to do.
+   *
+   * 0.6em is the measured ink of the glyph it replaces (0.596em), so the drawn marker is the size
+   * the comp draws — 6.6px at the desktop 11px and 6.0px at the mobile 10px, against the flat 8px
+   * it replaces, which was a fifth too big at desktop and a third too big on a phone.
+   *
+   * The ring weight is proportional for the same reason — a donut whose hole closes up as the marker
+   * shrinks is not the same mark — though note the browser floors a border to whole device pixels,
+   * so at these two sizes 0.2em lands on 2px either way and only a reader who has raised their root
+   * size sees it move.
+   */
+  .marker {
+    flex-shrink: 0;
+    width: 0.6em;
+    height: 0.6em;
+    border: 0.2em solid currentColor;
+    border-radius: var(--radius-full);
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+  }
+
+  .input:checked + .card .marker {
+    background-color: currentColor;
+  }
+
+  // Both words are always in the DOM and CSS picks which is painted, which is what keeps the swap
+  // working without the component knowing whether it is checked. See the `aria-hidden` note in
+  // `index.tsx` for why that costs nothing at the accessibility layer.
+  .stateSelected {
+    display: none;
+  }
+
+  .input:checked + .card .stateUnselected {
+    display: none;
+  }
+
+  .input:checked + .card .stateSelected {
+    display: inline;
+  }
+
+  /*
+   * Forced colours — Windows High Contrast Mode and the like. This block is what makes the claim at
+   * the top of the file ("survives … a forced-colours stylesheet") actually true; measured, it was
+   * not.
+   *
+   * Forced colours replaces every author colour with one from the user's palette, which collapses
+   * both of the state's *colour* differences at once: the checked card's fill is forced to the same
+   * `Canvas` as the page behind it, and `.marker`'s `background-color: currentColor` is forced to
+   * the same ink as its own border — a filled disc that is pixel-identical to the unchecked hollow
+   * ring. The input underneath is `appearance: none` and transparent, so there is no native checkbox
+   * glyph to fall back on either. Only the ~10px `IN`/`OUT` word was left carrying the state.
+   *
+   * `forced-color-adjust: none` opts the checked card back out so the system `Highlight` pair can be
+   * painted on purpose — the pair the OS itself uses for a selected row, which is what this is. The
+   * property inherits, so the marker's `currentColor` resolves to `HighlightText` and the filled
+   * disc returns without a rule of its own.
+   *
+   * Scoped to `:not(:disabled)` so a disabled card keeps the system's own inactive rendering rather
+   * than being painted as an active selection, and the focus ring is re-forced to `CanvasText`
+   * because opting the card out would otherwise leave the ring at an author colour that has no
+   * guaranteed contrast against `Highlight`.
+   */
+  @media (forced-colors: active) {
+    .input:checked:not(:disabled) + .card {
+      forced-color-adjust: none;
+      border-color: Highlight;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+
+    .input:focus-visible + .card {
+      outline-color: CanvasText;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card,
+    .marker {
+      transition: none;
+    }
+  }
+}

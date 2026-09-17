@@ -26,8 +26,28 @@ import './overrides.css';
  * Note the layer order is declared in `main.ts`'s `previewHead`, not by importing
  * `AaCSSLayerDefinitions` here — that import is dropped by the bundler. See the comment there.
  */
+/**
+ * Seed `data-theme` on `<body>` at module scope, for the same reason the fonts are set here — and
+ * the measurement that found it is worth keeping.
+ *
+ * Every theme-aware token in `_variables.scss` is declared under `[data-theme='light']` / `[dark]`,
+ * not on `:root`. `withThemeByDataAttribute` below sets that attribute, but it is a decorator, and
+ * in the dev Storybook it lands roughly a second after the story mounts: measured on a cold load of
+ * `forms-field-checkbox--invalid`, the story was in the DOM at 91ms and `data-theme` appeared at
+ * 1225ms. For that whole second *no* theme token exists, so every `var(--button-*)`,
+ * `var(--fg-*)` and `var(--bg-*)` is invalid at computed-value time and the declaration around it
+ * is dropped — which is why a cold Storybook flashed unstyled black text and hairlines, and why a
+ * `play` function could not assert on a token-derived computed style at all: the `outline` in
+ * `FieldCheckbox`'s focus-ring check read `none`, and its error border read `rgb(0, 0, 0)`, for
+ * longer than any reasonable `waitFor` timeout.
+ *
+ * Seeding the default here makes the first paint themed; the decorator still owns switching, so the
+ * toolbar and `?globals=theme:dark` are unaffected — they just change an attribute that is already
+ * there rather than introducing it.
+ */
 if (typeof document !== 'undefined') {
   document.body.classList.add(...fonts.split(' ').filter(Boolean));
+  document.body.dataset.theme ??= 'light';
 }
 
 const preview: Preview = {
