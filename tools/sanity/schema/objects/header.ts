@@ -4,86 +4,44 @@ import type { IButtonElement } from '@/tools/sanity/schema/elements/button';
 
 import type { ILinkElement } from '../elements/link';
 
+/**
+ * The header's editable content.
+ *
+ * Five flat links and one action, which is the whole of the design (Figma nodes 1:45 desktop,
+ * 1:103 mobile). The dropdown machinery that used to live here — `dropdown`, `navSublinks` and a
+ * `navSublink` object type — was removed with the renderer that drew it: a Studio toggle whose
+ * only effect is to hide the nav item's own link is worse than no toggle at all. It was also the
+ * sole reason `HeaderNavigationDesktop` reached for `Link`'s `forceLinkWhenEmpty`, which rendered
+ * a dropdown parent as `<a href="#" role="button">` — a control Space does not activate and a
+ * click navigates away from (WCAG 2.1.1, 4.1.2). Both are gone.
+ *
+ * The **reply-by line is not here**. It lives on the `weddingSettings` singleton as `rsvpLabel`,
+ * because the same date appears in the nav on every page and beside the RSVP action on the home
+ * page; two fields would drift. `button` supplies the action's destination and its short label,
+ * which is what the bar shows on a phone where there is no room for the date.
+ */
 interface IHeaderObject {
   navItems: {
+    _key?: string;
     title: string;
     link: ILinkElement;
-    dropdown: boolean;
-    navSublinks: {
-      title: string;
-      link: ILinkElement;
-    }[];
   }[];
   addButton: boolean;
   button?: IButtonElement;
-  addSecondaryButton: boolean;
-  secondaryButton: IButtonElement;
 }
-
-const navSublink = defineType({
-  fields: [
-    {
-      name: 'title',
-      title: 'Name',
-      type: 'string'
-    },
-    {
-      name: 'link',
-      title: 'Link',
-      type: 'linkElement'
-    }
-  ],
-  name: 'navSublink',
-  preview: {
-    prepare: (selection) => ({
-      subtitle: selection.description || undefined,
-      title: selection.title || 'Dropdown Link'
-    }),
-    select: {
-      description: 'description',
-      title: 'title'
-    }
-  },
-  title: 'Nav Sub Link',
-  type: 'object'
-});
 
 const navLink = defineType({
   fields: [
     {
       name: 'title',
       title: 'Title',
-      type: 'string'
+      type: 'string',
+      validation: (Rule) => Rule.required()
     },
     {
       name: 'link',
       title: 'Link',
       type: 'linkElement'
-    },
-    {
-      description:
-        'Choose whether to include a dropdown menu of sublinks. If this is on, we remove the link from the nav item itself.',
-      name: 'dropdown',
-      title: 'Dropdown',
-      type: 'boolean'
-    },
-    {
-      hidden: ({ parent }) => !parent.dropdown,
-      name: 'navSublinks',
-      of: [{ type: 'navSublink' }],
-      title: 'Nav Sublinks',
-      type: 'array',
-      validation: (Rule) =>
-        Rule.custom((self, { parent }) => {
-          const navParent = parent as { dropdown?: boolean };
-          if (navParent.dropdown && !self) {
-            return 'Please add dropdown links.';
-          }
-          if (!navParent.dropdown && !!self) {
-            return 'Please remove dropdown links or switch navigation link to dropdown.';
-          }
-          return true;
-        })
     }
   ],
   name: 'navLink',
@@ -102,6 +60,7 @@ const navLink = defineType({
 const header = defineType({
   fields: [
     {
+      description: 'The links in the middle of the bar, and the same list inside the mobile menu.',
       name: 'navItems',
       of: [{ type: 'navLink' }],
       title: 'Nav Items',
@@ -109,24 +68,15 @@ const header = defineType({
     },
     {
       name: `addButton`,
-      title: `Add Primary Button`,
+      title: `Add RSVP Action`,
       type: `boolean`
     },
     {
+      description:
+        'The accent pill at the right of the bar. The label here is the short form shown on a phone — the "reply by" line on desktop comes from Wedding Settings.',
       hidden: ({ parent }) => !parent?.addButton,
       name: `button`,
-      title: `Primary Button`,
-      type: `buttonElement`
-    },
-    {
-      name: `addSecondaryButton`,
-      title: `Add Secondary Button`,
-      type: `boolean`
-    },
-    {
-      hidden: ({ parent }) => !parent?.addSecondaryButton,
-      name: `secondaryButton`,
-      title: `Secondary Button`,
+      title: `RSVP Action`,
       type: `buttonElement`
     }
   ],
@@ -142,5 +92,5 @@ const header = defineType({
   type: 'object'
 });
 
-export { header, navLink, navSublink };
+export { header, navLink };
 export type { IHeaderObject };

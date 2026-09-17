@@ -33,7 +33,7 @@ import {
 } from './objects/blockContent';
 import divider from './objects/divider';
 import { footer, linkGroup } from './objects/footer';
-import { header, navLink, navSublink } from './objects/header';
+import { header, navLink } from './objects/header';
 import redirect from './objects/redirect';
 import { sectionFields, spacingOptions, themeOptions } from './objects/sectionFields';
 import seo from './objects/seo';
@@ -68,7 +68,6 @@ const schema: SchemaTypeDefinition[] = [
   linkGroup,
   header,
   navLink,
-  navSublink,
   playerTextStat,
   playerMeterStat,
   redirect,
