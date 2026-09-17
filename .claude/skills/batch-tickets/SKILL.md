@@ -1,8 +1,10 @@
 # Batch Tickets
 
-Autonomous pipeline that generates a ticket manifest from Linear, then implements, reviews, commits, and merges each ticket — one at a time, sequentially. Each step runs in a separate Agent to keep context fresh.
+Autonomous pipeline that generates a ticket manifest from Linear, then implements, reviews, commits and merges each ticket. Sequential by default; `--parallel` fans implementation out across isolated git worktrees and keeps the merges serial. Each step runs in a separate Agent to keep context fresh.
 
-This is the generalised cousin of `/batch-sections` and `/batch-components`. It handles arbitrary tickets — sections, components, bug fixes, refactors, content changes — by delegating each one to `/ticket`, which routes to the right slash command (`/create-section`, `/create-component`) or executes the work directly.
+It handles arbitrary tickets — sections, components, bug fixes, refactors, content changes — routing each to the right slash command (`/create-section`, `/create-component`) or executing the work directly.
+
+This replaced `/batch-sections` and `/batch-components`, which were the same pipeline with one word substituted. Nothing was lost: a `type: "section"` ticket here runs the identical Step B prompt, the identical reviews and the identical PR title those commands used.
 
 ## Arguments
 
@@ -16,13 +18,16 @@ This is the generalised cousin of `/batch-sections` and `/batch-components`. It 
 - `/batch-tickets MAM-261 MAM-262 MAM-263` — individual tickets
 - `/batch-tickets --from 2` — resume from index 2 (uses existing tickets.json)
 - `/batch-tickets --only 0` — run only the first ticket (uses existing tickets.json)
+- `/batch-tickets MAM-260 --parallel=4` — implement four at a time in worktrees, merge serially
 
 **Optional flags:**
 
 - `--from {index}` — Start from ticket index (0-based), skip earlier tickets
 - `--only {index}` — Run only one ticket by index
-- `--skip-reviews` — Skip review-design and review-code, even for section/component tickets
+- `--skip-reviews` — Skip review-design and review-code for every ticket, whatever its `reviews` flag says
 - `--generate-only` — Generate tickets.json and stop (do not execute)
+- `--parallel[={N}]` — Implement tickets concurrently in isolated git worktrees, then merge them one at a time. Default `N` is 4. See Phase 2-P.
+- `--no-consolidate` — Skip the closing `/consolidate` pass (Phase 3). **Refused together with `--parallel`** — see Phase 3
 
 **Manifest location:** `${CLAUDE_SKILL_DIR}/tickets.json`
 
@@ -77,6 +82,19 @@ For each ticket, extract:
 - **desktop** / **mobile** / **additionalFigma** — Only for `section` and `component` types. Extract the `--desktop=` and `--mobile=` URLs from the slash command in the Technical Notes (or "Desktop:" / "Mobile:" labels). Other Figma URLs go into `additionalFigma` (string or `{name, url}` object). For `other` type, set all three to `null` / `[]`.
 - **ticketDescription** — The full ticket description, verbatim. This is the primary context carrier — it contains requirements, approach notes, acceptance criteria, and anything else the developer wrote
 - **commands** — Comments on the ticket (if any) appended to description for full context
+- **reviews** — Boolean. Whether Steps C and D run for this ticket. Default to `true` when a `desktop` Figma URL was found, `false` otherwise
+- **reviewName** — The argument Steps C and D pass to `/review-design` / `/review-code`, or `null` when `reviews` is `false`. For `section` this is `{Name}Section`; for `component` it is `{Name}`; for `other` it is whatever the work actually produced (a route ticket that builds a `Hero` sets `Hero`)
+
+**`reviews` drives the reviews, not `type`.** These are separate on purpose. Type detection is a
+title-pattern guess — `section` needs a title matching `Build {Name} section` or a description
+mentioning `/create-section` — and plenty of real tickets that produce reviewable UI don't match it.
+"Build the home route — hero, character select and CTA" is `type: "other"` and still yields a `Hero`
+worth reviewing against Figma. Gating reviews on `type` would silently skip it. Gating on `reviews`
+means a mis-detected `type` costs you the wrong Step B prompt, which is visible, rather than a
+silently skipped review, which is not.
+
+Check the `type` column in the Phase 1d preview before approving — it is the one field a wrong guess
+makes expensive.
 
 ### 1c. Write tickets.json
 
@@ -90,6 +108,8 @@ Write the array to `.claude/skills/batch-tickets/tickets.json`:
     "linearId": "MAM-261",
     "linearUrl": "https://linear.app/mammoth/issue/MAM-261/...",
     "branch": "feature/mam-261-build-hero-section",
+    "reviews": true,
+    "reviewName": "HeroSection",
     "desktop": "https://figma.com/design/...?node-id=...",
     "mobile": "https://figma.com/design/...?node-id=...",
     "additionalFigma": [],
@@ -101,6 +121,8 @@ Write the array to `.claude/skills/batch-tickets/tickets.json`:
     "linearId": "MAM-262",
     "linearUrl": "https://linear.app/mammoth/issue/MAM-262/...",
     "branch": "feature/mam-262-build-badge-component",
+    "reviews": true,
+    "reviewName": "Badge",
     "desktop": "https://figma.com/design/...?node-id=...",
     "mobile": "https://figma.com/design/...?node-id=...",
     "additionalFigma": [],
@@ -112,6 +134,8 @@ Write the array to `.claude/skills/batch-tickets/tickets.json`:
     "linearId": "MAM-263",
     "linearUrl": "https://linear.app/mammoth/issue/MAM-263/...",
     "branch": "bugfix/mam-263-mobile-menu-close",
+    "reviews": false,
+    "reviewName": null,
     "desktop": null,
     "mobile": null,
     "additionalFigma": [],
@@ -127,9 +151,9 @@ Display the manifest grouped by type:
 ```
 tickets.json generated — {count} tickets:
 
-  0: [section]    {name} ({linearId}) — desktop: ✓  mobile: ✓
-  1: [component]  {name} ({linearId}) — desktop: ✓  mobile: ✓
-  2: [other]      {name} ({linearId})
+  0: [section]    {name} ({linearId}) — desktop: ✓  mobile: ✓  reviews: {reviewName}
+  1: [component]  {name} ({linearId}) — desktop: ✓  mobile: ✓  reviews: {reviewName}
+  2: [other]      {name} ({linearId}) — reviews: —
   ...
 
 Proceed with execution? (y/n)
@@ -150,10 +174,11 @@ Before starting execution, verify:
 1. Storybook is running — check with `curl -s -o /dev/null -w "%{http_code}" http://localhost:6006/iframe.html` (expect 200). If not running, start it once at the top of the run with `yarn storybook > /tmp/storybook.log 2>&1 &` and wait for it to respond.
 2. Working tree is clean — `git status --porcelain` should be empty
 3. Currently on `main` — `git branch --show-current` should output `main`
-4. **Conditional checks** — only required if the manifest contains any `section` or `component` tickets:
+4. **`--parallel` only** — `git worktree list` shows no leftovers from an earlier run. Report any that exist, with whether each holds uncommitted work (`git -C {path} status --porcelain`), and let the user decide before creating more. They are locked and roughly 1.6 GB each, so a few stale ones are both invisible and expensive.
+5. **Conditional checks** — only required if any ticket in the manifest has `reviews: true` (and `--skip-reviews` is not set):
    - Figma MCP is available — check for `mcp__figma__get_design_context` via ToolSearch
    - `FIGMA_PERSONAL_ACCESS_TOKEN` is set in `.env.development`
-   - Playwright MCP is available — check for `mcp__playwright__browser_navigate` via ToolSearch (only if `--skip-reviews` is NOT set)
+   - Playwright MCP is available — check for `mcp__playwright__browser_navigate` via ToolSearch
 
 Report ALL failures in a single message. Do not proceed until all checks pass.
 
@@ -161,7 +186,7 @@ Report ALL failures in a single message. Do not proceed until all checks pass.
 
 - `--from {index}` — Skip tickets before this index
 - `--only {index}` — Only run the ticket at this index
-- `--skip-reviews` — Skip Steps C and D for ALL tickets (even sections/components)
+- `--skip-reviews` — Skip Steps C and D for ALL tickets, overriding each ticket's `reviews` flag
 
 ### Read manifest
 
@@ -276,14 +301,15 @@ After the agent completes, run `/commit` directly (not in an agent).
 
 ---
 
-#### Step C: Review design (Agent) — only for `section` and `component` types, skip if `--skip-reviews`
+#### Step C: Review design (Agent) — when `ticket.reviews` is `true`, skip if `--skip-reviews`
 
-For `type: "other"`, skip this step entirely (design review only applies to visual UI work tied to a Figma reference).
+Skip entirely when `ticket.reviews` is `false`. Note this is **not** keyed on `ticket.type` — see
+"`reviews` drives the reviews" in Phase 1b.
 
-**For `type: "section"`:**
+Launch a `general-purpose` Agent:
 
 ```
-Run /review-design {ticket.name}Section
+Run /review-design {ticket.reviewName}
 
 Desktop Figma: {ticket.desktop}
 Mobile Figma: {ticket.mobile}
@@ -292,25 +318,12 @@ Complete all phases autonomously:
 - Do NOT use AskUserQuestion — make decisions based on the Figma design
 - Fix all issues found
 - Verify fixes with screenshots and re-measurement
-- Clean up the review page when done
 - Do NOT run /commit — that happens after this agent completes
 ```
 
-**For `type: "component"`:**
-
-```
-Run /review-design {ticket.name}
-
-Desktop Figma: {ticket.desktop}
-Mobile Figma: {ticket.mobile}
-
-Complete all phases autonomously:
-- Do NOT use AskUserQuestion — make decisions based on the Figma design
-- Fix all issues found
-- Verify fixes with screenshots and re-measurement
-- Clean up the review page when done
-- Do NOT run /commit — that happens after this agent completes
-```
+`/review-design` resolves the target itself (`sections/{Name}Section/` then `components/{Name}/`), so
+`reviewName` carries the full name — `HeroSection`, not `Hero`. It degrades gracefully when the story
+has no `parameters.design` bound: token/compliance review instead of the pixel comparison.
 
 Wait for the agent to complete. If it fails, log a warning but continue.
 
@@ -318,14 +331,10 @@ After the agent completes, run `/commit` directly (not in an agent) if there are
 
 ---
 
-#### Step D: Review code (Agent) — only for `section` and `component` types, skip if `--skip-reviews`
-
-For `type: "other"`, skip this step entirely. Code review of arbitrary ticket work is too open-ended for this autonomous pipeline — leave it for human review on the PR.
-
-**For `type: "section"`:**
+#### Step D: Review code (Agent) — when `ticket.reviews` is `true`, skip if `--skip-reviews`
 
 ```
-Run /review-code {ticket.name}Section
+Run /review-code {ticket.reviewName}
 
 Complete all phases autonomously:
 - Do NOT use AskUserQuestion — make decisions based on best practices
@@ -333,16 +342,11 @@ Complete all phases autonomously:
 - Do NOT run /commit — that happens after this agent completes
 ```
 
-**For `type: "component"`:**
-
-```
-Run /review-code {ticket.name}
-
-Complete all phases autonomously:
-- Do NOT use AskUserQuestion — make decisions based on best practices
-- Fix all issues found
-- Do NOT run /commit — that happens after this agent completes
-```
+**This step reviews the ticket in isolation, and that is deliberate.** Cross-section duplication is
+not its job and it cannot do that job here: `code-quality-reviewer` only recommends extracting a
+pattern found in 3+ places, and at ticket _n_ the sections from tickets _n+1…_ do not exist yet. The
+threshold cannot fire for anything this batch is introducing. Phase 3 runs once at the end, when they
+all exist, and owns that question.
 
 Wait for the agent to complete. If it fails, log a warning but continue.
 
@@ -358,7 +362,8 @@ Determine the PR title prefix based on `ticket.type`:
 - `component` → `Add {name} component`
 - `other` → use the ticket title (the value stored in `name` for non-section/component tickets)
 
-Run these commands directly (not in an agent):
+Run these commands directly (not in an agent). In `--parallel` mode every command runs with `-C
+{worktree}` until the worktree is removed:
 
 ```bash
 # Push
@@ -387,13 +392,181 @@ git pull origin main
 
 Update the Linear ticket status to **Done** via `mcp__linear__save_issue`.
 
-If any step fails, log a warning and continue to the next ticket. Always return to `main`.
+##### Worktree teardown (`--parallel` only)
+
+**Nothing cleans this up for you.** A worktree created with the Agent tool's `isolation: "worktree"`
+is auto-removed only when it is _unchanged_, and a ticket agent always leaves changes. It is also
+created **locked**, which `git worktree remove` refuses on — hence `--force` twice below (git's
+manual: a locked worktree needs `--force` specified twice; a single `-f` only covers dirty).
+
+**Check for uncommitted work before removing anything.** By this point Step E has merged the branch,
+so the worktree should be clean — if it is not, something did not get committed, and `--force` would
+destroy it silently:
+
+```bash
+# 1. Refuse to discard work. If this prints anything, keep the worktree and
+#    report it in the summary instead of removing it.
+git -C {worktree} status --porcelain
+
+# 2. Only when the above is empty. Twice, because the worktree is locked.
+git worktree remove --force --force {worktree}
+
+# 3. Drop the administrative entry if the directory was already gone.
+git worktree prune
+
+# 4. Only now can the local branch go — git refuses while a worktree holds it
+#    checked out. `--delete-branch` on the merge above removed the remote one.
+git branch -D {ticket.branch} 2>/dev/null || true
+```
+
+Do this for failed tickets too — a failed ticket's worktree is still a full checkout costing a
+`node_modules`, and at ~1.6 GB each they are not free. But apply the same rule: if it holds
+uncommitted work, keep it and name it in the summary so the user knows it is there and why.
+
+**Orphaned worktrees are the default failure mode here, not an edge case.** An interrupted run leaves
+its worktrees registered, locked, and invisible unless you go looking. Start every `--parallel` run
+with `git worktree list` and report anything already present before creating more.
+
+If any step fails, log a warning and continue to the next ticket. Always return to `main`, and always
+tear the worktree down.
 
 ---
 
 #### Step F: Log result
 
 Print: `[{index+1}/{total}] {ticket.linearId}: {ticket.name} ({ticket.type}) — DONE`
+
+---
+
+---
+
+## Phase 2-P: Parallel execution (`--parallel[={N}]`)
+
+Same steps, regrouped. Implementation fans out across isolated git worktrees; everything that touches
+a browser or `main` stays serial.
+
+**What can and cannot be parallelised.** Step B is pure codegen and filesystem work — it parallelises
+cleanly. Steps C and D cannot: Storybook is a single instance on a hardcoded port 6006 (8 references
+in `review-design.md`, 4 in `review-code.md`, 3 in `design-visual-comparer.md`), so N concurrent
+reviews would all measure whichever worktree owns the port and return confidently wrong numbers. The
+Playwright MCP is also one browser shared across the session, so concurrent `browser_navigate` calls
+interleave in the same tab. Neither fails loudly. Keep them serial.
+
+So `--parallel` buys the implementation phase — Figma reads, five-file scaffolds, iterate-to-green —
+which is the long pole, but it is not an N× speedup.
+
+### 2-P a. Fan out (concurrent, `N` at a time)
+
+For each ticket, launch a `general-purpose` Agent with `isolation: "worktree"` running **Step A + Step
+B only**, plus `yarn fix && yarn ts:check` and a `/commit`. No reviews, no Storybook, no Playwright.
+
+Each worktree needs bootstrapping before the agent can build — a fresh worktree is a clean checkout:
+
+```bash
+cp .env.development {worktree}/.env.development   # gitignored, so the checkout has none
+(cd {worktree} && yarn install --immutable)        # nodeLinker is node-modules, not PnP
+```
+
+Both are load-bearing. `vitest.config.ts` loads `.env.development` explicitly, `generate-fixtures.ts`
+needs it, and `next.config.js` calls `fetchSanityRedirects()` in its `redirects()` hook, which throws
+`Configuration must contain projectId` without it.
+
+Give the agent its ticket's branch name so it does not invent one, and tell it not to push.
+
+### 2-P b. Merge train (serial, manifest order)
+
+For each ticket **in manifest order**, one at a time:
+
+```bash
+git -C {worktree} fetch origin main
+git -C {worktree} rebase origin/main
+```
+
+**Resolve conflicts by tier — do not hand-resolve tier 1 or 2.**
+
+**Tier 1 — derivable.** The four section registration files (`sections/index.ts`,
+`tools/sanity/helpers/sections.ts`, `tools/sanity/schema/index.ts`,
+`tools/sanity/projections/common/sections.groq.ts`). Both sides appended to a short sorted list and
+git's three-line context made them overlap; the union is recomputable:
+
+```bash
+git -C {worktree} checkout --ours {conflicted registration files}
+(cd {worktree} && yarn sections:register)
+git -C {worktree} add {those four files}
+```
+
+**Tier 2 — additive only.** Both sides add distinct lines and neither modifies a line the other
+touched. This is the common case in `tools/sass/global/_variables.scss` and shared components: two
+branches appending different tokens, or different props. Take both sides, in manifest order:
+
+```bash
+# keep both hunks, drop the conflict markers, then prove it
+(cd {worktree} && yarn fix && yarn ts:check && yarn test)
+```
+
+`yarn test` is the verifier that makes this safe — 227 story tests render every component in a real
+browser, so a bad union fails rather than merging quietly.
+
+**Tier 3 — modify/modify.** Both sides changed the same lines. Stop, report it, leave that ticket for
+a human. Do not guess which intent wins.
+
+```bash
+git -C {worktree} rebase --continue   # after tier 1 or 2
+```
+
+Then run Steps C, D and E for that ticket exactly as in sequential mode — reviews against the single
+Storybook, then PR, merge, and worktree teardown — before starting the next ticket's rebase.
+
+### 2-P c. Failure handling
+
+A ticket that fails in 2-P a is dropped from the merge train, its worktree torn down, and the rest
+continue. A ticket that fails its rebase keeps its worktree (say so in the summary) so the conflict
+can be inspected.
+
+---
+
+## Phase 3: Consolidate (skip with `--no-consolidate`)
+
+Run once, after every ticket has merged and `main` is up to date:
+
+```bash
+git checkout main && git pull origin main
+```
+
+Then run `/consolidate` with the names of everything this batch produced — the `reviewName` of every
+ticket that succeeded, plus any section or component folder created along the way:
+
+```
+/consolidate {name} {name} {name} …
+```
+
+**Why this is a separate pass rather than part of Step D.** `code-quality-reviewer` only recommends
+extracting a pattern it finds in 3+ places. During the batch, ticket _n_ is reviewed when the work
+from tickets _n+1…_ does not exist, so that threshold cannot fire for anything the batch itself is
+introducing — and batch-introduced duplication is the most likely kind, because every section comes
+from one design system and one Figma file. This is the only point in the run where they all coexist.
+
+**After a `--parallel` run this phase is mandatory, not optional** — `--parallel --no-consolidate`
+is refused. Serial mode gets reuse for free, because each ticket branches from a `main` containing
+its predecessors and can extend a shared component and retrofit earlier adopters (MAM-1906 did
+exactly that: it extended `TextBlock` and removed overrides from HeaderDisplay and Schedule). Parallel
+forfeits that, so the sweep is where it comes back. Skipping it ships the duplication and cancels the
+cleanup.
+
+Expect a **larger PR after a parallel run**, and say so when opening it. N agents that could not see
+each other will have solved the same problem N ways, so the sweep rewrites many sections at once
+rather than the incremental drip serial produces. That is the trade, not a defect — and it carries
+one advantage serial lacks: serial hides demand (once ticket 2 adds a `Text` variant, tickets 3–7 use
+it silently), whereas parallel surfaces all N instances, which is a far better signal for what the
+shared API should be.
+
+`/consolidate` opens a PR and **does not merge it**. Every other PR in this pipeline is a
+self-contained addition; this one rewrites already-merged, already-reviewed code across many files.
+It has a real safety net — every story is a browser component test, so `yarn test` exercises each
+section's render — but it is the one PR in the run that a human should look at.
+
+Report the PR URL in the summary. If `/consolidate` finds nothing worth extracting, it says so and
+opens no PR — that is a normal outcome for a small batch.
 
 ---
 
@@ -434,6 +607,9 @@ Results:
   ⊘ [section]    Footer (MAM-264) — skipped (--from)
 
 tickets.json has been deleted.
+
+Consolidation: {PR url — awaiting human review} / {nothing to extract} / {skipped}
+Worktrees removed: {count}  (kept for inspection: {list or none})
 ```
 
 ## Error Handling

@@ -165,7 +165,11 @@ The Figma source is bound to the story via `parameters.design.url`. Resolve it i
 **Set the review mode based on what you find — do NOT stop if there's no design:**
 
 - **A URL was resolved → `full` mode.** Run the complete review including the Figma visual + measurement comparison (Phases 1, 5, 7).
-- **No URL (neither arg nor `parameters.design`) → `compliance` mode.** This is normal and expected for primitives (`Badge`, `Icon`, `Text`, `Container`) that don't map to a single Figma frame. Skip the Figma-dependent phases (1, 5, 7) and run only the content-independent review: design-system token compliance, spacing/typography/colour-token usage, reuse/DRY, accessibility, and code quality (Phases 3, 4, 6 minus the visual re-measure). Note clearly in the report:
+- **No URL (neither arg nor `parameters.design`) → `compliance` mode.** This is normal and expected for primitives (`Badge`, `Icon`, `Text`, `Container`) that don't map to a single Figma frame. Skip the Figma-dependent phases (1, 5, 7) and run the content-independent review: design-system token compliance and spacing/typography/colour-token usage (Phases 3, 4, 6 minus the visual re-measure), **plus the `accessibility-reviewer` agent alongside `design-code-reviewer` in Phase 3**.
+
+  That a11y agent is not optional in this mode and is the reason compliance mode is worth running at all. Compliance mode is the primitives path — buttons, icons, fields, containers — which is precisely where keyboard, focus and semantic-HTML defects live, and precisely what a pixel comparison would never have caught. Launch it in the same parallel message as `design-code-reviewer`.
+
+  Note clearly in the report:
 
   > "No Figma design bound to `{Name}` — ran design-system / token compliance + accessibility review; skipped the Figma pixel comparison. Bind a design via `parameters.design` to enable the full visual review."
 
@@ -252,6 +256,9 @@ Sections and components are rendered via their `.stories.tsx` files — no tempo
 
 ## Phase 3: Code Review (AGENT)
 
+**In `compliance` mode, launch `accessibility-reviewer` in the same message** — see Phase 0e. In
+normal mode `design-code-reviewer` runs alone; accessibility is covered by `/review-code` Phase 3b.
+
 Launch the `design-code-reviewer` agent with:
 
 - Section name (PascalCase and camelCase)
@@ -331,17 +338,22 @@ Only AFTER Phases 3-6 are complete:
 4. Resize to 414px, take a mobile screenshot
 5. If mobile Figma design was provided, compare against that too
 
-Perform detailed visual comparison across all categories:
+**Look for what measurement cannot catch.** Phase 5's `design-visual-comparer` has already compared
+every computed value against the Figma spec — layout, spacing, typography, colour, component sizing,
+responsive reflow and alignment are settled, and re-eyeballing them from a screenshot is strictly
+less reliable than the numbers you already have. Re-check them only where a Phase 6 fix touched them.
 
-1. **Layout & Structure** — flex/grid layout, column proportions, element ordering
-2. **Spacing** — padding, margins, gaps between elements
-3. **Typography** — font sizes, weights, line heights, letter spacing
-4. **Colours** — backgrounds, text colours, borders, opacity
-5. **Component sizing** — image aspect ratios, button dimensions, icon sizes
-6. **Responsive behaviour** — how elements reflow between desktop and mobile
-7. **Alignment** — vertical/horizontal alignment of elements
-8. **Missing elements** — anything in Figma but absent from the build
-9. **Clipping/overflow** — no unexpected white space or cut-off content
+What a per-element measurement pass genuinely cannot see:
+
+1. **Missing elements** — anything in the Figma frame with no counterpart in the build. A comparer
+   measures the elements that exist; it cannot miss what was never rendered.
+2. **Extra elements** — anything rendered that the design does not have.
+3. **Clipping and overflow** — content cut off, unexpected white space, a scrollbar that shouldn't be
+   there. These are relationships between boxes, not properties of one.
+4. **Visual order and grouping** — whether the eye lands in the same sequence as the design. Correct
+   individual values can still assemble into the wrong composition.
+5. **Anything the fixes in Phase 6 disturbed** — a spacing change that pushed a neighbour, a font
+   change that reflowed a line.
 
 If issues remain, fix them and repeat Phase 7 until the section passes.
 

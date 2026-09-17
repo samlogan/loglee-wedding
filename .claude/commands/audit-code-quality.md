@@ -77,8 +77,14 @@ BUTTON VARS:
   (plus -hover, -active, -disabled variants)
 
 PRIMITIVE COLOR SCALES (avoid using directly — use semantic theme vars above):
-  --primary-{25-900}, --secondary-{25-900}, --tertiary-{25-900},
-  --gray-{25-900}, --shades-black, --shades-white
+  --stone-{25-900}   warm neutral base
+  --pine-{25-900}    brand green
+  --signal-{25-900}  bright accent, reserved for interactive states
+  --shades-black, --shades-white
+
+NOT IN THE DESIGN SYSTEM — flag any use as a non-existent token, not as a primitive:
+  --primary-*, --secondary-*, --tertiary-*, --gray-*
+  (these were the boilerplate's ramp names before they were replaced by stone/pine/signal)
 ```
 
 ### 2a: `code-quality-reviewer` agent
