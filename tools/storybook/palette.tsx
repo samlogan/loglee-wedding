@@ -54,16 +54,65 @@ const swatch = (value: string) => ({
   display: 'inline-block'
 });
 
-const FAMILIES: { title: string; subtitle: string; match: RegExp }[] = [
-  { title: 'Primary', subtitle: 'Brand', match: /^--primary-/ },
-  { title: 'Secondary', subtitle: 'Accents and buttons', match: /^--secondary-/ },
-  { title: 'Tertiary', subtitle: 'Supporting surfaces', match: /^--tertiary-/ },
-  { title: 'Gray', subtitle: 'Neutral', match: /^--gray-/ },
-  { title: 'Shades', subtitle: 'Flat surfaces', match: /^--shades-/ },
-  { title: 'Error', subtitle: 'System', match: /^--system-error-/ },
-  { title: 'Success', subtitle: 'System', match: /^--system-success-/ },
-  { title: 'Warning', subtitle: 'System', match: /^--system-warning-/ }
-];
+/**
+ * A short note for a family, when there is something useful to say. Purely cosmetic — a family
+ * with no entry here still renders, it just has no subtitle. Nothing is gated on this map.
+ */
+const SUBTITLES: Record<string, string> = {
+  shades: 'Flat surfaces',
+  stone: 'Warm neutral, the base',
+  pine: 'Brand green',
+  signal: 'Bright accent, interactive states only',
+  'system-error': 'System',
+  'system-success': 'System',
+  'system-warning': 'System',
+  'system-info': 'System'
+};
+
+/** Families are listed in this order when present; anything unrecognised sorts to the end. */
+const FAMILY_ORDER = ['shades', 'stone', 'pine', 'signal'];
+
+/**
+ * Derive the colour families from `:root` rather than listing them.
+ *
+ * This used to be a hardcoded array, which quietly stopped matching the moment the palette was
+ * renamed — the brand ramps vanished from a page that presents itself as a complete reading of the
+ * stylesheet, with nothing to indicate anything was missing. `system-info` had never appeared at
+ * all, because nobody added it.
+ *
+ * A colour token here is either `--shades-{word}` or `--{family}-{number}`, where family may itself
+ * contain dashes (`--system-error-500`). Non-colour tokens in `:root` — spacing, radius, container
+ * widths, font sizes and weights, button sizing — all end in a word rather than a number, so the
+ * numeric-suffix test separates them without inspecting any value. That matters: filtering on
+ * "can I parse this as a colour" is what an earlier version did, and it silently dropped any token
+ * written as an 8-digit hex or an `oklch()`.
+ */
+const deriveFamilies = (names: string[]) => {
+  const families = new Map<string, string[]>();
+
+  for (const name of names) {
+    // Indexed rather than named groups — tsconfig targets ES2017, which predates named groups.
+    const match = /^--(.+)-\d+$/.exec(name);
+    const family = match?.[1] ?? (name.startsWith('--shades-') ? 'shades' : null);
+    if (!family) {
+      continue;
+    }
+    families.set(family, [...(families.get(family) ?? []), name]);
+  }
+
+  return [...families.entries()]
+    .toSorted(([a], [b]) => {
+      const ai = FAMILY_ORDER.indexOf(a);
+      const bi = FAMILY_ORDER.indexOf(b);
+      return (ai === -1 ? FAMILY_ORDER.length : ai) - (bi === -1 ? FAMILY_ORDER.length : bi) || a.localeCompare(b);
+    })
+    .map(([family, tokens]) => ({
+      family,
+      subtitle: SUBTITLES[family],
+      // Numeric shades ascend; the word-suffixed shades ramp keeps declaration order.
+      tokens: tokens.toSorted((a, b) => (Number(a.split('-').pop()) || 0) - (Number(b.split('-').pop()) || 0))
+    }));
+};
 
 /**
  * The base ramps, read from `:root`.
@@ -79,17 +128,19 @@ export const Ramps = () => {
     return null;
   }
 
+  const families = deriveFamilies(tokens.root.filter((name) => tokens.rootValues[name]));
+
   return (
     <div className={DOCS_FONT} style={block}>
-      {FAMILIES.map((family) => {
-        const names = tokens.root.filter((name) => family.match.test(name) && tokens.rootValues[name]);
+      {families.map(({ family, subtitle, tokens: names }) => {
         if (!names.length) {
           return null;
         }
         return (
-          <div key={family.title} style={{ marginBottom: 28 }}>
+          <div key={family} style={{ marginBottom: 28 }}>
             <p style={{ margin: '0 0 8px', fontWeight: 600 }}>
-              {family.title} <span style={{ opacity: 0.6, fontWeight: 400 }}>— {family.subtitle}</span>
+              {family}
+              {subtitle ? <span style={{ opacity: 0.6, fontWeight: 400 }}> — {subtitle}</span> : null}
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {names.map((name) => (

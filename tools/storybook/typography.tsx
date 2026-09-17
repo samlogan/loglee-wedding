@@ -139,16 +139,34 @@ export const Weights = () => {
   );
 };
 
-/** The two families, side by side, at a size where the difference is legible. */
+/**
+ * Every type role, at a size where the difference between them is legible.
+ *
+ * The roles are discovered from the `--*-font` custom properties `next/font` writes onto `<body>`,
+ * not from a list here. A hardcoded pair is what this was, and it silently omitted the monospace
+ * role the moment a third face was added — on a page whose own opening line promises that
+ * everything below is read from the running page.
+ */
 export const Families = () => {
   const tokens = useTokens();
   if (!tokens) {
     return null;
   }
 
+  /*
+   * Read off `<body>`, not `tokens.root`. `next/font` declares each family on a generated class it
+   * puts on the body element, so these never appear in a `:root` rule and the CSSOM walk in
+   * `./tokens` cannot see them. Enumerating a computed style yields custom properties in Chromium,
+   * which is what Storybook and the story test runner use.
+   */
+  const families = [...getComputedStyle(document.body)]
+    .filter((name) => /^--[a-z]+-font$/.test(name))
+    .map((name) => name.replaceAll(/^--|-font$/g, ''))
+    .toSorted();
+
   return (
     <div className={`${DOCS_FONT} sb-unstyled`} style={block}>
-      {(['heading', 'body'] as const).map((family) => (
+      {families.map((family) => (
         <div key={family} style={{ marginBottom: 14 }}>
           <p style={{ margin: '0 0 2px', fontSize: 11, opacity: 0.7 }}>
             <code>--{family}-font</code>
