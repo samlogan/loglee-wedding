@@ -9,7 +9,9 @@ import footerDocument from './documents/footerDocument';
 import headerDocument from './documents/headerDocument';
 // Documents
 import page from './documents/page';
+import { player, playerMeterStat, playerTextStat } from './documents/player';
 import route from './documents/route';
+import rsvp from './documents/rsvp';
 import settings from './documents/settings';
 import { socialMediaDocument, socialMediaItem } from './documents/socialMediaDocument';
 import weddingSettings from './documents/weddingSettings';
@@ -47,7 +49,9 @@ const schema: SchemaTypeDefinition[] = [
   footerDocument,
   headerDocument,
   page,
+  player,
   route,
+  rsvp,
   settings,
   socialMediaDocument,
   weddingSettings,
@@ -65,6 +69,8 @@ const schema: SchemaTypeDefinition[] = [
   header,
   navLink,
   navSublink,
+  playerTextStat,
+  playerMeterStat,
   redirect,
   seo,
   sectionFields,
