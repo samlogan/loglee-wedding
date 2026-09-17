@@ -193,12 +193,13 @@
      */
     --card-gap: 0.875rem;
     /*
-     * The two mono micro-labels. Below `--body-xs` (11→12px), the floor of the body scale, so there
-     * is no token — and this stays a local rather than becoming one, because a new rung on the
-     * shared scale would show up in the client-facing type documentation on the strength of two
-     * labels in one component.
+     * The two mono micro-labels. Below `--body-xs` (11→12px), the floor of the body scale.
+     *
+     * This stayed a local while it was two labels in one component; it is `--body-2xs` now, because
+     * `PlayerCard`, `StatMeter` and `ScheduleSection` were each computing the same pair under their
+     * own name. The local alias survives only so the two use sites below read as one decision.
      */
-    --micro-font-size: #{fluid(10px, 11px)};
+    --micro-font-size: var(--body-2xs);
 
     display: flex;
     /*

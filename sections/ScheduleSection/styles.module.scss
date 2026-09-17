@@ -1,0 +1,682 @@
+/*
+ * The weekend schedule: a band per day, each a narrow summary column beside a column of
+ * time-stamped event rows.
+ *
+ * Drawn six times on Planner — days 01–03 at 1:312 / 1:348 / 1:392 (desktop) and
+ * 1:469 / 1:498 / 1:537 (mobile). There is no wrapper frame around the three: each band is a
+ * sibling at page level, separated from its neighbour by a rule that runs the full width of the
+ * page rather than the width of the content column. That is why the section renders `full` and
+ * moves `Container` *inside* each band — the rule is on the band, the gutter is on the container.
+ *
+ * ## Two switches, two containers, and why neither is a media query
+ *
+ * Everything that scales scales through `fluid()`. The one thing `fluid()` cannot interpolate is a
+ * change of *direction*, and this section changes direction twice — the band splits into two
+ * columns, and the event row reorders into three. Those are separate questions about separate
+ * boxes, so they are separate **container** queries:
+ *
+ *   `schedule`        the band's content box     → does the summary sit beside its events?
+ *   `scheduleEvents`  the event column's own box → is there room for [time][title][location]?
+ *
+ * Keying the row to the event column rather than to the page is what makes the two independent in
+ * the case that actually occurs between them: a ~900px viewport, where the band is stacked (the
+ * summary is above) but the event column is the full content width and has ample room for the
+ * three-column row. A single viewport breakpoint would have to pick one answer for both.
+ *
+ * Both are containers rather than media queries for the reason `HeaderDisplaySection` states: it
+ * makes the switch testable. The `Mobile` story renders the section in a 375px column and gets the
+ * stacked layout without owning the window.
+ *
+ * **Stacked is the unconditional default in both cases.** A container query cannot be evaluated
+ * before its container has been laid out, so on the first style pass neither branch matches; the
+ * narrow layout has to be what an unmatched query leaves behind.
+ */
+
+/*
+ * 60rem (960px) — the band split, measured against what the two columns have to hold rather than
+ * taken from the breakpoint map. The design's summary column is a fixed 400px, so at a 960px
+ * container the event column is 520px: enough for the 110px time gutter, a 24px gap, a title at the
+ * ~21px `--body-2xl` resolves to around there, and the location chip. Below that the event column
+ * is narrower than the summary beside it, which inverts the design's proportion rather than
+ * compressing it.
+ *
+ * `rem` and not `px`, for the same reason `$header-inline-switch` is: at a fixed 960px the query
+ * would ignore a reader who raised their root font size and hand them a two-column band at a width
+ * where neither column fits (WCAG 1.4.4). `$schedule-summary-width` is in `rem` too, so the two
+ * scale together and the split never engages at a width the summary alone would overflow.
+ *
+ * Local to this module, like `$header-display-inline-switch` and unlike `$header-inline-switch` —
+ * that one lives in `tools/sass/base/__media.scss` only because three separate modules have to
+ * agree on it. Named to the same `$<owner>-inline-switch` family so the next section's switch is
+ * findable by shape rather than by grep.
+ */
+$schedule-inline-switch: 60rem;
+
+/*
+ * 32rem (512px) — the event row's reorder, and the ceiling on it is not arbitrary.
+ *
+ * It has to be **at or below the event column's width at the band switch** — 60rem (960px)
+ * container − 25rem (400px) summary − the 40px gap = 520px — or there would be a band of widths
+ * where the band has split into two columns while the rows inside it are still stacked, a
+ * discontinuity the design never draws. Measured rather than left as arithmetic: sweeping the
+ * container from 300px to 1400px, the row switch fires at an events column of exactly 512px and the
+ * band switch at 520.02px, and there is no width at which the band is split while its rows are not.
+ * The margin is 8px, and it narrows as the root font size *falls* rather than rises, because the
+ * 40px gap is the one term in that subtraction that is not in `rem`.
+ *
+ * 512px also leaves ~250px of title column after the gutter, the gaps and a typical chip, which is
+ * where a two-word event title stops fitting on one line.
+ */
+$schedule-event-inline-switch: 32rem;
+
+/*
+ * The summary column, fixed at the design's 400px (nodes 1:318, 1:352, 1:396 are all `w-[400px]`
+ * against a 1200px content width). Fixed rather than a percentage because the design's own
+ * proportion changes with the frame — 33% at 1280, 42% at the switch — and the constant thing is
+ * the measure the date line and intro are set to, not the fraction.
+ */
+$schedule-summary-width: 25rem;
+
+/*
+ * The time gutter, at the design's 110px (node 1:329 and every sibling). A fixed track, because the
+ * requirement is that the times line up down the column: sizing it to content would give each row
+ * its own gutter, since each row is its own grid.
+ *
+ * What keeps an over-long time inside the gutter is `.time`'s own `overflow-wrap`. It is *not*
+ * `min-width: 0`, which this note used to credit: a grid item's automatic minimum applies only when
+ * it spans a track whose **min** sizing function is `auto` (CSS Grid §6.6), and this track's is a
+ * fixed 6.875rem. `min-width: auto` therefore already computes to 0 here, which is why the
+ * declaration was removed rather than kept — verified by toggling it at 375px and 1440px with a
+ * deliberately over-long day name, and measuring no change to any box.
+ */
+$schedule-time-gutter: 6.875rem;
+
+/*
+ * The intro's measure, at the design's `max-w-[320px]` (node 1:325) inside the 400px column — about
+ * 40 characters at the 16px it is set in, which is why it is a cap and not a width.
+ *
+ * Named here beside the other two rather than left inline 200 lines down, since it is the same kind
+ * of number: a constant the design states, read off one node, that a later reader will want to
+ * trace. Deliberately **not** a `--container-*` token — those start at 640px and cap a *page*
+ * column, and this is a paragraph measure inside one.
+ */
+$schedule-intro-measure: 20rem;
+
+@layer defaults {
+  /*
+   * There is deliberately no `.days` rule, and the list of days carries no class at all.
+   *
+   * It held `margin: 0; padding: 0`, on the stated reasoning that the bands butt directly against
+   * each other — the rule *is* the separator, so any gap would leave it floating in the middle of
+   * one. True, and already true without it: `tools/sass/global/_reset.scss` zeroes `margin`,
+   * `padding` and the marker on every `ol` in `@layer global`, and nothing in `@layer defaults`
+   * puts them back. A restatement that can only ever agree with the reset is not insurance, it is
+   * a second place to look.
+   *
+   * The page-spanning rule. `--stroke-cards` is the strong-stroke role: `--stone-900` on the light
+   * theme, which is the `#131412` every band is drawn with, and `--stone-50` on dark, so the rule
+   * inverts with the page instead of disappearing into it. `--stroke-divider` is the *hairline*
+   * role and is used inside the event column below; the two weights are the design's, not a
+   * simplification of one.
+   *
+   * Top only, on every band including the first. That is what the design draws (1:312, 1:348 and
+   * 1:392 all carry `border-t`, none carries a bottom), and it is why the section needs no bottom
+   * rule of its own: the band below supplies it, and the next section supplies the last one.
+   */
+  .day {
+    border-top: 1px solid var(--stroke-cards);
+  }
+
+  .dayContainer {
+    /*
+     * The query container is the `Container` element, so the queried inline size is the content
+     * width the design measures its columns against — frame minus gutters. An element cannot query
+     * itself, which is why the flex row lives on `.dayInner` one level down rather than here.
+     *
+     * `inline-size` and not `size`: the band's width comes from the page, its height from its
+     * content, and containing the height would collapse it.
+     *
+     * The cost of that containment, worth restating because it is the trap in copying this: an
+     * inline-size container does not contribute its contents to its own intrinsic width, so inside
+     * a *shrink-to-fit* ancestor — `inline-block`, a float, `width: max-content`, an absolutely
+     * positioned box — it collapses to its padding. Safe here because sections render as block
+     * children of `<main>` (`components/Layout`) and of a plain `<div>` in Storybook, both of which
+     * size from the outside in.
+     */
+    container: schedule / inline-size;
+
+    /*
+     * 41/40 desktop and 25/24 mobile in the design (`pt-[41px] pb-[40px]`, `pt-[25px] pb-[24px]`).
+     * The extra pixel on top is the band's 1px rule counted into Figma's padding; one fluid pair
+     * covers both edges.
+     *
+     * This is the section's whole vertical rhythm — `spacing="none"` on `Section` above — so it is
+     * deliberately a measured pair rather than a `--section-spacing-*` step. No step on that scale
+     * carries 24 → 40.
+     */
+    padding-block: #{fluid(24px, 40px)};
+  }
+
+  .dayInner {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /*
+   * The two-column band, applied only when the day has events to put in the second column.
+   *
+   * Mirrors `HeaderDisplaySection`'s `.row_split`: the modifier gates the *two-column* branch, so a
+   * day with no events keeps the single-column layout at every width and its summary runs the full
+   * content measure instead of hugging a 400px column with two thirds of the band empty.
+   *
+   * "The two-column branch" and not "the whole wide branch", which is what this said and is not
+   * true: `.intro`'s measure cap below is keyed to the same container query but sits outside this
+   * modifier, so an event-less day above the switch gets a full-width summary containing a 320px
+   * paragraph. That is deliberate — see the note there — and `DayWithoutEvents` now pins it.
+   */
+  .dayInner_split {
+    @container schedule (width >= #{$schedule-inline-switch}) {
+      // Both columns start at the band's content top — Figma sets `items-start` and puts the
+      // summary and the first event row on the same y (41) on all three desktop bands.
+      align-items: flex-start;
+      flex-direction: row;
+      // 40px between the columns (1:312). Fluid rather than fixed because the row only exists above
+      // the switch, so this interpolates across a short band and tops out at the drawn value.
+      gap: #{fluid(24px, 40px)};
+
+      .summary {
+        flex: 0 0 $schedule-summary-width;
+      }
+
+      /*
+       * `flex: 1 1 0` — the events column takes everything left over, which is what Figma's
+       * `flex-[1_0_0] min-w-px` on node 1:327 says. The `min-width: 0` that normally has to
+       * accompany this is already implied: `.events` is an inline-size container, so its
+       * min-content contribution is zero and the automatic minimum resolves to zero with it.
+       */
+      .events {
+        flex: 1 1 0;
+      }
+    }
+  }
+
+  .summary {
+    display: flex;
+    flex-direction: column;
+    /*
+     * **No gap.** Each of the three items below carries its own `padding-top`, holding the
+     * separation the design draws *above that item* — which is the structure the mobile frame uses
+     * verbatim (`gap-0` plus `pt-[5px]` / `pt-[8px]` / `pt-[12px]` on 1:472, 1:474, 1:476).
+     *
+     * A single 8px `gap` was here, taken from the desktop frame's `gap-[8px]` (1:318), on the
+     * reasoning that the two ends resolved to within a few pixels. Measured, they do not: the three
+     * separations are 8 / 12 / 18 on desktop and 5 / 8 / 12 on mobile, so a fixed 8px is exact at
+     * the top of the desktop column and +3 / +4 / +4 on a phone — which compounded to a summary
+     * **12.5px taller than drawn at 375px** (159.53 against the frame's 147).
+     *
+     * They are three `fluid()` pairs rather than one because the three separations are not a
+     * constant ratio apart, and the design shrinks them unevenly towards the phone. Each pair below
+     * is the two numbers Figma states, nothing derived.
+     *
+     * A fourth item added here would therefore get no separation of its own — give it a
+     * `padding-top` in the same shape rather than reaching for a `gap`, which would land under all
+     * three of the existing ones as well.
+     */
+
+    /*
+     * The one live `min-width: 0` in this module, and it earns its place in exactly one state: the
+     * `.dayInner_split` row branch above, where this becomes a **row** flex item with
+     * `flex: 0 0 25rem`. There its automatic minimum is its `min-content` width — a long day name at
+     * the 88px wide anchor, which `overflow-wrap: break-word` does not reduce — so without this the
+     * column would floor above 400px and push the events beside it off the band.
+     *
+     * Note what it does *not* do, since that is what the rest of the module used to claim. On a
+     * phone `.dayInner` is a **column**, so `min-width` is the cross axis and `min-width: auto`
+     * computes to 0 there anyway. Every other `min-width: 0` in this file was of that kind, or a
+     * grid item in a `minmax(0, …)` track, and all six measured inert and were deleted.
+     */
+    min-width: 0;
+  }
+
+  /*
+   * The mono micro-label in its loud register — JetBrains Mono Bold, uppercase, widely tracked.
+   *
+   * Declared here rather than taken through `Text` because `Text` has no `mono` variant; that gap
+   * is logged as MAM-1927 and re-declaring the family in the module is the accepted workaround,
+   * which `Button`, `PlayerCard`, `StatMeter`, `FieldCheckbox`, `ModelViewer` and
+   * `HeaderDisplaySection` all take too.
+   *
+   * The size is the design's own pair — 11px on the mobile frame (1:471), 13px on the desktop one
+   * (1:320) — written out rather than taken from `--body-xs`, which is fluid(11px, 12px). That
+   * token's narrow anchor is already this label's drawn 11px, but its wide anchor is a pixel short
+   * of the 13 drawn here, and the shortfall is *not* the 1280-against-1440 undershoot every fluid
+   * token pays: measured at a 1440px viewport, where the token is at its wide anchor by definition,
+   * it renders 12.00 against the drawn 13. `--body-xs` is the floor of the shared body scale and has
+   * four consumers — `Text.size_xs`, `HeaderDisplaySection.metaItem`, `FieldCheckbox` and
+   * `FieldNumber` — so it cannot move at source for one label's sake. (It does **not** size the
+   * location chip below, as this note used to say; that is `--body-2xs`, the step under the scale's
+   * floor, and the note on `.location` sets out why.)
+   *
+   * Tracking in `em` (2.6px on 13px and 2.2px on 11px are both 0.2em) so it stays proportional as
+   * the fluid size moves — fixing the size therefore fixes the tracking with it.
+   */
+  .eyebrow {
+    @include mono-font();
+
+    color: var(--fg-accent);
+    font-size: #{fluid(11px, 13px)};
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.2em;
+    line-height: var(--body-line-height);
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  /*
+   * The oversized day heading, re-pointed rather than re-declared — the same mechanism
+   * `HeaderDisplaySection`'s `.ledeText` uses, and for the same reason: the rule that owns
+   * `font-size` is `Text`'s `.variant_display.size_md`, at a specificity a single class here cannot
+   * beat, so setting the custom property that rule *reads* changes what it resolves to without
+   * fighting it.
+   *
+   * Why it needs re-pointing: `--display-md` is `fluid(56px, 132px)`, whose narrow anchor is
+   * already exactly this heading's drawn 56px (node 1:473) — but whose wide anchor is the 132px the
+   * *page header* is set at, against the 88px drawn here (1:322). Left alone it renders ~120px at a
+   * 1280px viewport, 37% over. The wide anchor is the design's own 88 rather than 88 re-projected
+   * from the 1280px frame onto the scale's 1440px one, following the convention `--container-gutter`
+   * sets out; the cost is that 1280px lands on ~83px rather than 88.
+   *
+   * Local rather than a new `--display-sm`, deliberately. A third global step would have to carry
+   * the narrow anchor 56px, which `--display-md` already has — two steps identical at one end of
+   * the range and 44px apart at the other is not a scale, it is two roles sharing a phone. Raise it
+   * at design review if a second heading ever wants this size.
+   *
+   * The leading and tracking are the tier's own (`--display-line-height: 0.84`,
+   * `--display-letter-spacing: -0.045em`) against the 0.86 / -0.04em drawn here — within 2% and
+   * 0.005em, and deliberately not overridden: desynchronising this heading from the tier would hide
+   * the mismatch rather than fix it.
+   */
+  .dayTitle {
+    --display-md: #{fluid(56px, 88px)};
+
+    overflow-wrap: break-word;
+    /*
+     * The separation above the heading: 5px on the mobile frame (`pt-[5px]` on 1:472), 8px on the
+     * desktop one (the `gap-[8px]` of 1:318). See the note on `.summary` for why the three
+     * separations are per-item paddings rather than one flex `gap`.
+     */
+    padding-top: #{fluid(5px, 8px)};
+  }
+
+  /*
+   * The date line — Archivo Medium, 15px mobile / 18px desktop (nodes 1:475, 1:324).
+   *
+   * Three overrides, each covering a different gap:
+   *
+   * 1. `heading-font()`. `Text.variant_heading` states no `font-family` at all — unlike
+   *    `.variant_display`, which does — so it works only on an `h1`–`h6`, where the global
+   *    `@layer global` rule supplies Archivo. This is a `<p>`, so without this line it renders in
+   *    the body family at heading sizes. That is a gap in `Text` rather than in this section; it is
+   *    stated here because fixing it there changes every `variant="heading"` on a non-heading
+   *    element across the repo, which is not this ticket.
+   * 2. `--heading-xs` is `fluid(20px, 24px)`, the smallest step of a tier this line sits below.
+   * 3. `--heading-letter-spacing` is -0.02em; the design tracks this line at 0.
+   *
+   * `--heading-line-height` (1.2) is left alone against the drawn ~1.1 — 1.8px on an 18px line, and
+   * it is the tier's ratio.
+   */
+  .date {
+    @include heading-font();
+
+    --heading-xs: #{fluid(15px, 18px)};
+    --heading-letter-spacing: 0;
+
+    // The separation above the date: 8px on mobile (`pt-[8px]` on 1:474), 12px on desktop
+    // (`gap-[8px]` + `pt-[4px]` on 1:323). See `.summary`.
+    padding-top: #{fluid(8px, 12px)};
+  }
+
+  .intro {
+    // The separation above the intro: 12px on mobile (`pt-[12px]` on 1:476), 18px on desktop
+    // (`gap-[8px]` + `pt-[10px]` on 1:325). See `.summary`.
+    padding-top: #{fluid(12px, 18px)};
+    // The measure guard for an unbreakable run — a pasted URL — since the column is fixed-width.
+    overflow-wrap: break-word;
+
+    @container schedule (width >= #{$schedule-inline-switch}) {
+      /*
+       * Only above the switch: the mobile frames set the intro to the full 350px content width, and
+       * capping it there would leave a ragged 30px of unused measure on a phone. See
+       * `$schedule-intro-measure` for the value's provenance.
+       *
+       * Keyed to the container query alone and **not** nested inside `.dayInner_split`, which makes
+       * it the one wide-branch declaration a day with no events still gets. Chosen rather than
+       * inherited: a cap is a measure, and a measure is a property of the paragraph, not of whether
+       * something happens to sit beside it. The alternative is a single line of body copy running
+       * the full 1200px band, which is worse typography than a narrow column with space to its
+       * right. `DayWithoutEvents` asserts the cap so the choice stays visible.
+       */
+      max-width: $schedule-intro-measure;
+    }
+  }
+
+  .events {
+    /*
+     * The second query container. `.event` below is a descendant, so its `@container scheduleEvents`
+     * resolves here rather than to `schedule` on the band — that is the whole point of naming them.
+     *
+     * Also the reason `.dayInner_split .events` needs no `min-width: 0`: inline-size containment
+     * zeroes the min-content contribution, which is what that declaration would have been for.
+     */
+    container: scheduleEvents / inline-size;
+  }
+
+  /*
+   * The event row.
+   *
+   * Grid, and every child is placed explicitly by `grid-area`, so the source order in `index.tsx`
+   * is free to be the reading order at both widths while the *visual* arrangement changes. See the
+   * long note there for why the DOM order is time → location → title → description.
+   *
+   * The default placement below is the narrow one and needs no reordering at all: read down the
+   * source and you get row 1 column 1, row 1 column 2, row 2, row 3. Only the wide branch reorders.
+   *
+   * `align-items: baseline` rather than `center` or `start`, and it is the design's own alignment:
+   * on the desktop frame the time sits at y=30, the title at y=21 and the chip at y=26, which are
+   * three different tops and one shared baseline (~42). Reproducing that with offsets would mean
+   * hardcoding three numbers that only hold at one type size; baseline alignment holds at every
+   * size the fluid scale produces. The mobile frame centres its two instead, which baseline
+   * alignment lands within a pixel of.
+   */
+  .event {
+    display: grid;
+    /*
+     * `minmax(0, …)` on both tracks, not `1fr auto`.
+     *
+     * A grid item's automatic minimum is its `min-content` width, and the inherited
+     * `overflow-wrap: break-word` (from `body` in `tools/sass/global/_typography.scss`, under its
+     * legacy `word-wrap` alias) does *not* reduce `min-content`. So a single unbreakable location —
+     * an editor pasting a venue name with no spaces — would size the second track past the
+     * container at 320px. A `0` minimum lets both **tracks** shrink.
+     *
+     * That is only half the job, and the missing half was a real defect rather than a theoretical
+     * one — see `.location`'s `overflow-wrap` below for what shrinking the track alone does to the
+     * item sitting in it.
+     */
+    grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+    align-items: baseline;
+    // 24px between the columns at every position in the design — gutter → title (110 → 134) and
+    // title → chip (646.69 → 670.69) on node 1:328.
+    column-gap: var(--spacing-lg);
+    /*
+     * Between the stacked parts. The design draws 5px between the title and its description
+     * (`gap-[5px]` on the mobile row, 48 → 53 on the desktop one); `--spacing-xxs` is 4px and is the
+     * nearest step, the scale being fixed below its 32px cutoff. 1px.
+     *
+     * It is deliberately the *smaller* of the two separations the stacked row needs — the design
+     * puts 8px above the title, not 5 — because one `row-gap` cannot be two numbers and this is the
+     * one that applies at both widths. `.eventTitle` tops the other up with a `padding-top` at the
+     * narrow width only; see the note there for why it cannot simply live here.
+     *
+     * A `row-gap` rather than margins because the rows are implicit: no `grid-template-rows` and no
+     * `grid-template-areas`, so an event with no description creates no third row and pays no gap
+     * for it. Naming the areas would have read better and silently added 4px to every
+     * description-less row.
+     */
+    row-gap: var(--spacing-xxs);
+
+    /*
+     * The hairline, spanning the event column only — `--stroke-divider` against the design's
+     * `rgba(19,20,18,0.2)`, which composites to roughly one step darker than `--stone-300` on the
+     * light page. The token is the divider role and inverts with the theme; the drawn value would
+     * not.
+     *
+     * On every row including the last, which is what the design draws (both of node 1:312's rows
+     * carry `border-b`, as do all three of 1:348's). The trailing one is 40px of band padding above
+     * the next band's page-wide rule, and reads as the foot of a table rather than as a stray line.
+     */
+    border-bottom: 1px solid var(--stroke-divider);
+    // 20/16 top and 17 bottom on mobile, ~21 top and ~24 bottom on desktop (the desktop rows are a
+    // fixed 99.89px box around 55px of content). The first row of each day is drawn 4px looser than
+    // its siblings; one pair is used for all of them.
+    padding-block: #{fluid(16px, 21px)} #{fluid(17px, 24px)};
+
+    @container scheduleEvents (width >= #{$schedule-event-inline-switch}) {
+      // [time] [title / description] [location]. The gutter is a fixed track so the times line up
+      // down the column; see `$schedule-time-gutter`.
+      grid-template-columns: $schedule-time-gutter minmax(0, 1fr) minmax(0, auto);
+    }
+  }
+
+  /*
+   * The mono micro-label in its quiet register — JetBrains Mono Medium, untracked.
+   *
+   * The size is the design's own pair — 12px mobile (1:481), 13px desktop (1:330) — written out for
+   * the same reason `.eyebrow` states its own: `--body-sm` is fluid(12px, 14px), whose narrow anchor
+   * is already the drawn 12 but whose wide anchor is a pixel *over* the drawn 13. That is a miss at
+   * the token's own wide anchor (measured 14.00 at a 1440px viewport), not the 1280-against-1440
+   * undershoot, and it is the wrong direction for that undershoot to explain. Same
+   * `Text`-has-no-mono workaround as `.eyebrow`.
+   *
+   * Deliberately **not** `white-space: nowrap`, though Figma sets it on every time node. Above the
+   * switch this sits in a fixed 110px track, so `nowrap` would trade a time that wraps onto two
+   * lines for one that overflows the gutter and overlaps the title beside it.
+   */
+  .time {
+    @include mono-font();
+
+    grid-area: 1 / 1;
+
+    color: var(--fg-accent);
+    font-size: #{fluid(12px, 13px)};
+    font-weight: var(--font-weight-medium);
+    line-height: var(--body-line-height);
+    margin: 0;
+    // What actually keeps a long time inside the fixed 110px gutter — see `$schedule-time-gutter`,
+    // which used to credit a `min-width: 0` that never applied to this track.
+    overflow-wrap: break-word;
+  }
+
+  /*
+   * The location chip — a bordered pill, flush to the row's right edge.
+   *
+   * **Deliberately not a shared component, and this is the decision rather than the absence of
+   * one.** A bordered uppercase mono pill is generic enough to belong in `components/`, and there
+   * is no `Tag` / `Chip` / `Badge` there today — `Button` is the only chip-shaped thing in the repo
+   * and is the wrong reuse, because this is not interactive and `Button`/`Link` render a `<button>`
+   * or an `<a>`, which would put a fake control in the tab order. Verified rather than assumed:
+   * `border(-color): currentColor` has exactly two callers repo-wide, this rule and
+   * `components/SocialsShare`, and that one is an icon *button*.
+   *
+   * Name the near-miss, though, because "one instance" is doing a lot of work above:
+   * `components/ModelViewer`'s `.badge` is the same object in the other treatment — `mono-font()`,
+   * `--radius-sm`, `--fg-accent`, a `fluid()` padding pair, `width: fit-content`, even the same
+   * `overflow-wrap: anywhere` for the same intrinsic-sizing reason — differing only in fill versus
+   * stroke. It is arguably already the second. So the trigger is **the third**, and what it should
+   * produce is `components/Tag`, a presentational `<span>` taking `label`, `size`, `theme` and a
+   * `variant: 'outline' | 'filled'` covering both, owning the border, radius, padding and type, and
+   * leaving this rule holding only `grid-area`, `justify-self` and the container-query re-placement.
+   * Copying the block below into a third module instead is the outcome this note exists to prevent.
+   *
+   * `border-color: currentColor` rather than a second token: the design draws the stroke and the
+   * label in the same ink (`#1e4632`, which is `--fg-accent` on the light theme), so tying them
+   * together means the dark theme's `--signal-300` moves both by construction.
+   *
+   * The padding anchors are the design's inset **minus the 1px border**, following the convention
+   * the button tokens set out: Figma hangs a stroke outside the padding box and we put it inside,
+   * so 10×6 drawn is 9×5 here and the rendered box matches the drawn one.
+   *
+   * `--radius-sm` is 4px against the drawn 3px — the nearest step on a fixed scale, and a pixel of
+   * corner on a ~27px pill. Left as the token.
+   *
+   * The size and the leading are **not** left to the body scale, because on this element they are
+   * the box rather than the type. The chip's height is `2 × (padding + border) + line box`, so both
+   * feed it directly:
+   *
+   * - `--body-xs` is fluid(11px, 12px) against the drawn 10/11px (1:483, 1:337) — a pixel over at
+   *   both ends, and at the wide anchor that is a genuine miss rather than the 1280-against-1440
+   *   undershoot. The step below the floor of the body scale is now `--body-2xs`, promoted for
+   *   exactly this: `PlayerCard`, `StatMeter` and `FieldCheckbox` had each computed
+   *   `fluid(10px, 11px)` under a local name, and this rule being the fourth is the threshold
+   *   `StatMeter`'s note named. One token, four callers, one place to retune.
+   * - `--body-line-height` is 1.5, the paragraph ratio. Figma sets `leading-[normal]` on every mono
+   *   run in the file, which for JetBrains Mono is 1.32 — so 1.5 inflated the pill by ~2px at each
+   *   end and rendered it **30px tall against the drawn 27** at 1440. `normal` rather than a hard
+   *   1.32 so the number comes from the font's own metrics, exactly as the design's does; the
+   *   fallback stack in `mono-font()` then carries its own.
+   *
+   * Only the chip takes this. `.eyebrow` and `.time` keep `--body-line-height` — their line box is
+   * surrounding rhythm rather than a drawn edge, which is how `HeaderDisplaySection.metaItem`,
+   * `PlayerCard` and `StatMeter` set theirs.
+   *
+   * Not "how every mono label in the repo is set", which this note used to claim and which is 5-of-11
+   * false: `FieldCheckbox` (×3) and `ModelViewer` (×3) use a hard `1.3`. Eleven call sites and three
+   * answers for one type role is a missing `--mono-line-height` token rather than eleven local
+   * judgements — logged alongside MAM-1927, since the `mono` variant on `Text` is what would consume
+   * it.
+   */
+  .location {
+    @include mono-font();
+
+    grid-area: 1 / 2;
+    // Flush right. The track is `auto`-sized so this is usually a no-op, but it keeps the chip on
+    // the row's right edge rather than stretching if anything ever widens the track.
+    justify-self: end;
+
+    border: 1px solid currentColor;
+    border-radius: var(--radius-sm);
+    color: var(--fg-accent);
+    font-size: var(--body-2xs);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.1em;
+    line-height: normal;
+    margin: 0;
+    /*
+     * `anywhere`, not the `break-word` every sibling here declares, and the difference is the whole
+     * point: **only `anywhere` reduces `min-content`**. `ModelViewer`'s `.badge` had already reached
+     * the same conclusion from the same corner — a `fit-content` chip whose cap resolves against the
+     * longest unbreakable run unless the wrap rule participates in intrinsic sizing — and this rule
+     * missed the precedent. Both break a long word once a line box is
+     * too narrow for it, but `break-word` leaves the element's intrinsic minimum at the width of
+     * the unbroken word, and this is the one item in the row whose box is sized from its own
+     * intrinsic width rather than from its track — `justify-self: end` above makes it `fit-content`
+     * instead of `stretch`.
+     *
+     * So the `minmax(0, …)` on `.event` shrinks the *track* and, with `break-word`, the *item*
+     * ignores it. Measured at 320px with a 57-character unbreakable location: the track resolved to
+     * 216px, the chip's border box to 466.59px, and because it is `justify-self: end` the 226px of
+     * overflow went **left, off the container** — content silently lost rather than scrolled to,
+     * which is why no reflow check caught it (`scrollWidth` never moved). With `anywhere` the chip
+     * takes the 216px it is given and wraps to two lines.
+     *
+     * Costs nothing in the normal case, which was measured too: every box in a populated row is
+     * byte-identical either way, because nothing wraps until it has to.
+     *
+     * `location` is also capped in the schema (`Rule.max`) — belt and braces, and the cap is the
+     * content-model half of the same argument: this is a short place label, not a sentence.
+     */
+    overflow-wrap: anywhere;
+    padding: #{fluid(4px, 5px)} #{fluid(7px, 9px)};
+    text-transform: uppercase;
+
+    @container scheduleEvents (width >= #{$schedule-event-inline-switch}) {
+      // Out from beside the time, over to the far side of the title's line. This one line is the
+      // reorder the AC asks for — the DOM does not move.
+      grid-area: 1 / 3;
+    }
+  }
+
+  /*
+   * The event title — Instrument Sans SemiBold, 20px/22px mobile and 24px/26.4px desktop
+   * (nodes 1:485, 1:333). Both are a flat 1.1.
+   *
+   * `body-font()` is not redundant. This renders as an `<h3>`, and the global `h1…h6` rule sets the
+   * heading family; `Text.variant_body` declares only a weight, no family, so the element tag would
+   * win and the title would come out in Archivo. `@layer defaults` beats `@layer global`, so one
+   * line here settles it — the same gap in `Text` that `.date` documents from the other side.
+   *
+   * The two custom properties are re-pointed rather than re-declared, exactly as `.ledeText` does:
+   * `--body-2xl` is fluid(20px, 22px), whose narrow anchor is already this title's drawn 20px but
+   * whose wide anchor is 2px short, and `--body-line-height` is the 1.5 the body scale is genuinely
+   * drawn at — correct for paragraphs and far too loose for a heading. Both tokens are shared
+   * (`--body-2xl` also sizes the mobile nav panel's links), so neither could move at source.
+   */
+  .eventTitle {
+    @include body-font();
+
+    --body-2xl: #{fluid(20px, 24px)};
+    --body-line-height: 1.1;
+
+    grid-area: 2 / 1 / auto / -1;
+
+    overflow-wrap: break-word;
+    /*
+     * Tops the 4px `row-gap` up to the 8px the stacked row is drawn with: the mobile frame separates
+     * the time/chip line from the title by `gap-[5px]` plus `pt-[3px]` on 1:484, and it separates
+     * the title from the description by the `gap-[5px]` alone. One `row-gap` cannot be both numbers,
+     * so the larger of the two is carried here.
+     *
+     * It reads as separation only because the title is the *sole* item in its row at this width. It
+     * is padding, not margin, so what it actually does is grow the title's own box downwards from a
+     * fixed top edge — which is indistinguishable from separation while nothing shares the row, and
+     * is not what it looks like once something does. See the wide branch below.
+     */
+    padding-top: var(--spacing-xxs);
+
+    @container scheduleEvents (width >= #{$schedule-event-inline-switch}) {
+      // Up onto the time's line, in the middle column.
+      grid-area: 1 / 2;
+      /*
+       * Off again, and the reason is not the one you would guess from `align-items: baseline`.
+       *
+       * Baseline alignment does not let this title's baseline drift below the time's and the chip's
+       * — that is the one thing it exists to prevent. An item's baseline *offset* is measured from
+       * its own box start and therefore includes its `padding-top`, and the largest offset in the
+       * row decides where the shared baseline sits. This title already has the largest (it is the
+       * biggest type in the row), so the padding is added to the number that wins.
+       *
+       * Measured at 1440 with it forced back on: the title's box top does not move, the time and the
+       * chip are pushed down 4px to keep the baseline shared, and the row grows 4px taller. So the
+       * cost is 4px of dead space above all three and a row 4px over the drawn height — a silent
+       * mis-measure of the whole column rather than a visible misalignment of one item, which is
+       * why it would not have been caught by eye.
+       */
+      padding-top: 0;
+    }
+  }
+
+  /*
+   * The supporting line. `index.tsx` passes `size="md"` and `color="themeFgMuted"` through
+   * `TextBlock`'s config; this rule carries the placement and one re-point.
+   *
+   * `--body-md` is fluid(14px, 16px) against the drawn 14px/15px (1:487, 1:335). Narrow anchor
+   * exact, wide anchor a pixel over — and because `--body-line-height` (1.5) is the drawn ratio
+   * exactly, that pixel becomes 1.5px of leading too: measured at a 1440px viewport, 16.00/24.00
+   * against the drawn 15/22.5. Re-pointed rather than overridden with `font-size`, the same
+   * mechanism `.eventTitle` and `.date` use — the rule that owns `font-size` is `Text`'s
+   * `.size_md`, at a specificity a single class here cannot beat, so the way to change what it
+   * resolves to is to change what it reads. The custom property inherits from this wrapper into the
+   * `<p>` `TextBlock` renders.
+   *
+   * `--body-md` is the mid step of the shared body scale and is read across the repo, so it cannot
+   * move at source; the leading needs no override at all once the size is right.
+   *
+   * The design's ink is `rgba(19,20,18,0.75)`, which composites to about `--stone-700` on the light
+   * page; `--fg-muted` is `--stone-600`, a step lighter, and is the muted-body role. Measured
+   * rather than estimated: `--stone-600` (#65635c) on `--stone-50` (#f3f1ea) is **5.32:1** and
+   * `--fg-muted` (`--pine-100`) on the dark page is 7.30:1 — both past the 4.5:1 WCAG 1.4.3 asks of
+   * body copy at this size.
+   */
+  .description {
+    --body-md: #{fluid(14px, 15px)};
+
+    grid-area: 3 / 1 / auto / -1;
+
+    overflow-wrap: break-word;
+
+    @container scheduleEvents (width >= #{$schedule-event-inline-switch}) {
+      // Under the title, still in the middle column — never under the time gutter.
+      grid-area: 2 / 2;
+    }
+  }
+}

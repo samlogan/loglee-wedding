@@ -44,11 +44,14 @@
     --card-stat-padding: #{fluid(10px, 12px)};
     /*
      * The mono micro-label above each value, and on each meter. 11px desktop (node 1:184), 10px
-     * mobile (node 1:252) — below `--body-xs` (11→12px), the floor of the body scale, so there is no
-     * token to reach for. Same call, and same reasoning, as `StatMeter`'s `--meter-label-size` and
-     * `FieldCheckbox`'s `--micro-font-size`.
+     * mobile (node 1:252) — below `--body-xs` (11→12px), the floor of the body scale.
+     *
+     * That used to mean "so there is no token to reach for", and the pair was written out here, in
+     * `StatMeter` and in `FieldCheckbox`. It is `--body-2xs` now; the local name stays because
+     * `.meters` passes it down to `StatMeter` as `--meter-label-size`, which is what keeps the two
+     * the same size inside one card.
      */
-    --card-label-size: #{fluid(10px, 11px)};
+    --card-label-size: var(--body-2xs);
     /*
      * The mono value, and the two runs in the header band. 13px desktop (nodes 1:178, 1:186), 12px
      * mobile (nodes 1:246, 1:254). Also just off the body scale: `--body-xs` tops out at 12px and

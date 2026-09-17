@@ -3,6 +3,7 @@ import { groq } from 'next-sanity';
 // Section Projections
 import faqSectionProjection from '@/sections/FaqSection/queries.groq';
 import headerDisplaySectionProjection from '@/sections/HeaderDisplaySection/queries.groq';
+import scheduleSectionProjection from '@/sections/ScheduleSection/queries.groq';
 
 /*
  * `sectionFields.themeOptions` was missing from this projection, and the omission was silent.
@@ -23,6 +24,7 @@ const sectionsProjection = groq`{
   _type,
   ${faqSectionProjection}
   ${headerDisplaySectionProjection}
+  ${scheduleSectionProjection}
   sectionFields {
     spacingOptions {
       removeTopSpacing,
