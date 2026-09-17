@@ -190,5 +190,23 @@
     flex-grow: 1;
     min-height: 0;
     overflow-y: auto;
+
+    /*
+     * Room for the focus ring to be drawn, because a scroll container clips it.
+     *
+     * `overflow-y: auto` computes `overflow-x` to `auto` as well, which makes this a scrollport —
+     * and a scrollport clips at its *padding* box. With no padding here and `fullWidth` rows flush
+     * to both edges (measured: 0px either side), the 3px ring on a focused link was cut off down
+     * its left and right strokes, and top or bottom on the end rows. Exactly the failure
+     * `components/Button/styles.module.scss` warns about by name.
+     *
+     * Padding to make the room, negative margin to give it straight back, so the rows still sit on
+     * the panel's `--container-gutter` inset rather than moving in by 3px. Derived from the ring's
+     * own tokens so it tracks them.
+     */
+    --focus-bleed: calc(var(--button-focus-ring-width) + var(--button-focus-ring-offset));
+
+    padding: var(--focus-bleed);
+    margin: calc(var(--focus-bleed) * -1);
   }
 }

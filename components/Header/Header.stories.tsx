@@ -345,6 +345,20 @@ export const MobileOpenThenWidened: Story = {
         await expect(document.body.style.overflow).toBe('');
         await expect(panel).toHaveAttribute('inert');
       });
+
+      /*
+       * …and the keyboard user is still somewhere, which is a separate claim from the three above.
+       *
+       * This is the one close path nobody asked for, so the trap's usual answer is unavailable:
+       * `returnFocusRef` is the toggle, and the toggle is `display: none` at this width, which
+       * makes `focus()` on it a silent no-op. Meanwhile the panel link that had focus has already
+       * been blurred to `<body>` by its own `display: none`. Without a fallback, rotating a tablet
+       * mid-menu drops focus at the top of the document.
+       */
+      const bar = canvasElement.querySelector('header') as HTMLElement;
+      await waitFor(async () => {
+        await expect(bar.contains(document.activeElement)).toBe(true);
+      });
     });
 
     await step('…and the disclosure still works on the way back down', async () => {
@@ -360,6 +374,45 @@ export const MobileOpenThenWidened: Story = {
       await waitFor(async () => {
         await expect(document.body.style.overflow).toBe('');
       });
+    });
+
+    /*
+     * The same trap again, reached without touching the width the CSS switches at.
+     *
+     * The switch is `56.25rem`, which is 900px only while the root font size is the default 16px.
+     * A reader whose browser default is 12px moves it to 675px — so the band from 675 to 900 is one
+     * where the CSS has already taken the toggle *and* the panel away. `useHeaderState` compared
+     * against a hardcoded `900` there, and across that band left the menu open behind a layout with
+     * no affordance to close it: `overflow: hidden` on the body with nothing to unset it, and the
+     * focus trap cycling the two controls still in the bar. The px constant is the bug, so the
+     * assertion has to move the root font size rather than only the width.
+     *
+     * Restored in a `finally` — `document.documentElement` outlives the story, and leaking a 12px
+     * root would quietly re-scale every `rem` in the stories that run after this one.
+     */
+    await step('The switch follows the root font size, not a hardcoded 900px', async () => {
+      const root = document.documentElement;
+      const previousFontSize = root.style.fontSize;
+
+      try {
+        root.style.fontSize = '12px';
+
+        const reopened = await toggleOf(canvasElement);
+        await userEvent.click(reopened);
+        await expect(reopened).toHaveAttribute('aria-expanded', 'true');
+
+        // Past the container query's 675px, comfortably short of 900. Stated in px on purpose:
+        // `rem` here would be re-scaled by the very font size under test.
+        column.style.width = '700px';
+
+        await waitFor(async () => {
+          await expect(reopened).toHaveAttribute('aria-expanded', 'false');
+          await expect(document.body.style.overflow).toBe('');
+        });
+      } finally {
+        root.style.fontSize = previousFontSize;
+        column.style.width = '23.4375rem';
+      }
     });
   }
 };

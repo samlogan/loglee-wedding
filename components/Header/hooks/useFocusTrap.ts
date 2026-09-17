@@ -103,8 +103,17 @@ const useFocusTrap = (props: UseFocusTrapProps): void => {
        * container breakpoint swaps which half of the nav is displayed.
        */
       const reachable = reachableWithin(container);
+      /*
+       * Nothing to hold focus on, so let go of it rather than eat the keystroke.
+       *
+       * This used to `preventDefault()` and return, which is a keyboard trap by definition — the
+       * one thing this hook exists to prevent (WCAG 2.1.2). It is currently unreachable (`active`
+       * implies a rendered toggle, and above the switch the desktop links are displayed), but a
+       * fail-safe whose failure mode *is* the failure is the wrong shape regardless. Asking the
+       * consumer to close and letting the Tab through is the behaviour that degrades safely.
+       */
       if (reachable.length === 0) {
-        event.preventDefault();
+        onEscapeRef.current?.();
         return;
       }
 
@@ -139,10 +148,24 @@ const useFocusTrap = (props: UseFocusTrapProps): void => {
        * where it stays on `<body>` — and focusing `<body>` on close would drop the keyboard user at
        * the top of the document. The toggle is the correct destination either way.
        *
-       * Optional chaining covers unmount: the ref is already null by the time this runs, and there
-       * is nothing left to focus.
+       * …but only while it is still on screen. `focus()` on a `display: none` element is a silent
+       * no-op, and the trap does not only deactivate because someone dismissed it: the header also
+       * closes the menu when the layout grows past the switch, and above that switch the toggle is
+       * `display: none`. Measured on that path — the panel link that had focus was blurred to
+       * `<body>` by its own `display: none`, the toggle refused the focus, and a keyboard user who
+       * merely rotated a tablet was dropped at the top of the document. Falling back to whatever is
+       * still reachable in the container keeps them where they were working.
+       *
+       * Optional chaining covers unmount: the ref is null and the container is detached by the time
+       * this runs, `reachableWithin` filters everything out on zero client rects, and both calls
+       * become no-ops.
        */
-      (returnFocusRef?.current ?? previouslyFocused)?.focus();
+      const returnTo = returnFocusRef?.current ?? previouslyFocused;
+      if (returnTo?.getClientRects().length) {
+        returnTo.focus();
+      } else {
+        reachableWithin(container)[0]?.focus();
+      }
     };
   }, [active, containerRef, initialFocusRef, returnFocusRef]);
 };

@@ -38,6 +38,22 @@
     &.hidden {
       transform: translateY(-100%);
     }
+
+    /*
+     * …unless something in it has focus, in which case it stays put.
+     *
+     * `transform` moves the bar without taking it out of the tab order, so a keyboard user who tabs
+     * to the wordmark or the RSVP pill and then scrolls — Space, PageDown, an arrow key — keeps
+     * focus on a control that is now entirely above the viewport. Measured: the pill sits at
+     * `bottom: -22px` with focus still on it and Enter still activating it, and nothing scrolls it
+     * back because focus never moved (WCAG 2.4.7, and 2.4.11 under 2.2).
+     *
+     * `.hidden:focus-within` rather than a bare `:focus-within`, so it out-specifies the modifier
+     * on its own rather than relying on being written after it.
+     */
+    &.hidden:focus-within {
+      transform: none;
+    }
   }
 
   .bar {
