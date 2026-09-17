@@ -79,25 +79,37 @@ For each theme (light, dark, primary, secondary, tertiary), parse the semantic t
 
 ### 2c. Typography (from `:root`)
 
-| CSS Property Pattern               | DTCG Path                                                           |
-| ---------------------------------- | ------------------------------------------------------------------- |
-| `--font-weight-{name}`             | `typography.font-weight.{name}` (value is a number)                 |
-| `--heading-{size}` (not `-mobile`) | `typography.heading.desktop.{size}`                                 |
-| `--heading-{size}-mobile`          | `typography.heading.mobile.{size}`                                  |
-| `--heading-line-height`            | `typography.heading.line-height`                                    |
-| `--heading-letter-spacing`         | `typography.heading.letter-spacing`                                 |
-| `--heading-default-font-weight`    | `typography.heading.default-font-weight` (resolve `var()` to alias) |
-| `--body-{size}` (not `-mobile`)    | `typography.body.desktop.{size}`                                    |
-| `--body-{size}-mobile`             | `typography.body.mobile.{size}`                                     |
-| `--body-line-height`               | `typography.body.line-height`                                       |
-| `--body-default-font-weight`       | `typography.body.default-font-weight` (resolve `var()` to alias)    |
-| `--body-bold-font-weight`          | `typography.body.bold-font-weight` (resolve `var()` to alias)       |
+The size tokens are **fluid** — a single `clamp(MINrem, Xrem + Yvw, MAXrem)` per step, built by
+`fluid($narrow-px, $wide-px)` in `tools/sass/base/__fluid.scss`. DTCG has no fluid type and Figma
+variables need concrete numbers, so **unpack each clamp back into its two anchors**: the first
+argument is the mobile value, the third is the desktop one. Convert `rem` back to px at 16px per rem
+(`3rem` → `48px`) — the `fluid()` call in the source has the px anchors verbatim if you would rather
+read them there.
+
+| CSS Property Pattern            | DTCG Path                                                                |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| `--font-weight-{name}`          | `typography.font-weight.{name}` (value is a number)                      |
+| `--display-{size}`              | `typography.display.mobile.{size}` + `typography.display.desktop.{size}` |
+| `--display-line-height`         | `typography.display.line-height`                                         |
+| `--display-letter-spacing`      | `typography.display.letter-spacing`                                      |
+| `--display-default-font-weight` | `typography.display.default-font-weight` (resolve `var()` to alias)      |
+| `--heading-{size}`              | `typography.heading.mobile.{size}` + `typography.heading.desktop.{size}` |
+| `--heading-line-height`         | `typography.heading.line-height`                                         |
+| `--heading-letter-spacing`      | `typography.heading.letter-spacing`                                      |
+| `--heading-default-font-weight` | `typography.heading.default-font-weight` (resolve `var()` to alias)      |
+| `--body-{size}`                 | `typography.body.mobile.{size}` + `typography.body.desktop.{size}`       |
+| `--body-line-height`            | `typography.body.line-height`                                            |
+| `--body-default-font-weight`    | `typography.body.default-font-weight` (resolve `var()` to alias)         |
+| `--body-bold-font-weight`       | `typography.body.bold-font-weight` (resolve `var()` to alias)            |
 
 ### 2d. Spacing (from `:root`)
 
 | CSS Property Pattern | DTCG Path        |
 | -------------------- | ---------------- |
 | `--spacing-{name}`   | `spacing.{name}` |
+
+`--spacing-xl` and above are fluid. Export the **wide anchor** (the clamp's third argument) as the
+value — a single-value DTCG token should carry the nominal size, not the phone one.
 
 ### 2e. Container Widths (from `:root`)
 
@@ -113,10 +125,11 @@ For each theme (light, dark, primary, secondary, tertiary), parse the semantic t
 
 ### 2g. Section Spacing (from `:root`)
 
-| CSS Property Pattern               | DTCG Path                        |
-| ---------------------------------- | -------------------------------- |
-| `--section-spacing-{size}-desktop` | `section-spacing.desktop.{size}` |
-| `--section-spacing-{size}-mobile`  | `section-spacing.mobile.{size}`  |
+| CSS Property Pattern       | DTCG Path                                                          |
+| -------------------------- | ------------------------------------------------------------------ |
+| `--section-spacing-{size}` | `section-spacing.mobile.{size}` + `section-spacing.desktop.{size}` |
+
+One fluid token per step, unpacked into its two anchors exactly as the type scale is above.
 
 ### 2h. Button Sizing (from `:root`)
 
@@ -167,6 +180,13 @@ Combine all parsed tokens into a single JSON object following this structure:
   },
   "typography": {
     "font-weight": { "light": { "$value": 300 }, "regular": { "$value": 400 }, ... },
+    "display": {
+      "desktop": { "lg": { "$value": "176px" }, "md": { "$value": "128px" } },
+      "mobile": { "lg": { "$value": "64px" }, "md": { "$value": "56px" } },
+      "line-height": { "$value": 1.05 },
+      "letter-spacing": { "$value": "-0.03em" },
+      "default-font-weight": { "$value": "{font-weight.black}" }
+    },
     "heading": {
       "desktop": { "2xl": { "$value": "72px" }, ... },
       "mobile": { "2xl": { "$value": "48px" }, ... },
