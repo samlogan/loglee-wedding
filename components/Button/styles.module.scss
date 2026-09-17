@@ -1,174 +1,207 @@
+/*
+ * The shared appearance layer for `Button` and `Link`.
+ *
+ * `Link` imports this module rather than its own, because a link styled as a button and a button
+ * are the same control drawn twice — the only difference is which element the browser gives it.
+ * Four independent axes compose:
+ *
+ *   theme    primary | secondary | accent    which colour pair fills it
+ *   variant  pill | rounded | ui | square | bare | content    what shape it takes
+ *   size     sm | md | lg                    how large the box is
+ *   outline  boolean                         filled or drawn
+ *
+ * plus `mono` (the JetBrains Mono UI label), `arrow` and the two full-width modifiers. The design's
+ * seven-button component set is entirely combinations of those — "ACCENT / UI →" is
+ * `theme=accent variant=ui size=sm mono arrow=right`, "GHOST / UI" is the same with `outline` and no
+ * theme, "← BACK" is `variant=bare mono arrow=left`. Nothing here is a one-off.
+ */
+
 @layer defaults {
+  /*
+   * Kept in step with `ButtonTheme` in `appearance.tsx`. Every state below is generated from it, so
+   * a fourth colour pair is a token trio in `_variables.scss` plus one word in two lists.
+   */
+  $button-themes: primary, secondary, accent;
+
   .button {
+    /*
+     * First, so everything after it wins. `font` is a shorthand and resets family, size, weight and
+     * line-height in one go.
+     */
     font: inherit;
+
+    /*
+     * Padding is read through two local custom properties rather than set directly by the size
+     * classes, so a variant that has no box — `bare`, `content` — can zero it without having to
+     * out-specify `.size_md`. Both are single class selectors; whoever wins would otherwise be
+     * decided by which block happens to sit lower in this file.
+     */
+    --button-padding-y: 0px;
+    --button-padding-x: 0px;
+
     position: relative;
     display: inline-flex;
-    background-color: transparent;
-    border: 0;
-    padding: 0;
-    box-shadow: none;
-    inset: 0;
-    cursor: pointer;
     align-items: center;
-    font-size: 1em;
-    font-weight: var(--button-font-weight);
-    border-width: var(--button-border-width);
-    border-color: transparent;
-    color: currentColor;
-    border-style: solid;
-    transition: 0.2s ease;
+    justify-content: center;
     gap: var(--button-gap);
+    padding: var(--button-padding-y) var(--button-padding-x);
+    background-color: transparent;
+    /*
+     * Every button carries the border box, filled or not. Toggling `outline` then swaps a colour
+     * rather than adding a border, so the label does not shift by a pixel and a row of mixed filled
+     * and outlined controls lines up.
+     */
+    border: var(--button-border-width) solid transparent;
+    box-shadow: none;
+    color: currentColor;
+    font-weight: var(--button-font-weight);
+    /*
+     * Stated rather than inherited from `--body-line-height` (1.5). The control's height is
+     * padding + line box, and the design's 46px `md` pill only falls out of the arithmetic at 1.2.
+     */
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
 
     &:disabled {
-      cursor: not-allowed !important;
+      cursor: not-allowed;
     }
 
     &:hover {
       text-decoration: none;
     }
+
+    /*
+     * Focus is geometry; hover is colour. That is the whole distinction, and it is deliberate.
+     *
+     * Hover repaints inside the box — fill and label swap to the `-hover` pair — and never draws a
+     * ring. Focus adds a ring *outside* the box and never touches the fill. So the two are
+     * unmistakable apart, they read correctly when both apply at once (a focused button under the
+     * pointer shows the hover fill *and* the ring), and neither can be mistaken for the `outline`
+     * variant, whose border is thinner and sits on the box rather than clear of it.
+     *
+     * The offset gap is transparent, so it shows the section behind the button: the ring's inner
+     * neighbour is the page, not the fill, and only ring-vs-page contrast has to hold. Each theme
+     * picks a ring that clears 3:1 against its own surface — see the note in `_variables.scss`.
+     *
+     * `--fg-default` is the fallback for an unthemed control (the `bare` back link, a plain
+     * `<Button>` with no theme); it is by construction the theme's AA-safe ink.
+     */
+    &:focus-visible {
+      outline: var(--button-focus-ring-width) solid var(--fg-default);
+      outline-offset: var(--button-focus-ring-offset);
+      // Above its neighbours, so the offset ring is not clipped by the next control in a tight row.
+      z-index: 1;
+    }
   }
 
   // --------------------
   // Themes
+  //
+  // `:not(:disabled)` guards the interactive states so a disabled button does not light up under the
+  // pointer. It is a no-op on `<a>`, where `:disabled` never matches.
 
-  .theme {
-    &_primary {
-      background-color: var(--button-primary-bg);
-      color: var(--button-primary-fg);
+  @each $theme in $button-themes {
+    .theme_#{$theme} {
+      background-color: var(--button-#{$theme}-bg);
+      // Matches the fill so a filled button's colour reaches the outer edge of the border box.
+      border-color: var(--button-#{$theme}-bg);
+      color: var(--button-#{$theme}-fg);
 
       &:focus-visible {
-        outline: 2px solid var(--button-primary-focus-ring);
-        outline-offset: 2px;
+        outline-color: var(--button-#{$theme}-focus-ring);
       }
 
-      &:hover {
-        background-color: var(--button-primary-bg-hover);
-        color: var(--button-primary-fg-hover);
+      &:hover:not(:disabled) {
+        background-color: var(--button-#{$theme}-bg-hover);
+        border-color: var(--button-#{$theme}-bg-hover);
+        color: var(--button-#{$theme}-fg-hover);
       }
 
-      &:active {
-        background-color: var(--button-primary-bg-active);
-        color: var(--button-primary-fg-active);
+      &:active:not(:disabled) {
+        background-color: var(--button-#{$theme}-bg-active);
+        border-color: var(--button-#{$theme}-bg-active);
+        color: var(--button-#{$theme}-fg-active);
       }
 
       &:disabled {
-        background-color: var(--button-primary-bg-disabled);
-        color: var(--button-primary-fg-disabled);
-      }
-    }
-
-    &_secondary {
-      background-color: var(--button-secondary-bg);
-      color: var(--button-secondary-fg);
-
-      &:focus-visible {
-        outline: 2px solid var(--button-secondary-focus-ring);
-        outline-offset: 2px;
-      }
-
-      &:hover {
-        background-color: var(--button-secondary-bg-hover);
-        color: var(--button-secondary-fg-hover);
-      }
-
-      &:active {
-        background-color: var(--button-secondary-bg-active);
-        color: var(--button-secondary-fg-active);
-      }
-
-      &:disabled {
-        background-color: var(--button-secondary-bg-disabled);
-        color: var(--button-secondary-fg-disabled);
+        background-color: var(--button-#{$theme}-bg-disabled);
+        border-color: var(--button-#{$theme}-bg-disabled);
+        color: var(--button-#{$theme}-fg-disabled);
       }
     }
   }
 
   // --------------------
   // Outline modifier
-  // Derives outline styling from the theme's fill color
+  //
+  // Derived from the theme's own fill: the border and the label take the fill colour, and hover
+  // completes the fill rather than introducing a fourth colour.
 
   .outline {
     background-color: transparent;
-    border-color: var(--button-primary-bg);
-    color: var(--button-primary-bg);
 
-    &:hover {
-      background-color: var(--button-primary-bg);
-      color: var(--button-primary-fg);
-    }
+    @each $theme in $button-themes {
+      &.theme_#{$theme} {
+        border-color: var(--button-#{$theme}-bg);
+        color: var(--button-#{$theme}-bg);
 
-    &:active {
-      background-color: var(--button-primary-bg-active);
-      color: var(--button-primary-fg-active);
-    }
+        &:hover:not(:disabled) {
+          background-color: var(--button-#{$theme}-bg);
+          border-color: var(--button-#{$theme}-bg);
+          color: var(--button-#{$theme}-fg);
+        }
 
-    &:disabled {
-      border-color: var(--button-primary-bg-disabled);
-      color: var(--button-primary-fg-disabled);
-      background-color: transparent;
-    }
+        &:active:not(:disabled) {
+          background-color: var(--button-#{$theme}-bg-active);
+          border-color: var(--button-#{$theme}-bg-active);
+          color: var(--button-#{$theme}-fg-active);
+        }
 
-    &.theme_secondary {
-      border-color: var(--button-secondary-bg);
-      color: var(--button-secondary-bg);
-
-      &:hover {
-        background-color: var(--button-secondary-bg);
-        color: var(--button-secondary-fg);
-      }
-
-      &:active {
-        background-color: var(--button-secondary-bg-active);
-        color: var(--button-secondary-fg-active);
-      }
-
-      &:disabled {
-        border-color: var(--button-secondary-bg-disabled);
-        color: var(--button-secondary-fg-disabled);
-        background-color: transparent;
+        &:disabled {
+          background-color: transparent;
+          border-color: var(--button-#{$theme}-bg-disabled);
+          color: var(--button-#{$theme}-fg-disabled);
+        }
       }
     }
-  }
 
-  // --------------------
-  // Variants
-
-  .variant {
-    &_pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      border-radius: var(--radius-full);
-    }
-
-    &_rounded {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      border-radius: var(--radius-md);
-    }
-
-    &_square {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      border-radius: 0;
-    }
-
-    &_content {
-      text-decoration: none !important;
+    /*
+     * Accent is the one theme whose fill cannot also serve as its outline ink, so it is the one
+     * exception to the derivation above. It has to come after the loop, which sets the same two
+     * properties at the same specificity.
+     *
+     * `--button-accent-bg` is signal/300: 16:1 against the near-black label it carries as a *fill*,
+     * but 1.02:1 as *text* on the light page behind it — invisible, not merely low contrast, and no
+     * better in the dark theme where it would sit on pine. The outline form borrows `--fg-default`,
+     * the ink each theme already guarantees against its own surface, and brings the accent back on
+     * hover where it is a fill again.
+     *
+     * That is also what the design draws: "GHOST / UI" sits beside "ACCENT / UI" with a neutral
+     * border and lights up lime on interaction. It keeps the accent to interactive states, which is
+     * the rule for this palette.
+     */
+    &.theme_accent {
+      border-color: var(--fg-default);
+      color: var(--fg-default);
     }
   }
 
   // --------------------
   // Sizes
+  //
+  // Before the variants, so a boxless variant can zero the padding these set. See `.button`.
 
   .size {
     &_sm {
-      padding: var(--button-sm-padding-y) var(--button-sm-padding-x);
+      --button-padding-y: var(--button-sm-padding-y);
+      --button-padding-x: var(--button-sm-padding-x);
+
       font-size: var(--button-sm-font-size);
 
       .icon {
@@ -178,7 +211,9 @@
     }
 
     &_md {
-      padding: var(--button-md-padding-y) var(--button-md-padding-x);
+      --button-padding-y: var(--button-md-padding-y);
+      --button-padding-x: var(--button-md-padding-x);
+
       font-size: var(--button-md-font-size);
 
       .icon {
@@ -188,13 +223,165 @@
     }
 
     &_lg {
-      padding: var(--button-lg-padding-y) var(--button-lg-padding-x);
+      --button-padding-y: var(--button-lg-padding-y);
+      --button-padding-x: var(--button-lg-padding-x);
+
       font-size: var(--button-lg-font-size);
 
       .icon {
         width: var(--button-lg-icon-size);
         height: var(--button-lg-icon-size);
       }
+    }
+  }
+
+  // --------------------
+  // Variants
+  //
+  // Shape only, for the first four. `bare` and `content` are the two that have no box at all; they
+  // are on this axis because that is where `content` already lived, and splitting the axis now would
+  // break every consumer that passes `variant`.
+
+  .variant {
+    &_pill {
+      border-radius: var(--radius-full);
+    }
+
+    &_rounded {
+      border-radius: var(--radius-md);
+    }
+
+    /*
+     * The UI-chrome shape: the 4px radius the design gives its mono controls — the nav RSVP pill,
+     * "ACCENT / UI", "GHOST / UI" and the switch-player button. Distinct from `rounded` (8px), which
+     * is what the larger "PRESS START" action uses.
+     */
+    &_ui {
+      border-radius: var(--radius-sm);
+    }
+
+    &_square {
+      border-radius: 0;
+    }
+
+    /*
+     * No box at all — the design's "← BACK" control. Ink only, accent on hover, and it keeps the
+     * size axis for its type size. It ignores `theme` and `outline` by design; combining them is a
+     * contradiction rather than a shape.
+     */
+    &_bare {
+      --button-padding-y: 0px;
+      --button-padding-x: 0px;
+
+      background-color: transparent;
+      border-color: transparent;
+      color: var(--fg-default);
+
+      &:hover:not(:disabled) {
+        background-color: transparent;
+        border-color: transparent;
+        color: var(--fg-accent);
+      }
+
+      &:active:not(:disabled) {
+        background-color: transparent;
+        border-color: transparent;
+        color: var(--fg-accent);
+      }
+    }
+
+    /*
+     * A link inside rich text.
+     *
+     * `display: inline` matters and is not cosmetic: the base is `inline-flex`, which makes the
+     * link a single unbreakable box, so a long link in a paragraph refuses to wrap and pushes the
+     * measure out. It is underlined rather than colour-only, so it does not rely on hue alone to
+     * announce itself (WCAG 1.4.1).
+     */
+    &_content {
+      --button-padding-y: 0px;
+      --button-padding-x: 0px;
+
+      display: inline;
+      background-color: transparent;
+      border-color: transparent;
+      color: var(--fg-link);
+      font-weight: inherit;
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+
+      &:hover {
+        color: var(--fg-accent);
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // --------------------
+  // Mono label
+  //
+  // The third type role, switched on per control rather than baked into a variant so it stays
+  // orthogonal to shape. Uppercase and wide tracking come with it because every mono control in the
+  // design has both; see the note on `mono-font()` in `tools/sass/base/__typography.scss`.
+
+  .mono {
+    @include mono-font();
+
+    font-weight: var(--button-mono-font-weight);
+    letter-spacing: var(--button-mono-letter-spacing);
+    text-transform: uppercase;
+  }
+
+  // --------------------
+  // Arrow
+  //
+  // A typographic glyph, not an SVG. The design sets the arrow in the label's own font at the
+  // label's own size ("RSVP →", "SWITCH PLAYER → LAUREN", "← BACK"), so it has to inherit both;
+  // an icon component would need its own size token per button size to track them.
+
+  .arrow {
+    flex-shrink: 0;
+    line-height: 1;
+    transition: transform 0.2s ease;
+  }
+
+  .button:hover .arrow_right {
+    transform: translateX(0.15em);
+  }
+
+  .button:hover .arrow_left {
+    transform: translateX(-0.15em);
+  }
+
+  // --------------------
+  // Full width
+  //
+  // Two modifiers rather than one automatic rule: the design stretches the hero's RSVP action and
+  // the form's submit to the column on a phone, but leaves the nav pill and the room chips inline
+  // at the same width. Which of those a button is cannot be inferred from the button.
+
+  .fullWidth {
+    width: 100%;
+  }
+
+  .fullWidthMobile {
+    @include media-down(tablet) {
+      width: 100%;
+    }
+  }
+
+  // --------------------
+  // Motion
+
+  @media (prefers-reduced-motion: reduce) {
+    .button,
+    .arrow {
+      transition: none;
+    }
+
+    .button:hover .arrow_right,
+    .button:hover .arrow_left {
+      transform: none;
     }
   }
 }

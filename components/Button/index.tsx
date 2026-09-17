@@ -4,11 +4,15 @@ import type { MouseEvent, ReactNode } from 'react';
 
 import type { IconProps } from '@/components/Icon';
 import Icon from '@/components/Icon';
-import classNames from '@/helpers/classNames';
+
+import type { ButtonAppearanceProps } from './appearance';
+import { ButtonArrow, buttonClasses } from './appearance';
 
 import styles from './styles.module.scss';
 
-export interface ButtonProps {
+export type { ButtonAppearanceProps, ButtonArrowDirection, ButtonSize, ButtonTheme, ButtonVariant } from './appearance';
+
+export interface ButtonProps extends ButtonAppearanceProps {
   children?: ReactNode;
   className?: string;
   id?: string;
@@ -18,12 +22,8 @@ export interface ButtonProps {
   to?: string;
   ariaLabel?: string;
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
-  theme?: 'primary' | 'secondary';
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'rounded' | 'square' | 'pill';
   icon?: IconProps['title'];
   iconPosition?: 'left' | 'right';
-  outline?: boolean;
   tabIndex?: number;
 }
 
@@ -39,6 +39,10 @@ const Button = (props: ButtonProps) => {
     variant,
     disabled = false,
     outline = false,
+    mono = false,
+    arrow,
+    fullWidth = false,
+    fullWidthMobile = false,
     ariaLabel = '',
     iconPosition = 'left',
     text,
@@ -46,14 +50,7 @@ const Button = (props: ButtonProps) => {
     tabIndex
   } = props;
 
-  const classes = classNames(
-    styles.button,
-    styles[`variant_${variant}`],
-    styles[`theme_${theme}`],
-    styles[`size_${size}`],
-    { [styles.outline]: outline },
-    className
-  );
+  const classes = buttonClasses({ theme, size, variant, outline, mono, arrow, fullWidth, fullWidthMobile }, className);
 
   const onClickHandler = (event: MouseEvent<HTMLButtonElement>) => {
     if (onClick) {
@@ -63,17 +60,25 @@ const Button = (props: ButtonProps) => {
 
   return (
     <button
-      aria-label={ariaLabel}
-      type={type}
-      disabled={disabled}
+      /*
+       * Omitted when empty, never emitted as `aria-label=""` — the same fix `Link` carries, for the
+       * same reason. An empty `aria-label` overrides the accessible name rather than falling back to
+       * the content, so an icon-only button (the carousel's previous/next) announced nothing at all.
+       * `ariaLabel` defaults to `''`, so every button in the app was emitting one.
+       */
+      aria-label={ariaLabel || undefined}
       className={classes}
+      disabled={disabled}
       id={id}
-      tabIndex={tabIndex}
       onClick={onClickHandler}
+      tabIndex={tabIndex}
+      type={type}
     >
-      {iconPosition === 'left' && icon && <Icon title={icon} className={styles.icon} />}
+      {arrow === 'left' && <ButtonArrow direction="left" />}
+      {iconPosition === 'left' && icon && <Icon className={styles.icon} title={icon} />}
       {children || text}
-      {iconPosition === 'right' && icon && <Icon title={icon} className={styles.icon} />}
+      {iconPosition === 'right' && icon && <Icon className={styles.icon} title={icon} />}
+      {arrow === 'right' && <ButtonArrow direction="right" />}
     </button>
   );
 };

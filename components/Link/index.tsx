@@ -3,15 +3,28 @@
 import NextLink from 'next/link';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 
-import classNames from '@/helpers/classNames';
 import stringClean from '@/tools/helpers/stringClean';
 import type { ILinkElement } from '@/tools/sanity/schema/elements/link';
 
-import Text from '../Text';
+import type { ButtonAppearanceProps } from '../Button/appearance';
+import { ButtonArrow, buttonClasses } from '../Button/appearance';
 
-import styles from '../Button/styles.module.scss';
+export type {
+  ButtonAppearanceProps,
+  ButtonArrowDirection,
+  ButtonSize,
+  ButtonTheme,
+  ButtonVariant
+} from '../Button/appearance';
 
-export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+/*
+ * `ButtonAppearanceProps` rather than a parallel copy of the same six props.
+ *
+ * A link styled as a button and a button are the same control on different elements — the design
+ * names every one of them "Link" — and the two declarations had already drifted once: `Link` knew
+ * about `variant="content"` and `Button` did not. One source, one class-composition helper.
+ */
+export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement>, ButtonAppearanceProps {
   children?: ReactNode;
   className?: string;
   id?: string;
@@ -29,10 +42,6 @@ export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   target?: '_blank' | '_self' | '_parent' | '_top' | string;
   newWindow?: boolean;
   tabIndex?: number;
-  theme?: 'primary' | 'secondary';
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'rounded' | 'square' | 'pill' | 'content';
-  outline?: boolean;
   forceLinkWhenEmpty?: boolean;
 }
 
@@ -57,6 +66,10 @@ const Link = (props: LinkProps) => {
     size,
     theme,
     outline = false,
+    mono = false,
+    arrow,
+    fullWidth = false,
+    fullWidthMobile = false,
     forceLinkWhenEmpty,
     ...rest
   } = props;
@@ -68,17 +81,25 @@ const Link = (props: LinkProps) => {
 
   const linkType = stringClean(rawLinkType);
 
-  const classes = classNames(
-    styles.button,
-    className,
-    { [styles[`size_${size}`]]: !!size },
-    { [styles[`variant_${variant}`]]: !!variant },
-    { [styles[`theme_${theme}`]]: !!theme },
-    { [styles.outline]: outline }
-  );
+  const classes = buttonClasses({ theme, size, variant, outline, mono, arrow, fullWidth, fullWidthMobile }, className);
 
   const linkTarget = newWindow ? '_blank' : target;
-  const child = children || text || title;
+
+  /*
+   * Composed once, not per branch.
+   *
+   * Every return below renders the same content, and the arrows have to sit inside whichever
+   * element wins — including the plain `<span>` fallback, which is what an unresolvable link type
+   * renders. Building it in each branch is how the six branches drift apart.
+   */
+  const label = children || text || title;
+  const child = (
+    <>
+      {arrow === 'left' && <ButtonArrow direction="left" />}
+      {label}
+      {arrow === 'right' && <ButtonArrow direction="right" />}
+    </>
+  );
 
   const commonProps = {
     /*
@@ -124,7 +145,7 @@ const Link = (props: LinkProps) => {
 
     return (
       <NextLink href={linkHref} prefetch={true} {...commonProps}>
-        {children || text || title}
+        {child}
       </NextLink>
     );
   }
@@ -137,13 +158,13 @@ const Link = (props: LinkProps) => {
     if (isRelative && linkHref) {
       return (
         <NextLink href={linkHref} prefetch={true} {...commonProps}>
-          {children || text || title}
+          {child}
         </NextLink>
       );
     }
     return (
       <a href={linkHref} rel="nofollow noreferrer" {...commonProps}>
-        {children || text || title}
+        {child}
       </a>
     );
   }
@@ -162,7 +183,7 @@ const Link = (props: LinkProps) => {
     if (phoneHrefClean) {
       return (
         <a href={`tel:${phoneHrefClean}`} {...commonProps}>
-          {children || text || title}
+          {child}
         </a>
       );
     }
@@ -173,7 +194,7 @@ const Link = (props: LinkProps) => {
     if (emailHref) {
       return (
         <a href={`mailto:${emailHref}`} {...commonProps}>
-          {children || text || title}
+          {child}
         </a>
       );
     }
