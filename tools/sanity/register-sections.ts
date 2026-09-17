@@ -25,6 +25,8 @@ import { dirname, join } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { companionExports } from './lib/companionExports';
+
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
 
@@ -86,16 +88,7 @@ if (missing.length > 0) {
  */
 const companions = sections.flatMap(({ type }) => {
   const source = readFileSync(join(root, 'tools/sanity/schema/sections', `${type}.ts`), 'utf8');
-  const exported = [...source.matchAll(/^export\s*\{([^}]*)\}/gm)]
-    .flatMap((match) => match[1].split(','))
-    .map(
-      (name) =>
-        name
-          .trim()
-          .split(/\s+as\s+/)
-          .pop() ?? ''
-    )
-    .filter((name) => name.length > 0 && name !== type);
+  const exported = companionExports(source, type);
   return exported.length > 0 ? [`  ${type}.ts also exports: ${exported.join(', ')}`] : [];
 });
 
