@@ -7,7 +7,14 @@ import Field from '../FieldCommon/Field';
 import styles from './styles.module.scss';
 
 export interface FieldCheckboxOption {
-  /** The submitted value, and what `defaultValues[name]` holds for a pre-checked option. */
+  /**
+   * The submitted value, and what `defaultValues[name]` holds for a pre-checked option.
+   *
+   * Must be unique within `options`. react-hook-form matches checkboxes by `value`, so a repeated
+   * one ties those cards together — ticking either ticks both, and the submitted array carries the
+   * value twice. Nothing dedupes it; React's duplicate-key warning is the only signal, and only in
+   * development.
+   */
   value: string;
   /** The card's title. The bulk of the option's accessible name. */
   label: string;
@@ -20,7 +27,19 @@ export interface FieldCheckboxOption {
   eyebrow?: string;
 }
 
-export interface FieldCheckboxProps extends FieldProps {
+/**
+ * `valueAs` is dropped rather than inherited. `Field` feeds it straight to
+ * `register(name, { valueAsNumber: valueAs === 'number' })`, which is meaningless for a group whose
+ * value is a list of strings — and worse than meaningless, because the compiler accepts
+ * `valueAs="number"` here and the coercion then silently mangles what the form submits. Omitting it
+ * is the same shape `FieldBotCheck` uses to drop `name`.
+ */
+export interface FieldCheckboxProps extends Omit<FieldProps, 'valueAs'> {
+  /**
+   * Two or more. With a single option react-hook-form stops collecting into an array — its
+   * `getCheckboxValue` branches on `options.length > 1` — and submits the bare `value` string, or
+   * `false` when unchecked, which is not the `string[]` this component's contract promises below.
+   */
   options: FieldCheckboxOption[];
   /**
    * The word in the indicator line when the option is selected / not selected.
@@ -55,17 +74,41 @@ export interface FieldCheckboxProps extends FieldProps {
  *    padding would push the hit area outside the card it is meant to cover. `className` is therefore
  *    set *after* the spread rather than merged into it.
  *
+ *    Dropped rather than corrected, because it cannot be corrected from here: that stylesheet is
+ *    **unlayered**, this one is in `@layer defaults`, and unlayered author styles outrank every
+ *    layer. `.theme_primary :global(.input)` would beat anything this file declares no matter how
+ *    specific, so merging the class back and adding `box-sizing: border-box` — the obvious-looking
+ *    fix — would quietly restore the padding. `Form` also defaults to `theme="primary"`, so that
+ *    rule is live by default rather than opt-in.
+ *
  * 3. **The input is transparent, not `display: none`.** Both siblings hide theirs outright, which
  *    removes them from the tab order and the accessibility tree — neither is operable by keyboard at
  *    all. This one is `opacity: 0` and stretched over the card, so it keeps native focus, Space
  *    toggling and the checked state a screen reader reads out.
  */
 const FieldCheckbox = (props: FieldCheckboxProps) => {
-  const { label, options, required = false, selectedText = 'In', unselectedText = 'Out', ...fieldProps } = props;
+  const {
+    disabled = false,
+    label,
+    options,
+    required = false,
+    selectedText = 'In',
+    unselectedText = 'Out',
+    ...fieldProps
+  } = props;
   const { name } = fieldProps;
 
   return (
-    <Field {...fieldProps} required={required}>
+    /*
+     * `required` is withheld while the group is disabled, and that is a correctness fix rather than
+     * tidying. `Field` forwards `required` into `register()` but never forwards `disabled`, so
+     * react-hook-form keeps validating the field — while `getCheckboxValue` filters disabled inputs
+     * out of the values it collects. The two together make the rule unsatisfiable: a
+     * `required disabled` group reports "This field is required" forever and blocks submit on a
+     * control nobody can reach. Native constraint validation skips disabled controls for the same
+     * reason.
+     */
+    <Field {...fieldProps} disabled={disabled} required={required && !disabled}>
       {({ field, hasError }) => (
         <fieldset className={styles.fieldset}>
           {label && (

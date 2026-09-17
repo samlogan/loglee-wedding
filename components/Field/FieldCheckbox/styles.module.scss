@@ -106,7 +106,16 @@
    * `inline-size` and not `size`: the group's width comes from the column it sits in and never from
    * its contents, but its height is the content, and containing that would collapse it. Nothing is
    * clipped by it: `container-type` implies layout, style and inline-size containment, not `paint`,
-   * so the focus ring still draws outside the card.
+   * so the focus ring still draws outside the card — measured, not assumed.
+   *
+   * The one thing inline-size containment does cost: the contents no longer contribute to this
+   * element's own intrinsic width, so a shrink-to-fit ancestor has nothing to size against and the
+   * group collapses to the legend. `Form`'s `grid` (a `1fr` track) and `normal` (a stretched column)
+   * layouts both give it a definite width, but `layout="flex"` is `flex-direction: row` with no
+   * `flex` basis set, which is shrink-to-fit — measured there, the whole group folds to ~114px and
+   * the cards overflow. Nothing uses that layout today. If something does, give the field container
+   * a definite width rather than reaching for a viewport media query here; the width genuinely is
+   * the grid track's, which is the whole reason this is a container query.
    *
    * The gap splits by axis so the grid's own wrap point is a number the query can name exactly.
    * `column-gap` only ever applies once there are two tracks, which needs 448px of group before the
@@ -310,9 +319,17 @@
     background-color: var(--button-secondary-bg-disabled);
   }
 
-  // Set from the render prop's `hasError`, not from `Field`'s own container class — `Field`'s module
-  // declares `.container` and nothing else, so the `styles.error` it composes is `undefined` and
-  // never reaches the DOM.
+  /*
+   * Set from the render prop's `hasError`, not from `Field`'s own container class. `Field`'s module
+   * declares an empty `.container` and nothing else, which Sass drops, so both `styles.container`
+   * and `styles.error` are `undefined` there and neither can be styled from this file.
+   *
+   * Worth knowing what that actually produces upstream, because it is not nothing: `Field` composes
+   * the error class as an *object key* — `classNames(styles.container, { [styles.error]: !!error })`
+   * — and an `undefined` key stringifies, so an invalid field renders `<div class="undefined">` on
+   * its container. Harmless today, and a selector accident waiting for whoever writes `.undefined`.
+   * Its own ticket; do not chase it from here.
+   */
   .card.error {
     --card-border-color: var(--input-error-border);
   }
@@ -438,6 +455,41 @@
 
   .input:checked + .card .stateSelected {
     display: inline;
+  }
+
+  /*
+   * Forced colours — Windows High Contrast Mode and the like. This block is what makes the claim at
+   * the top of the file ("survives … a forced-colours stylesheet") actually true; measured, it was
+   * not.
+   *
+   * Forced colours replaces every author colour with one from the user's palette, which collapses
+   * both of the state's *colour* differences at once: the checked card's fill is forced to the same
+   * `Canvas` as the page behind it, and `.marker`'s `background-color: currentColor` is forced to
+   * the same ink as its own border — a filled disc that is pixel-identical to the unchecked hollow
+   * ring. The input underneath is `appearance: none` and transparent, so there is no native checkbox
+   * glyph to fall back on either. Only the ~10px `IN`/`OUT` word was left carrying the state.
+   *
+   * `forced-color-adjust: none` opts the checked card back out so the system `Highlight` pair can be
+   * painted on purpose — the pair the OS itself uses for a selected row, which is what this is. The
+   * property inherits, so the marker's `currentColor` resolves to `HighlightText` and the filled
+   * disc returns without a rule of its own.
+   *
+   * Scoped to `:not(:disabled)` so a disabled card keeps the system's own inactive rendering rather
+   * than being painted as an active selection, and the focus ring is re-forced to `CanvasText`
+   * because opting the card out would otherwise leave the ring at an author colour that has no
+   * guaranteed contrast against `Highlight`.
+   */
+  @media (forced-colors: active) {
+    .input:checked:not(:disabled) + .card {
+      forced-color-adjust: none;
+      border-color: Highlight;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+
+    .input:focus-visible + .card {
+      outline-color: CanvasText;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

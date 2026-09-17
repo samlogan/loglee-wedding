@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import Form from '@/components/Form';
 
@@ -94,6 +94,19 @@ export const Default: Story = {
      * are in the DOM at once, so an unhidden indicator would announce "Out In" on every option.
      */
     await expect(fri).toHaveAccessibleName(/^fri 12 feb\s+arrival dinner$/i);
+
+    /*
+     * The other half of `NarrowColumn`, and the half that can actually fail.
+     *
+     * `row` — what that story asserts — is also `flex-direction`'s initial value, so it is the
+     * answer you get from a card with no stylesheet at all: that assertion alone would keep passing
+     * if this module stopped loading, or if the container query were deleted. `column` is not an
+     * initial value, so pinning it here is what makes the pair a test of the 460px switch rather
+     * than of one side of it. The decorator's 696px column is the comp's desktop form.
+     */
+    await waitFor(async () => {
+      await expect(getComputedStyle(cardOf(fri)).flexDirection).toBe('column');
+    });
   }
 };
 
@@ -142,10 +155,20 @@ export const KeyboardOperation: Story = {
        * outline is the only way to catch a token that resolved to nothing: an undefined `var()` with
        * no fallback invalidates the whole declaration and silently removes the ring, which is
        * exactly how the site-wide one in `_reset.scss` disappeared.
+       *
+       * Polled rather than read once, because the read races the theme. Every `--button-*` token
+       * is declared under `[data-theme]` (`_variables.scss:309`), which nothing sets until the
+       * preview applies it to `<body>`; until then this `outline` shorthand is
+       * invalid-at-computed-value-time and reports `outline-style: none` — the same answer a
+       * genuinely absent token gives. Polling tells the two apart: a late token resolves, a missing
+       * one never does and still fails at the timeout. See the note on the module-scope
+       * `data-theme` in `.storybook/preview.tsx` for why it used to be *permanently* late here.
        */
-      const ring = getComputedStyle(fri.nextElementSibling as HTMLElement);
-      await expect(ring.outlineStyle).toBe('solid');
-      await expect(Number.parseFloat(ring.outlineWidth)).toBeGreaterThan(0);
+      await waitFor(async () => {
+        const ring = getComputedStyle(cardOf(fri));
+        await expect(ring.outlineStyle).toBe('solid');
+        await expect(Number.parseFloat(ring.outlineWidth)).toBeGreaterThan(0);
+      });
     });
 
     await step('Space selects it, and the state is on the control itself', async () => {
@@ -215,8 +238,18 @@ export const Invalid: Story = {
 
     await expect(fri).toHaveAttribute('aria-invalid', 'true');
 
-    const card = getComputedStyle(cardOf(fri));
-    await expect(card.borderTopColor).not.toBe(card.color);
+    /*
+     * Polled for the reason the keyboard story is, and one more. Both colours are `var()` chains
+     * onto `[data-theme]` tokens, so before the theme lands they compute to the initial
+     * `rgb(0, 0, 0)` and the assertion compares black to black; and `.card` *transitions*
+     * `border-color`, so even once the tokens arrive the reported value is interpolated for another
+     * 200ms. Polling waits out both. A border that genuinely never diverges from the text — the
+     * regression this story exists to catch — still fails at the timeout.
+     */
+    await waitFor(async () => {
+      const card = getComputedStyle(cardOf(fri));
+      await expect(card.borderTopColor).not.toBe(card.color);
+    });
   }
 };
 
