@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 
 import type { IHeaderDisplaySection } from '@/tools/sanity/schema/sections/headerDisplaySection';
@@ -30,11 +30,20 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A fixed width, so the container query resolves the same way whatever the test canvas is. */
+/**
+ * A fixed width, so the container query resolves the same way whatever the test canvas is.
+ *
+ * `rem` and not `px`, matching `Header.stories` and `Footer.stories`: the switch is `60rem`, so a
+ * `px` wrapper makes the assertions below depend on the reader's root font size — `Desktop` would
+ * quietly flip to the stacked branch at a ~24px root and assert the wrong layout while still
+ * passing its name. The design's px frame is stated at each call site.
+ *
+ * Typed `Decorator` rather than `(Story: any)`: Storybook exports the type, `sectionStory.tsx`
+ * already uses it, and it removes a lint suppression that seven more section stories would copy.
+ */
 const atWidth =
-  (width: string) =>
-  // eslint-disable-next-line typescript-eslint/no-explicit-any -- Storybook's decorator story arg
-  (Story: any) => (
+  (width: string): Decorator =>
+  (Story) => (
     <div style={{ width }}>
       <Story />
     </div>
@@ -44,10 +53,12 @@ const atWidth =
  * Real Sanity data when there is any, design-faithful mock otherwise — and today it is always the
  * mock: the dataset has no content documents yet, so `sectionFixture` returns `undefined`.
  *
- * The copy, the item counts and the four-item meta row are Stay's (node 1:615) verbatim. The one
- * deliberate departure is the heading's case: Figma types "STAY" in capitals, and this passes "Stay"
- * so the section's `textTransform="uppercase"` is the thing under test rather than the mock's shift
- * key. It renders identically to the comp.
+ * The copy and the item counts are Stay's (node 1:615) verbatim. The one deliberate departure is
+ * case: Figma types "STAY" and "39 ROOMS" in capitals, and this passes "Stay" and "39 rooms" so the
+ * uppercasing under test is the section's CSS rather than the mock's shift key. It renders
+ * identically to the comp, and it is the shape an editor should store — the schema now says so,
+ * because short literal all-caps runs are what screen readers most often spell out letter by
+ * letter.
  */
 const data = sectionFixture<IHeaderDisplaySection>('headerDisplaySection') ?? {
   title: '<h1>Stay</h1>',
@@ -57,7 +68,7 @@ const data = sectionFixture<IHeaderDisplaySection>('headerDisplaySection') ?? {
       'We’ve booked the whole Lodge so everyone can stay together: 39 rooms across 9 acres of gardens, pine trees and river frontage.'
     )
   ],
-  items: ['39 ROOMS', '9 ACRES', '2 NIGHTS', '1 RIVER']
+  items: ['39 rooms', '9 acres', '2 nights', '1 river']
 };
 
 /** The section at the canvas's own width — how it behaves on a real page. */
@@ -79,7 +90,7 @@ export const Default: Story = {
 /**
  * Desktop: heading and aside side by side, sharing one bottom edge.
  *
- * 1280px is the design's desktop frame. Pinned as a wrapper rather than left to the canvas so the
+ * 80rem is 1280px, the design's desktop frame. Pinned as a wrapper rather than left to the canvas so the
  * container query resolves the same way in the component-test runner as it does here — the switch is
  * on the section's own inline size, and a test canvas narrower than 960px would otherwise assert the
  * stacked layout while claiming to be desktop.
@@ -89,7 +100,7 @@ export const Default: Story = {
  */
 export const Desktop: Story = {
   args: data,
-  decorators: [atWidth('1280px')],
+  decorators: [atWidth('80rem')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const heading = canvas.getByRole('heading', { level: 1 });
@@ -105,14 +116,15 @@ export const Desktop: Story = {
 /**
  * Mobile: the aside drops beneath the heading and left-aligns.
  *
- * 375px is the narrow anchor of the fluid scale and close to the design's 390px mobile frame. A
+ * 23.4375rem is 375px, the narrow anchor of the fluid scale and close to the design's 390px mobile
+ * frame. A
  * width and not a viewport, deliberately — the reflow is a container query, so a story that reached
  * this branch by shrinking the window would pass just as well against the viewport media query this
  * is not, and that rule gets a narrow section in a wide window backwards.
  */
 export const Mobile: Story = {
   args: data,
-  decorators: [atWidth('375px')],
+  decorators: [atWidth('23.4375rem')],
   parameters: { design: { type: 'figma', url: `${FIGMA}1-688` } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -139,9 +151,9 @@ export const Mobile: Story = {
 export const WithoutLede: Story = {
   args: {
     title: '<h2>The Weekend</h2>',
-    items: ['3 DAYS · 3 NIGHTS OPTIONAL', 'ALL TIMES AEDT · TBC']
+    items: ['3 days · 3 nights optional', 'All times AEDT · TBC']
   },
-  decorators: [atWidth('1280px')],
+  decorators: [atWidth('80rem')],
   parameters: { design: { type: 'figma', url: `${FIGMA}1-307` } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -186,7 +198,7 @@ export const WithoutMeta: Story = {
       )
     ]
   },
-  decorators: [atWidth('1280px')],
+  decorators: [atWidth('80rem')],
   parameters: { design: { type: 'figma', url: `${FIGMA}16-277` } }
 };
 
@@ -198,7 +210,7 @@ export const WithoutMeta: Story = {
  */
 export const TitleOnly: Story = {
   args: { title: '<h1>The Weekend</h1>' },
-  decorators: [atWidth('1280px')],
+  decorators: [atWidth('80rem')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -218,19 +230,19 @@ export const LongMeta: Story = {
   args: {
     ...data,
     items: [
-      '39 ROOMS',
-      '9 ACRES',
-      '2 NIGHTS',
-      '1 RIVER',
-      'MAP · LEVEL 01',
-      '9 LOCATIONS',
-      'ALL UNLOCKED',
-      '3 DAYS · 3 NIGHTS OPTIONAL',
-      'ALL TIMES AEDT · TBC',
-      'CHECK IN FROM 2PM'
+      '39 rooms',
+      '9 acres',
+      '2 nights',
+      '1 river',
+      'Map · level 01',
+      '9 locations',
+      'All unlocked',
+      '3 days · 3 nights optional',
+      'All times AEDT · TBC',
+      'Check in from 2pm'
     ]
   },
-  decorators: [atWidth('1280px')],
+  decorators: [atWidth('80rem')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const items = within(canvas.getByRole('list')).getAllByRole('listitem');
@@ -244,5 +256,63 @@ export const LongMeta: Story = {
     for (const item of items) {
       await expect(item.getBoundingClientRect().width).toBeGreaterThan(0);
     }
+  }
+};
+
+/**
+ * The lede an editor typed into and then emptied.
+ *
+ * Sanity does not unset the field — it keeps one `normal` block whose only child is `''` — so
+ * `content` arrives with `length === 1` and every naive truthiness test reports a lede that is not
+ * there. The visible cost is not a stray empty paragraph (there is none, `TextBlock` is never
+ * mounted) but the *layout*: `.row_split` would apply and hand half the row to an empty column.
+ *
+ * Asserted on `flex-grow` rather than on a class name, because the class is the mechanism and the
+ * 50/50 split is the behaviour.
+ */
+export const EmptyLede: Story = {
+  args: {
+    title: '<h1>The Weekend</h1>',
+    content: [mockBlock('normal', '   ')],
+    items: ['All times AEDT · TBC']
+  },
+  decorators: [atWidth('80rem')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const heading = canvas.getByRole('heading', { level: 1 });
+
+    // No paragraph at all — the section never mounts `TextBlock` for an empty lede.
+    await expect(canvasElement.querySelector('p')).toBeNull();
+    // `0` is the un-split default (`flex: 0 1 auto`); `.row_split` would make it `1`.
+    await expect(getComputedStyle(heading).flexGrow).toBe('0');
+    // The meta still renders — emptying the lede must not take the rest of the aside with it.
+    await expect(within(canvas.getByRole('list')).getAllByRole('listitem')).toHaveLength(1);
+  }
+};
+
+/**
+ * One meta item long enough to be its own line, at the narrow end.
+ *
+ * A flex item's automatic minimum is its `min-content` width, and the inherited
+ * `overflow-wrap: break-word` does **not** reduce `min-content` — so before `.metaItem` carried
+ * `min-width: 0`, a single unbroken run pushed the row past the viewport: measured 167px of
+ * horizontal scroll at 320px with the root font size doubled, a WCAG 1.4.10 / 1.4.4 failure. The
+ * string below is the shape that produces it — a pasted reference with nothing to break on.
+ */
+export const LongMetaItem: Story = {
+  args: {
+    title: '<h1>Stay</h1>',
+    items: ['Accommodationbookingreferencenumberpleasequoteonarrival']
+  },
+  decorators: [atWidth('23.4375rem')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [item] = within(canvas.getByRole('list')).getAllByRole('listitem');
+    const row = canvas.getByRole('heading', { level: 1 }).parentElement as HTMLElement;
+
+    // Wraps inside the column rather than widening it. A half-pixel of slack for sub-pixel layout.
+    await expect(item.getBoundingClientRect().width).toBeLessThanOrEqual(row.getBoundingClientRect().width + 0.5);
+    // And it is still laid out, i.e. wrapped rather than collapsed to nothing.
+    await expect(item.getBoundingClientRect().height).toBeGreaterThan(0);
   }
 };

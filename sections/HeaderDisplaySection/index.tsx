@@ -4,6 +4,7 @@ import Section from '@/components/Section';
 import TextBlock from '@/components/TextBlock';
 import TextTitle from '@/components/TextTitle';
 import classNames from '@/helpers/classNames';
+import hasBlockContent from '@/helpers/hasBlockContent';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type { IHeaderDisplaySection } from '@/tools/sanity/schema/sections/headerDisplaySection';
 
@@ -18,7 +19,15 @@ const HeaderDisplaySection: FC<IHeaderDisplaySection> = (props) => {
    * readable and means a story passing raw mock data behaves the same as the CMS.
    */
   const metaItems = items?.filter((item) => Boolean(item?.trim()));
-  const hasLede = Boolean(content?.length);
+  /*
+   * `hasBlockContent` and not `Boolean(content?.length)`. The length test handles the two shapes the
+   * projection returns for an unset field — `null` and `[]` — but not the third: an editor who types
+   * into the lede and deletes it leaves one `normal` block holding an empty child, which Sanity does
+   * not unset. That reads as populated, `.row_split` applies, and the heading gives up half the row
+   * to an empty column. `TextBlock` renders the empty `<p>` rather than bailing, so the guard has to
+   * be here.
+   */
+  const hasLede = hasBlockContent(content);
   const hasMeta = Boolean(metaItems?.length);
 
   return (
@@ -52,8 +61,9 @@ const HeaderDisplaySection: FC<IHeaderDisplaySection> = (props) => {
          * one `h1` whichever tag somebody happened to pick in the Studio.
          *
          * `variant="display"` is the Archivo Black tier added above `--heading-*`; `size="md"`
-         * resolves `--display-md` = fluid(56px, 128px) against the 132px the three desktop frames
-         * are set at. The leading and tracking that go with it were wrong at the token — 1.05 and
+         * resolves `--display-md` = fluid(56px, 132px), whose wide anchor is the 132px the three
+         * desktop frames are set at. The token read 128px until it was corrected alongside this
+         * section. The leading and tracking that go with it were wrong too — 1.05 and
          * -0.03em against the 0.84 and -0.045em every display heading in the design is drawn at —
          * and were fixed there rather than here; see `--display-line-height` in `_variables.scss`.
          */}
@@ -95,9 +105,13 @@ const HeaderDisplaySection: FC<IHeaderDisplaySection> = (props) => {
               <ul className={styles.meta} role="list" aria-label="Key facts">
                 {metaItems?.map((item) => (
                   /*
-                   * Keyed by the item, not its index. These are short unique facts an editor
-                   * reorders in place in a Sanity tag input, and an index key makes React keep the
-                   * old text in the old node on a reorder.
+                   * Keyed by the item, not its index. These are short facts an editor reorders in
+                   * place in a Sanity tag input, and an index key makes React keep the old text in
+                   * the old node on a reorder.
+                   *
+                   * Safe because the schema enforces it: `items` carries `Rule.unique()`, without
+                   * which a tags input would happily take "TBC" twice and hand React a duplicate
+                   * key. The key and that rule have to move together.
                    */
                   <li className={styles.metaItem} key={item}>
                     {item}

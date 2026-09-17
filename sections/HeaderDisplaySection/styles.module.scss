@@ -29,9 +29,11 @@
  * where neither column fits (WCAG 1.4.4).
  *
  * Local to this module — unlike `$header-inline-switch`, which lives in `tools/sass/base/__media.scss`
- * because three separate modules have to agree on it. Only this file uses this one.
+ * because three separate modules have to agree on it. Only this file uses this one, which is also
+ * where `$footer-inline-switch` lives for the same reason. Named to match both: the family is
+ * `$<owner>-inline-switch`, so the next section's switch is findable by shape rather than by grep.
  */
-$stack-switch: 60rem;
+$header-display-inline-switch: 60rem;
 
 @layer defaults {
   /*
@@ -40,6 +42,14 @@ $stack-switch: 60rem;
    *
    * `inline-size` and not `size`: the header's width comes from the page, its height from its
    * content, and containing the height would collapse it.
+   *
+   * The cost of that containment, and the one thing to know before copying this into the next
+   * section: an inline-size container does not contribute its contents to its own intrinsic width,
+   * so in a *shrink-to-fit* ancestor — `inline-block`, a float, `width: max-content`, an
+   * absolutely positioned box — it collapses to its padding. Measured at 1280px: 73.97px wide with
+   * the heading at 0, against 1280px for the same markup with `container-type: normal`. Safe here
+   * because sections render as block children of `<main>` (`components/Layout`) and of a plain
+   * `<div>` in Storybook, both of which size from the outside in.
    */
   .container {
     container: headerDisplay / inline-size;
@@ -58,7 +68,7 @@ $stack-switch: 60rem;
     // frames — `--spacing-sm` is 12px and fixed, which is the scale's rule below the 32px cutoff.
     gap: var(--spacing-sm);
 
-    @container headerDisplay (width >= #{$stack-switch}) {
+    @container headerDisplay (width >= #{$header-display-inline-switch}) {
       /*
        * `flex-end` is the whole layout idea: the meta block hangs off the *bottom* of the heading,
        * not the top. Figma sets `items-end` on all three desktop frames, and on Planner the heading
@@ -87,7 +97,7 @@ $stack-switch: 60rem;
    * the meta 203px rather than 580px each.
    */
   .row_split {
-    @container headerDisplay (width >= #{$stack-switch}) {
+    @container headerDisplay (width >= #{$header-display-inline-switch}) {
       .aside,
       .heading {
         flex: 1 1 0;
@@ -132,7 +142,7 @@ $stack-switch: 60rem;
     gap: #{fluid(16px, 20px)};
     min-width: 0;
 
-    @container headerDisplay (width >= #{$stack-switch}) {
+    @container headerDisplay (width >= #{$header-display-inline-switch}) {
       // Meta-only. Shrink-to-fit against the right edge; `.row_split` above restores `stretch` when
       // there is a lede to fill the column.
       align-items: flex-end;
@@ -166,7 +176,7 @@ $stack-switch: 60rem;
      */
     row-gap: var(--spacing-xxs);
 
-    @container headerDisplay (width >= #{$stack-switch}) {
+    @container headerDisplay (width >= #{$header-display-inline-switch}) {
       // Meta-only: wrapped lines stack against the right edge, as Planner's two lines do.
       justify-content: flex-end;
       /*
@@ -194,6 +204,22 @@ $stack-switch: 60rem;
   .metaItem {
     @include mono-font();
 
+    /*
+     * The same automatic-minimum guard `.heading` and `.aside` carry, and for a sharper reason:
+     * without it this is a WCAG 1.4.10 / 1.4.4 failure, not just a layout wobble.
+     *
+     * A flex item's automatic minimum is its `min-content` width, and the inherited
+     * `overflow-wrap: break-word` (from `body` in `_typography.scss`) explicitly does **not** reduce
+     * `min-content` — that is what `anywhere` does. So a single long unbroken item stretched the row
+     * past the viewport. Measured at a 320px viewport with the root font size at 32px (200% text-only
+     * zoom) and a 29-character item: `scrollWidth` 487 against `clientWidth` 320, i.e. 167px of
+     * horizontal scroll. With this line, 320 and the item wraps at 240px.
+     *
+     * `min-width: 0` rather than `overflow-wrap: anywhere` — both measured to fix it identically, and
+     * this one matches the pattern the other two flex items in this file already use.
+     */
+    min-width: 0;
+
     color: var(--fg-accent);
     font-size: var(--body-xs);
     font-weight: var(--font-weight-medium);
@@ -212,9 +238,14 @@ $stack-switch: 60rem;
   }
 
   /*
-   * Colour comes from `TextBlock`'s `config` prop (see index.tsx) and the measure comes from the
-   * column, so all this rule carries is the guard against an unbreakable run — a pasted URL — and
-   * the hook a design review measures against.
+   * Colour is `TextBlock`'s own default — it hardcodes `color: 'themeFgDefault'` on every block
+   * handler, so the lede reads `--fg-default`, the same ink as the heading beside it. `index.tsx`
+   * passes no `color`, deliberately: that is what the comps draw. Stated here because an earlier
+   * version of this comment claimed the colour was set through the `config` prop, which it never
+   * was.
+   *
+   * The measure comes from the column, so all this rule carries is the guard against an unbreakable
+   * run — a pasted URL — and the hook a design review measures against.
    */
   .lede {
     overflow-wrap: break-word;

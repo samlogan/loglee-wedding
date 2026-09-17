@@ -171,6 +171,16 @@
    *
    * Unitless leading, so it stays a multiple of whatever `--display-lg` / `--display-md` resolve to
    * at the current width; tracking in `em` for the same reason.
+   *
+   * What 0.84 costs, recorded here because the number looks arbitrary otherwise and the headroom is
+   * negative: on a heading that *wraps*, consecutive line boxes overlap. Measured on Archivo Black
+   * at 120.58px (1280px viewport, `--display-md`): line pitch 101.29px, plain cap ascent 83.0px,
+   * accented cap ascent 106.7px, comma descent 23.2px. So an accented capital on line two rises
+   * 5.4px above line one's baseline and can overprint a descender on it — glyphs overlap rather
+   * than clip, since nothing in the chain sets `overflow: hidden`. Correct for the single-line
+   * uppercase headings the design actually draws, and a content constraint rather than a bug: keep
+   * display titles short. Raise it at design review before using this tier on anything that wraps.
+   * WCAG 1.4.12 is unaffected — it governs paragraphs, and was verified passing at 320px.
    */
   --display-line-height: 0.84;
   --display-letter-spacing: -0.045em;

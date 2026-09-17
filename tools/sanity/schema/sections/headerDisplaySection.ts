@@ -42,12 +42,32 @@ const headerDisplaySection = defineType({
      * opposite.
      */
     {
-      description: 'The page heading. Rendered as the page’s <h1> and set in the display type scale.',
+      description:
+        'The page heading. Always rendered as the page’s <h1> and set in the display type scale — the level selector beside this field does not change that.',
       group: 'data',
       name: `title`,
+      /*
+       * `TitleInput` shows a live h1–span selector and defaults it to `h2`, but the component forces
+       * `as="h1"` and discards the choice — so the control was presenting an option it does not have.
+       * The input reads this option (`TitleInput/index.tsx`), so at minimum the selector now opens on
+       * the tag that will actually be rendered. Making it genuinely read-only needs a `lockTag`
+       * option on the input, which is a change to a shared Studio component rather than to this
+       * section.
+       */
+      options: { defaultTag: 'h1' as const },
       title: `Title`,
       type: `title`,
-      validation: (Rule) => Rule.required()
+      /*
+       * `required()` alone is not enough. `TitleInput` unsets an emptied field, so the common blank
+       * case is covered — but a single space is stored as `<h1> </h1>`, which `required()` sees as a
+       * non-empty string and `TextTitle`'s `if (!title)` guard sees as truthy, so the page ships an
+       * empty `<h1>`. Stripping the tags before testing is the same whitespace check `items` gets in
+       * the component.
+       */
+      validation: (Rule) =>
+        Rule.required().custom((value?: string) =>
+          stripTitleTags(value ?? '').trim() ? true : 'Title cannot be blank'
+        )
     },
     /*
      * Named `content` rather than `lede` to match the field-naming rule in CLAUDE.md (`content` /
@@ -67,14 +87,28 @@ const headerDisplaySection = defineType({
      * and an object of one field is a worse editing experience for no gain.
      */
     {
+      /*
+       * "Type them in sentence case" is not a style preference. `text-transform: uppercase` already
+       * guarantees the display, so literal capitals in the stored value buy nothing and cost
+       * pronunciation: short all-caps runs are the case screen readers most often spell out letter
+       * by letter. The heading already works this way — the design draws "STAY", the CMS holds
+       * "Stay" — and this makes the two fields agree.
+       */
       description:
-        'Short facts shown in uppercase mono beside or beneath the heading — counts, dates, times. They wrap onto as many lines as they need.',
+        'Short facts shown beside or beneath the heading — counts, dates, times. Type them in normal sentence case; they are displayed in uppercase mono automatically. They wrap onto as many lines as they need.',
       group: 'data',
       name: 'items',
       of: [{ type: 'string' }],
       options: { layout: 'tags' as const },
       title: 'Meta Items',
-      type: 'array'
+      type: 'array',
+      /*
+       * The component keys these by their own text, because an editor reorders them in place and an
+       * index key would leave the old text in the old node. That is only safe if they really are
+       * unique, and a tags input happily takes "TBC" twice — which would be a duplicate React key
+       * and undefined reconciliation. This makes the component's premise true rather than assumed.
+       */
+      validation: (Rule) => Rule.unique()
     },
     {
       group: 'styles',

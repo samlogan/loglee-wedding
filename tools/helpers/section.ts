@@ -8,9 +8,16 @@ interface SectionFieldsShape {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- section props vary per section
 export const getSectionSpacingProps = (props: {
   sectionFields?: SectionFieldsShape;
+  /*
+   * The directive has to sit here, immediately above the `any`, and spell the rule the way oxlint
+   * names it. It previously sat above the `export` line with an `@typescript-eslint/` prefix, so it
+   * was inert twice over: `eslint-disable-next-line` covers exactly one line, and this repo's
+   * linter has no `@`-prefixed rule of that name. CLAUDE.md warns that a disable comment can
+   * suppress nothing here; this was the example.
+   */
+  // eslint-disable-next-line typescript-eslint/no-explicit-any -- section props vary per section
   [key: string]: any;
 }): {
   removeTopSpacing?: boolean;
@@ -32,8 +39,11 @@ export const getSectionSpacingProps = (props: {
   };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- section props vary per section
 export const getSectionTheme = (
-  props: { sectionFields?: SectionFieldsShape; [key: string]: any },
+  props: {
+    sectionFields?: SectionFieldsShape;
+    // eslint-disable-next-line typescript-eslint/no-explicit-any -- section props vary per section
+    [key: string]: any;
+  },
   defaultTheme?: ProjectTheme
 ): ProjectTheme | undefined => (props?.sectionFields?.themeOptions?.theme as ProjectTheme) || defaultTheme;
