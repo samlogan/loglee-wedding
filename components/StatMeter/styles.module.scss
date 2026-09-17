@@ -1,0 +1,192 @@
+/*
+ * The game-style stat meter on the player card (Figma node 1:208 desktop; absent from the mobile
+ * comp entirely — see the note on `.meters` in `components/PlayerCard/styles.module.scss`).
+ *
+ * Every colour here was measured off the comp at 4× *and* confirmed against the design's own fills,
+ * and all three land exactly on an existing theme token:
+ *
+ *   track        #dcd9cf  stone/300   → `--stroke-divider`
+ *   fill         #1e4632  pine/600    → `--fg-icon`
+ *   fill (low)   #d6ff3b  signal/300  → `--button-accent-bg`
+ *
+ * Three tracks, three fills, and the design names four literals between them: the 8/10 and 9/10
+ * fills are both `#1e4632` (1:215, 1:223), the 3/10 fill is `#d6ff3b` (1:231), and every track is
+ * `#dcd9cf`. There is no fourth ink and no colour property on any of them — which is the whole
+ * evidentiary basis for deriving the switch from the value; see `LOW_SCORE_RATIO` in `index.tsx`.
+ *
+ * So the meter needs no token of its own, and each one carries a sensible dark-theme counterpart for
+ * free. `--fg-icon` in particular is the foreground of a non-text graphic mark, which is what the
+ * fill is; it resolves to pine/100 on the dark theme, keeping the *relationship* the comp draws —
+ * the low fill stays the louder of the two on both surfaces — where `--button-primary-bg` (off-white
+ * on dark) would have put them at roughly equal weight. Measured on the dark theme, the fill reads
+ * 4.66:1 against the track at pine/100 and 5.88:1 at signal/300; on the light theme those are 7.52:1
+ * and 1.23:1, so the *low* bar is the one carried by its fraction rather than by its contrast, and
+ * that is the comp's own choice rather than this file's.
+ */
+
+@layer defaults {
+  .meter {
+    /*
+     * 6px, the comp's only stated value for it. Fixed rather than fluid, and `rem` rather than `px`.
+     *
+     * Fluid takes two anchors and the design gives one: the mobile comp has no meter band at all, so
+     * a narrow anchor would be invented rather than measured, which is the opposite of how every
+     * other pair in `_variables.scss` was built. It is also a component-internal graphic well below
+     * the 32px cutoff at which the spacing scale itself stops interpolating. `rem` still scales it
+     * with a reader's root font size, which is the part that is not negotiable.
+     */
+    --meter-track-height: 0.375rem;
+    /*
+     * The head-row gap, the comp's 6px again. Shares a value with the track height by coincidence,
+     * not by relationship, so it is named separately — tying them together would make one move when
+     * the other was meant to.
+     */
+    --meter-head-gap: 0.375rem;
+    /*
+     * A pill: `--radius-full` is 200px and the browser clamps a radius to half the shorter side, so
+     * on a 6px bar it resolves to the comp's 3px at both ends of the track and both ends of the
+     * fill.
+     *
+     * "Hard-edged" in the ticket is therefore the *colour* boundary — a hard stop with no gradient
+     * or feather — and not square corners. That is no longer an inference from a 4× pixel sample:
+     * the design states a 3px radius outright on all six painted boxes in the band (tracks
+     * 1:214/1:222/1:230, fills 1:215/1:223/1:231) and again on the lone swatch on the design-system
+     * board (1:1078). 3px on a 6px bar *is* a pill. Held in a local anyway, so the other reading
+     * stays one line away.
+     */
+    --meter-radius: var(--radius-full);
+    --meter-track: var(--stroke-divider);
+    --meter-fill: var(--fg-icon);
+    display: flex;
+    flex-direction: column;
+    gap: var(--meter-head-gap);
+    // A grid item's automatic minimum is `min-content`, so an unbreakable label would otherwise push
+    // the meter past the track it was given.
+    min-width: 0;
+  }
+
+  /* Below half the scale. See `LOW_SCORE_RATIO` in `index.tsx` for why the rule is derived here. */
+  .low {
+    --meter-fill: var(--button-accent-bg);
+  }
+
+  /*
+   * `baseline`, not `center`: the label and the fraction are the same size today, but the fraction
+   * is the shorter run and any future size difference should hang them off the same line, which is
+   * how the comp draws them.
+   */
+  .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    // A floor rather than a measurement — the comp's `space-between` has slack to distribute and
+    // states no gap. This keeps the fraction off the label when a long one fills the row.
+    gap: var(--spacing-xs);
+    min-width: 0;
+  }
+
+  /*
+   * `Text` has no `mono` variant — a known gap — so the family is declared here. That is the
+   * accepted workaround in this repo and the same one `FieldCheckbox` uses for its `.legend`,
+   * `.eyebrow` and `.indicator`; going through `Text` would buy nothing, since every one of these
+   * declarations would still have to be overridden.
+   *
+   * `--fg-accent` is pine/600 on the light theme, which is the `#1e4632` the comp sets both runs in,
+   * and signal/300 on the dark one. Tracking is held in `em` — 1.1px on 11px is 0.1em — so it stays
+   * proportional as the fluid size moves.
+   */
+  .label,
+  .score {
+    @include mono-font();
+
+    color: var(--fg-accent);
+    /*
+     * The two mono micro-labels, below `--body-xs` (11→12px) which is the floor of the body scale,
+     * so there is no token — the same call `FieldCheckbox` makes for its `--micro-font-size`, and
+     * for the same reason: a new rung on the shared scale would show up in the client-facing type
+     * documentation on the strength of a handful of labels. (Three components now compute the same
+     * `fluid(10px, 11px)` under three names, which is the threshold at which that trade is worth
+     * re-opening — as one token, or as a `mono` variant on `Text`. Noted rather than done here: it
+     * is a design-system change and this is a component.)
+     *
+     * The comp sets the desktop meter label at 11px; the narrow anchor is the player card's own
+     * label step (10px, node 1:252), since the two are the same type role in the same card and
+     * should not diverge across the range. `PlayerCard`'s `.meters` is what makes that true, by
+     * setting `--meter-label-size` on the band from its own `--card-label-size`.
+     *
+     * Which is why the standalone default is a `var()` **fallback** here rather than a declaration
+     * on `.meter`. It was the latter, and that silently disabled the override: a custom property
+     * declared on an element wins over the same property inherited from an ancestor, so the band's
+     * value reached `.meters` and stopped there. The two sizes agreed only because both happened to
+     * compute `fluid(10px, 11px)` independently — which is the drift the override exists to
+     * prevent, one retune away. Measured rather than reasoned: setting `--card-label-size` on the
+     * card moved the stat label to 40px and left the meter label at 11px. Left undeclared, the
+     * property inherits through when a consumer sets one and falls back to this when nobody does.
+     */
+    font-size: var(--meter-label-size, #{fluid(10px, 11px)});
+    font-weight: var(--font-weight-regular);
+    line-height: var(--body-line-height);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  // The fraction is the load-bearing half of the pair and never wraps or truncates; the label gives
+  // way first.
+  .score {
+    flex-shrink: 0;
+  }
+
+  .track {
+    display: block;
+    width: 100%;
+    height: var(--meter-track-height);
+    border-radius: var(--meter-radius);
+    background-color: var(--meter-track);
+  }
+
+  /*
+   * `width` comes from the component as an inline style — it is the datum. `border-radius: inherit`
+   * gives the fill the track's pill at both ends, which is what the comp draws: the left cap sits
+   * inside the track's own cap and the right one is a rounded stop against the remaining track.
+   */
+  .fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background-color: var(--meter-fill);
+  }
+
+  /*
+   * Forced colours — Windows High Contrast Mode and the like.
+   *
+   * Without this the meter disappears outright. Forced colours replaces every author colour with one
+   * from the user's palette and forces *both* backgrounds to `Canvas`, so the fill and the track
+   * become the same flat nothing and the bar stops existing — the failure `FieldCheckbox` documents
+   * for its marker, one step worse here because there is no border to fall back on.
+   *
+   * `forced-color-adjust: none` opts the track out so the system pair can be painted deliberately,
+   * and it inherits, so the fill's `CanvasText` is honoured without a rule of its own. The hairline
+   * keeps the *unfilled* remainder visible, which is what makes the proportion readable rather than
+   * just the fill's length.
+   *
+   * The low/normal colour distinction collapses here, and that is correct rather than a compromise:
+   * it is redundant emphasis, and the score is set as text either way. There is no palette
+   * guaranteed to give two inks that both contrast with `Canvas` *and* with each other.
+   */
+  @media (forced-colors: active) {
+    .track {
+      forced-color-adjust: none;
+      border: 1px solid CanvasText;
+      background-color: Canvas;
+    }
+
+    .fill {
+      background-color: CanvasText;
+    }
+  }
+}
