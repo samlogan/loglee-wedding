@@ -38,13 +38,25 @@ const meta = {
      * `box-sizing: border-box`, so `width: 183px; padding: 24px` would leave the meter 135px and
      * every story would be measured at a width the comp never draws.
      */
-    (Story) => (
-      <div style={{ padding: 'var(--spacing-lg)' }}>
-        <div style={{ width: '183px' }}>
-          <Story />
+    (Story, context) => {
+      /*
+       * A story can pin a theme through `parameters.forceTheme` rather than the toolbar global; see
+       * `DarkTheme` below for why it has to. Absent, nothing is added and the toolbar still drives
+       * every other story here.
+       */
+      const forced = context.parameters.forceTheme as 'dark' | 'light' | undefined;
+
+      return (
+        <div
+          data-theme={forced}
+          style={{ padding: 'var(--spacing-lg)', backgroundColor: forced ? 'var(--bg-default)' : undefined }}
+        >
+          <div style={{ width: '183px' }}>
+            <Story />
+          </div>
         </div>
-      </div>
-    )
+      );
+    }
   ]
 } satisfies Meta<typeof StatMeter>;
 
@@ -119,6 +131,35 @@ export const Default: Story = {
       await expect(fill).not.toBe('');
       await expect(fill).toBe(icon);
       await expect(fill).not.toBe(accent);
+
+      /*
+       * The bar's drawn geometry, which is the whole of what a design review measures here and was
+       * previously stated only in the stylesheet. All three come straight off the comp: a 6px track
+       * (node 1:214) under a 6px gap (node 1:208 is 29px tall = 17 + 6 + 6).
+       *
+       * This is the half of the suite that needs a real browser rather than jsdom — none of these
+       * numbers exists without a layout engine.
+       */
+      const track = trackOf(meter);
+      await expect(getComputedStyle(track).height).toBe('6px');
+      await expect(getComputedStyle(meter).rowGap).toBe('6px');
+
+      /*
+       * And the fill takes the track's pill rather than declaring one, which is what makes the left
+       * cap sit inside the track's own cap. Compared between the two elements rather than against a
+       * literal, because the interesting property is `inherit` holding — the resolved value is
+       * `--radius-full` (200px), which the browser then clamps to 3px on a 6px bar. That clamp is
+       * the comp's stated radius (`rounded-[3px]` on every track and fill in the band) and it is
+       * invisible to `getComputedStyle`, so it is asserted as the pill intent, not as "3px".
+       */
+      await expect(getComputedStyle(fillOf(meter)).borderRadius).toBe(getComputedStyle(track).borderRadius);
+
+      /*
+       * The capitals are `text-transform`, so every text assertion above reads the sentence-case
+       * string and none of them can see it. Without this, removing the declaration renders "Dance"
+       * where the comp draws "DANCE" and the suite stays green.
+       */
+      await expect(getComputedStyle(meter.querySelector('span > span') as HTMLElement).textTransform).toBe('uppercase');
     });
   }
 };
@@ -161,7 +202,108 @@ export const ZeroScore: Story = {
     // Zero is the only score with nothing to see, which is exactly why the text has to carry it.
     await waitFor(async () => {
       await expect(filledPercent(meter)).toBe(0);
-      await expect(tokens(meter).fill).not.toBe('');
+
+      // Below half, so the ink is the accent — the fill has no width to show it with, but the rule
+      // still has to fire, and a second guard on it costs one line.
+      const { accent, fill } = tokens(meter);
+      await expect(fill).not.toBe('');
+      await expect(fill).toBe(accent);
+    });
+  }
+};
+
+/*
+ * The two stories below exist to pin `LOW_SCORE_RATIO` at 0.5 *from both sides*, which nothing did.
+ *
+ * `LowScore` (3/10) and `Default` (8/10) between them only prove the threshold sits somewhere in
+ * (0.3, 0.8] — so the derived midpoint, which is the longest comment block in `index.tsx` and one of
+ * the four calls this component was reviewed on, was free to be retuned to 0.4 or 0.7 with the suite
+ * still green. 5/10 taking the ordinary ink rules out everything above 0.5 and rules out `<=`;
+ * 4/10 taking the accent rules out everything at or below 0.4. Together they leave (0.4, 0.5] with a
+ * strict `<`, which is the rule as written.
+ */
+
+/**
+ * Exactly half. Takes the **ordinary** ink: the rule is "below half", not "at most half".
+ *
+ * The boundary case is the one worth a story because it is the one an off-by-one gets wrong, and
+ * because `<` versus `<=` is otherwise invisible — every other score in the suite is well clear of
+ * the line in one direction or the other.
+ */
+export const AtThreshold: Story = {
+  args: { label: 'Patience', score: 5 },
+  play: async ({ canvasElement }) => {
+    const meter = meterOf(canvasElement, /^patience$/i);
+
+    await expect(meter).toHaveAttribute('aria-valuenow', '5');
+
+    await waitFor(async () => {
+      await expect(filledPercent(meter)).toBe(50);
+
+      const { accent, fill, icon } = tokens(meter);
+      await expect(fill).not.toBe('');
+      await expect(fill).toBe(icon);
+      await expect(fill).not.toBe(accent);
+    });
+  }
+};
+
+/** One below the threshold, and the first score that takes the accent. The other half of the pin. */
+export const BelowThreshold: Story = {
+  args: { label: 'Mornings', score: 4 },
+  play: async ({ canvasElement }) => {
+    const meter = meterOf(canvasElement, /^mornings$/i);
+
+    await expect(meter).toHaveAttribute('aria-valuenow', '4');
+
+    await waitFor(async () => {
+      await expect(filledPercent(meter)).toBe(40);
+
+      const { accent, fill, icon } = tokens(meter);
+      await expect(fill).not.toBe('');
+      await expect(fill).toBe(accent);
+      await expect(fill).not.toBe(icon);
+    });
+  }
+};
+
+/**
+ * The same 8/10 meter on the dark theme, where the stylesheet makes a claim worth holding it to.
+ *
+ * `--fg-icon` was chosen over `--button-primary-bg` on the argument that it "keeps the *relationship*
+ * the comp draws — the low fill stays the louder of the two on both surfaces". Nothing rendered that.
+ * On dark the ordinary fill is pine/100 and the low fill is signal/300, so the claim is testable:
+ * the two inks must stay distinct, and both must stay clear of the track.
+ *
+ * One thing this story makes visible rather than asserts, because it is a design observation and not
+ * a rule: on dark `--fg-accent` resolves to signal/300 too, so the meter's *label* and a *low fill*
+ * are the same colour, while an ordinary fill is a third. Measured at 4.66:1 (ordinary) and 5.88:1
+ * (low) against the track, both comfortably clear of 3:1 — where the light theme's low pair is
+ * 1.23:1. Dark is the better-contrasted of the two surfaces here, which is the opposite of the usual
+ * worry and the reason it is worth having on the page.
+ */
+export const DarkTheme: Story = {
+  parameters: { forceTheme: 'dark' },
+  play: async ({ canvasElement }) => {
+    const meter = meterOf(canvasElement, /^dance$/i);
+    const surface = meter.closest('[data-theme]') as HTMLElement;
+
+    // Synchronous: the decorator sets the attribute during the first render. A story-level
+    // `globals: { theme: 'dark' }` would only land on a later one — measured at 5209ms against a
+    // 102ms mount, so there is no `waitFor` timeout worth guessing. See the twin note in
+    // `PlayerCard.stories.tsx`.
+    await expect(surface.dataset.theme).toBe('dark');
+
+    await waitFor(async () => {
+      const { accent, fill, icon } = tokens(meter);
+      await expect(fill).not.toBe('');
+      await expect(fill).toBe(icon);
+      await expect(fill).not.toBe(accent);
+
+      // …and the bar is still drawn, which is the failure mode a theme flip actually produces: a
+      // fill that resolves to the same ink as its track reads as no bar rather than as a wrong one.
+      await expect(getComputedStyle(meter).getPropertyValue('--meter-track').trim()).not.toBe(fill);
+      await expect(filledPercent(meter)).toBe(80);
     });
   }
 };

@@ -2,18 +2,26 @@
  * The game-style stat meter on the player card (Figma node 1:208 desktop; absent from the mobile
  * comp entirely — see the note on `.meters` in `components/PlayerCard/styles.module.scss`).
  *
- * Every colour here was measured off the comp at 4× rather than read out of the code export, and
- * all three land exactly on an existing theme token:
+ * Every colour here was measured off the comp at 4× *and* confirmed against the design's own fills,
+ * and all three land exactly on an existing theme token:
  *
  *   track        #dcd9cf  stone/300   → `--stroke-divider`
  *   fill         #1e4632  pine/600    → `--fg-icon`
  *   fill (low)   #d6ff3b  signal/300  → `--button-accent-bg`
  *
- * so the meter needs no token of its own, and each one carries a sensible dark-theme counterpart
- * for free. `--fg-icon` in particular is the foreground of a non-text graphic mark, which is what
- * the fill is; it resolves to pine/100 on the dark theme, keeping the *relationship* the comp draws
- * — the low fill stays the louder of the two on both surfaces — where `--button-primary-bg`
- * (off-white on dark) would have put them at roughly equal weight.
+ * Three tracks, three fills, and the design names four literals between them: the 8/10 and 9/10
+ * fills are both `#1e4632` (1:215, 1:223), the 3/10 fill is `#d6ff3b` (1:231), and every track is
+ * `#dcd9cf`. There is no fourth ink and no colour property on any of them — which is the whole
+ * evidentiary basis for deriving the switch from the value; see `LOW_SCORE_RATIO` in `index.tsx`.
+ *
+ * So the meter needs no token of its own, and each one carries a sensible dark-theme counterpart for
+ * free. `--fg-icon` in particular is the foreground of a non-text graphic mark, which is what the
+ * fill is; it resolves to pine/100 on the dark theme, keeping the *relationship* the comp draws —
+ * the low fill stays the louder of the two on both surfaces — where `--button-primary-bg` (off-white
+ * on dark) would have put them at roughly equal weight. Measured on the dark theme, the fill reads
+ * 4.66:1 against the track at pine/100 and 5.88:1 at signal/300; on the light theme those are 7.08:1
+ * and 1.23:1, so the *low* bar is the one carried by its fraction rather than by its contrast, and
+ * that is the comp's own choice rather than this file's.
  */
 
 @layer defaults {
@@ -37,9 +45,14 @@
     /*
      * A pill: `--radius-full` is 200px and the browser clamps a radius to half the shorter side, so
      * on a 6px bar it resolves to the comp's 3px at both ends of the track and both ends of the
-     * fill. Measured on the comp at 4×, the caps are rounded over ~3px — so "hard-edged" in the
-     * ticket is read as the *colour* boundary, which is a hard stop with no gradient or feather, and
-     * not as square corners. Held in a local so the other reading is one line away.
+     * fill.
+     *
+     * "Hard-edged" in the ticket is therefore the *colour* boundary — a hard stop with no gradient
+     * or feather — and not square corners. That is no longer an inference from a 4× pixel sample:
+     * the design states a 3px radius outright on all six painted boxes in the band (tracks
+     * 1:214/1:222/1:230, fills 1:215/1:223/1:231) and again on the lone swatch on the design-system
+     * board (1:1078). 3px on a 6px bar *is* a pill. Held in a local anyway, so the other reading
+     * stays one line away.
      */
     --meter-radius: var(--radius-full);
     --meter-track: var(--stroke-divider);
@@ -48,9 +61,17 @@
      * The two mono micro-labels, below `--body-xs` (11→12px) which is the floor of the body scale,
      * so there is no token — the same call `FieldCheckbox` makes for its `--micro-font-size`, and
      * for the same reason: a new rung on the shared scale would show up in the client-facing type
-     * documentation on the strength of a handful of labels. The comp sets the desktop meter label at
-     * 11px; the narrow anchor is the player card's own label step (10px, node 1:252), since the two
-     * are the same type role in the same card and should not diverge across the range.
+     * documentation on the strength of a handful of labels. (Three components now compute the same
+     * `fluid(10px, 11px)` under three names, which is the threshold at which that trade is worth
+     * re-opening — as one token, or as a `mono` variant on `Text`. Noted rather than done here: it
+     * is a design-system change and this is a component.)
+     *
+     * The comp sets the desktop meter label at 11px; the narrow anchor is the player card's own
+     * label step (10px, node 1:252), since the two are the same type role in the same card and
+     * should not diverge across the range. That last clause used to be a claim in a comment with
+     * nothing holding it up — `PlayerCard`'s `.meters` now overrides this property with its own
+     * `--card-label-size`, so inside a card the two are the same declaration and cannot drift. The
+     * value here is the standalone default, for a meter used anywhere else.
      */
     --meter-label-size: #{fluid(10px, 11px)};
 
@@ -99,7 +120,7 @@
     color: var(--fg-accent);
     font-size: var(--meter-label-size);
     font-weight: var(--font-weight-regular);
-    line-height: 1.5;
+    line-height: var(--body-line-height);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }

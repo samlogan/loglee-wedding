@@ -89,6 +89,11 @@ const PlayerCard = (props: PlayerCardProps) => {
                * the type scale, so it draws that one and the mono cells are plain text — `Text` has
                * no `mono` variant, so routing them through it would mean overriding every
                * declaration it makes.
+               *
+               * `size="md"` is the single statement of that step. The stylesheet used to restate it
+               * as `font-size: var(--body-md)` on the `<dd>` as well; it now sets only the family,
+               * which is the half `Text` cannot supply (`variant_body` declares no `font-family`,
+               * so without it this run would inherit the mono face from `.statValue`).
                */}
               <dd className={styles.statValue}>
                 {stat.fullWidth ? <Text as="span" size="md" text={stat.value} /> : stat.value}

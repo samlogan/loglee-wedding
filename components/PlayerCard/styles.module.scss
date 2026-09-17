@@ -25,8 +25,23 @@
     /*
      * The gutter every band shares, so the header, the stat grid and the meter band cannot drift
      * apart. 18px desktop (node 1:181), 14px mobile (node 1:249).
+     *
+     * Named for the gutter rather than for `padding-inline`, because the comp draws the same step in
+     * three directions and not just at the sides: the meter band's bottom padding is 18px (node
+     * 1:207) and so is the gap between one meter and the next (nodes 1:208/1:216/1:224 sit at
+     * x = 18, 219.33, 420.67 inside a 622px band). One number, one name, and the band cannot drift
+     * out of square with the sides it sits between.
      */
-    --card-inline-padding: #{fluid(14px, 18px)};
+    --card-gutter: #{fluid(14px, 18px)};
+    /*
+     * The block padding above a stat's label — and below the closing stat, which has no rule.
+     *
+     * Held here because the two cells need the *same* number in two different declarations. Ordinary
+     * cells are deliberately a pixel bottom-heavy (12 over 13 desktop, node 1:182; 10 over 11
+     * mobile, node 1:250) because that extra pixel is what seats the rule; the closer draws no rule
+     * and the comp pays it back, closing symmetrically at 12/12 (node 1:202) and 10/10 (node 1:270).
+     */
+    --card-stat-padding: #{fluid(10px, 12px)};
     /*
      * The mono micro-label above each value, and on each meter. 11px desktop (node 1:184), 10px
      * mobile (node 1:252) — below `--body-xs` (11→12px), the floor of the body scale, so there is no
@@ -66,9 +81,14 @@
      */
     overflow: hidden;
     /*
-     * 1px inside the border box, not outside it. The design's gutters are therefore one pixel less
-     * of padding on each band, following the convention the button tokens are built on
-     * (`_variables.scss`) — it is what keeps a row of bordered and unbordered boxes on one baseline.
+     * Inside the border box, which is also how Figma draws it: node 1:175 is 624px wide and its
+     * header band starts at x = 1 and is 622px across, so the stroke eats into the card rather than
+     * hanging off it.
+     *
+     * That is worth pinning down because the tempting correction is wrong. Every band below takes
+     * the comp's padding *verbatim* — 18px, not 17px — and must keep doing so: the comp measures its
+     * gutters from the same inner edge the browser does, so subtracting the border a second time
+     * would draw every band a pixel tight.
      */
     border: 1px solid var(--stroke-cards);
     border-radius: var(--radius-md);
@@ -85,7 +105,7 @@
     align-items: baseline;
     justify-content: space-between;
     gap: var(--spacing-md);
-    padding: #{fluid(10px, 12px)} var(--card-inline-padding);
+    padding: #{fluid(10px, 12px)} var(--card-gutter);
     background-color: var(--button-secondary-bg);
     color: var(--button-secondary-fg);
   }
@@ -103,7 +123,7 @@
 
     font-size: var(--card-value-size);
     font-weight: var(--font-weight-bold);
-    line-height: 1.5;
+    line-height: var(--body-line-height);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
@@ -127,8 +147,17 @@
    * "FAVOURITE DRINK AT FIN'S" — 24 characters of JetBrains Mono, whose cell is 0.6em plus 0.1em of
    * tracking, so 0.7em × 11px × 24 ≈ 185px — and 200px rounds that up with room for a longer one.
    * Two of those plus the 24px column gap plus both 18px gutters is 460px of content box, which is
-   * what a size container query measures. Both comps clear it by a wide margin in their own
-   * direction: the desktop card's content box is 622px and the mobile card's is 348px.
+   * what a size container query measures — confirmed by sweeping the card a pixel at a time: the
+   * flip fires at exactly 460px of content box and nowhere else. Both comps clear it by a wide
+   * margin in their own direction: the desktop card's content box is 622px and the mobile card's is
+   * 348px.
+   *
+   * The 18px in that sum is the wide anchor, so the derivation is only exact at a 1440px viewport —
+   * but it errs in the safe direction. A narrower viewport shrinks the gutter towards 14px *and* the
+   * label towards 10px, so the column needs less room at the same time as it is given more, and
+   * 460px stays conservative across the whole range. A container query condition cannot read a
+   * custom property, so this is a literal whether or not that is tidy; it is at least the only one
+   * in the file.
    *
    * `repeat(2, …)` rather than an `auto-fit` track list, which is what `FieldCheckbox` uses: an
    * `auto-fit` grid would keep adding columns as the card grew, and the comp's stat grid is two
@@ -143,7 +172,7 @@
     grid-template-columns: 1fr;
     column-gap: var(--spacing-lg);
     margin: 0;
-    padding: #{fluid(4px, 8px)} var(--card-inline-padding);
+    padding: #{fluid(4px, 8px)} var(--card-gutter);
 
     @container (min-width: 460px) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -154,10 +183,15 @@
    * A cell: label over value, with the rule along the bottom.
    *
    * The comp's rule is `rgba(19, 20, 18, 0.15)`, which composites to `#d1d0ca` on the off-white
-   * page; `--stroke-divider` is stone/300 (`#dcd9cf`), four values lighter per channel and
-   * indistinguishable in place. Taking the token buys the dark theme (pine/500) and keeps one
-   * divider ink across the card rather than a translucent ink here and an opaque one on the meter
-   * track, which the comp already draws as the same colour.
+   * page — sampled off the render at (209, 208, 202). `--stroke-divider` is stone/300 (`#dcd9cf`) =
+   * (220, 217, 207), so the token is (11, 9, 5) lighter: 1.25:1 against the page where the comp
+   * draws 1.37:1. Both are hairlines at the bottom of the contrast range and the difference is not
+   * separable by eye, but it is a real tenth of a ratio rather than the rounding error it looks
+   * like, so it is stated rather than waved through.
+   *
+   * Taking the token anyway buys the dark theme (pine/500) and keeps one divider ink across the card
+   * rather than a translucent ink here and an opaque one on the meter track, which the comp already
+   * draws as the same colour.
    *
    * 12px over 13px desktop (node 1:182), 10px over 11px mobile (node 1:250) — the comp's rows are
    * very slightly bottom-heavy and that is reproduced rather than averaged away.
@@ -166,18 +200,24 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
-    padding-block: #{fluid(10px, 12px)} #{fluid(11px, 13px)};
+    padding-block: var(--card-stat-padding) #{fluid(11px, 13px)};
     border-bottom: 1px solid var(--stroke-divider);
   }
 
   /*
-   * The closing stat: spans the grid and drops its rule.
+   * The closing stat: spans the grid, drops its rule, and closes square.
    *
    * `1 / -1` resolves against the explicit track list, so it is the full width at one column and at
    * two without knowing which is current.
+   *
+   * The padding comes back to the top value because the extra pixel every other cell carries is
+   * there to seat the rule, and this cell has none — the comp closes it at 12/12 (node 1:202) and
+   * 10/10 (node 1:270) against 12/13 and 10/11 on the cells above. Left inherited it would put a
+   * stray pixel between the last line of copy and the meter band's own rule.
    */
   .fullWidth {
     grid-column: 1 / -1;
+    padding-bottom: var(--card-stat-padding);
     border-bottom: 0;
   }
 
@@ -187,7 +227,7 @@
     color: var(--fg-accent);
     font-size: var(--card-label-size);
     font-weight: var(--font-weight-regular);
-    line-height: 1.5;
+    line-height: var(--body-line-height);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
@@ -201,55 +241,77 @@
     color: var(--fg-default);
     font-size: var(--card-value-size);
     font-weight: var(--font-weight-regular);
-    line-height: 1.5;
+    line-height: var(--body-line-height);
     overflow-wrap: anywhere;
   }
 
   /*
    * The one value the comp sets in the body face rather than the mono — 15px Instrument Sans
-   * desktop (node 1:206), 14px mobile (node 1:274). `--body-md` is `fluid(14px, 16px)`: the narrow
-   * anchor is exact and the wide one is a pixel over, which is the trade `FieldCheckbox` already
-   * makes for its title in exchange for staying on the type scale.
+   * desktop (node 1:206), 14px mobile (node 1:274). That step is `<Text size="md">` on the value
+   * itself, which resolves `--body-md` = `fluid(14px, 16px)`: the narrow anchor is exact and the
+   * wide one is a pixel over, which is the trade `FieldCheckbox` already makes for its title in
+   * exchange for staying on the type scale.
    *
-   * Stated here as well as on the `<Text>` inside, and the two agree by construction because they
-   * name the same token. The family is the part that has to be here: `.statValue` above sets the
-   * mono face on the `<dd>`, and an inline `<Text>` would inherit it.
+   * The **family** is the only thing this rule exists for, and it cannot move to the prop:
+   * `Text`'s `.variant_body` sets a weight and a size and no `font-family` at all, so an inline
+   * `<Text>` inside the `<dd>` inherits the mono face `.statValue` sets above it and renders the
+   * one body-face run in the card in JetBrains Mono.
+   *
+   * Size and line-height are deliberately *not* restated here. They were, and the two declarations
+   * agreed only because both happened to name `--body-md` — two places to change, no way for either
+   * to notice the other, and the browser silently taking whichever won. The component prop owns the
+   * step; the stylesheet owns the face.
    */
   .fullWidth .statValue {
     @include body-font();
-
-    font-size: var(--body-md);
-    line-height: var(--body-line-height);
   }
 
   /*
    * The meter band.
    *
    * **The mobile comp has no meter band at all** — node 1:243 ends at the "HOW WE MET" stat — so the
-   * narrow form is inferred rather than measured, and is flagged for design review. It follows the
-   * text stats: one meter per row once the card is too narrow for a second column, which is the same
-   * collapse and the same threshold, so the two bands never disagree about how wide the card is.
+   * narrow end is inferred rather than measured. What the desktop frame does state is that the band
+   * has no breakpoint in it: three meters at `flex: 1 0 0` with `min-width: 1px` (nodes
+   * 1:208/1:216/1:224), which is a track list and not a media query. `auto-fit` is the grid spelling
+   * of that, and it is deliberately the *only* rule here — the band takes no part in `.stats`'
+   * 460px switch.
    *
-   * Above that threshold the track list *is* `auto-fit`, unlike `.stats`, and the difference is
-   * deliberate. The comp draws its three meters as equal flexible columns across one row, so the
-   * band's column count follows the number of meters rather than being fixed at three — six meters
-   * on a 624px card would each be 87px wide and unreadable. 180px is pinned by both frames: at the
-   * desktop card's 588px of band content, three 180px tracks plus two 18px gaps is 576px and a
-   * fourth does not fit, which reproduces the comp's three-across; at the mobile card's 320px a
-   * second track would need 378px, so it stacks. Empty tracks collapse and the survivors are `1fr`,
-   * so three meters in a wider card still share the row equally, as the comp's `flex: 1` does.
+   * That is worth stating because the obvious-looking alternative is to reuse the text stats'
+   * threshold so the card only ever changes shape once. It reads tidy and it is wrong twice over.
+   * The comp already runs a two-column stat grid above a three-column meter band on the same card,
+   * so a shared column count is not something the design asserts; and forcing one meter per row
+   * below 460px draws a 404px bar at a 440px card and a 421px one at 459px, against the 183.33px
+   * the comp draws — at which width the head row's label and fraction are flung to opposite ends of
+   * a third of a metre of whitespace. Measured, not guessed: that was the build's first form.
    *
-   * 18px gap, 15px over 18px block padding (node 1:207).
+   * 180px is therefore the only number the band needs, and both frames pin it. At the desktop card's
+   * 586px of band content, three 180px tracks plus two 18px gaps is 576px and a fourth would need
+   * 774px, which reproduces the comp's three-across at 183.33px exactly. At the mobile card's 320px
+   * a second track would need 378px, so it stacks — the inferred case, and the one still worth a
+   * design opinion. In between the band simply fits what it can: two at ~193px around 440px, which
+   * is the comp's own meter width and the reason this is a track list rather than a breakpoint.
+   *
+   * `min(180px, 100%)` keeps a lone track from overflowing a card narrower than 180px; empty tracks
+   * collapse and the survivors are `1fr`, so three meters in a wider card still share the row
+   * equally, as the comp's `flex: 1` does.
+   *
+   * Gap and bottom padding are both the shared gutter — 18px, 18px and 18px in the comp (node
+   * 1:207) — over 15px of top padding, which is the one value in the band that is its own.
    */
   .meters {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.125rem;
-    padding: #{fluid(12px, 15px)} var(--card-inline-padding) #{fluid(14px, 18px)};
+    /*
+     * The meter's label and the stat label above it are one type role — both are the comp's mono
+     * micro-label, 11px desktop (nodes 1:184, 1:211) and 10px mobile (node 1:252) — so inside a card
+     * they are one declaration rather than two that happen to agree. `StatMeter` keeps its own
+     * standalone default for a meter used outside a card; this is the consumer overriding the knob
+     * the primitive exposes, which is the direction that dependency is allowed to run.
+     */
+    --meter-label-size: var(--card-label-size);
 
-    @container (min-width: 460px) {
-      grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
-    }
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+    gap: var(--card-gutter);
+    padding: #{fluid(12px, 15px)} var(--card-gutter) var(--card-gutter);
   }
 
   /*

@@ -108,13 +108,25 @@ const meta = {
      * and every measurement in these stories is quietly taken at the wrong width. Measured — that is
      * how this was found, with the meter band laying out two tracks where the comp draws three.
      */
-    (Story) => (
-      <div style={{ padding: 'var(--spacing-lg)' }}>
-        <div style={{ width: '624px' }}>
-          <Story />
+    (Story, context) => {
+      /*
+       * A story can pin a theme through `parameters.forceTheme` instead of the toolbar global, and
+       * `DarkTheme` below explains at length why it has to. Absent, both attributes are omitted and
+       * the canvas behaves exactly as before — the toolbar still drives every other story.
+       */
+      const forced = context.parameters.forceTheme as 'dark' | 'light' | undefined;
+
+      return (
+        <div
+          data-theme={forced}
+          style={{ padding: 'var(--spacing-lg)', backgroundColor: forced ? 'var(--bg-default)' : undefined }}
+        >
+          <div style={{ width: '624px' }}>
+            <Story />
+          </div>
         </div>
-      </div>
-    )
+      );
+    }
   ]
 } satisfies Meta<typeof PlayerCard>;
 
@@ -171,6 +183,23 @@ export const Default: Story = {
        * is invalid at computed-value time and reports `none` — the same answer a missing rule gives.
        */
       await expect(getComputedStyle(meters).borderTopStyle).toBe('solid');
+
+      /*
+       * The gutter all three bands share. `--card-gutter` exists precisely so the header, the stat
+       * grid and the meter band cannot drift apart, and until now that was prose: each band could
+       * have been given its own 18px and nothing would have noticed until one of them was retuned.
+       */
+      const card = cardOf(canvasElement);
+      const gutters = [...card.children].map((band) => getComputedStyle(band).paddingLeft);
+      await expect(gutters).toHaveLength(3);
+      await expect(new Set(gutters).size).toBe(1);
+
+      /*
+       * `overflow: hidden` is what clips the header band's square top corners to the card's 8px
+       * radius, which is why no band declares a radius of its own. Remove it and the band's corners
+       * poke out at both ends — a visible break with nothing else in the suite to catch it.
+       */
+      await expect(getComputedStyle(card).overflow).toBe('hidden');
     });
 
     const cells = stats.querySelectorAll('div');
@@ -196,18 +225,51 @@ export const Default: Story = {
       const ordinaryValue = getComputedStyle(ordinary.querySelector('dd') as HTMLElement).fontFamily;
       await expect(closerValue).not.toBe('');
       await expect(closerValue).not.toBe(ordinaryValue);
+
+      /*
+       * …and the *size* swaps with it. Asserted on the `<Text>` inside the `<dd>` rather than on the
+       * `<dd>`, because that is where the step now lives: the stylesheet states only the family, so
+       * reading the block would report the mono size it inherits and pass whatever `Text` did.
+       * Compared against the ordinary cell rather than against `16px`, so it survives a retune of
+       * `--body-md` and still fails if the prop is dropped.
+       */
+      const closerStep = getComputedStyle(closer.querySelector('dd > *') as HTMLElement).fontSize;
+      await expect(closerStep).not.toBe('');
+      await expect(closerStep).not.toBe(getComputedStyle(ordinary.querySelector('dd') as HTMLElement).fontSize);
+    });
+
+    /*
+     * The capitals are `text-transform`, not the data — the args are sentence case throughout so the
+     * shouting stays out of the accessible name. Which means every text assertion in this file
+     * queries the untransformed string and none of them can see the transform at all: drop it from
+     * the stylesheet and the whole suite stays green while every label in the card renders in the
+     * wrong case. Checked on both registers, the header's bold and the stat's regular.
+     */
+    await waitFor(async () => {
+      await expect(getComputedStyle(canvas.getByText('Player card')).textTransform).toBe('uppercase');
+      await expect(getComputedStyle(ordinary.querySelector('dt') as HTMLElement).textTransform).toBe('uppercase');
     });
   }
 };
 
 /**
- * The same card at the mobile comp's width (node 1:243), where both bands collapse to one column.
+ * The card at the mobile comp's *width* (node 1:243), where both bands collapse to one column.
  *
- * The narrow wrapper is the point, and it is a *width* rather than a viewport: the card's layout is
- * a container query, because its width comes from the column it sits in and never from the window.
- * A story that reached this branch by shrinking the viewport would pass just as well against the
+ * The narrow wrapper is the point, and it is a width rather than a viewport: the card's layout is a
+ * container query, because its width comes from the column it sits in and never from the window. A
+ * story that reached this branch by shrinking the viewport would pass just as well against the
  * viewport media query this deliberately is not — and that rule gets the middle of the range
  * backwards, giving a narrow card in a sidebar the desktop grid.
+ *
+ * **This is not the mobile comp, and it is worth being exact about why.** Layout here is the card's
+ * (container-driven, so narrow); *type and spacing* are still the canvas's (viewport-driven, because
+ * `fluid()` interpolates on `vw` by construction), so at a 1440px canvas this renders node 1:243's
+ * grid at node 1:175's 11px/13px/18px rather than its own 10px/12px/14px. That is not a defect in
+ * either the component or the story — it is what a 350px card in a wide window genuinely looks like,
+ * and it is the case this story exists to pin. The mobile frame's own numbers were checked by
+ * driving the viewport to 375px in the design review; they match to four decimal places. There is no
+ * story that reproduces them, because a story cannot set a viewport the component test runner
+ * honours.
  *
  * The mobile comp has **no meter band at all**, so the stacked meters here are inferred rather than
  * measured. Flagged for design review.
@@ -236,6 +298,52 @@ export const NarrowColumn: Story = {
 
     await waitFor(async () => {
       await expect(getComputedStyle(closer).borderBottomStyle).toBe('none');
+    });
+  }
+};
+
+/**
+ * The width between the two comps, where the bands deliberately disagree.
+ *
+ * Neither frame draws this, and it is the case that decides whether the meter band is a track list
+ * or a breakpoint. At 440px of card the text stats are still a single column — 460px is where they
+ * flip — while the meter band fits two 193px meters, which is the width the comp actually draws
+ * (183.33px). Pinned to the text stats' threshold instead, the same card would draw one 404px bar
+ * with its label and its fraction at opposite ends of the row.
+ *
+ * So this story asserts the *asymmetry*: one stat track, two meter tracks, on one card. It fails if
+ * the meter band is ever coupled back to `.stats`' container query — which is exactly the tidy-
+ * looking change someone will propose, since the comp's own desktop card runs two stat columns above
+ * three meter columns and so never asserts a shared count either.
+ *
+ * 440px has ~20px of clearance on the stats side (they need 460) and ~26px on the meters side (two
+ * tracks need 180 + 180 + an 18px gap inside gutters that are themselves fluid), so the assertion
+ * does not hang on the viewport the suite happens to run at.
+ */
+export const MediumColumn: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ width: '442px' }}>
+        <Story />
+      </div>
+    )
+  ],
+  play: async ({ canvasElement }) => {
+    const stats = statsOf(canvasElement) as HTMLElement;
+    const meters = metersOf(canvasElement) as HTMLElement;
+
+    await waitFor(async () => {
+      await expect(trackCount(stats)).toBe(1);
+      await expect(trackCount(meters)).toBe(2);
+
+      /*
+       * And the meters that result are near the width the comp draws rather than the width of the
+       * card. Bounded on both sides: the upper bound is what fails if the band is stacked again,
+       * the lower is what fails if 180px is ever lowered far enough to squeeze three across here.
+       */
+      const first = meters.firstElementChild as HTMLElement;
+      await expect(first.offsetWidth).toBeLessThan(260);
+      await expect(first.offsetWidth).toBeGreaterThan(150);
     });
   }
 };
@@ -402,6 +510,59 @@ export const ExtremeScores: Story = {
       // 5 of 10 is exactly the threshold and takes the ordinary ink — "below half", not "at most".
       await expect(fillOf(mid)).toBe(fillOf(high));
       await expect(fillOf(low)).not.toBe(fillOf(high));
+    });
+  }
+};
+
+/**
+ * The comp's card on the dark theme, where the header band's one contentious decision gets rendered.
+ *
+ * The band inverts through the design system's ink-chip pair (`--button-secondary-bg` /
+ * `--button-secondary-fg`) rather than through `data-theme="dark"` on the band itself. The argument
+ * for that is in the stylesheet and it is a *negative* one — `data-theme="dark"` paints
+ * `--bg-default`, which is pine/600, so the band would come out green rather than ink — and a
+ * negative argument is exactly the kind nothing renders. This is what it renders.
+ *
+ * What the assertion pins is the property that matters on both surfaces: the band is inverted
+ * *relative to the surface around it*. On light that is ink under off-white; on dark it is off-white
+ * under pine. Stated as "different from the page, and legible against itself", so it holds either
+ * way round and fails if the band ever resolves to the page's own colour — which is precisely what
+ * the `data-theme` spelling would have done.
+ *
+ * **Themed through `parameters.forceTheme`, not `globals: { theme: 'dark' }`, and the difference is
+ * not stylistic.** A story-level globals override is applied on a *later* render than the first:
+ * the preview mounts on whatever the globals store holds, then `withThemeByDataAttribute` rewrites
+ * `body[data-theme]` when the change propagates. Measured on a cold iframe of this very story, the
+ * card was in the DOM at 102ms and the attribute flipped to `dark` at **5209ms** — so a `play`
+ * function polling for it fails at the 1s default, fails at 5s, and can only be made to pass by
+ * guessing a timeout longer than a machine-dependent delay. (`.storybook/preview.tsx` documents the
+ * smaller cousin of this: ~1.2s for the attribute to appear at all, which is why the default theme
+ * is seeded there.) The decorator sets the attribute *in* the first render, so there is no race to
+ * lose — and because the theme blocks in `_variables.scss` are bare `[data-theme='…']` selectors
+ * rather than `body[data-theme='…']`, a wrapper themes its subtree exactly as the body would.
+ */
+export const DarkTheme: Story = {
+  parameters: { forceTheme: 'dark' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const card = cardOf(canvasElement);
+    const header = card.children[0] as HTMLElement;
+    const surface = card.closest('[data-theme]') as HTMLElement;
+
+    await expect(canvas.getByText('Player card')).toBeVisible();
+    // Synchronous, because the decorator put it there — this is the assertion that was unwinnable
+    // against the globals round-trip and is trivially true against a wrapper.
+    await expect(surface.dataset.theme).toBe('dark');
+
+    await waitFor(async () => {
+      const band = getComputedStyle(header);
+      const page = getComputedStyle(surface).backgroundColor;
+
+      await expect(band.backgroundColor).not.toBe(page);
+      await expect(band.backgroundColor).not.toBe(band.color);
+      // The card's own border resolves on the same theme, so it standing up is what makes the two
+      // assertions above mean "inverted" rather than "no token has resolved yet".
+      await expect(getComputedStyle(card).borderTopStyle).toBe('solid');
     });
   }
 };
