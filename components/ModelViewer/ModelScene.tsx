@@ -5,7 +5,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { Suspense, useLayoutEffect } from 'react';
 import { NeutralToneMapping } from 'three';
 
-import type { ModelClipNames, ModelClipRole } from '@/helpers/modelClips';
+import type { ModelClipNames, ModelRestRole } from '@/helpers/modelClips';
 
 import ModelBoundary from './ModelBoundary';
 import ModelCharacter, { preloadCharacter } from './ModelCharacter';
@@ -65,10 +65,26 @@ const CameraTarget = () => {
  */
 const DPR: [number, number] = [1, 2];
 
+/**
+ * The renderer options.
+ *
+ * Khronos PBR Neutral, and this is a project decision rather than a preference. R3F defaults to
+ * `ACESFilmicToneMapping`, which pushes skin warm and desaturates these models badly — settled
+ * empirically in the model harness against Meshy's own render. `NoToneMapping` is worse again: it
+ * clips everything above 1.0 to white, which is what a plain GLB previewer does and what "washed
+ * out" actually looks like.
+ *
+ * Hoisted for the same reason as `CAMERA` and `DPR` above. R3F shallow-compares this object against
+ * the live renderer before re-applying it, so an inline literal was not a re-render hazard — but
+ * this file states its canvas configuration as module constants and there is no reason for one
+ * exception.
+ */
+const GL = { toneMapping: NeutralToneMapping, toneMappingExposure: 1 } as const;
+
 export interface ModelSceneProps {
   src: string;
   clips?: ModelClipNames | null;
-  restClip: ModelClipRole;
+  restClip: ModelRestRole;
   /** `false` under reduced motion — the model is posed and the frame loop goes on demand. */
   animate: boolean;
   /** Gentle auto-orbit plus limited drag. The player page only. */
@@ -101,18 +117,7 @@ const ModelScene = (props: ModelSceneProps) => {
          * precisely the sort of thing the reader turned motion down to avoid.
          */
         frameloop={animate ? 'always' : 'demand'}
-        gl={{
-          /*
-           * Khronos PBR Neutral, and this is a project decision rather than a preference.
-           *
-           * R3F defaults to `ACESFilmicToneMapping`, which pushes skin warm and desaturates these
-           * models badly — settled empirically in the model harness against Meshy's own render.
-           * `NoToneMapping` is worse again: it clips everything above 1.0 to white, which is what a
-           * plain GLB previewer does and what "washed out" actually looks like.
-           */
-          toneMapping: NeutralToneMapping,
-          toneMappingExposure: 1
-        }}
+        gl={GL}
         /*
          * No real-time shadows, per the brief — the contact shadow below is a single ground pass
          * rather than a shadow map, and a shadow-casting light would add a depth render per frame
@@ -136,21 +141,30 @@ const ModelScene = (props: ModelSceneProps) => {
             restClip={restClip}
             src={src}
           />
-        </Suspense>
 
-        {/*
-         * Seats the character on the ground. `frames={1}` when nothing moves — the pose is fixed,
-         * so re-rendering the shadow's depth pass every frame would draw the same texture forever.
-         */}
-        <ContactShadows
-          blur={2.6}
-          far={1.2}
-          frames={animate ? Number.POSITIVE_INFINITY : 1}
-          opacity={0.32}
-          position={[0, 0, 0]}
-          resolution={512}
-          scale={4}
-        />
+          {/*
+           * Seats the character on the ground. `frames={1}` when nothing moves — the pose is fixed,
+           * so re-baking the shadow's depth pass every frame would draw the same texture forever.
+           *
+           * **Inside the character's suspense boundary on purpose.** drei holds `frames`' counter in
+           * its render scope, so `frames={1}` means "one bake per React render", not "one ever" —
+           * and under `frameloop="demand"` the first demanded frame can arrive before the GLB has
+           * resolved, baking an empty scene. Mounted out here it was saved only by a chain of
+           * accidents (`onClip` → `setModel` → a re-render of an unmemoised `ModelScene` → a fresh
+           * counter → `ModelCharacter`'s own `invalidate()`), which anyone memoising this component
+           * would have broken silently, leaving the reduced-motion render with no shadow under the
+           * character. Suspended alongside the model, it simply cannot mount before there is one.
+           */}
+          <ContactShadows
+            blur={2.6}
+            far={1.2}
+            frames={animate ? Number.POSITIVE_INFINITY : 1}
+            opacity={0.32}
+            position={[0, 0, 0]}
+            resolution={512}
+            scale={4}
+          />
+        </Suspense>
 
         {orbit ? null : <CameraTarget />}
 

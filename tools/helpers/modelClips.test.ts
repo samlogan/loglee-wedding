@@ -25,6 +25,15 @@ describe('matchModelClip', () => {
     expect(matchModelClip('gangnam_groove', SAM)).toBe('Gangnam_Groove');
   });
 
+  it('matches past whitespace in the *file* name, and still returns the file spelling', () => {
+    // The third pass trims both sides of the comparison, so a GLB exported with a padded clip name
+    // resolves — and what comes back is the padded original, untrimmed. That is deliberate and it is
+    // the non-obvious half of the "returns the file spelling" rule: `useAnimations` keys `actions`
+    // off the name exactly as the file spells it, so handing back the tidied version would resolve
+    // here and then find no action at all.
+    expect(matchModelClip('gangnam_groove', [' Gangnam_Groove '])).toBe(' Gangnam_Groove ');
+  });
+
   it('does not guess at a near miss', () => {
     // "Gangnam" is a prefix of a real clip. Playing the nearest match would hide the typo; the
     // caller degrading to idle shows it without breaking the page.
@@ -63,6 +72,11 @@ describe('resolveModelClip', () => {
     // The dangerous one: the field is filled in, so nothing in the Studio looks wrong. A model
     // re-exported with renamed clips puts every player in this state at once.
     expect(resolveModelClip('feature', { ...clips, feature: 'Dance Loop' }, SAM)).toBe('Excited_Walk_M');
+    // Asserted for `hover` too, because the doc claims both non-idle roles behave identically and
+    // only `feature` was pinned. Note `ModelCharacter` deliberately routes around this branch —
+    // degrading a one-shot to idle would crossfade the rest clip into itself on every pointer enter
+    // — so this is the helper's contract for a future caller, not a description of today's.
+    expect(resolveModelClip('hover', { ...clips, hover: 'Wave Hello' }, SAM)).toBe('Excited_Walk_M');
   });
 
   it('resolves to nothing when idle itself is missing, rather than throwing', () => {

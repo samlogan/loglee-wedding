@@ -96,10 +96,23 @@ const probeRenderer = (): RendererClass => {
     /*
      * Hand the context back rather than waiting for GC. Without this the probe context counts
      * against the per-document limit for as long as the canvas is reachable, and on the home page
-     * the two real canvases are created moments later.
+     * the two real canvases are created moments later. `getContext` returns the *same* context for
+     * a matching type and `null` for a mismatched one, so whichever branch above obtained it, one
+     * of these two calls hands back that very context.
+     *
+     * The inner `try` is not ceremony. **A throw inside `finally` replaces the value the `catch`
+     * returned**, so on a browser that throws from `getContext` rather than returning null — which
+     * is precisely the case the `catch` above exists for — an unguarded cleanup would re-throw and
+     * turn `'unsupported'` back into an exception. That exception would escape `readCapability`,
+     * which is `useSyncExternalStore`'s `getSnapshot` and therefore runs **during render**, above
+     * every error boundary this component has.
      */
-    const lose = canvas?.getContext('webgl2') ?? canvas?.getContext('webgl');
-    (lose as WebGLRenderingContext | null)?.getExtension('WEBGL_lose_context')?.loseContext();
+    try {
+      const lose = canvas?.getContext('webgl2') ?? canvas?.getContext('webgl');
+      (lose as WebGLRenderingContext | null)?.getExtension('WEBGL_lose_context')?.loseContext();
+    } catch {
+      // No context to hand back. GC will take the canvas; there is nothing useful to report.
+    }
   }
 };
 
@@ -112,6 +125,21 @@ export const hasRenderer = (): boolean => {
   return rendererClass !== 'unsupported';
 };
 
+/**
+ * The reader's stated motion preference, read on its own.
+ *
+ * Exported beside `hasRenderer` because `index.tsx` has to consult it *after* a forced `mode` has
+ * already replaced `capability` — a force may override the machine heuristics, never this. See the
+ * note on `ModelViewerMode`.
+ *
+ * `matchMedia` is feature-detected rather than assumed. This runs inside `getSnapshot`, i.e. during
+ * render, so an environment without it (jsdom's default) would otherwise throw out of a render that
+ * has no boundary above it. Absent is read as "no preference stated", which is the same answer the
+ * media query gives on every browser that does support it.
+ */
+export const prefersReducedMotion = (): boolean =>
+  typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia(REDUCED_MOTION).matches;
+
 const readCapability = (): ModelCapability => {
   if (typeof window === 'undefined') {
     return 'pending';
@@ -122,7 +150,7 @@ const readCapability = (): ModelCapability => {
     return 'fallback';
   }
 
-  return window.matchMedia(REDUCED_MOTION).matches ? 'static' : 'animated';
+  return prefersReducedMotion() ? 'static' : 'animated';
 };
 
 /**
@@ -132,6 +160,9 @@ const readCapability = (): ModelCapability => {
  * expose it as a switch, and a reader who flips it mid-visit should not have to reload to be obeyed.
  */
 const subscribe = (onChange: () => void) => {
+  if (typeof window.matchMedia !== 'function') {
+    return () => undefined;
+  }
   const query = window.matchMedia(REDUCED_MOTION);
   query.addEventListener('change', onChange);
   return () => query.removeEventListener('change', onChange);

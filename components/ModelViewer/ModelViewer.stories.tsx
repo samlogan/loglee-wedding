@@ -127,6 +127,14 @@ const stageOf = (panel: HTMLElement) => panel.querySelector(':scope > div') as H
  * unit-testable only in the sense that `Default` proves it ran and produced a decision. The clip
  * degradation that the acceptance criteria call out *is* pinned deterministically, and without a
  * GPU — in `tools/helpers/modelClips.test.ts`, which runs in the `unit` project in milliseconds.
+ *
+ * **A forced `animated` still yields to `prefers-reduced-motion`**, so the four stories below that
+ * pass it resolve to `static` on a machine asking for reduced motion — and their `data-model-mode`
+ * and `data-model-clip` assertions would fail there. That does not make `yarn test` machine-
+ * dependent: Playwright's browser context emulates `reducedMotion: 'no-preference'` by default,
+ * regardless of the host OS, so the runner always takes the animated branch. It is only visible to
+ * a developer browsing `yarn storybook` with the OS switch on — where seeing the posed render is
+ * the correct answer, not a broken story.
  */
 export const Default: Story = {
   play: async ({ canvasElement }) => {

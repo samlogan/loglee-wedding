@@ -22,6 +22,17 @@
 export type ModelClipRole = 'idle' | 'hover' | 'feature';
 
 /**
+ * The roles that can be a viewer's *rest* clip — the one that loops when nothing is happening.
+ *
+ * `hover` is excluded by construction rather than by convention: it is a one-shot played *over* the
+ * rest loop, so naming it as the thing it interrupts is incoherent. Named here rather than spelled
+ * `Exclude<ModelClipRole, 'hover'>` at each use so the invariant survives the whole way down —
+ * `ModelViewerProps` had it and the two components below it did not, which is exactly how an
+ * invariant enforced at the front door gets lost behind it.
+ */
+export type ModelRestRole = Exclude<ModelClipRole, 'hover'>;
+
+/**
  * The authored names. Structurally identical to `IPlayerDocument['clips']`, declared here rather
  * than imported from the schema so this helper does not depend on the CMS layer — a second document
  * type with the same three roles would reuse it as-is.

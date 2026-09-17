@@ -248,6 +248,26 @@
   }
 
   /*
+   * Nothing is on its way any more — so the breathe stops, whether or not the hatch goes with it.
+   *
+   * `.resting` covers the case `.settled` cannot: an arch whose final render *is* the placeholder,
+   * because no GLB was authored or because this browser has no WebGL and no fallback image was
+   * given either. There the hatch has to stay — it is the comp's empty-arch ground, not a spinner —
+   * but pulsing it says "still working" about something that has finished, forever, with no pause
+   * or stop mechanism. See the note on `loading` in `index.tsx`.
+   *
+   * Declared at the same specificity as the `prefers-reduced-motion` override nested in
+   * `.placeholder` above, which also resolves to `animation: none`, so the two cannot disagree
+   * whichever way the cascade falls.
+   */
+  .resting,
+  .settled {
+    .placeholder {
+      animation: none;
+    }
+  }
+
+  /*
    * The arch has its final content — a character on the stage, or the fallback image.
    *
    * Both, and not just the canvas: the image *is* the settled render for a browser with no WebGL,
@@ -258,7 +278,6 @@
   .settled {
     .placeholder {
       opacity: 0;
-      animation: none;
     }
   }
 
@@ -327,6 +346,22 @@
     inset-block-end: 4.1cqw;
     inset-inline: 0;
     width: fit-content;
+    /*
+     * Capped and wrapping, where this was `white-space: nowrap`.
+     *
+     * The chip sits inside `.stage`, which is `overflow: hidden` to clip the canvas to the arch — so
+     * `nowrap` meant a chip wider than the arch was silently cut off at the dome's edge. Measured at
+     * the mobile panel: the comp's own `sam-dance.glb` is 99px inside a 200px arch and safe, but a
+     * plausible authored name (`sam-dance-final-v3-compressed.glb`) measures 227px and loses its
+     * last four characters — 269px with WCAG 1.4.12's text-spacing overrides applied. The string
+     * comes from the CMS, so its length is not this component's to assume, and a truncated file name
+     * is the worst possible failure for the one string here that has to read verbatim.
+     *
+     * `anywhere` rather than `break-word` because it participates in intrinsic sizing: `fit-content`
+     * then resolves against the cap instead of against the longest unbreakable run, which for a
+     * hyphen-free file name is the whole string.
+     */
+    max-width: calc(100% - 2 * var(--viewer-gutter-inline));
     margin-inline: auto;
     border-radius: var(--radius-sm);
     background-color: var(--bg-default);
@@ -335,7 +370,7 @@
     font-size: var(--viewer-chrome-size);
     font-weight: var(--font-weight-regular);
     line-height: 1.3;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
   }
 
   /*
@@ -350,6 +385,16 @@
 
     .placeholder {
       background-image: none;
+    }
+
+    /*
+     * The chip is distinguished from the arch by its fill alone, and forced colours flattens both
+     * to `Canvas`. The file name stays readable either way, but the chip is a deliberate grouping
+     * and the rest of this block goes to some trouble to keep exactly that kind of shape. Matches
+     * what `StatMeter`'s `.track` does.
+     */
+    .badge {
+      border: 1px solid CanvasText;
     }
   }
 }

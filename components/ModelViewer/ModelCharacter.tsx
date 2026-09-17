@@ -4,11 +4,11 @@ import { useAnimations, useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { LoopOnce, LoopRepeat, PropertyBinding } from 'three';
-import type { AnimationAction, AnimationClip, AnimationMixer, Bone, Object3D } from 'three';
+import type { AnimationAction, AnimationClip, AnimationMixer, Bone, Object3D, SkinnedMesh } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 
 import { matchModelClip, resolveModelClip } from '@/helpers/modelClips';
-import type { ModelClipNames, ModelClipRole } from '@/helpers/modelClips';
+import type { ModelClipNames, ModelRestRole } from '@/helpers/modelClips';
 
 /** Seconds of crossfade between two clips. Long enough to read as a transition, short enough not to drift. */
 const FADE = 0.35;
@@ -19,16 +19,21 @@ export interface ModelCharacterProps {
   /** The authored clip names. Every one of the three may be absent or wrong; see `@/helpers/modelClips`. */
   clips?: ModelClipNames | null;
   /** Which role loops at rest — `idle` on the select screen, `feature` on a player page. */
-  restClip: ModelClipRole;
+  restClip: ModelRestRole;
   /** `false` under reduced motion: the rest clip is posed at its first frame and never advanced. */
   animate: boolean;
   /**
    * Increment to play the hover clip once.
    *
    * A counter rather than a boolean because the interesting event is *another* hover, not a change
-   * of state — a boolean would have to be flipped back before it could fire again, and a second
-   * hover during the first playthrough would be swallowed. `0` is the initial value and never
-   * plays, so the first render is not a hover.
+   * of state: a counter re-arms itself, where a boolean has to be flipped back — by whom, and on
+   * what event? — before it could fire a second time. `0` is the initial value and never plays, so
+   * the first render is not a hover.
+   *
+   * A repeat hover *during* the playthrough is still swallowed, deliberately, by the
+   * `action === current.current` guard on the one-shot effect below; restarting the clip mid-play
+   * reads as a jitter. That same guard is what makes a touch tap benign, where `pointerenter` and
+   * `pointerdown` both fire and bump this by two.
    */
   hoverSignal: number;
   /**
@@ -96,9 +101,16 @@ const groundClips = (animations: AnimationClip[], root: Object3D | null) => {
   }
 
   /*
-   * Bindings are keyed by the *sanitised* node name: three strips `:` and `.` from it, so
-   * `mixamorig:Hips` is bound as `mixamorigHips` and comparing against `root.name` raw would match
-   * nothing at all — silently, leaving the walk-off in place with no way to tell from the outside.
+   * Bindings are keyed by the *sanitised* node name — three strips `:` and `.` and turns whitespace
+   * into `_`, so `mixamorig:Hips` is bound as `mixamorigHips`.
+   *
+   * Belt and braces rather than the load-bearing step it looks like, and worth being accurate about:
+   * `GLTFLoader` already runs every node name through `sanitizeNodeName` as it builds the graph
+   * (`createUniqueName`), and writes its track names from the result — so for a GLB, `root.name` is
+   * *already* sanitised and a raw comparison would have matched. `sanitizeNodeName` is idempotent,
+   * so calling it costs nothing and keeps the rule true for a root that reached this graph by some
+   * other route. The failure it guards against is silent: a name that does not match leaves the
+   * walk-off in place with no way to tell from the outside.
    */
   const trackName = `${PropertyBinding.sanitizeNodeName(root.name)}.position`;
 
@@ -158,19 +170,55 @@ const ModelCharacter = (props: ModelCharacterProps) => {
    */
   const model = useMemo(() => SkeletonUtils.clone(scene), [scene]);
 
+  /*
+   * Release the clone's skeletons on the way out.
+   *
+   * `SkeletonUtils.clone` gives every `SkinnedMesh` copy `sourceMesh.skeleton.clone()` — a whole new
+   * `Skeleton` per viewer — and each one lazily allocates its own `boneTexture` the first time it is
+   * rendered. Nothing else frees them: R3F deliberately never disposes a `<primitive>` ("their state
+   * may be kept outside of React"), which is the right call here because geometry and material are
+   * shared with the cached original and disposing *those* would blank every other viewer. So the
+   * leak is specifically the per-clone skeletons, and it accumulates across route changes, StrictMode
+   * double-mounts and story swaps.
+   *
+   * `Skeleton.dispose()` is the exact scalpel: it disposes `boneTexture` and nulls it, and touches
+   * nothing shared.
+   */
+  useEffect(
+    () => () => {
+      model.traverse((object) => {
+        const skinned = object as SkinnedMesh;
+        if (skinned.isSkinnedMesh) {
+          skinned.skeleton.dispose();
+        }
+      });
+    },
+    [model]
+  );
+
   /**
    * The rig's root bone — `mixamorig:Hips` on these characters, but **found rather than named**, so
-   * the rule survives a character exported through a different pipeline. `traverse` is depth-first
-   * pre-order, so the first bone it reaches is the topmost one.
+   * the rule survives a character exported through a different pipeline.
+   *
+   * `traverse` is depth-first pre-order, which visits a node before its children — so the first bone
+   * it reaches provably has no bone above it. What that does *not* rule out is a rig with more than
+   * one independent bone root (a prop with its own single bone placed before the armature): the
+   * first-traversed root wins, and the armature's tracks then match no track name. That degrades to
+   * "the clip is not grounded", never to a throw. See `groundClips`.
+   *
+   * `traverse` has no early exit, so the flag is how this stops doing work after the first hit. The
+   * previous spelling collected every bone into an array and read index 0 off it — through
+   * `Array.prototype.at`, which is ES2022 against this project's ES2017 target. `lib: ["esnext"]`
+   * means `ts:check` cannot see that, and TypeScript never down-levels a built-in method.
    */
   const rootBone = useMemo(() => {
-    const bones: Object3D[] = [];
+    let root: Object3D | null = null;
     model.traverse((object) => {
-      if ((object as Bone).isBone) {
-        bones.push(object);
+      if (!root && (object as Bone).isBone) {
+        root = object;
       }
     });
-    return bones.at(0) ?? null;
+    return root as Object3D | null;
   }, [model]);
 
   /** See `groundClips` — without this a travelling clip walks the character out of the arch. */

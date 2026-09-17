@@ -5,11 +5,11 @@ import { useCallback, useEffect, useState } from 'react';
 
 import Image from '@/components/Image';
 import classNames from '@/helpers/classNames';
-import type { ModelClipNames, ModelClipRole } from '@/helpers/modelClips';
+import type { ModelClipNames, ModelRestRole } from '@/helpers/modelClips';
 
 import type { ModelEnvironmentPreset } from './ModelLighting';
 import { preloadModel } from './preload';
-import useModelCapability, { hasRenderer } from './useModelCapability';
+import useModelCapability, { hasRenderer, prefersReducedMotion } from './useModelCapability';
 import type { ModelCapability } from './useModelCapability';
 
 import styles from './styles.module.scss';
@@ -42,12 +42,21 @@ const ModelScene = dynamic(() => import('./ModelScene'), { loading: () => null, 
  *   static    the canvas, posed at the first frame and never advanced — the reduced-motion render.
  *   fallback  the fallback image — the no-WebGL, slow-device and failed-load render.
  *
- * **A forced mode overrides policy, never capability.** `animated` and `static` on a browser with
- * no WebGL at all still resolve to `fallback`, because the alternative is a forced mode that can
- * hard-crash a page. What a force *does* override is the judgement calls — reduced motion, a
- * software rasteriser, Data Saver — which is what makes each branch reachable from a story and from
- * a page that has a reason to differ (a print view, a Studio preview, a decorative use where the
- * motion carries no meaning).
+ * **A forced mode overrides the machine, never the reader.** Two things are deliberately out of a
+ * caller's reach, for different reasons:
+ *
+ *   - **capability.** `animated` and `static` on a browser with no WebGL at all still resolve to
+ *     `fallback`, because the alternative is a forced mode that can hard-crash a page.
+ *   - **`prefers-reduced-motion`.** A forced `animated` on a machine asking for reduced motion
+ *     resolves to `static` — the canvas still mounts, the clip does not play. This is the one
+ *     signal here that is a *stated requirement* rather than a guess about the hardware, and
+ *     overriding it would leave an infinitely looping character with no in-page way to stop it
+ *     (WCAG 2.2.2). `static` and `fallback` are already reduced-motion-safe and pass through
+ *     untouched.
+ *
+ * What a force *does* override is the guesses — a software rasteriser, Data Saver, a low memory
+ * report — which is what makes the canvas reachable from a story (headless Chromium rasterises in
+ * software) and from a page with a reason to differ.
  */
 export type ModelViewerMode = 'auto' | 'animated' | 'static' | 'fallback';
 
@@ -74,7 +83,7 @@ export interface ModelViewerProps {
    * page. The one prop that distinguishes the two uses, which is why there is one component and not
    * two.
    */
-  restClip?: Exclude<ModelClipRole, 'hover'>;
+  restClip?: ModelRestRole;
   /**
    * Play the hover clip once on pointer enter or tap, then crossfade back to rest.
    *
@@ -84,10 +93,38 @@ export interface ModelViewerProps {
    * has become content, and it needs a described trigger rather than a hover.
    */
   interactive?: boolean;
-  /** Gentle auto-orbit plus limited drag. The player page only. */
+  /**
+   * Gentle auto-orbit plus limited drag. The player page only.
+   *
+   * Pointer-only, like `interactive`, and defensible on the same grounds — but the reasoning is
+   * narrower and worth stating rather than leaving to be re-derived. The *orbit* is the part that
+   * carries the view: with `animate` on it auto-rotates, so a reader who never touches it is shown
+   * every angle anyway and the drag is strictly redundant. Under reduced motion the auto-rotation
+   * stops and the drag becomes the only way to see another side, which is a real asymmetry — it is
+   * acceptable only because a decorative character render carries no information on its far side
+   * that `alt` does not already carry. If a character ever *does* (a number on a back, a detail the
+   * copy refers to), this needs a keyboard path: drei's `OrbitControls` takes `keyEvents`, and the
+   * holder would need `tabIndex` and a focus ring drawn as an inset `box-shadow`, since the arch
+   * clips an outline.
+   */
   orbit?: boolean;
   /** Shown whenever the 3D is unavailable. `player.fallbackImage`. */
   fallbackImage?: SanityImageSimple | null;
+  /**
+   * Load the fallback image eagerly, at high fetch priority.
+   *
+   * The one LCP lever this component has, and it needs a caller to pull it. Neither the canvas nor
+   * the placeholder is an LCP candidate — `<canvas>` never is, and the placeholder's surface is a
+   * `background-color` plus a gradient, neither of which counts — so in those two branches the
+   * viewer contributes nothing to LCP at all. The fallback `<img>` is the exception, and it is
+   * chosen for precisely the devices least able to absorb a lazy load: no WebGL, a software
+   * rasteriser, Data Saver, ≤1GB of memory.
+   *
+   * Honest about its limit: the branch is only known after hydration, so this buys `fetchpriority`
+   * and eager loading rather than a server-emitted `<link rel="preload">`. Worth several hundred
+   * milliseconds on a constrained connection; not the same thing as a real preload.
+   */
+  priority?: boolean;
   /** Override the automatic decision. See `ModelViewerMode`. */
   mode?: ModelViewerMode;
   /** drei's HDRI preset. `studio` is what the model harness settled on against the real characters. */
@@ -155,6 +192,7 @@ const ModelViewer = (props: ModelViewerProps) => {
     label,
     mode = 'auto',
     orbit = false,
+    priority = false,
     readout,
     restClip = 'idle',
     src
@@ -202,7 +240,16 @@ const ModelViewer = (props: ModelViewerProps) => {
    * The first call is also "the model is in the scene": nothing can be playing before it exists.
    */
   const handleClip = useCallback((name?: string) => {
-    setModel((current) => ({ ...current, clip: name ?? null, loaded: true }));
+    setModel((current) => {
+      const clip = name ?? null;
+      /*
+       * Returning `current` unchanged is a real saving rather than hygiene. Every state object this
+       * produces re-renders the whole canvas subtree through R3F's `diffProps`, and this fires on
+       * each run of the rest effect — which includes StrictMode's double-invocation and any
+       * dependency change that resolves to the clip already playing.
+       */
+      return current.loaded && current.clip === clip ? current : { ...current, clip, loaded: true };
+    });
   }, []);
 
   const handleError = useCallback(() => setModel((current) => ({ ...current, failed: true })), []);
@@ -226,8 +273,20 @@ const ModelViewer = (props: ModelViewerProps) => {
     if (mode === 'fallback') {
       return 'fallback';
     }
-    // Policy overridden, capability not. See `ModelViewerMode`.
-    return hasRenderer() ? mode : 'fallback';
+    // Capability is not overridable: no context at all still means the fallback image.
+    if (!hasRenderer()) {
+      return 'fallback';
+    }
+    /*
+     * Nor is the reader's stated preference. A forced `animated` still yields the posed, silent
+     * render on a machine asking for reduced motion — everything else about the force stands, so
+     * the canvas mounts where `auto` would have refused it over a software rasteriser. See
+     * `ModelViewerMode`.
+     */
+    if (mode === 'animated' && prefersReducedMotion()) {
+      return 'static';
+    }
+    return mode;
   })();
 
   const hasFallbackImage = Boolean(fallbackImage?.asset?.url);
@@ -242,8 +301,20 @@ const ModelViewer = (props: ModelViewerProps) => {
   })();
 
   /*
-   * Start the GLB download as soon as it is known to be needed, in parallel with the scene chunk
-   * rather than after it. `useGLTF` caches by URL, so the mount below reuses this download.
+   * Warm the GLB cache as soon as a canvas is known to be needed.
+   *
+   * **Not a parallel download, and this comment used to claim it was.** `preloadModel` reaches the
+   * loader through `import('./ModelScene')`, so the GLB request cannot be issued until the chunk
+   * carrying `three` has downloaded, parsed and evaluated — the file waits on the code either way.
+   * Genuinely parallelising it would need the bytes fetched off a path that does not touch the 3D
+   * chunk at all (a `<link rel="preload" as="fetch">` emitted by the page), and that only helps if
+   * the preload matches three's own `FileLoader` request exactly; mismatched, it downloads four
+   * megabytes twice. That is a page-level decision, not this component's.
+   *
+   * What it does buy is small but real: `<ModelScene>` mounts in this same commit and fires the same
+   * dynamic import, so this mostly leads the real load by a microtask — but it is not conditional on
+   * React committing the canvas subtree, which a transition or a suspended reveal can defer.
+   * `useGLTF` caches by URL, so the two share one download whichever wins.
    */
   useEffect(() => {
     if (render === 'canvas') {
@@ -257,14 +328,31 @@ const ModelViewer = (props: ModelViewerProps) => {
   const placeholderIsContent = render === 'placeholder';
 
   /*
-   * The arch is holding its final content, and the loading placeholder should be gone.
+   * Three states, not two, and conflating the last two was a bug.
    *
-   * Not the same question as `data-model-loaded`, which stays canvas-only because it reports
-   * whether *the model* is in the scene. The fallback image is a settled render too — it is what
-   * this browser is going to show — so leaving the hatch pulsing behind the letterbox of a
-   * `contain`-fitted picture would say "still working" about something that had finished.
+   * `loading`  something is genuinely still on its way: the capability decision (the server render
+   *            and the first hydrating render), or the model itself. The hatch shows *and breathes*.
+   * `settled`  the arch is holding its final content — a character on the stage, or the fallback
+   *            image — so the placeholder fades out entirely.
+   * neither    the placeholder **is** the final render: no GLB authored, or a browser with no WebGL
+   *            and no fallback image to offer it. The hatch stays, because it is the arch's empty
+   *            ground rather than a spinner, and the breathe stops.
+   *
+   * That third case is why `.resting` exists. `settled` alone used to carry both jobs, so an empty
+   * arch pulsed "still working" forever beside page content, with no pause, stop or hide — an
+   * animation that both misinforms and fails WCAG 2.2.2 outright in the two branches
+   * (`Loading`, `NoFallbackImage`) where neither disjunct could ever become true.
+   *
+   * `settled` is also now gated on `render === 'canvas'` rather than on `loaded` alone. `failed` is
+   * set without clearing `loaded`, so a throw *after* a successful load — a lost WebGL context, a
+   * drei runtime error — used to leave `loaded` true, the placeholder held at `opacity: 0`, and the
+   * arch blank while still announcing an image to assistive tech.
+   *
+   * Note `data-model-loaded` stays canvas-only and unchanged: it reports whether *the model* is in
+   * the scene, which is a different question from whether the arch has stopped waiting.
    */
-  const settled = model.loaded || render === 'image';
+  const loading = resolved === 'pending' || (render === 'canvas' && !model.loaded);
+  const settled = render === 'image' || (render === 'canvas' && model.loaded);
 
   return (
     <div
@@ -277,7 +365,7 @@ const ModelViewer = (props: ModelViewerProps) => {
       {label ? <span className={styles.label}>{label}</span> : null}
 
       <div
-        className={classNames(styles.stage, { [styles.settled]: settled })}
+        className={classNames(styles.stage, { [styles.resting]: !loading, [styles.settled]: settled })}
         onPointerDown={canHover ? triggerHover : undefined}
         onPointerEnter={canHover ? triggerHover : undefined}
       >
@@ -329,6 +417,8 @@ const ModelViewer = (props: ModelViewerProps) => {
              * lost — and does it differently at every panel width.
              */
             objectFit="contain"
+            // The only LCP-eligible thing this component can render. See the prop's own note.
+            priority={priority}
             sizes="(max-width: 768px) 60vw, 30vw"
           />
         ) : null}
