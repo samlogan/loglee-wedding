@@ -1,0 +1,88 @@
+.container {
+  overflow: auto;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: calc(100dvh - 85px);
+  display: block;
+  background: var(--bg-default);
+  color: var(--fg-default);
+  opacity: 0;
+  padding: 0 24px min(40vh, 180px);
+  transition: opacity 0.3s ease;
+
+  &:not(.open) {
+    pointer-events: none;
+    * {
+      pointer-events: none;
+    }
+  }
+
+  &.open {
+    opacity: 1;
+    pointer-events: all;
+
+    .dropdownTrigger {
+      &.noDropdown {
+        * {
+          pointer-events: auto;
+        }
+      }
+    }
+  }
+
+  @include media-up(small-desktop) {
+    display: none;
+  }
+}
+
+.dropdownTrigger {
+  position: relative;
+  padding: 16px 0 !important;
+
+  &.current {
+    color: var(--fg-accent);
+
+    svg {
+      path {
+        fill: var(--fg-accent);
+      }
+    }
+  }
+}
+
+.dropdownLinks {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 16px;
+}
+
+.dropdownLink {
+  display: block !important;
+  padding: 10px 0 !important;
+
+  &.current {
+    color: var(--fg-accent);
+  }
+}
+
+.buttonContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 16px 24px;
+  background: var(--bg-default);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  z-index: 3;
+  border-top: 1px solid var(--stroke-cards);
+
+  .button {
+    width: 100%;
+  }
+}

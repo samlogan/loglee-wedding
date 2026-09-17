@@ -1,0 +1,27 @@
+@layer defaults {
+  .card {
+    background-color: var(--bg-raised);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    height: 100%;
+    position: relative;
+  }
+
+  .linkOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+  }
+
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .variant_outline {
+    border: 1px solid var(--stroke-cards);
+  }
+}

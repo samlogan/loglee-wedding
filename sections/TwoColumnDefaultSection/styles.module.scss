@@ -1,0 +1,61 @@
+.container {
+  display: flex;
+  gap: 80px;
+  align-items: center;
+
+  @include media-down(large-tablet) {
+    gap: 24px;
+  }
+
+  &.left {
+    flex-direction: row;
+
+    @include media-down(large-tablet) {
+      flex-direction: column;
+    }
+  }
+
+  &.right {
+    flex-direction: row-reverse;
+
+    @include media-down(large-tablet) {
+      flex-direction: column;
+    }
+  }
+
+  .contentContainer {
+    flex: 1;
+
+    @include media-down(large-tablet) {
+      width: 100%;
+    }
+
+    .titleContainer {
+      margin-bottom: 24px;
+    }
+
+    .button {
+      margin-top: 32px;
+    }
+  }
+
+  .imageContainer {
+    flex: 1;
+
+    @include media-down(large-tablet) {
+      width: 100%;
+    }
+
+    .image {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+
+      @include media-down(large-tablet) {
+        &:after {
+          padding-bottom: 100%;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,103 @@
+@use 'sass:math';
+
+@layer components {
+  .container {
+    position: relative;
+    pointer-events: none;
+
+    .wrapper {
+      display: flex;
+      width: 100%;
+      pointer-events: all;
+      cursor: grab;
+
+      &:not(.active) {
+        cursor: default !important;
+      }
+
+      &:active {
+        cursor: grabbing;
+      }
+    }
+  }
+
+  $slide-widths: (
+    1: 20%,
+    // 5 slides
+    2: 25%,
+    // 4 slides
+    3: calc(100% / 3),
+    // 3 slides
+    4: 50%,
+    // 2 slides
+    5: 60%,
+    // 1.67 slides
+    6: calc(100% / 1.5),
+    // 1.5 slides
+    7: 80%,
+    // 1.25 slides
+    8: 85%,
+    // 1.18 slides
+    9: 90%,
+    // 1.11 slides
+    10: 95%,
+    // 1.05 slides
+    11: 98%,
+    // 1.02 slides
+    12: 100% // 1 slide
+  );
+
+  $slide-gaps: (
+    1: 8px,
+    2: 16px,
+    3: 32px,
+    4: 54px,
+    5: 72px,
+    // Legacy
+    xs: 8px,
+    sm: 16px,
+    md: 32px,
+    lg: 54px,
+    xl: 72px
+  );
+
+  .width {
+    @include responsive {
+      @each $width-key, $width-value in $slide-widths {
+        $slides-per-view: if($width-value > 50%, 1, math.ceil(math.div(100%, $width-value)));
+        $gap-count: max($slides-per-view - 1, 0);
+
+        &-#{$width-key} {
+          > * {
+            width: $width-value;
+            flex: 0 0 $width-value;
+          }
+
+          &.gap {
+            @each $gap-key, $gap-value in $slide-gaps {
+              &-#{$gap-key} > * {
+                @if $width-value > 50% {
+                  width: #{$width-value};
+                  flex: 0 0 #{$width-value};
+                } @else {
+                  width: calc((100% - (#{$gap-count} * #{$gap-value})) / #{$slides-per-view});
+                  flex: 0 0 calc((100% - (#{$gap-count} * #{$gap-value})) / #{$slides-per-view});
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .gap {
+    @include responsive {
+      @each $gap-key, $gap-value in $slide-gaps {
+        &-#{$gap-key} {
+          gap: $gap-value;
+        }
+      }
+    }
+  }
+}

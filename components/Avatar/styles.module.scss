@@ -1,0 +1,34 @@
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+// ---------------
+// Sizes
+
+.size_sm {
+  width: 32px;
+  height: 32px;
+}
+
+.size_md {
+  width: 48px;
+  height: 48px;
+}
+
+.size_lg {
+  width: 56px;
+  height: 56px;
+}

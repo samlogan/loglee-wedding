@@ -1,0 +1,65 @@
+.form {
+  display: block;
+}
+
+// Theme
+.theme {
+  &_primary {
+    gap: 24px;
+
+    :global(.input) {
+      color: var(--input-fg);
+      border: 1px solid var(--input-border);
+      padding: 16px 24px;
+      @include body-font();
+      font-size: 16px;
+      background-color: var(--input-bg);
+      transition: all 600ms ease;
+      position: relative;
+
+      &:hover,
+      &:focus {
+        color: var(--input-active-fg);
+        border-color: var(--input-active-border);
+        background-color: var(--input-active-bg);
+      }
+    }
+  }
+
+  &_secondary {
+    :global(.input) {
+      color: var(--input-fg);
+      border-color: var(--input-border);
+      padding: 16px 24px;
+      border-radius: var(--radius-full);
+      @include body-font();
+
+      &:hover,
+      &:focus {
+        color: var(--input-active-fg);
+        border-color: var(--input-active-border);
+        background-color: var(--input-active-bg);
+      }
+    }
+  }
+}
+
+// Layouts
+.layout {
+  &_grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  &_flex {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  &_normal {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}

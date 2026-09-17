@@ -1,0 +1,191 @@
+{
+  "_key": "TBom21UaTtMT",
+  "_type": "threeColBlogSection",
+  "addButton": true,
+  "button": {
+    "label": "View all",
+    "link": {
+      "action": null,
+      "email": null,
+      "externalLink": "https://example.com",
+      "internalLink": null,
+      "linkType": "external",
+      "phone": null
+    }
+  },
+  "content": [
+    {
+      "_key": "tcb-intro",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "tcb-intro-span",
+          "_type": "span",
+          "marks": [],
+          "text": "Article cards with a lead image, a heading and a short standfirst. The header CTA is optional."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    }
+  ],
+  "featureCards": [
+    {
+      "_key": "tcb-card-1",
+      "addButton": true,
+      "button": {
+        "label": "Read more",
+        "link": {
+          "action": null,
+          "email": null,
+          "externalLink": "https://example.com",
+          "internalLink": null,
+          "linkType": "external",
+          "phone": null
+        }
+      },
+      "content": [
+        {
+          "_key": "tcb-c1",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "tcb-c1s",
+              "_type": "span",
+              "marks": [],
+              "text": "Why a semantic token beats a hex code, and what that buys you when the brand changes."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "image": {
+        "altText": "Mountain landscape",
+        "aspectRatio": null,
+        "asset": {
+          "_id": "image-06afa10ca9dd683cb7e7a321b77b8a16dd670b4c-1920x1280-jpg",
+          "altText": null,
+          "metadata": {
+            "dimensions": {
+              "height": 1280,
+              "width": 1920
+            },
+            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAANABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAABwADBf/EACMQAAEDAwQCAwAAAAAAAAAAAAECAwQABREHEiExBhMUIkH/xAAVAQEBAAAAAAAAAAAAAAAAAAACBP/EABoRAAICAwAAAAAAAAAAAAAAAAARAQITISL/2gAMAwEAAhEDEQA/AFSfeYZeQwHElxStgSOTmuVNubbL3pKVFW5KeOuaHI/l0oXX5RZQXAveft2cVjdNRrg9LUVRmQoKHIJ/Oqmmy0xOovych4iqhROqd1aBQY0deD2c5qpZJDyf/9k="
+          },
+          "url": "https://cdn.sanity.io/images/nq76qjq1/production/06afa10ca9dd683cb7e7a321b77b8a16dd670b4c-1920x1280.jpg"
+        },
+        "crop": null,
+        "hotspot": null
+      },
+      "title": "Designing with tokens"
+    },
+    {
+      "_key": "tcb-card-2",
+      "addButton": true,
+      "button": {
+        "label": "Read more",
+        "link": {
+          "action": null,
+          "email": null,
+          "externalLink": "https://example.com",
+          "internalLink": null,
+          "linkType": "external",
+          "phone": null
+        }
+      },
+      "content": [
+        {
+          "_key": "tcb-c2",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "tcb-c2s",
+              "_type": "span",
+              "marks": [],
+              "text": "Page building works best when each section owns its own spacing and theme."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "image": {
+        "altText": "Coastline at dusk",
+        "aspectRatio": null,
+        "asset": {
+          "_id": "image-17499966c32932bc81c7adfcba2089da82e769e5-2400x1600-jpg",
+          "altText": null,
+          "metadata": {
+            "dimensions": {
+              "height": 1600,
+              "width": 2400
+            },
+            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAANABQDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAUGB//EACMQAAIBBAIABwAAAAAAAAAAAAEDAgAEBREGEgcTMTJBUWH/xAAWAQEBAQAAAAAAAAAAAAAAAAAFAgb/xAAjEQABAgUDBQAAAAAAAAAAAAABAAIDBQYRcQQSMRMhYZHw/9oADAMBAAIRAxEAPwBi7w2VaYwMDNvA2T+0mxnHcheXPkKiBo67Vf47Puv09HKjo/Rp/iFKRua1gSPrUvmM40TulEcHZ5HpJTCl9C+xjMsRwB2BypFHFLu2VFc5ynIfIorRCzZ9oopBlTO2jcLnCwcWigXkiIQPvC//2Q=="
+          },
+          "url": "https://cdn.sanity.io/images/nq76qjq1/production/17499966c32932bc81c7adfcba2089da82e769e5-2400x1600.jpg"
+        },
+        "crop": null,
+        "hotspot": null
+      },
+      "title": "Composing sections"
+    },
+    {
+      "_key": "tcb-card-3",
+      "addButton": true,
+      "button": {
+        "label": "Read more",
+        "link": {
+          "action": null,
+          "email": null,
+          "externalLink": "https://example.com",
+          "internalLink": null,
+          "linkType": "external",
+          "phone": null
+        }
+      },
+      "content": [
+        {
+          "_key": "tcb-c3",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "tcb-c3s",
+              "_type": "span",
+              "marks": [],
+              "text": "Every section renders in isolation against real data, so a review needs no local database."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "image": {
+        "altText": "Forest path",
+        "aspectRatio": null,
+        "asset": {
+          "_id": "image-663d04cf2c8f6d3aa8eb1dd9cabadab8bb95633d-1920x1280-jpg",
+          "altText": null,
+          "metadata": {
+            "dimensions": {
+              "height": 1280,
+              "width": 1920
+            },
+            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAANABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAcCBAYI/8QAIRAAAgICAQQDAAAAAAAAAAAAAQIDBAARBQYSQXEHIWH/xAAXAQADAQAAAAAAAAAAAAAAAAABAgME/8QAIBEAAQMCBwAAAAAAAAAAAAAAAAECAwURExQVMUFRYf/aAAwDAQACEQMRAD8Ahx/ydxUjBLNaaFvW80NbrHgbWgtxUJ8ONYkarCRVdlUn1luWKIJsRqPreY21CVFtuDAidwPEX+MlHelyuQfPeMM5+kSMudKR+Bjhl9Sd0Jlo/T//2Q=="
+          },
+          "url": "https://cdn.sanity.io/images/nq76qjq1/production/663d04cf2c8f6d3aa8eb1dd9cabadab8bb95633d-1920x1280.jpg"
+        },
+        "crop": null,
+        "hotspot": null
+      },
+      "title": "Reviewing in Storybook"
+    }
+  ],
+  "sectionFields": {
+    "spacingOptions": {
+      "removeBottomSpacing": false,
+      "removeTopSpacing": false
+    }
+  },
+  "title": "Latest thinking"
+}

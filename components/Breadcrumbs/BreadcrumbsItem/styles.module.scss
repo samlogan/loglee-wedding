@@ -1,0 +1,20 @@
+.link {
+  text-decoration: underline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+
+  &.active {
+    text-decoration: none;
+  }
+}
+
+.text {
+  // `md` is not a breakpoint in `tools/sass/base/__media.scss` — the scale runs small-mobile …
+  // giant — so this emitted "Invalid breakpoint: md" and the rule never applied. Surfaced by the
+  // Storybook test run, which compiles every module's SCSS. `tablet` (769px) is the equivalent step.
+  @include media-up(tablet) {
+    font-size: 1.25rem;
+  }
+}

@@ -1,0 +1,37 @@
+.container {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  width: auto;
+  gap: 4px;
+  position: relative;
+}
+
+.item {
+  display: flex;
+  justify-content: flex-start;
+  gap: 4px;
+  // color: $theme-color;
+
+  &:first-child {
+    flex-shrink: 0.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:nth-child(2) {
+    flex-shrink: 0.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:last-child {
+    flex-shrink: 1;
+  }
+}

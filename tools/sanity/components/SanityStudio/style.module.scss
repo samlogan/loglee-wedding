@@ -1,0 +1,84 @@
+.sanity {
+  // &:not(.dev) {
+  //   // Hide Unknown field found alerts in document pane - mainly used to hide pathname not in schema alert.
+  //   // Will show alerts in modals.
+  //   :global(div[data-testid="document-panel-scroller"] [data-ui="Alert"][data-tone="caution"]) {
+  //     display: none;
+  //   }
+  // }
+
+  // #all-fields-tab {
+  //   display: none;
+  // }
+
+  // :global(#all-fields-tab) {
+  //   display: none;
+  // }
+
+  // :global(div[data-ui='Container']) {
+  //   padding: 1rem;
+  //   // max-width: 800px;
+  //   max-width: none;
+  //   /* Add any other styles as needed */
+  // }
+
+  :global(div[data-testid='field-groups']) {
+    padding-top: 1rem;
+    margin: 0;
+    // border-bottom: 1px solid var(--card-shadow-outline-color);
+  }
+
+  // :global(div[data-testid='tool-collapse-menu']) {
+  //   display: none !important;
+  // }
+
+  :global(div[data-testid='change-connector-root']) > div:first-child {
+    :global(div[data-testid='pane-header']) > div:first-child > div:first-child {
+      padding: 0.5rem !important;
+    }
+    :global(div[data-testid='pane-header']) > div:first-child > div:last-child {
+      display: none !important;
+      border: 2px solid red;
+    }
+  }
+
+  // Dashed fieldset left border
+  // [data-as="fieldset"] > [data-ui="Box"] {
+  //   border-left-style: dashed;
+  // }
+
+  // Fix selected item text contrast
+  :global(a[data-selected] [data-ui='Text']) {
+    --card-muted-fg-color: #fff;
+  }
+
+  // Navbar styling
+  :global([data-testid='studio-navbar']) {
+    // Removing underline from navbar buttons
+    a[data-ui='Button'] {
+      text-decoration: none;
+    }
+
+    // Styling navbar icon
+    a[href='/studio'] {
+      text-decoration: none;
+
+      // [data-ui='Flex'] {
+      //   [data-ui='Card'][data-scheme='light'][data-tone='default'] {
+      //     width: auto;
+      //     height: auto;
+
+      //     > div > div {
+      //       width: auto;
+      //       height: auto;
+      //     }
+      //   }
+
+      //   // Hide Project Title
+      //   // [data-ui="Box"] {
+      //   //   display: none;
+      //   // }
+      // }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+.container {
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+
+  &.overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+
+  .button {
+    pointer-events: all;
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+}
+
+.progressContainer {
+  width: 100%;
+  border-radius: var(--radius-full);
+  background-color: var(--stroke-divider);
+  overflow: hidden;
+  max-width: 300px;
+  margin: 0 auto;
+
+  .progress {
+    height: 10px;
+    border-radius: var(--radius-full);
+    background-color: var(--fg-default);
+  }
+}

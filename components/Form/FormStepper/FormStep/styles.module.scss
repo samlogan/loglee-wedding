@@ -1,0 +1,24 @@
+@layer defaults {
+  .container {
+    opacity: 0;
+    position: absolute;
+    top: 0;
+
+    &.previous {
+      transform: translateX(-10%);
+      pointer-events: none;
+    }
+
+    &.next {
+      transform: translateX(10%);
+      pointer-events: none;
+    }
+
+    &.current {
+      display: block;
+      position: relative;
+      transform: translateX(0%);
+      opacity: 1;
+    }
+  }
+}

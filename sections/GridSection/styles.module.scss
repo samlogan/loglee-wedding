@@ -1,0 +1,57 @@
+.contentContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+
+.textContainer {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+
+  .content {
+    max-width: 450px;
+  }
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  row-gap: 48px;
+  column-gap: 64px;
+
+  @include media-down(large-tablet) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include media-down(large-mobile) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.imageContainer {
+  max-width: 100px;
+  max-height: 100px;
+  height: 100%;
+  width: 100%;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+
+  .button {
+    margin-top: 16px;
+  }
+}

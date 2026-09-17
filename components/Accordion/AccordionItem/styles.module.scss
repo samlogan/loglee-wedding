@@ -1,0 +1,49 @@
+@layer defaults {
+  .item {
+    position: relative;
+    border-bottom: 1px solid currentColor;
+
+    &.active {
+      .content {
+        opacity: 1;
+      }
+
+      .icon {
+        transform: rotate(45deg);
+      }
+    }
+  }
+
+  .icon {
+    transition: transform 0.3s ease;
+  }
+
+  .title {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    width: 100%;
+    padding: 24px 0;
+    cursor: pointer;
+    user-select: none;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .content {
+    opacity: 0;
+    transition:
+      max-height 0.5s ease,
+      opacity 0.3s ease;
+    overflow: hidden;
+  }
+
+  .wrapper {
+    padding-bottom: 24px;
+  }
+}

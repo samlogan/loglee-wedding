@@ -1,0 +1,61 @@
+.container {
+  will-change: transform;
+
+  // If format is not 'auto'
+  &:not(.ratio-auto) {
+    position: relative;
+
+    &::after {
+      content: '';
+      display: block;
+    }
+
+    .image {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 50% 50%;
+    }
+  }
+
+  // Square Format
+  &.ratio-1-1 {
+    &::after {
+      padding-bottom: 100%;
+    }
+  }
+
+  // 3:2 Format
+  &.ratio-3-2 {
+    &::after {
+      padding-bottom: 66.66%;
+    }
+  }
+
+  // 4:3 Format
+  &.ratio-4-3 {
+    &::after {
+      padding-bottom: 75%;
+    }
+  }
+
+  // 16:9 Format
+  &.ratio-16-9 {
+    &::after {
+      padding-bottom: 56.25%;
+    }
+  }
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.wrapper {
+  overflow: hidden;
+}

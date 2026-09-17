@@ -1,0 +1,12 @@
+# Netlify header rules for the Storybook site.
+#
+# Storybook is deployed publicly (as a second Netlify site off this repo) but must never appear in
+# search results. An X-Robots-Tag header is used rather than a robots.txt `Disallow`, because a
+# disallowed crawler never fetches the page and so never sees the noindex — leaving the URL eligible
+# for index-without-content. Allowing the crawl and serving noindex is what actually keeps it out.
+#
+# This file is copied to the publish root by the `./static` entry in .storybook/main.ts `staticDirs`.
+# It is deliberately NOT in /public, which is shared with the Next.js site and would collide with
+# app/robots.ts there.
+/*
+  X-Robots-Tag: noindex, nofollow

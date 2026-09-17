@@ -1,0 +1,47 @@
+.contentContainer {
+  display: flex;
+  justify-content: space-between;
+  gap: 80px;
+
+  @include media-down(large-tablet) {
+    flex-direction: column;
+    gap: 40px;
+  }
+}
+
+.infoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
+  max-width: 510px;
+}
+
+// for FaqItems.tsx
+.accordionContainer {
+  max-width: 660px;
+
+  .faqItem {
+    background: var(--bg-default);
+    padding: 24px 0;
+    border-bottom: 1px solid var(--fg-default);
+    // margin-bottom: 12px;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    @include media-down(large-tablet) {
+      padding: 16px 0;
+    }
+
+    .faqItemTrigger {
+      padding: 0;
+      gap: 24px;
+    }
+
+    .faqItemContent {
+      padding-top: 16px;
+    }
+  }
+}

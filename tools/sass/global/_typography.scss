@@ -1,0 +1,96 @@
+/*=============================================>>>>>
+= Default typography styles =
+===============================================>>>>>*/
+
+body {
+  @include body-font();
+  font-size: 16px;
+  font-size-adjust: auto;
+  text-align: left;
+  word-wrap: break-word;
+  text-rendering: optimizeLegibility;
+  font-smoothing: antialiased;
+  text-shadow: 0 0 1px transparent;
+  background: white; // Needed for presentation iframe for some reason
+}
+
+// --------------------------------------------------------------------------
+//   Headings
+// --------------------------------------------------------------------------
+
+h1 + h2,
+h2 + h3,
+h3 + h4,
+h5 + h6 {
+  margin-top: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @include heading-font();
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+// h1 { @include h1; }
+// h2 { @include h2; }
+// h3 { @include h3; }
+// h4 { @include h4; }
+// h5 { @include h5; }
+// h6 { font-size: 14px; }
+
+// --------------------------------------------------------------------------
+//   Content Elements
+// --------------------------------------------------------------------------
+
+a {
+  text-decoration: none;
+  color: currentColor;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+p {
+  margin-top: 0;
+}
+
+strong {
+  font-weight: var(--body-bold-font-weight);
+}
+
+figure {
+  margin: 0;
+  padding: 0;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+hr {
+  display: block;
+  margin: 20px 0;
+  border: 0;
+}
+
+blockquote {
+  margin: 0 0 20px;
+  font-family: cambria, georgia, times, serif;
+  font-style: italic;
+  p {
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+table {
+  width: 100%;
+}

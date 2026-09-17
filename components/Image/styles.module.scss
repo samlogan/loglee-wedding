@@ -1,0 +1,76 @@
+@layer defaults {
+  .container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+
+    &::after {
+      content: '';
+      display: block;
+    }
+
+    // If format is 'natural'
+    .image {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-position: 50% 50%;
+      object-fit: cover;
+    }
+  }
+
+  // --------------------
+  // Object Fits
+  .object-fit_contain {
+    .image {
+      object-fit: contain;
+    }
+  }
+  .object-fit_cover {
+    .image {
+      object-fit: cover;
+    }
+  }
+
+  // --------------------
+  // Ratios
+  .ratio_natural {
+    position: relative;
+
+    .image {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-position: center;
+    }
+  }
+
+  // Square Format
+  .ratio_1-1 {
+    &::after {
+      padding-bottom: 100%;
+    }
+  }
+
+  // 3:2 Format
+  .ratio_3-2 {
+    &::after {
+      padding-bottom: 66.66%;
+    }
+  }
+
+  // 4:3 Format
+  .ratio_4-3 {
+    &::after {
+      padding-bottom: 75%;
+    }
+  }
+
+  // 16:9 Format
+  .ratio_16-9 {
+    &::after {
+      padding-bottom: 56.25%;
+    }
+  }
+}

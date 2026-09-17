@@ -1,0 +1,62 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+import { Ramps, ThemeCards, TokenMatrix } from '../palette';
+
+<Meta title="Foundations/Design System/Colour" />
+
+# Colour
+
+Every value on this page is read from the running stylesheet, not from a list kept alongside it. The
+token names and the theme columns come from the CSSOM; the values come from `getComputedStyle` on a
+probe element, so what you see is what the browser resolved — `var()` chains followed and the theme
+cascade applied. Adding a token or a whole theme to `tools/sass/global/_variables.scss` shows up here
+on the next build.
+
+## Ramps
+
+The base palette, declared on `:root`. These are the raw materials: they are theme-independent, and
+components should reach for the semantic tokens below rather than these directly.
+
+<Ramps />
+
+## Themes
+
+Each theme's own surface, with its foreground tokens drawn on it — which is how they are actually
+used, and the only arrangement that shows whether a pairing works.
+
+<ThemeCards />
+
+## Semantic tokens
+
+The tokens components should actually use. Each row is one token; each column is a theme. An empty
+cell means the token resolves to nothing under that theme.
+
+### Surfaces
+
+<TokenMatrix group="Surfaces" />
+
+### Foreground
+
+<TokenMatrix group="Foreground" />
+
+### Lines
+
+<TokenMatrix group="Lines" />
+
+### Inputs
+
+<TokenMatrix group="Inputs" />
+
+## Buttons
+
+Button tokens (`--button-*`) are declared once on `:root` rather than per theme, so they are the same
+in every theme by design and there is no matrix to show. They are listed in the ramps above.
+
+## Using these
+
+- Reach for a semantic token (`--bg-default`, `--fg-muted`) over a ramp token (`--gray-500`). The
+  semantic one follows the theme; the ramp one does not.
+- A section sets its theme through Sanity, which writes `data-theme` on the section element. Nothing
+  in a component needs to know which theme is active.
+- If a colour you need has no token, add it to `_variables.scss` for every theme rather than writing
+  a literal in a component — a hardcoded hex is invisible to this page and to the theme switcher.

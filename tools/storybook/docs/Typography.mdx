@@ -1,0 +1,47 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+import { Families, TypeScale, Weights } from '../typography';
+
+<Meta title="Foundations/Design System/Typography" />
+
+# Typography
+
+Every size, weight and family below is read from the running page. The steps are discovered from the
+token names rather than listed here, and ordered by their resolved pixel value — so adding
+`--heading-3xl` or a new weight to `tools/sass/global/_variables.scss` puts it on this page with
+nothing to update.
+
+## Families
+
+Two faces, exposed as CSS custom properties by `next/font`. Components should reference
+`var(--heading-font)` / `var(--body-font)` rather than naming a family directly.
+
+<Families />
+
+## Heading scale
+
+Each step shows its desktop size and, where one exists, its mobile size. A step with no `-mobile`
+token says so rather than implying the two agree.
+
+<TypeScale family="heading" />
+
+## Body scale
+
+<TypeScale family="body" />
+
+## Weights
+
+<Weights />
+
+## Line height
+
+Line heights are unitless — a multiple of the font size rather than a fixed pixel value. That way a
+heading that steps down on mobile keeps the same proportions instead of growing tight, and body copy
+set at any size stays evenly leaded.
+
+## Using these
+
+- Set type through the `Text` component's `size` and `weight` props rather than a raw `font-size`.
+  The props map to these tokens; a literal does not, and will not follow a change to the scale.
+- The mobile values are applied by the components themselves at the relevant breakpoint. There is no
+  need to reach for a media query to step type down.

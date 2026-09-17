@@ -1,0 +1,35 @@
+.container {
+  position: absolute;
+  pointer-events: none;
+  bottom: 16px;
+  left: 50%;
+  z-index: var(--layer-1);
+  transform: translateX(-50%);
+  overflow: hidden;
+
+  .wrapper {
+    display: flex;
+    max-width: 20%;
+    margin: 0 auto;
+    pointer-events: all;
+    cursor: pointer;
+    padding: 0 2px;
+  }
+}
+
+.item {
+  flex: 0 0 120px !important;
+  width: 120px !important;
+  pointer-events: all;
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  overflow: hidden;
+  margin: 1px 0;
+  transition: all 400ms ease;
+  transform: scale(0.9);
+  position: relative;
+
+  &.selected {
+    transform: scale(1);
+  }
+}

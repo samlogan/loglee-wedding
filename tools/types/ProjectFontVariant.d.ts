@@ -1,0 +1,1 @@
+type ProjectFontVariant = 'heading' | 'body';

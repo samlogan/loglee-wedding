@@ -1,0 +1,32 @@
+:root {
+  --PhoneInputCountrySelectArrow-color--focus: var(--input-icon);
+  --PhoneInputCountryFlag-borderColor--focus: var(--shades-white);
+}
+
+.container {
+  .input {
+    position: relative;
+
+    &.error {
+      input {
+        border-color: var(--input-error-border);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--input-error-border) 20%, transparent);
+      }
+    }
+  }
+
+  :global(.PhoneInput) {
+    > input {
+      border-radius: var(--radius-full);
+      margin: 0;
+    }
+  }
+
+  :global(.PhoneInputCountry) {
+    position: absolute;
+    right: 10px;
+    top: 20px;
+    background: var(--input-bg);
+    padding: 0 2px 0 4px;
+  }
+}

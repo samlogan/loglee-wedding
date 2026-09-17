@@ -1,0 +1,78 @@
+/**
+ * Storybook-only overrides.
+ *
+ * Deliberately **unlayered**. The app's global stylesheet wraps everything in `@layer global`, and
+ * unlayered styles beat every cascade layer regardless of specificity — so most of these rules need
+ * no `!important`. The one exception is noted on the rule it applies to: emotion is unlayered too,
+ * so beating Storybook's own runtime-injected styles needs specificity rather than just being
+ * unlayered.
+ *
+ * Nothing here changes the site. Delete a rule the moment its reason stops applying.
+ */
+
+/**
+ * The canvas backdrop.
+ *
+ * `tools/sass/global/_typography.scss` hardcodes `body { background: white }`, which pins the canvas
+ * to white no matter which theme is selected — so a `dark` story renders its dark surface on a white
+ * surround. `withThemeByDataAttribute` puts `data-theme` on `body`, so pointing the background at
+ * `--bg-default` makes the surround follow the theme toolbar instead.
+ */
+body {
+  background: var(--bg-default, #fff);
+}
+
+/**
+ * Let section stories break out of the docs reading column.
+ *
+ * Storybook constrains `.sbdocs-content` to 1000px, which is right for prose and argument tables and
+ * wrong for a page section. A section on a docs page renders around 938px — below this project's
+ * `large-tablet` breakpoint (1025px), so every section on every docs page shows its tablet layout,
+ * and `small-desktop` (1260px) and `desktop` (1340px) are unreachable. Reviewers read the wrong
+ * breakpoint and have no way to tell.
+ *
+ * Only previews containing a section, or a non-section story that opted in with
+ * `parameters: { fullBleed: true }` (site chrome — a header or footer), widen. Both markers are
+ * added by decorators in `preview.tsx`. Ordinary component docs keep the narrower measure, where it
+ * helps rather than hurts.
+ *
+ * The arithmetic is the standard full-bleed trick: half the column, minus half the viewport, plus
+ * the wrapper's horizontal padding. `50%` rather than a hardcoded half-column constant so it
+ * survives a change to the 1000px cap, and `20px` because `DocsWrapper` is `padding: 4rem 20px`.
+ */
+.sbdocs-preview:has([data-section-story]),
+.sbdocs-preview:has([data-full-bleed]) {
+  max-width: none;
+  width: calc(100vw - 40px);
+  margin-left: calc(50% - 50vw + 20px);
+}
+
+/**
+ * `clip` rather than `hidden` so `position: sticky` inside a section keeps working. Only needed
+ * because `100vw` includes the scrollbar gutter, which would otherwise overflow the page.
+ */
+.sbdocs-wrapper:has([data-section-story]),
+.sbdocs-wrapper:has([data-full-bleed]) {
+  overflow-x: clip;
+}
+
+/**
+ * Render each docs preview on the theme's own surface.
+ *
+ * Storybook paints these blocks with `appPreviewBg` from `theme.ts`, so every story on a docs page
+ * would sit on the dark chrome colour regardless of which theme it renders under — a `light` Button
+ * on a near-black card, which is not how it looks anywhere in the app.
+ *
+ * `--bg-default` is theme-aware and `withThemeByDataAttribute` puts `data-theme` on `body`, so this
+ * follows the theme toolbar. The toolbar strip above each preview deliberately keeps the chrome
+ * colour: it is Storybook's UI rather than the story, and should read as separate from it.
+ *
+ * Doubled selector on purpose. Storybook styles these blocks with an emotion-generated class, which
+ * is also one class of specificity but is injected into `<head>` at runtime and therefore wins on
+ * source order. `.sbdocs.sbdocs-preview` is two classes on the same element, so it wins outright —
+ * being unlayered is not enough here, because emotion is unlayered too.
+ */
+.sbdocs.sbdocs-preview {
+  background: var(--bg-default);
+  border-color: var(--stroke-divider);
+}

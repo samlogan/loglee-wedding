@@ -1,0 +1,20 @@
+.container {
+  padding: 24px;
+}
+
+.title {
+  padding: 0 0 8px 0;
+}
+
+.subtitle {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.category {
+  display: block;
+  text-transform: uppercase;
+  padding: 0 0 16px 0;
+}

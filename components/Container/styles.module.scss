@@ -1,0 +1,32 @@
+@layer defaults {
+  .container {
+    margin: 0 auto;
+    max-width: var(--container-xl);
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .width_xs {
+    max-width: var(--container-xs);
+  }
+
+  .width_sm {
+    max-width: var(--container-sm);
+  }
+
+  .width_md {
+    max-width: var(--container-md);
+  }
+
+  .width_lg {
+    max-width: var(--container-lg);
+  }
+
+  .width_xl {
+    max-width: var(--container-xl);
+  }
+
+  .width_full {
+    max-width: 100%;
+  }
+}

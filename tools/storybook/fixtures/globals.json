@@ -1,0 +1,161 @@
+{
+  "header": {
+    "header": {
+      "addButton": true,
+      "addSecondaryButton": true,
+      "button": {
+        "label": "Primary",
+        "link": {
+          "action": null,
+          "email": null,
+          "externalLink": null,
+          "internalLink": {
+            "pathname": "/blog/testing/",
+            "slug": {
+              "_type": "slugElement",
+              "current": "/testing/"
+            },
+            "title": "Testing"
+          },
+          "linkType": "internal",
+          "phone": null
+        }
+      },
+      "navItems": [
+        {
+          "dropdown": null,
+          "link": {
+            "action": null,
+            "email": null,
+            "externalLink": null,
+            "internalLink": {
+              "pathname": "/hello-world/",
+              "slug": {
+                "_type": "slugElement",
+                "current": "/hello-world/"
+              },
+              "title": "Hello World"
+            },
+            "linkType": "internal",
+            "phone": null
+          },
+          "navSublinks": null,
+          "title": "Test"
+        },
+        {
+          "dropdown": true,
+          "link": {
+            "action": null,
+            "email": null,
+            "externalLink": null,
+            "internalLink": {
+              "pathname": "/blog/",
+              "slug": null,
+              "title": "Blog Landing Page"
+            },
+            "linkType": "internal",
+            "phone": null
+          },
+          "navSublinks": [
+            {
+              "link": {
+                "action": null,
+                "email": null,
+                "externalLink": null,
+                "internalLink": {
+                  "pathname": "/blog/hello-world/",
+                  "slug": {
+                    "_type": "slugElement",
+                    "current": "/hello-world/"
+                  },
+                  "title": "Hello World"
+                },
+                "linkType": "internal",
+                "phone": null
+              },
+              "title": "Hello World"
+            }
+          ],
+          "title": "Blog"
+        }
+      ],
+      "secondaryButton": {
+        "label": "Secondary",
+        "link": {
+          "action": null,
+          "email": null,
+          "externalLink": null,
+          "internalLink": {
+            "pathname": "/hello-world/",
+            "slug": {
+              "_type": "slugElement",
+              "current": "/hello-world/"
+            },
+            "title": "Hello World"
+          },
+          "linkType": "internal",
+          "phone": null
+        }
+      }
+    }
+  },
+  "footer": {
+    "footer": {
+      "disclaimer": null,
+      "sitemap": [
+        {
+          "groupTitle": "Test",
+          "links": [
+            {
+              "label": "Test",
+              "link": {
+                "action": null,
+                "email": null,
+                "externalLink": null,
+                "internalLink": {
+                  "pathname": "/",
+                  "slug": {
+                    "_type": "slugElement",
+                    "current": "/"
+                  },
+                  "title": "Home"
+                },
+                "linkType": "internal",
+                "phone": null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "socialMedia": {
+    "socials": [
+      {
+        "_key": "cf11096ca637",
+        "link": "https://mammoth.tech/",
+        "name": "facebook"
+      },
+      {
+        "_key": "cbcea06fe6b0",
+        "link": "https://mammoth.tech/",
+        "name": "x"
+      },
+      {
+        "_key": "7dd86f39ad05",
+        "link": "https://mammoth.tech/",
+        "name": "linkedin"
+      },
+      {
+        "_key": "afc1dd5c4085",
+        "link": "https://mammoth.tech/",
+        "name": "instagram"
+      },
+      {
+        "_key": "81b070638fff",
+        "link": "https://mammoth.tech/",
+        "name": "youtube"
+      }
+    ]
+  }
+}

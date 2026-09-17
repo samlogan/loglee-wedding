@@ -1,0 +1,37 @@
+.container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  background-color: var(--stroke-divider);
+  border: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  border-radius: var(--radius-full);
+  transition: all 600ms ease;
+  cursor: pointer;
+  transform-origin: center center;
+
+  @include media-up(tablet) {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background-color: var(--fg-subtle);
+    transform: scale(1);
+  }
+
+  &.selected {
+    background-color: var(--fg-default);
+    transform: scale(1);
+  }
+}

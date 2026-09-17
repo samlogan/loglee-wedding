@@ -1,0 +1,318 @@
+/*=============================================>>>>>
+= OnVisible transitions =
+===============================================>>>>>*/
+@mixin visible-styles($is_visible: false) {
+  @if $is_visible {
+    position: relative;
+    bottom: 0;
+    opacity: 1;
+  } @else {
+    position: relative;
+    opacity: 0;
+    bottom: -25px;
+    transition:
+      bottom 0.6s ease,
+      opacity 0.8s ease;
+  }
+}
+
+/*=============================================>>>>>
+= Placeholder =
+===============================================>>>>>*/
+@mixin placeholder {
+  &::-webkit-input-placeholder {
+    @content;
+  }
+
+  &:-moz-placeholder {
+    /* Firefox 18- */
+    @content;
+  }
+
+  &::-moz-placeholder {
+    /* Firefox 19+ */
+    @content;
+  }
+
+  &:-ms-input-placeholder {
+    @content;
+  }
+}
+
+/*=============================================>>>>>
+= Animations =
+===============================================>>>>>*/
+
+@mixin keyframes($animation_name) {
+  @keyframes $animation_name {
+    @content;
+  }
+}
+
+@mixin animation($animation: bounceIn, $duration: 1s, $delay: 0s) {
+  animation-delay: $delay;
+  animation-duration: $duration;
+  animation-name: $animation;
+  animation-fill-mode: forwards;
+  /* this prevents the animation from restarting! */
+}
+
+/*=============================================>>>>>
+= Ellipsis =
+===============================================>>>>>*/
+
+@mixin ellipsis($width: 100%) {
+  display: inline-block;
+  max-width: $width;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// line-clamp ellipses mixin
+@mixin multiLineEllipsis($clamp: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $clamp;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+}
+
+/**
+ * Responsive Mixin
+ * -----------------
+ * Creates class variants for each breakpoint.
+ * Generates the base class and breakpoint-specific classes with '_breakpoint' suffix.
+ *
+ */
+@mixin responsive {
+  & {
+    @content;
+  }
+
+  @each $breakpoint, $breakpoint-width in $breakpoints {
+    @include media-up($breakpoint) {
+      html &_#{$breakpoint} {
+        @content;
+      }
+    }
+  }
+}
+
+/**
+ * Responsive Property Mixin
+ * --------------------------
+ * Generates utility classes for a CSS property with responsive variants.
+ * Creates both base classes and breakpoint-specific classes with different values.
+ *
+ */
+@mixin responsive-property($class, $property, $values-map, $variable-prefix: null) {
+  // Generate base classes
+  @each $step, $value in $values-map {
+    .#{$class}-#{$step} {
+      @if $variable-prefix {
+        #{$property}: var(--#{$variable-prefix}-#{$step});
+      } @else {
+        #{$property}: $value;
+      }
+    }
+  }
+
+  // Generate breakpoint classes with increased specificity
+  @each $breakpoint, $breakpoint-width in $breakpoints {
+    @media (min-width: #{$breakpoint-width}) {
+      @each $step, $value in $values-map {
+        html .#{$class}_#{$breakpoint}-#{$step} {
+          @if $variable-prefix {
+            #{$property}: var(--#{$variable-prefix}-#{$step});
+          } @else {
+            #{$property}: $value;
+          }
+        }
+      }
+    }
+  }
+}
+
+/*=============================================>>>>>
+= Layout =
+===============================================>>>>>*/
+
+@mixin grid($columns: 1fr 1fr, $gap: 0) {
+  display: grid;
+  grid-template-columns: $columns;
+  grid-gap: $gap;
+}
+
+@mixin flex($gap: 0, $alignment: flex-start) {
+  display: flex;
+  align-items: $alignment;
+  gap: $gap;
+}
+
+@mixin dimensions($height, $width) {
+  max-height: $height;
+  max-width: $width;
+  height: 100%;
+  width: 100%;
+}
+
+@mixin wysiwyg() {
+  //HEADINGS
+  h1,
+  h1,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: 0;
+    margin-bottom: 30px;
+  }
+
+  h1 {
+    @include h1;
+  }
+
+  h2 {
+    @include h2;
+  }
+
+  h3 {
+    @include h3;
+  }
+
+  h4 {
+    @include h4;
+  }
+
+  h5 {
+    @include h5;
+  }
+
+  h6 {
+    @include h6;
+  }
+
+  // EMBED
+  iframe {
+    width: 100%;
+  }
+
+  // PARA +
+  p,
+  ul,
+  ol,
+  a,
+  span {
+    font-size: 16px;
+    line-height: 1.2em;
+  }
+
+  a {
+    text-decoration: none;
+    text-decoration-color: var(--fg-link);
+    color: var(--fg-link);
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  // FONT STYLE
+  strong {
+    font-weight: var(--font-weight-bold);
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  pre {
+    white-space: pre-wrap;
+    margin-bottom: 20px;
+  }
+
+  // LISTS
+  ul {
+    margin: 25px 0;
+
+    li {
+      margin-left: 20px;
+      list-style-type: disc;
+    }
+  }
+
+  ol {
+    margin: 25px 0;
+
+    li {
+      margin-left: 20px;
+      margin-bottom: 15px;
+      list-style-type: decimal;
+    }
+  }
+}
+
+/*=============================================>>>>>
+= Position =
+===============================================>>>>>*/
+
+@mixin vertical-align($position: absolute) {
+  position: $position;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@mixin horizontal-align($position: absolute) {
+  position: $position;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+@mixin center-align($position: absolute) {
+  position: $position;
+  top: 50%;
+  left: 50%;
+  transform: translateY(-50%) translateX(-50%);
+}
+
+/*=============================================>>>>>
+= Misc =
+===============================================>>>>>*/
+
+@mixin remove-last-margin {
+  & > *:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@mixin text-gradient {
+  display: inline-block;
+  background: linear-gradient(60deg, var(--primary-400), var(--primary-100));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@mixin underline($visible: false, $offset: 0px) {
+  position: relative;
+  &:after {
+    content: '';
+    display: block;
+    position: absolute;
+    top: calc(100% + $offset);
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-radius: 100px;
+    background-color: var(--fg-link);
+    transform-origin: right center;
+    transform: scaleX(0);
+    transition: transform 0.3s ease-in-out;
+  }
+  @if $visible {
+    &:after {
+      transform-origin: left center;
+      transform: scaleX(1);
+    }
+  }
+}

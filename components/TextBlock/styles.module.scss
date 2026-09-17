@@ -1,0 +1,57 @@
+.hiddenContent {
+  transition: all 0.4s ease;
+  overflow: hidden;
+
+  .hiddenContentContainer {
+    opacity: 0;
+    transition: all 0.6s ease;
+  }
+
+  &.viewHiddenContent {
+    opacity: 1;
+
+    .hiddenContentContainer {
+      opacity: 1;
+    }
+  }
+}
+
+.readMore {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+
+  .icon {
+    transition: transform 0.3s ease;
+  }
+
+  &.active {
+    margin-top: 16px;
+
+    .icon {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+p + .image {
+  padding: 32px 0 32px 0;
+}
+
+p + .divider {
+  margin-top: 8px; // for the case when divider is after p, remove p padding bottom from top margin
+}
+
+.markerFont {
+  background-color: var(--fg-accent);
+  color: var(--shades-white);
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background-color: var(--fg-default);
+  opacity: 0.5;
+  margin: 32px 0;
+}

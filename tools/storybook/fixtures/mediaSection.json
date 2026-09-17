@@ -1,0 +1,43 @@
+{
+  "_key": "gzaGlwRd3UOc",
+  "_type": "mediaSection",
+  "image": {
+    "altText": "Lake",
+    "aspectRatio": null,
+    "asset": {
+      "_id": "image-73efea2356183006d88ed78adc897d103dd4a0c9-1920x1282-jpg",
+      "altText": null,
+      "metadata": {
+        "dimensions": {
+          "height": 1282,
+          "width": 1920
+        },
+        "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAANABQDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAcDBAX/xAAiEAACAQMEAwEBAAAAAAAAAAABAgMABBEFBhMhEiKBFlH/xAAXAQADAQAAAAAAAAAAAAAAAAABAgME/8QAGxEAAQUBAQAAAAAAAAAAAAAAAQACAxESYQT/2gAMAwEAAhEDEQA/AL2lzu88V/e2I541weQgeVZO6NyajOWtLKVLKJjg+3Z+1KrNxq7sXkJwGbvHyi92raXzR88spZhkkUD67FPJWURPu4mgDqV95pytcyGSaKRye2PeaKZn4XSU9W5mP98sUUm2KuZ+L//Z"
+      },
+      "url": "https://cdn.sanity.io/images/nq76qjq1/production/73efea2356183006d88ed78adc897d103dd4a0c9-1920x1282.jpg"
+    },
+    "crop": {
+      "_type": "sanity.imageCrop",
+      "bottom": 0.5331673044043045,
+      "left": 0.37641802226027427,
+      "right": 0.000020066352739656068,
+      "top": 0
+    },
+    "hotspot": {
+      "_type": "sanity.imageHotspot",
+      "height": 0.2409383118800191,
+      "width": 0.43526594606164404,
+      "x": 0.7823469606164384,
+      "y": 0.12046915594000955
+    }
+  },
+  "mediaType": "image",
+  "sectionFields": {
+    "spacingOptions": {
+      "removeBottomSpacing": false,
+      "removeTopSpacing": false
+    }
+  },
+  "thumbnail": null,
+  "videoUrl": null
+}

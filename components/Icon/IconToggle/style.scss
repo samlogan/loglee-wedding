@@ -1,0 +1,39 @@
+$icon-width: 12px;
+
+.icon-toggle {
+  height: $icon-width;
+  width: $icon-width;
+  position: relative;
+  display: block;
+
+  .vertical,
+  .horizontal {
+    position: absolute;
+    background-color: var(--fg-icon);
+    height: 100%;
+    left: 50%;
+    width: 2px;
+    margin-left: -1px;
+    top: 50%;
+    margin-top: -6px;
+    transition: all 500ms ease-in-out;
+  }
+
+  .vertical {
+    transform: rotate(-90deg);
+  }
+
+  .horizontal {
+    transform: rotate(0deg);
+  }
+
+  &.selected {
+    .vertical {
+      transform: rotate(90deg);
+    }
+    .horizontal {
+      opacity: 0;
+      transform: rotate(180deg);
+    }
+  }
+}

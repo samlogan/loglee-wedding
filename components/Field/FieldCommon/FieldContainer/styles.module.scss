@@ -1,0 +1,19 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  grid-column: 1 / span 2;
+
+  &.align {
+    &_left {
+      @include media-up(tablet) {
+        grid-column: 1;
+      }
+    }
+    &_right {
+      @include media-up(tablet) {
+        grid-column: 2;
+      }
+    }
+  }
+}

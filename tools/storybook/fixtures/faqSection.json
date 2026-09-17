@@ -1,0 +1,125 @@
+{
+  "_key": "cf7e8e86f0f33671c74fefd1d2a5ba8e",
+  "_type": "faqSection",
+  "addButton": true,
+  "button": {
+    "label": "Click me",
+    "link": {
+      "action": null,
+      "email": null,
+      "externalLink": null,
+      "internalLink": {
+        "pathname": "/hello-world/",
+        "slug": {
+          "_type": "slugElement",
+          "current": "/hello-world/"
+        },
+        "title": "Hello World"
+      },
+      "linkType": "internal",
+      "phone": null
+    }
+  },
+  "content": [
+    {
+      "_key": "2d7d197b6158",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "7a721f1780f90",
+          "_type": "span",
+          "marks": [],
+          "text": "Phasellus mattis magna faucibus rhoncus ut in nec. Tempus odio sem volutpat varius mauris."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    }
+  ],
+  "faqItems": [
+    {
+      "answer": [
+        {
+          "_key": "110928e3bc96",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "f9dc4ee39fbd",
+              "_type": "span",
+              "marks": [],
+              "text": "Phasellus mattis magna faucibus rhoncus ut in nec. Tempus odio sem volutpat varius mauris."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "question": "Phasellus mattis magna faucibus rhoncus ut in nec?"
+    },
+    {
+      "answer": [
+        {
+          "_key": "110928e3bc96",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "f9dc4ee39fbd",
+              "_type": "span",
+              "marks": [],
+              "text": "Phasellus mattis magna faucibus rhoncus ut in nec. Tempus odio sem volutpat varius mauris."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "question": "Phasellus mattis magna faucibus rhoncus ut in nec?"
+    },
+    {
+      "answer": [
+        {
+          "_key": "110928e3bc96",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "f9dc4ee39fbd",
+              "_type": "span",
+              "marks": [],
+              "text": "Phasellus mattis magna faucibus rhoncus ut in nec. Tempus odio sem volutpat varius mauris."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "question": "Phasellus mattis magna faucibus rhoncus ut in nec?"
+    },
+    {
+      "answer": [
+        {
+          "_key": "110928e3bc96",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "f9dc4ee39fbd",
+              "_type": "span",
+              "marks": [],
+              "text": "Phasellus mattis magna faucibus rhoncus ut in nec. Tempus odio sem volutpat varius mauris."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "question": "Phasellus mattis magna faucibus rhoncus ut in nec?"
+    }
+  ],
+  "sectionFields": {
+    "spacingOptions": {
+      "removeBottomSpacing": false,
+      "removeTopSpacing": false
+    }
+  },
+  "tagline": null,
+  "title": "<h2>8 Column Accordion Block</h2>"
+}

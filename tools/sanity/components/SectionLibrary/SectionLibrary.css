@@ -1,0 +1,62 @@
+.sectionDialog [data-ui~='DialogCard'] {
+  max-width: 80%;
+}
+
+.searchContainer {
+  margin: 10px 20px 0 20px;
+}
+
+.searchContainer span {
+  border-radius: 4px;
+}
+
+.sectionsContainer {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 20px;
+  @media screen and (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media screen and (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sectionItem {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px;
+  width: 100%;
+  background-color: white;
+  border: 1px #ccc solid;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sectionItem:hover {
+  background-color: #f4f4f4;
+}
+
+.sectionItem:active {
+  border: 1px black solid;
+}
+
+.sectionItem h4 {
+  margin: 0;
+}
+
+.sectionItem img {
+  max-width: 100% !important;
+  aspect-ratio: 16/9;
+  width: 100%;
+  object-fit: contain;
+  object-position: center;
+  overflow: hidden;
+}
+
+/* Hide default button */
+.sectionLibraryUi > div[data-ui='Stack'] > div[data-ui='Grid'] > button {
+  display: none !important;
+}

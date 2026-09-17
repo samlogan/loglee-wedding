@@ -1,0 +1,104 @@
+@layer defaults {
+  .section {
+    position: relative;
+    z-index: 0;
+    background-color: var(--bg-default);
+    color: var(--fg-default);
+  }
+
+  // -------------------
+  // Spacing
+  .spacing {
+    &_top {
+      &_none {
+        padding-top: 0;
+      }
+
+      &_xs {
+        padding-top: var(--section-spacing-xs-mobile);
+
+        @include media-up(tablet) {
+          padding-top: var(--section-spacing-xs-desktop);
+        }
+      }
+
+      &_sm {
+        padding-top: var(--section-spacing-sm-mobile);
+
+        @include media-up(tablet) {
+          padding-top: var(--section-spacing-sm-desktop);
+        }
+      }
+
+      &_md {
+        padding-top: var(--section-spacing-md-mobile);
+
+        @include media-up(tablet) {
+          padding-top: var(--section-spacing-md-desktop);
+        }
+      }
+
+      &_lg {
+        padding-top: var(--section-spacing-lg-mobile);
+
+        @include media-up(tablet) {
+          padding-top: var(--section-spacing-lg-desktop);
+        }
+      }
+
+      &_xl {
+        padding-top: var(--section-spacing-xl-mobile);
+
+        @include media-up(tablet) {
+          padding-top: var(--section-spacing-xl-desktop);
+        }
+      }
+    }
+
+    &_bottom {
+      &_none {
+        padding-bottom: 0;
+      }
+
+      &_xs {
+        padding-bottom: var(--section-spacing-xs-mobile);
+
+        @include media-up(tablet) {
+          padding-bottom: var(--section-spacing-xs-desktop);
+        }
+      }
+
+      &_sm {
+        padding-bottom: var(--section-spacing-sm-mobile);
+
+        @include media-up(tablet) {
+          padding-bottom: var(--section-spacing-sm-desktop);
+        }
+      }
+
+      &_md {
+        padding-bottom: var(--section-spacing-md-mobile);
+
+        @include media-up(tablet) {
+          padding-bottom: var(--section-spacing-md-desktop);
+        }
+      }
+
+      &_lg {
+        padding-bottom: var(--section-spacing-lg-mobile);
+
+        @include media-up(tablet) {
+          padding-bottom: var(--section-spacing-lg-desktop);
+        }
+      }
+
+      &_xl {
+        padding-bottom: var(--section-spacing-xl-mobile);
+
+        @include media-up(tablet) {
+          padding-bottom: var(--section-spacing-xl-desktop);
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+$breakpoint: 'tablet';
+
+.container {
+  position: relative;
+  display: inline-flex;
+  gap: 12px;
+}
+
+.socialLink {
+  padding: 10px !important;
+  border-radius: var(--radius-md);
+  border: 1px solid currentColor !important;
+}

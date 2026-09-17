@@ -1,0 +1,60 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input {
+  cursor: pointer;
+  display: none;
+
+  &:checked + .label {
+    .radio {
+      border-color: var(--input-active-border);
+    }
+
+    .radioMarker {
+      background-color: var(--input-active-border);
+      transform: scale(1);
+    }
+  }
+}
+
+.radio {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 100%;
+  padding: 2px;
+  border: 1px solid var(--input-border);
+  transition: all 0.2s ease-in-out;
+
+  .radioMarker {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    background-color: var(--input-border);
+    transition: all 0.2s ease-in-out;
+    transform: scale(0.8);
+  }
+}
+
+.label {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover {
+    .radio {
+      border-color: var(--input-active-border);
+    }
+
+    .radioMarker {
+      background-color: var(--input-active-border);
+      transform: scale(1);
+    }
+  }
+}

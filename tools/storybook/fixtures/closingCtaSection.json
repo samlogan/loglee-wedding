@@ -1,0 +1,46 @@
+{
+  "_key": "ajRgu7rD1B6C",
+  "_type": "closingCtaSection",
+  "addButton": true,
+  "button": {
+    "label": "Contact us",
+    "link": {
+      "action": null,
+      "email": null,
+      "externalLink": null,
+      "internalLink": {
+        "pathname": "/hello-world/",
+        "slug": {
+          "_type": "slugElement",
+          "current": "/hello-world/"
+        },
+        "title": "Hello World"
+      },
+      "linkType": "internal",
+      "phone": null
+    }
+  },
+  "content": [
+    {
+      "_key": "c9036636f7a5",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "ec421f3d17d20",
+          "_type": "span",
+          "marks": [],
+          "text": "Join us in our mission to reduce environmental impact and build a greener community for generations to come."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    }
+  ],
+  "sectionFields": {
+    "spacingOptions": {
+      "removeBottomSpacing": false,
+      "removeTopSpacing": false
+    }
+  },
+  "title": "Take Action Today for a Greener Tomorrow"
+}

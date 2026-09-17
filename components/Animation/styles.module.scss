@@ -1,0 +1,66 @@
+.animation {
+  display: block;
+  width: 100%;
+  will-change: transform, opacity;
+}
+
+.fade {
+  opacity: 0;
+  transition: opacity 1s ease;
+
+  &.show {
+    opacity: 1;
+  }
+}
+
+.slideUp {
+  opacity: 0;
+  transform: translateY(5%);
+  transition:
+    transform 1s ease,
+    opacity 1s ease;
+
+  &.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slideDown {
+  opacity: 0;
+  transform: translateY(-5%);
+  transition:
+    transform 1s ease,
+    opacity 1s ease;
+
+  &.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slideLeft {
+  opacity: 0;
+  transform: translateX(5%);
+  transition:
+    transform 1s ease,
+    opacity 1s ease;
+
+  &.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slideRight {
+  opacity: 0;
+  transform: translateX(-5%);
+  transition:
+    transform 1s ease,
+    opacity 1s ease;
+
+  &.show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

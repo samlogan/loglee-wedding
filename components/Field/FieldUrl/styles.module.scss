@@ -1,0 +1,15 @@
+.input {
+  border-radius: var(--radius-full);
+  transition: all 0.4s ease-in-out;
+  margin: 0 !important;
+
+  &:hover,
+  &:focus {
+    border-color: var(--input-active-border);
+  }
+
+  &.error {
+    border-color: var(--input-error-border);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--input-error-border) 20%, transparent);
+  }
+}

@@ -1,0 +1,39 @@
+$max-width: 540px;
+
+.heading {
+  &.spacing_none {
+    padding-bottom: 0;
+  }
+
+  &.spacing_xs {
+    padding-bottom: 8px;
+  }
+
+  &.spacing_sm {
+    padding-bottom: 24px;
+  }
+
+  &.spacing_md {
+    padding-bottom: 48px;
+  }
+
+  &.spacing_lg {
+    padding-bottom: 64px;
+  }
+
+  &.spacing_xl {
+    padding-bottom: 96px;
+  }
+}
+
+.title {
+  max-width: $max-width;
+}
+
+.subtitle {
+  max-width: $max-width;
+}
+
+.tagline {
+  max-width: $max-width;
+}

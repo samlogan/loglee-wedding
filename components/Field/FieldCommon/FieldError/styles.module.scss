@@ -1,0 +1,12 @@
+.container {
+  display: block;
+  max-height: 0;
+
+  &.hasError {
+    max-height: 200px;
+  }
+
+  .message {
+    color: var(--system-error-500);
+  }
+}

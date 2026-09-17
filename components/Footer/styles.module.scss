@@ -1,0 +1,14 @@
+.footer {
+  padding: 24px 0;
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 48px;
+
+  @include media-down(large-tablet) {
+    flex-direction: column;
+  }
+}

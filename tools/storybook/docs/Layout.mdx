@@ -1,0 +1,39 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+import { ContainerWidths, SpacingScale } from '../layout';
+
+<Meta title="Foundations/Design System/Layout" />
+
+# Layout
+
+Two primitives create every bit of space on a page: `Section` provides vertical rhythm, `Container`
+constrains horizontal measure. Neither has an appearance of its own, which is why the pages that
+demonstrate them **measure** rather than show — see `Foundations/Section` and `Foundations/Container`
+for the live readouts.
+
+The tables below are the token reference behind those measurements, read from the running page.
+
+## Section spacing
+
+Vertical padding above and below a section. A section takes one step for both edges, or a pair for
+different top and bottom values, and `removeTopSpacing` / `removeBottomSpacing` zero one side —
+which is how two adjacent sections in the same theme are made to read as one block.
+
+<SpacingScale />
+
+## Container widths
+
+The horizontal cap on content. A container also applies a gutter, so on a narrow viewport content
+never touches the edge.
+
+<ContainerWidths />
+
+## Using these
+
+- Set spacing through the `Section` component's `spacing` prop, not a margin on the content inside
+  it. Sections are composed by editors in any order, and a margin on the content collapses
+  unpredictably against the next section's padding.
+- Reach for `Container`'s `width` prop rather than a `max-width` in a component's SCSS. The token is
+  shared; a literal is not.
+- Editors control top and bottom spacing removal per section in Sanity, so a component should not
+  assume the space above it exists.

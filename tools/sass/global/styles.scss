@@ -1,0 +1,10 @@
+/*=============================================>>>>>
+= Global Styles =
+===============================================>>>>>*/
+@layer global {
+  @import 'print';
+  @import 'reset';
+  @import 'typography';
+  @import 'variables';
+  @import 'easings';
+}

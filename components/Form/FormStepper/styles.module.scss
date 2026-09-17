@@ -1,0 +1,85 @@
+@layer defaults {
+  .steps {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+    input {
+      @include media-down(large-tablet) {
+        font-size: 16px;
+      }
+    }
+
+    @include media-down(large-mobile) {
+      height: 100%;
+    }
+  }
+
+  .heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--body-xl);
+    font-weight: var(--font-weight-bold);
+    line-height: 140%;
+    letter-spacing: -0.4px;
+    z-index: 1;
+  }
+
+  .progress {
+    width: 100%;
+    background-color: var(--bg-accent);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-top: 16px;
+    z-index: 1;
+
+    .progressInner {
+      height: 8px;
+      background-color: var(--button-primary-bg);
+      transition: width 200ms ease;
+    }
+  }
+
+  .wrapper {
+    position: relative;
+    transition: all 400ms ease;
+    min-height: 0;
+
+    @include media-down(large-mobile) {
+      height: 100%;
+
+      > div {
+        height: 100%;
+      }
+    }
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    transition: all 400ms ease;
+    min-height: 0;
+    z-index: 0;
+
+    @include media-down(large-mobile) {
+      height: 100%;
+    }
+  }
+
+  .footer {
+    z-index: 1;
+    margin-top: auto;
+    position: sticky;
+  }
+
+  .next {
+    width: 100%;
+    margin-top: 16px;
+  }
+
+  .previous {
+    width: 100%;
+    margin-top: 16px;
+  }
+}

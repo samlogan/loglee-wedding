@@ -1,0 +1,7 @@
+#navbar div[data-ui='Avatar'] strong {
+  color: white;
+}
+
+#navbar #sanity-logo {
+  height: 23px !important;
+}
