@@ -19,7 +19,16 @@ import styles from './styles.module.scss';
 type TextSpacing = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 interface TextBlockComponentConfig {
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /*
+   * `ProjectFontSize`, not a hand-copied union.
+   *
+   * Every value here is spread straight onto `Text`, whose `size` is `ProjectFontSize` — so this was
+   * a duplicate of that type that had fallen one step behind it. `2xl` exists on the scale and in
+   * `components/Text/styles.module.scss` (`--body-2xl`), and was the only step a caller could not
+   * ask for: `config={{ p: { size: '2xl' } }}` was a type error rather than the largest body step.
+   * Widening only, so no existing caller changes.
+   */
+  size?: ProjectFontSize;
   color?: ProjectColor;
   spacing?: TextSpacing | [TextSpacing, TextSpacing];
   className?: string;
