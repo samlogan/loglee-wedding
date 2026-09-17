@@ -1,0 +1,126 @@
+@layer defaults {
+  .harness {
+    min-height: 100vh;
+    background: var(--stone-900, #131412);
+    color: var(--stone-50, #f3f1ea);
+  }
+
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--pine-800, #112a1e);
+    background: var(--stone-900, #131412);
+  }
+
+  .title {
+    margin: 0 12px 0 0;
+    font-size: 15px;
+  }
+
+  .control {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    > span {
+      color: var(--stone-500, #8e8b82);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    > b {
+      font-variant-numeric: tabular-nums;
+      font-weight: 400;
+    }
+
+    select,
+    input[type='range'] {
+      border: 1px solid var(--pine-800, #112a1e);
+      border-radius: 6px;
+      background: var(--pine-900, #0b1c14);
+      color: inherit;
+      font: inherit;
+      padding: 5px 8px;
+    }
+
+    input[type='range'] {
+      width: 110px;
+      padding: 0;
+    }
+  }
+
+  .toggle {
+    border: 1px solid var(--pine-800, #112a1e);
+    border-radius: 6px;
+    background: var(--pine-900, #0b1c14);
+    color: inherit;
+    font: inherit;
+    padding: 6px 12px;
+    cursor: pointer;
+
+    &.on {
+      border-color: var(--signal-300, #d6ff3b);
+      background: var(--signal-300, #d6ff3b);
+      color: var(--stone-900, #131412);
+    }
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--pine-800, #112a1e);
+
+    @include media-down(large-tablet) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .cell {
+    display: flex;
+    flex-direction: column;
+    background: var(--stone-900, #131412);
+
+    canvas {
+      display: block;
+      // Tall enough to frame a standing character without cropping the feet.
+      aspect-ratio: 3 / 4;
+      width: 100%;
+    }
+  }
+
+  .caption {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--pine-800, #112a1e);
+
+    > span {
+      color: var(--stone-500, #8e8b82);
+      font-size: 11px;
+    }
+  }
+
+  .note {
+    margin: 0;
+    padding: 14px 20px;
+    border-top: 1px solid var(--pine-800, #112a1e);
+    color: var(--stone-500, #8e8b82);
+    font-size: 12px;
+
+    code {
+      border-radius: 4px;
+      background: var(--pine-900, #0b1c14);
+      padding: 1px 5px;
+      font-family: ui-monospace, monospace;
+    }
+  }
+}
