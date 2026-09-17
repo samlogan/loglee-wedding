@@ -10,6 +10,7 @@ import Image from '@/components/Image';
 import Link from '@/components/Link';
 import Text from '@/components/Text';
 import Video from '@/components/Video';
+import { AMOUNT_MARK } from '@/helpers/amountToken';
 import classNames from '@/helpers/classNames';
 import useElementHeight from '@/tools/hooks/useElementHeight';
 import type { ILinkElement } from '@/tools/sanity/schema/elements/link';
@@ -189,11 +190,26 @@ const TextBlock = (props: TextBlockProps) => {
       spacing: 'md',
       ...providedConfig?.listNumber
     },
+    /*
+     * `spacing: 'sm'` here rather than on the handler below, which is where it used to be —
+     * `<Text as="p" {...config?.p} spacing="sm">`, written **after** the spread and therefore
+     * unconditional. A caller passing `config={{ p: { spacing: 'lg' } }}` typed against the declared
+     * API, saw the value land in this object, and got `sm` anyway.
+     *
+     * The value is unchanged, deliberately: `sm` is what every `p` block has rendered at, so moving
+     * it here restores the override without moving any existing caller. It is the same
+     * written-after-the-spread trap `TwoColumnListSection` documents on its own `spacing="none"`,
+     * sitting in a shared component where it silently discarded declared API instead.
+     *
+     * `span` below keeps `md`. It spreads `providedConfig?.p` rather than this object, so the two
+     * defaults are independent — and `normal`, the style every `blockContent*` schema actually
+     * emits, routes through `span`.
+     */
     p: {
       alignment,
       color,
       size: 'md',
-      spacing: 'md',
+      spacing: 'sm',
       ...providedConfig?.p
     },
     span: {
@@ -249,7 +265,7 @@ const TextBlock = (props: TextBlockProps) => {
         </Text>
       ),
       p: ({ children }: ComponentProps) => (
-        <Text as="p" {...config?.p} spacing="sm">
+        <Text as="p" {...config?.p}>
           {children}
         </Text>
       ),
@@ -313,6 +329,30 @@ const TextBlock = (props: TextBlockProps) => {
           </Link>
         );
       },
+      /*
+       * The highlighted inline token — a run of prose lifted out of the sentence it sits in without
+       * leaving it.
+       *
+       * Produced by `tools/helpers/amountToken`, which splits the Portable Text child holding a
+       * `{amount}` placeholder and hangs this decorator on the substituted figure. Today
+       * `sections/TwoColumnListSection` is its only route onto a page.
+       *
+       * ## Why the renderer lives here and not in the section
+       *
+       * A mark renderer is a React *component*, and `TextBlock` is a client component that server
+       * sections render. A function prop does not cross that boundary — passing
+       * `marks={{ amountToken: … }}` from a section would be a serialisation error, not a styling
+       * choice — so the only place this can be registered is inside the component that owns the
+       * `PortableText` call. The alternative, leaving the mark unregistered, renders
+       * `<span class="unknown__pt__mark__amountToken">` from the library's fallback and logs a
+       * warning: the figure appears as plain text and nothing looks broken.
+       *
+       * The key is computed from the shared constant rather than written out, so a rename moves
+       * both ends at once. The treatment itself is written entirely in `currentColor` and theme
+       * tokens (see `styles.module.scss`), so it reads correctly on a light section and on a dark
+       * one without either end knowing which it is on.
+       */
+      [AMOUNT_MARK]: ({ children }: ComponentProps) => <span className={styles.amountToken}>{children}</span>,
       markerFont: ({ children }: ComponentProps) => <span className={styles.markerFont}>{children}</span>,
       strong: ({ children }: ComponentProps) => <strong>{children}</strong>
     },
@@ -398,8 +438,15 @@ const TextBlock = (props: TextBlockProps) => {
       setScrollPosition(window.scrollY);
       setShowMore(!showMore);
     } else {
+      /*
+       * `behavior` is read from the user's preference rather than pinned to `smooth`. A
+       * programmatic smooth scroll is motion the reader did not ask for and cannot stop, and it is
+       * the one piece of animation in this component that CSS cannot reach — the two `transition`
+       * rules in `styles.module.scss` now carry their own `prefers-reduced-motion` override, which
+       * twelve other modules in the repo already did and this one did not.
+       */
       window.scrollTo({
-        behavior: 'smooth',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
         top: scrollPosition
       });
 

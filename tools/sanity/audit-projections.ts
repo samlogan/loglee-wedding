@@ -8,10 +8,10 @@
 //
 // **CLI output, not a Storybook page.**
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import sectionsProjection from '@/tools/sanity/projections/common/sections.groq';
 
@@ -33,14 +33,35 @@ const readSectionDirs = (dir: string) => {
   }
 };
 
+/*
+ * The **exported GROQ string**, imported — not the bytes of `queries.groq.ts` on disk, which is what
+ * this read before and which measured the wrong thing entirely.
+ *
+ * A `queries.groq.ts` is mostly prose: `TwoColumnListSection`'s was 3234 bytes of file holding 2649
+ * bytes of query, because a 45-line header comment counted toward its score. That inverted the
+ * ranking the audit exists to produce — it reported `FaqSection` at 0.5 KB against
+ * `TwoColumnListSection` at 3.2 KB, a 6× gap, where the queries they actually send are 1.9 KB and
+ * 2.6 KB, a 1.35× one. The tell was in the output all along: the per-section rows summed to 5.3 KB
+ * under a "combined" line reading 7.2 KB, because only the combined line was measuring the query.
+ *
+ * It also makes the note in `sections.groq.ts` true. That comment keeps its own prose outside the
+ * template literal on the grounds that "a comment there is query weight (`yarn audit:projections`
+ * counts it)" — correct about the API and, until this changed, wrong about the audit, which counted
+ * the comment either way.
+ */
 const sections: { name: string; size: number }[] = [];
 for (const entry of readSectionDirs(join(root, 'sections'))) {
   if (!entry.isDirectory()) {
     continue;
   }
   try {
-    const src = readFileSync(join(root, 'sections', entry.name, 'queries.groq.ts'), 'utf8');
-    sections.push({ name: entry.name, size: Buffer.byteLength(src, 'utf8') });
+    // `pathToFileURL`, because a bare absolute path is not a valid ESM specifier on every platform.
+    const projectionModule = await import(pathToFileURL(join(root, 'sections', entry.name, 'queries.groq.ts')).href);
+    const projection: unknown = projectionModule.default;
+
+    if (typeof projection === 'string') {
+      sections.push({ name: entry.name, size: Buffer.byteLength(projection, 'utf8') });
+    }
   } catch {
     // no queries.groq.ts — not a projected section
   }
