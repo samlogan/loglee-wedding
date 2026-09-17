@@ -106,8 +106,7 @@ All in `/components`:
 - **`TextTitle`**: Rich text title renderer
 - **`Heading`**: Heading component
 - **`Image`**: Sanity image renderer. Props: spread from image projection, `aspectRatio`
-- **`Button`**: Button component
-- **`Link`**: Link with CTA variants. Props: spread from link, `variant`, `size`, `theme`
+- **`Button`** / **`Link`**: one appearance surface, shared via `components/Button/appearance.tsx`. Four orthogonal axes — `theme` (`primary`/`secondary`/`accent`), `variant` (`pill`/`rounded`/`ui`/`square`/`bare`/`content`), `size` (`sm`/`md`/`lg`), `outline` — plus `mono`, `arrow`, `fullWidth`, `fullWidthMobile`. `Link` also spreads from the link projection. Omitting all of `theme`/`size`/`variant` is a deliberate seventh appearance that many call sites rely on; it is not the same as `variant="bare"`. Three pairs do not legally combine and are closed in CSS rather than in the types: `bare`+`outline`, `content`+`size`, `outline` without `theme`. Note `variant="content"` renders `inline` on `Link` but `inline-block` on `Button` — CSS blockifies `<button>` and no rule changes that.
 - **`Icon`**: Icon component
 - **`Accordion`**: Expandable content panels
 - **`Animation`**: Motion-powered animation wrapper
