@@ -106,8 +106,7 @@ All in `/components`:
 - **`TextTitle`**: Rich text title renderer
 - **`Heading`**: Heading component
 - **`Image`**: Sanity image renderer. Props: spread from image projection, `aspectRatio`
-- **`Button`**: Button component
-- **`Link`**: Link with CTA variants. Props: spread from link, `variant`, `size`, `theme`
+- **`Button`** / **`Link`**: one appearance surface, shared via `components/Button/appearance.tsx`. Four orthogonal axes — `theme` (`primary`/`secondary`/`accent`), `variant` (`pill`/`rounded`/`ui`/`square`/`bare`/`content`), `size` (`sm`/`md`/`lg`), `outline` — plus `mono`, `arrow`, `fullWidth`, `fullWidthMobile`. `Link` also spreads from the link projection. Omitting all of `theme`/`size`/`variant` is a deliberate seventh appearance that many call sites rely on; it is not the same as `variant="bare"`. Three pairs do not legally combine and are closed in CSS rather than in the types: `bare`+`outline`, `content`+`size`, `outline` without `theme`. Note `variant="content"` renders `inline` on `Link` but `inline-block` on `Button` — CSS blockifies `<button>` and no rule changes that.
 - **`Icon`**: Icon component
 - **`Accordion`**: Expandable content panels
 - **`Animation`**: Motion-powered animation wrapper
@@ -451,7 +450,7 @@ Defined in `tools/sass/global/_variables.scss`:
 - **Type scale** (fluid): `var(--display-lg)`, `var(--display-md)`, `var(--heading-2xl)` … `var(--heading-xs)`, `var(--body-2xl)` … `var(--body-xs)`. **There are no `-mobile` variants** — each token is a single `clamp()` covering the whole viewport range. Set type through `Text`'s `variant` + `size` props, never a raw `font-size`.
 - **Section spacing** (fluid): `var(--section-spacing-xs)`, `var(--section-spacing-sm)`, `var(--section-spacing-md)`, `var(--section-spacing-lg)`, `var(--section-spacing-xl)` — one token per step, no `-desktop` / `-mobile` pair.
 - **Component spacing**: `var(--spacing-xxs)` … `var(--spacing-3xl)`. Fixed up to `lg` (24px); `xl` and above are fluid.
-- **Button tokens**: `var(--button-primary-bg)`, `var(--button-primary-fg)`, `var(--button-secondary-bg)`, `var(--button-secondary-fg)` (+ `-hover` variants). Outline styling is derived from theme fill colors in SCSS. Button sizing tokens are deliberately fixed, not fluid — padding sets the tap target.
+- **Button tokens**: three colour pairs — `var(--button-primary-*)`, `var(--button-secondary-*)`, `var(--button-accent-*)` — each with `bg`/`fg` plus `-hover`, `-active`, `-disabled` and a `focus-ring`. Outline styling is derived from theme fill colors in SCSS, with one documented exception: `accent`'s outline borrows `--fg-default`, because signal/300 is invisible as text on either theme's surface. Button sizing is fluid in font size and horizontal padding and fixed in vertical padding, so a control's height tracks the viewport without dropping below the 44px tap target.
 - **Container widths**: `var(--container-xs)` (640px), `var(--container-sm)` (768px), `var(--container-md)` (1024px), `var(--container-lg)` (1280px), `var(--container-xl)` (1440px). Fixed — these are caps. Use the `Container` component `width` prop instead of manual `max-width` where possible.
 - **System colors**: `var(--system-error-500)`, `var(--system-success-500)`, `var(--system-warning-500)`
 

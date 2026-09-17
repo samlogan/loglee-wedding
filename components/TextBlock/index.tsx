@@ -275,7 +275,13 @@ const TextBlock = (props: TextBlockProps) => {
             externalLink={externalLink}
             phone={phone}
             email={email}
-            className={styles.link}
+            /*
+             * `content` is the variant for a link inside prose, and this mark had no variant at all
+             * — so it inherited the button base's `inline-flex` and became an unbreakable box that
+             * refused to wrap mid-paragraph. It also gets the underline that stops the link relying
+             * on colour alone.
+             */
+            variant="content"
           >
             {children}
           </Link>
@@ -393,11 +399,7 @@ const TextBlock = (props: TextBlockProps) => {
       )}
 
       {content?.readMoreEnabled && (
-        <Button
-          onClick={toggleReadMore}
-          className={classNames(styles.readMore, { [styles.active]: showMore })}
-          ariaLabel="Read more"
-        >
+        <Button onClick={toggleReadMore} className={classNames(styles.readMore, { [styles.active]: showMore })}>
           <Text
             text={showMore ? 'Read less' : 'Read more'}
             size="lg"

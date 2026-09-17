@@ -219,35 +219,87 @@
   --section-spacing-xl: #{fluid(48px, 96px)};
 
   // ------------------------------------
-  // Button Sizing
+  // Button Sizing — fluid throughout, with a fixed vertical padding at `md` and `lg`
   // ------------------------------------
   //
-  // Deliberately fixed, not fluid. A button is a control before it is layout: its padding sets the
-  // tap target, and interpolating that downwards would shrink the target on exactly the small
-  // touchscreens where WCAG 2.5.8 needs it largest. The font sizes (14–16px) sit at the bottom of
-  // the type scale too, where a fluid range would be a couple of pixels wide for no benefit.
+  // Two things to know before changing a number here.
+  //
+  // 1. Every anchor is the design's inset *minus the border*. A control's border box is always
+  //    drawn (see `components/Button/styles.module.scss`), so a 22px gutter in Figma is 21px of
+  //    padding here. The consequence is worth stating: the rendered box matches the design's
+  //    *filled* control exactly, and sits 1px tighter than its *outlined* one — Figma hangs a
+  //    stroke outside the padding box, we put it inside, which is what keeps a row of mixed filled
+  //    and outlined controls on the same baseline. The design does not: its `md` outline is 48px
+  //    against a 46px fill, while its `sm` outline and fill are both 38px.
+  //
+  // 2. `padding-y` is fixed at `md` and `lg`, fluid at `sm`, and that split is the point.
+  //    A control's height is `2 × (padding-y + border) + line box`, and the line box is already
+  //    fluid because the font size is. Freezing `padding-y` at `md` lands the button on 44.8px at
+  //    375px and 46px at 1440px — it still tracks the viewport, and it never crosses below the
+  //    44px target WCAG 2.5.5 asks for; `lg` clears it by a wider margin still. That argument buys
+  //    nothing at `sm`, which is 33–38px tall and cannot reach 44px whatever the padding does, so
+  //    freezing it there only made the control 4px fatter than drawn on a phone. `sm` interpolates
+  //    like everything else and clears the 24px WCAG 2.5.8 AA target at both ends.
+  //
+  // Anchors, read off the Figma frames — `Design items` (node 1:977) and the page frames it is
+  // drawn from. `md` is the hero pill: 15px type on 22×14 at 1440 (node 1:978). `sm` is the nav
+  // RSVP pill: 12px on 16×10 at 1440 (node 1:982) and 11px on 12×9 at 392 (node 1:107). `lg` has
+  // no counterpart in the design at all — the full-width "PRESS START" submit (node 1:869) is a
+  // bespoke 96px bar with 44px display type, not this component — so `lg` is an extrapolated step
+  // above `md` for full-width actions rather than a measurement.
 
-  --button-font-weight: var(--font-weight-semibold);
-  --button-border-width: 2px;
-  --button-gap: 4px;
+  // Instrument Sans is loaded at 400 and 500 only (see `config/fonts.ts`), and the design sets every
+  // button label in Medium. Asking for 600 here bought a synthesised weight, not a bolder one.
+  --button-font-weight: var(--font-weight-medium);
 
-  // Small
-  --button-sm-font-size: 14px;
-  --button-sm-padding-y: 12px;
-  --button-sm-padding-x: 12px;
-  --button-sm-icon-size: 16px;
+  // The mono label, in its loud register — JetBrains Mono Bold, uppercase, widely tracked. Used by
+  // the UI-chrome controls ("ACCENT / UI", "GHOST / UI", the nav RSVP pill, the switch-player
+  // button). The design has a second, quieter mono register — Medium and untracked, which is what
+  // it sets "← BACK" in; `.variant_bare` selects it by overriding the two locals these feed.
+  --button-mono-font-weight: var(--font-weight-bold);
+  // 0.96px on 12px in the design. Held in `em` so it stays proportional as the fluid size moves.
+  --button-mono-letter-spacing: 0.08em;
+  --button-mono-quiet-font-weight: var(--font-weight-medium);
 
-  // Medium
-  --button-md-font-size: 16px;
-  --button-md-padding-y: 20px;
-  --button-md-padding-x: 20px;
-  --button-md-icon-size: 16px;
+  --button-border-width: 1px;
+  --button-gap: var(--spacing-xs);
 
-  // Large
-  --button-lg-font-size: 16px;
-  --button-lg-padding-y: 24px;
-  --button-lg-padding-x: 24px;
-  --button-lg-icon-size: 20px;
+  // Focus ring. Wider than the border and held off the box by an equal gap, so a focused control
+  // reads as a ring *around* the button rather than as a thicker version of the outline variant.
+  --button-focus-ring-width: 3px;
+  --button-focus-ring-offset: 3px;
+
+  // The pointer target a boxless control has to reach. `variant="bare"` zeroes its padding, so its
+  // border box is only the line box: measured at 375px it is 15.2px tall at `sm` and 18.8px at
+  // `md`, against the 24 CSS px WCAG 2.5.8 (Target Size Minimum, AA) asks for. `variant="content"`
+  // is exempt under that criterion's "Inline" clause — it sits in a sentence and is sized by the
+  // surrounding line-height — but `bare` is the standalone "← BACK" control and is not.
+  //
+  // Deliberately *not* fluid, and this is the one place in the file where that is the point: 24px
+  // is a floor the spec states in CSS px, so interpolating it would put the narrow end below the
+  // number it exists to clear. `bare` never grows past ~22px tall even at `lg`, so one fixed value
+  // covers every size.
+  --button-bare-target-height: 24px;
+
+  // Small — the mono UI controls: the nav RSVP pill, the switch-player button. Not the room chips,
+  // which the design sets in 15px body type on a 44px box — that is `md`, not this.
+  --button-sm-font-size: #{fluid(11px, 12px)};
+  --button-sm-padding-y: #{fluid(9px, 11px)};
+  --button-sm-padding-x: #{fluid(11px, 15px)};
+  --button-sm-icon-size: #{fluid(14px, 16px)};
+
+  // Medium — the default. The hero's "The Weekend" / "RSVP by 01.12.26" pills, every form control.
+  --button-md-font-size: #{fluid(14px, 15px)};
+  --button-md-padding-y: 13px;
+  --button-md-padding-x: #{fluid(18px, 21px)};
+  --button-md-icon-size: #{fluid(16px, 18px)};
+
+  // Large — the full-width primary action. Extrapolated, not measured; see the note above.
+  --button-lg-font-size: #{fluid(15px, 17px)};
+  --button-lg-padding-y: 17px;
+  // Narrow anchor 20px rather than `md`'s 18px, so the size ladder still separates at 375px.
+  --button-lg-padding-x: #{fluid(20px, 24px)};
+  --button-lg-icon-size: #{fluid(18px, 20px)};
 }
 
 // ------------------------------------
@@ -272,27 +324,56 @@
   --stroke-cards: var(--stone-900);
   --stroke-divider: var(--stone-300);
 
-  /* Button - Primary */
+  /*
+   * Button - Primary — the design's filled pine pill. 9.40:1 against its off-white label.
+   */
   --button-primary-bg: var(--pine-600);
   --button-primary-bg-hover: var(--stone-900);
   --button-primary-bg-active: var(--pine-800);
-  --button-primary-bg-disabled: var(--stone-300);
+  --button-primary-bg-disabled: var(--stone-200);
   --button-primary-fg: var(--stone-50);
   --button-primary-fg-hover: var(--stone-50);
   --button-primary-fg-active: var(--stone-50);
-  --button-primary-fg-disabled: var(--stone-500);
-  --button-primary-focus-ring: var(--signal-300);
+  --button-primary-fg-disabled: var(--stone-600);
+  /*
+   * Ink, not accent, and the reason is measured.
+   *
+   * The ring used to be signal/300, which is 1.02:1 against the stone/50 page it is drawn on — not
+   * low contrast, invisible. WCAG 1.4.11 wants 3:1 for a focus indicator against what surrounds it.
+   * stone/900 is 16.35:1 here and signal/300 is 9.22:1 on the dark theme's pine page, so each theme
+   * rings in whichever of the two actually reads against its own surface.
+   */
+  --button-primary-focus-ring: var(--stone-900);
 
-  /* Button - Secondary */
+  /*
+   * Button - Secondary — the design's ink chip. Filled it is "Chip · selected"; outlined it is the
+   * "Secondary" pill and the unselected chip.
+   */
   --button-secondary-bg: var(--stone-900);
   --button-secondary-bg-hover: var(--stone-800);
   --button-secondary-bg-active: var(--stone-700);
-  --button-secondary-bg-disabled: var(--stone-300);
+  --button-secondary-bg-disabled: var(--stone-200);
   --button-secondary-fg: var(--stone-50);
   --button-secondary-fg-hover: var(--stone-50);
   --button-secondary-fg-active: var(--stone-50);
-  --button-secondary-fg-disabled: var(--stone-500);
-  --button-secondary-focus-ring: var(--signal-300);
+  --button-secondary-fg-disabled: var(--stone-600);
+  --button-secondary-focus-ring: var(--stone-900);
+
+  /*
+   * Button - Accent — "ACCENT / UI" and the RSVP action. Identical in both themes: signal is a
+   * fixed pairing of lime under near-black ink (16.04:1), not a colour that flips with the surface.
+   * It is the one theme whose fill cannot double as its outline ink — see the note in
+   * `components/Button/styles.module.scss`.
+   */
+  --button-accent-bg: var(--signal-300);
+  --button-accent-bg-hover: var(--signal-400);
+  --button-accent-bg-active: var(--signal-500);
+  --button-accent-bg-disabled: var(--stone-200);
+  --button-accent-fg: var(--stone-900);
+  --button-accent-fg-hover: var(--stone-900);
+  --button-accent-fg-active: var(--stone-900);
+  --button-accent-fg-disabled: var(--stone-600);
+  --button-accent-focus-ring: var(--stone-900);
 
   /* Input */
   --input-bg: var(--stone-50);
@@ -335,11 +416,25 @@
   --stroke-cards: var(--stone-50);
   --stroke-divider: var(--pine-500);
 
-  /* Button - Primary */
+  /*
+   * Button - Primary — inverted: the off-white fill is the loud one on a pine page, and hover is
+   * where the accent earns its keep.
+   *
+   * `pine-400` / `pine-200` was the disabled pair and measured 2.25:1. Sinking the fill below the
+   * page instead (`pine-700`) and muting the label gets that back — an inactive control is exempt
+   * from 1.4.3, but "exempt" is not the same as "unreadable".
+   *
+   * The disabled label is `pine-200`, not `pine-300`, and the difference is the *outline* form.
+   * `.outline:disabled` forces `background-color: transparent`, so its label does not sit on the
+   * disabled fill at all — it sits on the page. `pine-300` measured 4.58:1 on `pine-700` (filled)
+   * but only 3.78:1 on `pine-600` (outlined), so the figure this comment used to quote held for one
+   * of the two forms and the other quietly missed the bar the rest of the set clears. `pine-200`
+   * covers both: 6.66:1 filled, 5.49:1 outlined.
+   */
   --button-primary-bg: var(--stone-50);
   --button-primary-bg-hover: var(--signal-300);
   --button-primary-bg-active: var(--signal-400);
-  --button-primary-bg-disabled: var(--pine-400);
+  --button-primary-bg-disabled: var(--pine-700);
   --button-primary-fg: var(--pine-600);
   --button-primary-fg-hover: var(--stone-900);
   --button-primary-fg-active: var(--stone-900);
@@ -350,12 +445,23 @@
   --button-secondary-bg: var(--stone-50);
   --button-secondary-bg-hover: var(--stone-200);
   --button-secondary-bg-active: var(--stone-300);
-  --button-secondary-bg-disabled: var(--pine-400);
+  --button-secondary-bg-disabled: var(--pine-700);
   --button-secondary-fg: var(--pine-600);
   --button-secondary-fg-hover: var(--pine-600);
   --button-secondary-fg-active: var(--pine-600);
   --button-secondary-fg-disabled: var(--pine-200);
   --button-secondary-focus-ring: var(--signal-300);
+
+  /* Button - Accent — the same lime-under-ink pairing as the light theme. */
+  --button-accent-bg: var(--signal-300);
+  --button-accent-bg-hover: var(--signal-400);
+  --button-accent-bg-active: var(--signal-500);
+  --button-accent-bg-disabled: var(--pine-700);
+  --button-accent-fg: var(--stone-900);
+  --button-accent-fg-hover: var(--stone-900);
+  --button-accent-fg-active: var(--stone-900);
+  --button-accent-fg-disabled: var(--pine-200);
+  --button-accent-focus-ring: var(--signal-300);
 
   /* Input */
   --input-bg: var(--pine-600);

@@ -162,6 +162,8 @@ const GROUPS: Record<string, RegExp> = {
   Surfaces: /^--bg-/,
   Foreground: /^--fg-/,
   Lines: /^--(stroke-|focus-ring)/,
+  // Colour only. The sizing half of `--button-*` is lengths, which have no swatch to show.
+  Buttons: /^--button-.+-(bg|fg|focus-ring)(-.+)?$/,
   Inputs: /^--input-/
 };
 

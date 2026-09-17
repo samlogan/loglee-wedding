@@ -49,8 +49,11 @@ cell means the token resolves to nothing under that theme.
 
 ## Buttons
 
-Button tokens (`--button-*`) are declared once on `:root` rather than per theme, so they are the same
-in every theme by design and there is no matrix to show. They are listed in the ramps above.
+Three colour pairs, each with hover, active and disabled states and a focus ring. `primary` and
+`secondary` invert between the themes; `accent` is the same lime-under-ink pairing in both, because
+it is a fixed pair rather than a colour that follows the surface.
+
+<TokenMatrix group="Buttons" />
 
 ## Using these
 

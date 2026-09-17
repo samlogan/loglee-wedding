@@ -47,7 +47,6 @@ const NavigationTabs = (props: NavigationTabsProps) => {
             className={tabClasses}
             key={tab}
             href={`${path}?${param}=${value}`}
-            color="primary"
             size="lg"
             role="tab"
             aria-selected={isCurrent}

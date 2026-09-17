@@ -1,20 +1,27 @@
-import type { FC } from 'react';
+'use client';
 
-import type { ButtonProps } from '@/components/Button';
 import Button from '@/components/Button';
+import type { ButtonAppearanceProps } from '@/components/Button/appearance';
 import classNames from '@/helpers/classNames';
 
 import { useCarouselContext } from '../CarouselProvider';
 
 import styles from './styles.module.scss';
 
-interface CarouselNavigationProps {
+export interface CarouselNavigationProps {
   className?: string;
   overlay?: boolean;
-  button?: ButtonProps;
+  /*
+   * Appearance only, deliberately narrower than `ButtonProps`.
+   *
+   * This object is spread *after* the props below, so typing it as the full `ButtonProps` let a
+   * caller pass `onClick` and silently disable scrolling, or `disabled` and defeat the end-of-track
+   * guards. The only thing a consumer has a legitimate reason to change here is how the arrows look.
+   */
+  button?: ButtonAppearanceProps;
 }
 
-const CarouselNavigation: FC<CarouselNavigationProps> = (props) => {
+const CarouselNavigation = (props: CarouselNavigationProps) => {
   const { className, overlay = false, button = {} } = props;
   const { carousel } = useCarouselContext();
   if (!carousel) {
@@ -35,13 +42,18 @@ const CarouselNavigation: FC<CarouselNavigationProps> = (props) => {
         [styles.overlay]: overlay
       })}
     >
+      {/*
+       * `size` is not decoration here: `--button-icon-size` gives the icon its dimensions, and an
+       * icon-only control with no size prop would also have zero padding — no tap target at all.
+       */}
       <Button
         onClick={onPrev}
         className={styles.button}
         disabled={!carousel.scrollPrevAllowed}
         icon="arrowLeft"
-        aria-label="Previous Slide"
-        tabIndex={-1}
+        ariaLabel="Previous Slide"
+        size="md"
+        variant="ui"
         {...button}
       />
       <Button
@@ -49,8 +61,9 @@ const CarouselNavigation: FC<CarouselNavigationProps> = (props) => {
         className={styles.button}
         disabled={!carousel.scrollNextAllowed}
         icon="arrowRight"
-        aria-label="Next Slide"
-        tabIndex={-1}
+        ariaLabel="Next Slide"
+        size="md"
+        variant="ui"
         {...button}
       />
     </div>

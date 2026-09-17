@@ -3,19 +3,28 @@
 import NextLink from 'next/link';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 
-import classNames from '@/helpers/classNames';
+import type { ButtonAppearanceProps } from '@/components/Button/appearance';
+import { ButtonArrow, buttonClasses, inertClasses } from '@/components/Button/appearance';
 import stringClean from '@/tools/helpers/stringClean';
 import type { ILinkElement } from '@/tools/sanity/schema/elements/link';
 
-import Text from '../Text';
-
-import styles from '../Button/styles.module.scss';
-
-export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+/*
+ * `ButtonAppearanceProps` rather than a parallel copy of the same six props.
+ *
+ * A link styled as a button and a button are the same control on different elements — the design
+ * names every one of them "Link" — and the two declarations had already drifted once: `Link` knew
+ * about `variant="content"` and `Button` did not. One source, one class-composition helper.
+ */
+export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement>, ButtonAppearanceProps {
   children?: ReactNode;
   className?: string;
   id?: string;
   href?: string;
+  /*
+   * `string`, where `ButtonProps.text` is `string | number`. The two deliberately differ: this
+   * one doubles as the accessible-name fallback (`ariaLabel = text || title || ''`) and
+   * `aria-label` takes a string, so widening it only buys a `String()` coercion on the name path.
+   */
   text?: string;
   title?: string;
   ariaLabel?: string;
@@ -29,10 +38,6 @@ export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   target?: '_blank' | '_self' | '_parent' | '_top' | string;
   newWindow?: boolean;
   tabIndex?: number;
-  theme?: 'primary' | 'secondary';
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'rounded' | 'square' | 'pill' | 'content';
-  outline?: boolean;
   forceLinkWhenEmpty?: boolean;
 }
 
@@ -53,10 +58,25 @@ const Link = (props: LinkProps) => {
     target = '_self',
     newWindow = false,
     tabIndex = 0,
+    arrow,
+    /*
+     * Everything from here to `forceLinkWhenEmpty` is pulled out to keep it *off* the element, not
+     * because this function reads it — `buttonClasses` is handed `props` whole below.
+     *
+     * `rest` is spread onto an `<a>`, so any prop left in it becomes a DOM attribute. `action` is
+     * the one that bites in production: `linkProjection` returns it and consumers spread the whole
+     * link object (`<Link {...button?.link}>`), so an editor picking "Action" in the Studio used to
+     * emit `<a action="…">`. React passes unknown attributes through to the DOM without warning, so
+     * nothing flagged it. The appearance props below are the same problem in waiting.
+     */
     variant,
     size,
     theme,
-    outline = false,
+    outline,
+    mono,
+    fullWidth,
+    fullWidthMobile,
+    action,
     forceLinkWhenEmpty,
     ...rest
   } = props;
@@ -68,17 +88,37 @@ const Link = (props: LinkProps) => {
 
   const linkType = stringClean(rawLinkType);
 
-  const classes = classNames(
-    styles.button,
-    className,
-    { [styles[`size_${size}`]]: !!size },
-    { [styles[`variant_${variant}`]]: !!variant },
-    { [styles[`theme_${theme}`]]: !!theme },
-    { [styles.outline]: outline }
-  );
+  /*
+   * `props` whole, rather than a hand-assembled copy of the appearance axes.
+   *
+   * The copy had already gone stale — it passed `arrow`, which `buttonClasses` does not read — and
+   * it is one of the two lists a ninth appearance prop would have had to be added to. Passing the
+   * props object means `ButtonAppearanceProps` is the only place that list lives.
+   */
+  const classes = buttonClasses(props, className);
+  /*
+   * The same list plus the inert modifier, for the two `<span>` branches below. Built here
+   * rather than at each `return` so the two cannot drift.
+   */
+  const inert = inertClasses(props, className);
 
   const linkTarget = newWindow ? '_blank' : target;
-  const child = children || text || title;
+
+  /*
+   * Composed once, not per branch.
+   *
+   * Every return below renders the same content, and the arrows have to sit inside whichever
+   * element wins — including the plain `<span>` fallback, which is what an unresolvable link type
+   * renders. Building it in each branch is how the six branches drift apart.
+   */
+  const label = children || text || title;
+  const child = (
+    <>
+      {arrow === 'left' && <ButtonArrow direction="left" />}
+      {label}
+      {arrow === 'right' && <ButtonArrow direction="right" />}
+    </>
+  );
 
   const commonProps = {
     /*
@@ -112,7 +152,7 @@ const Link = (props: LinkProps) => {
 
     if (!linkHref) {
       return (
-        <span className={classes} id={id} {...rest}>
+        <span className={inert} id={id} {...rest}>
           {child}
         </span>
       );
@@ -124,7 +164,7 @@ const Link = (props: LinkProps) => {
 
     return (
       <NextLink href={linkHref} prefetch={true} {...commonProps}>
-        {children || text || title}
+        {child}
       </NextLink>
     );
   }
@@ -137,13 +177,13 @@ const Link = (props: LinkProps) => {
     if (isRelative && linkHref) {
       return (
         <NextLink href={linkHref} prefetch={true} {...commonProps}>
-          {children || text || title}
+          {child}
         </NextLink>
       );
     }
     return (
       <a href={linkHref} rel="nofollow noreferrer" {...commonProps}>
-        {children || text || title}
+        {child}
       </a>
     );
   }
@@ -162,7 +202,7 @@ const Link = (props: LinkProps) => {
     if (phoneHrefClean) {
       return (
         <a href={`tel:${phoneHrefClean}`} {...commonProps}>
-          {children || text || title}
+          {child}
         </a>
       );
     }
@@ -173,7 +213,7 @@ const Link = (props: LinkProps) => {
     if (emailHref) {
       return (
         <a href={`mailto:${emailHref}`} {...commonProps}>
-          {children || text || title}
+          {child}
         </a>
       );
     }
@@ -191,7 +231,7 @@ const Link = (props: LinkProps) => {
    * behavioural prop has to do to be worth anything.
    */
   return (
-    <span className={classes} id={id} {...rest}>
+    <span className={inert} id={id} {...rest}>
       {child}
     </span>
   );
