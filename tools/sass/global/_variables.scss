@@ -204,6 +204,26 @@
   --container-lg: 1280px;
   --container-xl: 1440px;
 
+  /*
+   * The site gutter — the inset between the frame edge and the content column.
+   *
+   * Fluid, unlike the caps above, because it is a *size* rather than a limit: the design draws 20px
+   * at its 390px frame and 40px at its 1280px one (every page frame agrees — nodes 1:46, 1:104 and
+   * their counterparts on Planner, Stay and RSVP). It was a fixed 24px at every width, which is
+   * 4px too wide on a phone and 16px too tight on a desktop, and a fixed px where the design states
+   * two different values is exactly what `fluid()` exists for.
+   *
+   * The anchors are the design's own two numbers, following the convention the button tokens above
+   * use — take the value the design states and make it the anchor, rather than re-projecting it
+   * from the design's frame width onto this scale's. The cost is that 1280px lands on 37px rather
+   * than the drawn 40; the benefit is that the two numbers in the file are the two numbers in
+   * Figma.
+   *
+   * Consumed by `Container`, and by the header's mobile panel so its inline inset tracks the bar
+   * above it by construction rather than by two stylesheets happening to agree.
+   */
+  --container-gutter: #{fluid(20px, 40px)};
+
   // ------------------------------------
   // Section Spacing — fluid
   // ------------------------------------
