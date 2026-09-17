@@ -15,6 +15,10 @@
  * exits 2 when that is unreachable — so it cannot be the only guard. These run offline.
  */
 
+import { readdirSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { createSchema } from 'sanity';
 import { describe, expect, it } from 'vitest';
 
@@ -88,5 +92,31 @@ describe('section registrations', () => {
      * with double quotes is not reported as unprojected; `audit-sections.ts` reads it the same way.
      */
     expect(sectionsProjection).toMatch(new RegExp(`_type\\s*==\\s*['"]${type}['"]`));
+  });
+});
+
+describe('section folders', () => {
+  /*
+   * The reverse of the checks above, and the direction a new section actually fails in.
+   *
+   * Those assert that everything *registered* has its files. This asserts that everything with files
+   * is *registered* — because creating the folder is the step you remember and editing four
+   * unrelated lists is the step you don't. `yarn sections:register` writes all four from this same
+   * folder listing, so a failure here means it has not been run.
+   */
+  const folders = readdirSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'sections'), {
+    withFileTypes: true
+  })
+    .filter((entry) => entry.isDirectory() && /^[A-Z][A-Za-z0-9]*Section$/.test(entry.name))
+    .map((entry) => entry.name);
+
+  it('finds at least one section folder — the negative control for the cases below', () => {
+    /* `it.each([])` reports zero tests and passes, so a wrong path would silently assert nothing. */
+    expect(folders.length).toBeGreaterThan(0);
+  });
+
+  it.each(folders)('%s is registered — run `yarn sections:register` if this fails', (folder) => {
+    const type = folder.charAt(0).toLowerCase() + folder.slice(1);
+    expect(pageSections.map((section) => section.type)).toContain(type);
   });
 });

@@ -25,6 +25,8 @@ import { dirname, join } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { companionExports } from './lib/companionExports';
+
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
 
@@ -70,6 +72,30 @@ if (missing.length > 0) {
     `Incomplete section(s) — cannot generate registrations:\n${missing.map((m) => `  missing ${m}`).join('\n')}\n`
   );
   process.exit(1);
+}
+
+/*
+ * Sub-types are not derivable, so say so rather than silently dropping them.
+ *
+ * A schema file may export companions alongside the section (`export { gridSection, gridCard }`).
+ * The generated import names only the section, so a companion referenced in the schema array's
+ * `// Objects` block becomes an undefined identifier — caught by `yarn ts:check`, but with an error
+ * that names the identifier rather than the cause. Warning here names the cause.
+ *
+ * The fix is to move companions into `tools/sanity/schema/objects/`, which keeps the generated
+ * region generated. Deliberately a warning, not an error: a section may legitimately have them while
+ * that move is pending.
+ */
+const companions = sections.flatMap(({ type }) => {
+  const source = readFileSync(join(root, 'tools/sanity/schema/sections', `${type}.ts`), 'utf8');
+  const exported = companionExports(source, type);
+  return exported.length > 0 ? [`  ${type}.ts also exports: ${exported.join(', ')}`] : [];
+});
+
+if (companions.length > 0) {
+  process.stderr.write(
+    `Sub-type exports are not written by this generator — register them in the '// Objects' block by hand,\nor move them to tools/sanity/schema/objects/:\n${companions.join('\n')}\n`
+  );
 }
 
 const BANNER = (command: string) =>

@@ -72,6 +72,8 @@ The command auto-detects whether the target is a section or component:
 - `--theme=<name>` — Theme to render (default: `light`). Options: `light`, `dark`, `primary`, `secondary`, `tertiary`
 - `--fix` — Automatically fix issues after review (default behaviour — always fixes)
 - `--no-plan` — Skip entering plan mode
+- `--storybook-port={N}` — Storybook port to render against (default 6006)
+- `--browser=mcp|bash` — Browser driver (default mcp)
 
 **Examples:**
 
@@ -79,6 +81,22 @@ The command auto-detects whether the target is a section or component:
 /review-design GridSection
 /review-design Badge https://www.figma.com/design/abc123/...?node-id=5-678   # override the bound design
 ```
+
+---
+
+### Render target — `{PORT}` and the browser
+
+Every URL in this file is written `http://localhost:{PORT}`. Resolve `{PORT}` once, here:
+
+- `--storybook-port={N}` — default **6006**. `/batch-parallel` passes a distinct port per worktree,
+  because one Storybook instance serves one checkout: N concurrent reviews against a shared 6006 all
+  measure whichever worktree owns it and return confidently wrong numbers without erroring.
+- `--browser=mcp|bash` — default **mcp**. Use `bash` when several reviews run concurrently: the
+  Playwright MCP is a single browser shared across the session, so parallel `browser_navigate` calls
+  interleave in one tab. In `bash` mode drive a one-off Playwright Node script instead (`playwright`
+  is a devDependency), which gives this review its own browser process.
+
+Both default to today's behaviour, so a plain invocation is unchanged.
 
 ---
 
@@ -121,17 +139,17 @@ Store the target type (`section` or `component`) for use in later phases.
 
 ### 0c: Verify Storybook is running
 
-Check if Storybook is responding on port 6006:
+Check if Storybook is responding on port `{PORT}`:
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:6006/iframe.html 2>/dev/null || echo "DOWN"
+curl -s -o /dev/null -w "%{http_code}" http://localhost:{PORT}/iframe.html 2>/dev/null || echo "DOWN"
 ```
 
 If down, start it in the background and wait until the iframe responds:
 
 ```bash
-yarn storybook > /tmp/storybook.log 2>&1 &
-until curl -s -o /dev/null http://localhost:6006/iframe.html; do sleep 1; done
+yarn storybook --port {PORT} > /tmp/storybook-{PORT}.log 2>&1 &
+until curl -s -o /dev/null http://localhost:{PORT}/iframe.html; do sleep 1; done
 ```
 
 The dev server (port 3000) is **not** required — Storybook is the render target.
@@ -140,14 +158,14 @@ The dev server (port 3000) is **not** required — Storybook is the render targe
 
 Build the story ID for the target:
 
-**Look the story ID up in `http://localhost:6006/index.json` — do not build it from the folder name.** Titles group by what a thing _is_, so `FaqSection` lives at `Sections/FAQ` → `sections-faq--default`. Match on `type === 'story'` **and the export name** (`Default` unless `--story` names another — most titles have several stories, so a title-only match is ambiguous for almost every target), with the leaf title normalised (`toLowerCase()`, strip non-alphanumerics) against the folder name with a trailing `Section` removed, and filter by whether the title starts with `Sections/` according to the mode this command already determined. No fallback to the opposite group — if nothing matches, stop. See `/review-code` Phase 0d for the full rule and why each part matters.
+**Look the story ID up in `http://localhost:{PORT}/index.json` — do not build it from the folder name.** Titles group by what a thing _is_, so `FaqSection` lives at `Sections/FAQ` → `sections-faq--default`. Match on `type === 'story'` **and the export name** (`Default` unless `--story` names another — most titles have several stories, so a title-only match is ambiguous for almost every target), with the leaf title normalised (`toLowerCase()`, strip non-alphanumerics) against the folder name with a trailing `Section` removed, and filter by whether the title starts with `Sections/` according to the mode this command already determined. No fallback to the opposite group — if nothing matches, stop. See `/review-code` Phase 0d for the full rule and why each part matters.
 
 If the developer wants a specific story variant other than `Default`, pass it via `--story=<export-name-kebab>`.
 
 Verify the story exists by fetching the iframe URL and confirming HTTP 200:
 
 ```bash
-STORY_URL="http://localhost:6006/iframe.html?id={story-id}&viewMode=story"
+STORY_URL="http://localhost:{PORT}/iframe.html?id={story-id}&viewMode=story"
 curl -s -o /dev/null -w "%{http_code}" "$STORY_URL"
 ```
 
@@ -165,7 +183,11 @@ The Figma source is bound to the story via `parameters.design.url`. Resolve it i
 **Set the review mode based on what you find — do NOT stop if there's no design:**
 
 - **A URL was resolved → `full` mode.** Run the complete review including the Figma visual + measurement comparison (Phases 1, 5, 7).
-- **No URL (neither arg nor `parameters.design`) → `compliance` mode.** This is normal and expected for primitives (`Badge`, `Icon`, `Text`, `Container`) that don't map to a single Figma frame. Skip the Figma-dependent phases (1, 5, 7) and run only the content-independent review: design-system token compliance, spacing/typography/colour-token usage, reuse/DRY, accessibility, and code quality (Phases 3, 4, 6 minus the visual re-measure). Note clearly in the report:
+- **No URL (neither arg nor `parameters.design`) → `compliance` mode.** This is normal and expected for primitives (`Badge`, `Icon`, `Text`, `Container`) that don't map to a single Figma frame. Skip the Figma-dependent phases (1, 5, 7) and run the content-independent review: design-system token compliance and spacing/typography/colour-token usage (Phases 3, 4, 6 minus the visual re-measure), **plus the `accessibility-reviewer` agent alongside `design-code-reviewer` in Phase 3**.
+
+  That a11y agent is not optional in this mode and is the reason compliance mode is worth running at all. Compliance mode is the primitives path — buttons, icons, fields, containers — which is precisely where keyboard, focus and semantic-HTML defects live, and precisely what a pixel comparison would never have caught. Launch it in the same parallel message as `design-code-reviewer`.
+
+  Note clearly in the report:
 
   > "No Figma design bound to `{Name}` — ran design-system / token compliance + accessibility review; skipped the Figma pixel comparison. Bind a design via `parameters.design` to enable the full visual review."
 
@@ -238,12 +260,12 @@ Read the target's TypeScript interface from the schema file (sections) or compon
 Sections and components are rendered via their `.stories.tsx` files — no temporary review page is needed. The story acts as the canonical fixture for the design review.
 
 1. Resolve the story ID for the target (see Phase 0d). Default is `Default`; override with `--story=<export-kebab>`.
-2. Fetch `http://localhost:6006/index.json` and confirm the story ID is present.
+2. Fetch `http://localhost:{PORT}/index.json` and confirm the story ID is present.
 3. If the story is missing, generate one by following the template in `.claude/commands/create-section.md` (Step 2e) or `.claude/commands/create-component.md` (Step 3), using the data composed in Phase 2a (text, images, button labels).
 
 ### 2c: Verify the story renders
 
-1. Navigate Playwright to `http://localhost:6006/iframe.html?id={story-id}&viewMode=story`
+1. Navigate Playwright to `http://localhost:{PORT}/iframe.html?id={story-id}&viewMode=story`
 2. Wait 2 seconds for CSS animations and Storybook init to settle
 3. Take a screenshot to confirm it renders
 4. If the story shows an error, fix the story's `args` to match the component's actual prop shape and retry
@@ -251,6 +273,9 @@ Sections and components are rendered via their `.stories.tsx` files — no tempo
 ---
 
 ## Phase 3: Code Review (AGENT)
+
+**In `compliance` mode, launch `accessibility-reviewer` in the same message** — see Phase 0e. In
+normal mode `design-code-reviewer` runs alone; accessibility is covered by `/review-code` Phase 3b.
 
 Launch the `design-code-reviewer` agent with:
 
@@ -331,17 +356,22 @@ Only AFTER Phases 3-6 are complete:
 4. Resize to 414px, take a mobile screenshot
 5. If mobile Figma design was provided, compare against that too
 
-Perform detailed visual comparison across all categories:
+**Look for what measurement cannot catch.** Phase 5's `design-visual-comparer` has already compared
+every computed value against the Figma spec — layout, spacing, typography, colour, component sizing,
+responsive reflow and alignment are settled, and re-eyeballing them from a screenshot is strictly
+less reliable than the numbers you already have. Re-check them only where a Phase 6 fix touched them.
 
-1. **Layout & Structure** — flex/grid layout, column proportions, element ordering
-2. **Spacing** — padding, margins, gaps between elements
-3. **Typography** — font sizes, weights, line heights, letter spacing
-4. **Colours** — backgrounds, text colours, borders, opacity
-5. **Component sizing** — image aspect ratios, button dimensions, icon sizes
-6. **Responsive behaviour** — how elements reflow between desktop and mobile
-7. **Alignment** — vertical/horizontal alignment of elements
-8. **Missing elements** — anything in Figma but absent from the build
-9. **Clipping/overflow** — no unexpected white space or cut-off content
+What a per-element measurement pass genuinely cannot see:
+
+1. **Missing elements** — anything in the Figma frame with no counterpart in the build. A comparer
+   measures the elements that exist; it cannot miss what was never rendered.
+2. **Extra elements** — anything rendered that the design does not have.
+3. **Clipping and overflow** — content cut off, unexpected white space, a scrollbar that shouldn't be
+   there. These are relationships between boxes, not properties of one.
+4. **Visual order and grouping** — whether the eye lands in the same sequence as the design. Correct
+   individual values can still assemble into the wrong composition.
+5. **Anything the fixes in Phase 6 disturbed** — a spacing change that pushed a neighbour, a font
+   change that reflowed a line.
 
 If issues remain, fix them and repeat Phase 7 until the section passes.
 
@@ -351,7 +381,7 @@ If issues remain, fix them and repeat Phase 7 until the section passes.
 
 ### 8a: Stop ad-hoc Storybook
 
-If `/review-design` started Storybook itself in Phase 0c, you can leave it running for follow-up reviews. Otherwise (or to free port 6006), kill the process with `lsof -ti:6006 | xargs kill`. No filesystem cleanup is needed — stories are permanent fixtures.
+If `/review-design` started Storybook itself in Phase 0c, you can leave it running for follow-up reviews. Otherwise (or to free port `{PORT}`), kill the process with `lsof -ti:{PORT} | xargs kill`. No filesystem cleanup is needed — stories are permanent fixtures.
 
 ### 8b: Run final checks
 

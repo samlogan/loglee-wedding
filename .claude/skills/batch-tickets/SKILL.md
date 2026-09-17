@@ -1,8 +1,12 @@
 # Batch Tickets
 
-Autonomous pipeline that generates a ticket manifest from Linear, then implements, reviews, commits, and merges each ticket — one at a time, sequentially. Each step runs in a separate Agent to keep context fresh.
+Autonomous pipeline that generates a ticket manifest from Linear, then implements, reviews, commits and merges each ticket — **one at a time, in order**. Each step runs in a separate Agent to keep context fresh.
 
-This is the generalised cousin of `/batch-sections` and `/batch-components`. It handles arbitrary tickets — sections, components, bug fixes, refactors, content changes — by delegating each one to `/ticket`, which routes to the right slash command (`/create-section`, `/create-component`) or executes the work directly.
+Sequential is the point, not a limitation: every ticket branches from a `main` containing its predecessors, so each one can reuse and extend what came before. For concurrency, see `/batch-parallel`, which trades that for wall-clock and rebuilds the reuse with a shared-surface pre-pass and a closing sweep.
+
+It handles arbitrary tickets — sections, components, bug fixes, refactors, content changes — routing each to the right slash command (`/create-section`, `/create-component`) or executing the work directly.
+
+This replaced `/batch-sections` and `/batch-components`, which were the same pipeline with one word substituted. Nothing was lost: a `type: "section"` ticket here runs the identical Step B prompt, the identical reviews and the identical PR title those commands used.
 
 ## Arguments
 
@@ -21,8 +25,9 @@ This is the generalised cousin of `/batch-sections` and `/batch-components`. It 
 
 - `--from {index}` — Start from ticket index (0-based), skip earlier tickets
 - `--only {index}` — Run only one ticket by index
-- `--skip-reviews` — Skip review-design and review-code, even for section/component tickets
+- `--skip-reviews` — Skip review-design and review-code for every ticket, whatever its `reviews` flag says
 - `--generate-only` — Generate tickets.json and stop (do not execute)
+- `--no-consolidate` — Skip the closing `/consolidate` pass (Phase 3)
 
 **Manifest location:** `${CLAUDE_SKILL_DIR}/tickets.json`
 
@@ -30,114 +35,12 @@ This is the generalised cousin of `/batch-sections` and `/batch-components`. It 
 
 ## Phase 1: Generate tickets.json
 
-**Skip this phase if `--from` or `--only` is passed** — these flags assume tickets.json already exists.
+Follow `.claude/shared/ticket-manifest.md` in full — ticket resolution, field extraction (including
+`reviews` / `reviewName`), the JSON shape, and the preview-and-confirm gate.
 
-### 1a. Resolve tickets
+Write the result to `.claude/skills/batch-tickets/tickets.json`.
 
-Parse `$ARGUMENTS` to get Linear ticket IDs/URLs.
-
-**If no arguments are provided (or only flags like `--skip-reviews`):**
-
-Prompt the user using `AskUserQuestion`:
-
-> **Linear tickets?** Paste one of the following:
->
-> - A **parent ticket** URL or ID (e.g. `MAM-260`) — I'll process all its sub-issues
-> - **Multiple ticket** URLs or IDs, one per line — I'll process each one
->
-> Paste below:
-
-Parse the response — split by newlines and/or spaces, extract all ticket IDs/URLs.
-
-**If a single ticket is provided:**
-
-1. Fetch it via `mcp__linear__get_issue`
-2. Check if it has sub-issues (it's a parent). If yes, fetch all sub-issues via `mcp__linear__list_issues` filtered by `parentId`
-3. If no sub-issues, treat it as a single ticket
-
-**If multiple tickets are provided:**
-
-1. Fetch each via `mcp__linear__get_issue`
-
-### 1b. Extract ticket data and detect type
-
-For each ticket, extract:
-
-- **name** — A short label for logging. Derive from the title:
-  - "Build {Name} section (...)" → `{Name}` (e.g. `Hero`)
-  - "Build {Name} component (...)" / "Create {Name} component (...)" → `{Name}` (e.g. `Badge`)
-  - Anything else → use the full title (truncate to 60 chars for display)
-- **type** — Detect the ticket category for routing:
-  - `section` — title matches `Build {Name} section` OR description mentions `/create-section`
-  - `component` — title matches `Build {Name} component` / `Create {Name} component` OR description mentions `/create-component`
-  - `other` — anything else (bug fix, refactor, content, config, etc.)
-- **linearId** — The ticket identifier (e.g. "MAM-261")
-- **linearUrl** — The ticket URL
-- **branch** — The git branch name from Linear (`gitBranchName` field). If missing, construct one as `feature/{lowercase-id}-{slugified-title}`
-- **desktop** / **mobile** / **additionalFigma** — Only for `section` and `component` types. Extract the `--desktop=` and `--mobile=` URLs from the slash command in the Technical Notes (or "Desktop:" / "Mobile:" labels). Other Figma URLs go into `additionalFigma` (string or `{name, url}` object). For `other` type, set all three to `null` / `[]`.
-- **ticketDescription** — The full ticket description, verbatim. This is the primary context carrier — it contains requirements, approach notes, acceptance criteria, and anything else the developer wrote
-- **commands** — Comments on the ticket (if any) appended to description for full context
-
-### 1c. Write tickets.json
-
-Write the array to `.claude/skills/batch-tickets/tickets.json`:
-
-```json
-[
-  {
-    "name": "Hero",
-    "type": "section",
-    "linearId": "MAM-261",
-    "linearUrl": "https://linear.app/mammoth/issue/MAM-261/...",
-    "branch": "feature/mam-261-build-hero-section",
-    "desktop": "https://figma.com/design/...?node-id=...",
-    "mobile": "https://figma.com/design/...?node-id=...",
-    "additionalFigma": [],
-    "ticketDescription": "## Overview\n\nBuild the Hero section..."
-  },
-  {
-    "name": "Badge",
-    "type": "component",
-    "linearId": "MAM-262",
-    "linearUrl": "https://linear.app/mammoth/issue/MAM-262/...",
-    "branch": "feature/mam-262-build-badge-component",
-    "desktop": "https://figma.com/design/...?node-id=...",
-    "mobile": "https://figma.com/design/...?node-id=...",
-    "additionalFigma": [],
-    "ticketDescription": "## Overview\n\nBuild the Badge component..."
-  },
-  {
-    "name": "Fix mobile menu close on route change",
-    "type": "other",
-    "linearId": "MAM-263",
-    "linearUrl": "https://linear.app/mammoth/issue/MAM-263/...",
-    "branch": "bugfix/mam-263-mobile-menu-close",
-    "desktop": null,
-    "mobile": null,
-    "additionalFigma": [],
-    "ticketDescription": "## Overview\n\nThe mobile menu stays open when..."
-  }
-]
-```
-
-### 1d. Preview and confirm
-
-Display the manifest grouped by type:
-
-```
-tickets.json generated — {count} tickets:
-
-  0: [section]    {name} ({linearId}) — desktop: ✓  mobile: ✓
-  1: [component]  {name} ({linearId}) — desktop: ✓  mobile: ✓
-  2: [other]      {name} ({linearId})
-  ...
-
-Proceed with execution? (y/n)
-```
-
-If `--generate-only` was passed, stop here (do NOT delete tickets.json — the user may want to edit it before running again with `--from`).
-
-Wait for user approval before proceeding to Phase 2.
+**Skip this phase if `--from` or `--only` is passed** — those flags assume the manifest exists.
 
 ---
 
@@ -150,10 +53,10 @@ Before starting execution, verify:
 1. Storybook is running — check with `curl -s -o /dev/null -w "%{http_code}" http://localhost:6006/iframe.html` (expect 200). If not running, start it once at the top of the run with `yarn storybook > /tmp/storybook.log 2>&1 &` and wait for it to respond.
 2. Working tree is clean — `git status --porcelain` should be empty
 3. Currently on `main` — `git branch --show-current` should output `main`
-4. **Conditional checks** — only required if the manifest contains any `section` or `component` tickets:
+4. **Conditional checks** — only required if any ticket in the manifest has `reviews: true` (and `--skip-reviews` is not set):
    - Figma MCP is available — check for `mcp__figma__get_design_context` via ToolSearch
    - `FIGMA_PERSONAL_ACCESS_TOKEN` is set in `.env.development`
-   - Playwright MCP is available — check for `mcp__playwright__browser_navigate` via ToolSearch (only if `--skip-reviews` is NOT set)
+   - Playwright MCP is available — check for `mcp__playwright__browser_navigate` via ToolSearch
 
 Report ALL failures in a single message. Do not proceed until all checks pass.
 
@@ -161,7 +64,7 @@ Report ALL failures in a single message. Do not proceed until all checks pass.
 
 - `--from {index}` — Skip tickets before this index
 - `--only {index}` — Only run the ticket at this index
-- `--skip-reviews` — Skip Steps C and D for ALL tickets (even sections/components)
+- `--skip-reviews` — Skip Steps C and D for ALL tickets, overriding each ticket's `reviews` flag
 
 ### Read manifest
 
@@ -276,14 +179,15 @@ After the agent completes, run `/commit` directly (not in an agent).
 
 ---
 
-#### Step C: Review design (Agent) — only for `section` and `component` types, skip if `--skip-reviews`
+#### Step C: Review design (Agent) — when `ticket.reviews` is `true`, skip if `--skip-reviews`
 
-For `type: "other"`, skip this step entirely (design review only applies to visual UI work tied to a Figma reference).
+Skip entirely when `ticket.reviews` is `false`. Note this is **not** keyed on `ticket.type` — see
+"`reviews` drives the reviews" in Phase 1b.
 
-**For `type: "section"`:**
+Launch a `general-purpose` Agent:
 
 ```
-Run /review-design {ticket.name}Section
+Run /review-design {ticket.reviewName}
 
 Desktop Figma: {ticket.desktop}
 Mobile Figma: {ticket.mobile}
@@ -292,25 +196,12 @@ Complete all phases autonomously:
 - Do NOT use AskUserQuestion — make decisions based on the Figma design
 - Fix all issues found
 - Verify fixes with screenshots and re-measurement
-- Clean up the review page when done
 - Do NOT run /commit — that happens after this agent completes
 ```
 
-**For `type: "component"`:**
-
-```
-Run /review-design {ticket.name}
-
-Desktop Figma: {ticket.desktop}
-Mobile Figma: {ticket.mobile}
-
-Complete all phases autonomously:
-- Do NOT use AskUserQuestion — make decisions based on the Figma design
-- Fix all issues found
-- Verify fixes with screenshots and re-measurement
-- Clean up the review page when done
-- Do NOT run /commit — that happens after this agent completes
-```
+`/review-design` resolves the target itself (`sections/{Name}Section/` then `components/{Name}/`), so
+`reviewName` carries the full name — `HeroSection`, not `Hero`. It degrades gracefully when the story
+has no `parameters.design` bound: token/compliance review instead of the pixel comparison.
 
 Wait for the agent to complete. If it fails, log a warning but continue.
 
@@ -318,14 +209,10 @@ After the agent completes, run `/commit` directly (not in an agent) if there are
 
 ---
 
-#### Step D: Review code (Agent) — only for `section` and `component` types, skip if `--skip-reviews`
-
-For `type: "other"`, skip this step entirely. Code review of arbitrary ticket work is too open-ended for this autonomous pipeline — leave it for human review on the PR.
-
-**For `type: "section"`:**
+#### Step D: Review code (Agent) — when `ticket.reviews` is `true`, skip if `--skip-reviews`
 
 ```
-Run /review-code {ticket.name}Section
+Run /review-code {ticket.reviewName}
 
 Complete all phases autonomously:
 - Do NOT use AskUserQuestion — make decisions based on best practices
@@ -333,16 +220,11 @@ Complete all phases autonomously:
 - Do NOT run /commit — that happens after this agent completes
 ```
 
-**For `type: "component"`:**
-
-```
-Run /review-code {ticket.name}
-
-Complete all phases autonomously:
-- Do NOT use AskUserQuestion — make decisions based on best practices
-- Fix all issues found
-- Do NOT run /commit — that happens after this agent completes
-```
+**This step reviews the ticket in isolation, and that is deliberate.** Cross-section duplication is
+not its job and it cannot do that job here: `code-quality-reviewer` only recommends extracting a
+pattern found in 3+ places, and at ticket _n_ the sections from tickets _n+1…_ do not exist yet. The
+threshold cannot fire for anything this batch is introducing. Phase 3 runs once at the end, when they
+all exist, and owns that question.
 
 Wait for the agent to complete. If it fails, log a warning but continue.
 
@@ -397,6 +279,39 @@ Print: `[{index+1}/{total}] {ticket.linearId}: {ticket.name} ({ticket.type}) —
 
 ---
 
+---
+
+## Phase 3: Consolidate (skip with `--no-consolidate`)
+
+Run once, after every ticket has merged and `main` is up to date:
+
+```bash
+git checkout main && git pull origin main
+```
+
+Then run `/consolidate` with the names of everything this batch produced — the `reviewName` of every
+ticket that succeeded, plus any section or component folder created along the way:
+
+```
+/consolidate {name} {name} {name} …
+```
+
+**Why this is a separate pass rather than part of Step D.** `code-quality-reviewer` only recommends
+extracting a pattern it finds in 3+ places. During the batch, ticket _n_ is reviewed when the work
+from tickets _n+1…_ does not exist, so that threshold cannot fire for anything the batch itself is
+introducing — and batch-introduced duplication is the most likely kind, because every section comes
+from one design system and one Figma file. This is the only point in the run where they all coexist.
+
+`/consolidate` opens a PR and **does not merge it**. Every other PR in this pipeline is a
+self-contained addition; this one rewrites already-merged, already-reviewed code across many files.
+It has a real safety net — every story is a browser component test, so `yarn test` exercises each
+section's render — but it is the one PR in the run that a human should look at.
+
+Report the PR URL in the summary. If `/consolidate` finds nothing worth extracting, it says so and
+opens no PR — that is a normal outcome for a small batch.
+
+---
+
 ### Cleanup
 
 After all tickets have been processed (or if only `--only` was used and that ticket completed), **delete the manifest**:
@@ -434,6 +349,8 @@ Results:
   ⊘ [section]    Footer (MAM-264) — skipped (--from)
 
 tickets.json has been deleted.
+
+Consolidation: {PR url — awaiting human review} / {nothing to extract} / {skipped}
 ```
 
 ## Error Handling

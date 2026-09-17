@@ -34,6 +34,10 @@ yarn test:watch          # Watch mode
 yarn test:unit           # Pure logic only, no browser — well under a second
 yarn test:stories        # Every story as a component test in headless chromium
 
+# Section registrations — generated from the contents of sections/, never hand-edited
+yarn sections:register   # rewrite all four registration files
+yarn sections:check      # verify only; exits 1 on drift
+
 # Audits — CLI only. These print verdicts; the Storybook pages deliberately do not.
 yarn audit:groups        # Story sidebar taxonomy. Hard-blocks /commit and /pr
 yarn audit:sections      # Placeable vs rendered vs projected vs used, per section type
@@ -193,7 +197,7 @@ Pages are rendered through:
 
 ### Section Architecture
 
-Each section consists of **5 files** plus **registration in 4 locations**.
+Each section consists of **5 files**. The four registrations are generated — see below.
 
 #### Section Files
 
@@ -206,12 +210,47 @@ Each section consists of **5 files** plus **registration in 4 locations**.
 | Story     | `sections/{PascalCase}Section/{PascalCase}Section.stories.tsx` | Storybook story (mock-data shaped to the GROQ output) |
 | Thumbnail | `sections/{PascalCase}Section/thumbnail.png`                   | Preview image for Studio                              |
 
-#### Registration Locations
+#### Registration — generated, never hand-edited
 
-1. **`tools/sanity/schema/index.ts`** — import + add to schema array
-2. **`tools/sanity/helpers/sections.ts`** — add `{ type: '{camelCase}Section' }` to `pageSections`
-3. **`sections/index.ts`** — add component export
-4. **`tools/sanity/projections/common/sections.groq.ts`** — import + add projection
+```bash
+yarn sections:register          # rewrite all four from the contents of sections/
+yarn sections:check             # verify without writing; exits 1 on drift
+```
+
+`tools/sanity/register-sections.ts` derives every name from the folder (`TwoColumnListSection` →
+`twoColumnListSection`) and writes:
+
+| File                                               | Scope                                                                       |
+| -------------------------------------------------- | --------------------------------------------------------------------------- |
+| `sections/index.ts`                                | whole file — component barrel                                               |
+| `tools/sanity/helpers/sections.ts`                 | whole file — `pageSections` placement list                                  |
+| `tools/sanity/schema/index.ts`                     | the `// #region section-imports` and `// #region section-types` spans       |
+| `tools/sanity/projections/common/sections.groq.ts` | the `// #region section-imports` and `// #region section-projections` spans |
+
+The two partially-generated files keep hand-written content outside their sentinels. Note the
+projection's markers sit **outside** the `groq` template literal — everything between those backticks
+is sent to the Sanity API, so a marker inside would be query weight that `yarn audit:projections`
+counts.
+
+Three reasons this is generated rather than transcribed:
+
+- Every half-registration fails **silently** in a different way (`registration.test.ts` enumerates
+  them). All four are pure functions of the folder name, so writing them by hand is transcription.
+- The four files are short, alphabetically sorted lists, which is why parallel section branches
+  always conflict in them — git's three-line merge context makes any two insertions overlap. Because
+  they are derivable, regenerating _is_ the resolution; `/batch-tickets --parallel` does exactly that
+  in its merge train.
+- The output stays **committed**, not gitignored, because `audit-sections.ts`, `audit-projections.ts`
+  and `generate-fixtures.ts` import these modules and run under `tsx` — esbuild-on-Node with no
+  bundler. An `import.meta.glob` barrel (supported by both Turbopack and Vite) would break all three,
+  including the `story-fixture-checker` pass inside `/commit` and `/pr`.
+
+Sub-types exported alongside a section (`export { gridSection, gridCard }`) are **not** derivable.
+The generator warns about them; register them in the `// Objects` block by hand, or better, move them
+to `tools/sanity/schema/objects/`.
+
+`yarn test:unit` checks both directions — everything registered has its files, and every folder in
+`sections/` is registered.
 
 #### Naming Convention
 
@@ -446,7 +485,7 @@ Available mixins: `media-up($bp)`, `media-down($bp)`, `media-between($min, $max)
 Defined in `tools/sass/global/_variables.scss`:
 
 - **Base colors**: three ramps, each `25`–`900` — `var(--stone-500)` (warm neutral base), `var(--pine-500)` (brand green), `var(--signal-300)` (bright accent, reserved for interactive states) — plus `var(--shades-black)`, `var(--shades-white)` and the `var(--system-*)` ramps. Prefer the theme-aware tokens below; no component currently references a primitive directly.
-- **Theme-aware** (change with `[data-theme]`): `var(--bg-default)`, `var(--bg-accent)`, `var(--bg-raised)`, `var(--fg-default)`, `var(--fg-link)`, `var(--fg-icon)`, `var(--fg-accent)`, `var(--stroke-cards)`, `var(--stroke-divider)`. **Two themes only** — `light` and `dark`.
+- **Theme-aware** (change with `[data-theme]`): `var(--bg-default)`, `var(--bg-accent)`, `var(--bg-raised)`, `var(--fg-default)`, `var(--fg-muted)`, `var(--fg-subtle)`, `var(--fg-link)`, `var(--fg-icon)`, `var(--fg-accent)`, `var(--stroke-cards)`, `var(--stroke-divider)`. **Two themes only** — `light` and `dark`.
 - **Type scale** (fluid): `var(--display-lg)`, `var(--display-md)`, `var(--heading-2xl)` … `var(--heading-xs)`, `var(--body-2xl)` … `var(--body-xs)`, plus `var(--body-2xs)` and the `var(--body-lede)` / `var(--body-lede-line-height)` pair. **There are no `-mobile` variants** — each token is a single `clamp()` covering the whole viewport range. Set type through `Text`'s `variant` + `size` props, never a raw `font-size`.
   - `--body-2xs` is the step **below** the body scale's floor — the mono micro-label size (times, chips, eyebrows, stat labels). It has no `Text` `size` value because `Text` has no `mono` variant yet; consume it directly and comment why.
   - `--body-lede` is a **fluid px pair**, not a unitless ratio, because the lede's leading ramps 1.40 → 1.35 as its size ramps. A unitless `line-height` cannot express that.
@@ -522,35 +561,35 @@ Optional:
 
 Available in `.claude/commands/`:
 
-| Command                   | Description                                                                                              |
-| ------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `/branch`                 | Create a Gitflow branch with optional Linear issue                                                       |
-| `/create-component`       | Scaffold a new reusable UI component                                                                     |
-| `/create-section`         | Scaffold a new Sanity section (5 files incl. story + 4 regs)                                             |
-| `/batch-sections`         | Autonomous pipeline: generate manifest from Linear + build all sections                                  |
-| `/batch-components`       | Autonomous pipeline: generate manifest from Linear + build all components                                |
-| `/batch-tickets`          | Autonomous pipeline: generate manifest from Linear + action all tickets (sections, components, or other) |
-| `/project-brief`          | Generate Linear milestones and tickets from a proposal                                                   |
-| `/project-setup`          | Replace placeholders with project branding                                                               |
-| `/commit`                 | Commit changes with conventional messages                                                                |
-| `/pr`                     | Create a PR with auto-generated description                                                              |
-| `/check`                  | Run lint, format, and type checks                                                                        |
-| `/update-docs`            | Update CLAUDE.md and README.md                                                                           |
-| `/audit-a11y`             | Accessibility audit on a component/section                                                               |
-| `/audit-code-quality`     | Code quality / reusability audit                                                                         |
-| `/audit-content`          | CMS content audit                                                                                        |
-| `/audit-psi`              | PageSpeed Insights audit (performance, a11y, best practices, SEO)                                        |
-| `/audit-redirects`        | Redirect audit                                                                                           |
-| `/audit-schema`           | Sanity schema audit                                                                                      |
-| `/design-system-import`   | Import design tokens from Figma or JSON into SCSS                                                        |
-| `/design-system-export`   | Export SCSS tokens to DTCG JSON + Figma format                                                           |
-| `/sanity-create`          | Create/update a Sanity page from Figma design                                                            |
-| `/review-design`          | Compare section or component against Figma design                                                        |
-| `/review-code`            | Code quality, accessibility, and browser review                                                          |
-| `/ticket`                 | Fetch or create a Linear ticket and action it                                                            |
-| `/checklist-pre-handover` | Pre-handover checklist                                                                                   |
-| `/checklist-pre-launch`   | Pre-launch checklist                                                                                     |
-| `/checklist-post-launch`  | Post-launch checklist                                                                                    |
+| Command                   | Description                                                                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `/branch`                 | Create a Gitflow branch with optional Linear issue                                                                                     |
+| `/create-component`       | Scaffold a new reusable UI component                                                                                                   |
+| `/create-section`         | Scaffold a new Sanity section (5 files incl. story + 4 regs)                                                                           |
+| `/batch-tickets`          | Autonomous pipeline: generate manifest from Linear + action all tickets (sections, components, or other), one at a time                |
+| `/batch-parallel`         | Same, run concurrently in git worktrees — shared-surface pre-pass, parallel build, serial integration train, closing sweep. Unattended |
+| `/project-brief`          | Generate Linear milestones and tickets from a proposal                                                                                 |
+| `/project-setup`          | Replace placeholders with project branding                                                                                             |
+| `/commit`                 | Commit changes with conventional messages                                                                                              |
+| `/pr`                     | Create a PR with auto-generated description                                                                                            |
+| `/check`                  | Run lint, format, and type checks                                                                                                      |
+| `/update-docs`            | Update CLAUDE.md and README.md                                                                                                         |
+| `/audit-a11y`             | Accessibility audit on a component/section                                                                                             |
+| `/audit-code-quality`     | Code quality / reusability audit                                                                                                       |
+| `/audit-content`          | CMS content audit                                                                                                                      |
+| `/audit-psi`              | PageSpeed Insights audit (performance, a11y, best practices, SEO)                                                                      |
+| `/audit-redirects`        | Redirect audit                                                                                                                         |
+| `/audit-schema`           | Sanity schema audit                                                                                                                    |
+| `/design-system-import`   | Import design tokens from Figma or JSON into SCSS                                                                                      |
+| `/design-system-export`   | Export SCSS tokens to DTCG JSON + Figma format                                                                                         |
+| `/sanity-create`          | Create/update a Sanity page from Figma design                                                                                          |
+| `/review-design`          | Compare section or component against Figma design                                                                                      |
+| `/review-code`            | Code quality, accessibility, and browser review — one target, in isolation                                                             |
+| `/consolidate`            | Cross-cutting DRY pass over several targets at once; extracts shared patterns, opens a PR without merging                              |
+| `/ticket`                 | Fetch or create a Linear ticket and action it                                                                                          |
+| `/checklist-pre-handover` | Pre-handover checklist                                                                                                                 |
+| `/checklist-pre-launch`   | Pre-launch checklist                                                                                                                   |
+| `/checklist-post-launch`  | Post-launch checklist                                                                                                                  |
 
 ### MCP Integrations
 

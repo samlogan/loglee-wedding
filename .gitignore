@@ -66,3 +66,9 @@ docs/screaming-frog.csv
 
 # Playwright MCP artefacts
 .playwright-mcp/
+
+# Agent worktrees (--parallel runs). Locked, ~1.6GB each, never committed.
+.claude/worktrees/
+
+# Batch manifest — transient, deleted at the end of a run
+.claude/skills/batch-tickets/tickets.json

@@ -1,6 +1,8 @@
 # Review Code
 
-Senior lead developer review of a section or component — focused on **reusability, component structure, future-proofing, and best practices**. The goal is to ensure every section and component is built so the next developer can build on it confidently, patterns that repeat are shared not copied, and the design system is used consistently.
+Senior lead developer review of **one** section or component — component structure, future-proofing, design system discipline, accessibility and real browser behaviour.
+
+Cross-file duplication is deliberately **not** in scope; `/consolidate` owns that and runs over a whole set at once. The reason is structural: during a batch this command runs on section _n_ before sections _n+1…_ exist, so any "does this repeat elsewhere" scan searches a codebase missing most of its own content.
 
 Uses parallel agents for deep static analysis (code quality + accessibility), then exercises interactivity headlessly via Storybook + Playwright MCP. See the "Driving Storybook headlessly" section in `CLAUDE.md` for story ID and iframe URL conventions.
 
@@ -39,6 +41,28 @@ The command auto-detects whether the target is a section or component:
 /review-code Badge
 ```
 
+**Optional flags:**
+
+- `--story={export-kebab}` — Story export to review (default `default`)
+- `--storybook-port={N}` — Storybook port to render against (default 6006)
+- `--browser=mcp|bash` — Browser driver (default mcp)
+
+---
+
+### Render target — `{PORT}` and the browser
+
+Every URL in this file is written `http://localhost:{PORT}`. Resolve `{PORT}` once, here:
+
+- `--storybook-port={N}` — default **6006**. `/batch-parallel` passes a distinct port per worktree,
+  because one Storybook instance serves one checkout: N concurrent reviews against a shared 6006 all
+  measure whichever worktree owns it and return confidently wrong numbers without erroring.
+- `--browser=mcp|bash` — default **mcp**. Use `bash` when several reviews run concurrently: the
+  Playwright MCP is a single browser shared across the session, so parallel `browser_navigate` calls
+  interleave in one tab. In `bash` mode drive a one-off Playwright Node script instead (`playwright`
+  is a devDependency), which gives this review its own browser process.
+
+Both default to today's behaviour, so a plain invocation is unchanged.
+
 ---
 
 ## Phase 0: Prerequisites & Setup
@@ -62,14 +86,14 @@ Same detection logic as `/review-design`:
 ### 0c: Verify Storybook is running
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" http://localhost:6006/iframe.html 2>/dev/null || echo "DOWN"
+curl -s -o /dev/null -w "%{http_code}" http://localhost:{PORT}/iframe.html 2>/dev/null || echo "DOWN"
 ```
 
 If down, start it in the background and wait until it's responding:
 
 ```bash
-yarn storybook > /tmp/storybook.log 2>&1 &
-until curl -s -o /dev/null http://localhost:6006/iframe.html; do sleep 1; done
+yarn storybook --port {PORT} > /tmp/storybook-{PORT}.log 2>&1 &
+until curl -s -o /dev/null http://localhost:{PORT}/iframe.html; do sleep 1; done
 ```
 
 The Next.js dev server (port 3000) is **not** required.
@@ -78,7 +102,7 @@ The Next.js dev server (port 3000) is **not** required.
 
 **Look the story ID up — do not build it from the folder name.** Story titles group by what a thing _is_ (`Foundations/`, `Content/`, `Surfaces/`, `Navigation/`, `Forms/`, `Sections/`), so `{Name}` no longer maps to an ID by formula: `FaqSection` lives at `Sections/FAQ` → `sections-faq--default`.
 
-Fetch `http://localhost:6006/index.json` and resolve against it:
+Fetch `http://localhost:{PORT}/index.json` and resolve against it:
 
 ```
 norm(s)  = s.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -120,9 +144,22 @@ Read all files for the target:
 
 ---
 
-## Phase 2: Create Temporary Review Page
+## Phase 2: Verify the Story Renders
 
-Same pattern as `/review-design` — create `app/(frontend)/review/page.tsx` with dummy data that exercises all the target's props and states. Include multiple variants if the target supports them (e.g., different themes, sizes, states).
+The story is the fixture — there is no temporary review page, and the Next.js dev server is not
+involved at any point in this command.
+
+1. Confirm the story ID resolved in Phase 0d is present in `http://localhost:{PORT}/index.json`.
+2. Navigate Playwright to `http://localhost:{PORT}/iframe.html?id={story-id}&viewMode=story` and wait
+   2 seconds for Storybook init and CSS animations to settle.
+3. Screenshot to confirm it renders. If it errors, fix the story's `args` to match the component's
+   actual prop shape and retry.
+4. If no story exists, generate one from the template in `.claude/commands/create-section.md`
+   (Step 2e) or `.claude/commands/create-component.md` (Step 3). Writing the story is how this
+   component gets a test — `@storybook/addon-vitest` runs every story as a browser component test.
+
+If the target has variants worth exercising (themes, sizes, states), prefer adding a story export per
+variant over composing them in one render — each export then becomes its own test.
 
 ---
 
@@ -132,14 +169,14 @@ Launch both agents **in parallel** in a single message:
 
 ### 3a: `code-quality-reviewer` agent
 
-This agent reviews as a **senior lead developer** focused on reusability, component structure, and future-proofing. It scans the entire `sections/` and `components/` directory for duplication opportunities — not just the target files.
+This agent reviews as a **senior lead developer** focused on component structure, future-proofing and design system discipline. It reads **only the target's files** — it does not scan the rest of the codebase. Anything that looks like it might repeat elsewhere is noted in one line for `/consolidate` to confirm or reject with the full picture.
 
 Provide:
 
 - Target name and type (section/component)
 - List of files to review
 - Project conventions from CLAUDE.md (arrow functions, classNames helper, CSS layers, import order)
-- Instruction: "Spend the most time on the reusability scan. Search broadly across sections/ and components/ for patterns that match this target's code."
+- Instruction: "Do not grep other sections or components. Spend the time on design system compliance and component structure within this target."
 
 ### 3b: `accessibility-reviewer` agent
 
@@ -166,7 +203,7 @@ Provide:
 
 ## Phase 5: Browser Testing
 
-Navigate Playwright to the Storybook iframe URL (`http://localhost:6006/iframe.html?id={story-id}&viewMode=story`) and test interactively:
+Navigate Playwright to the Storybook iframe URL (`http://localhost:{PORT}/iframe.html?id={story-id}&viewMode=story`) and test interactively:
 
 ### 5a: Visual check at key breakpoints
 
@@ -219,11 +256,11 @@ At each breakpoint (1440, 769, 414):
 
 ## Phase 7: Cleanup & Report
 
-### 7a: Remove temporary review page
+### 7a: No filesystem cleanup
 
-```bash
-rm -f app/(frontend)/review/page.tsx
-```
+Stories are permanent fixtures, so nothing is removed. If `/review-code` started Storybook itself in
+Phase 0c you may leave it running for follow-up reviews, or free the port with
+`lsof -ti:{PORT} | xargs kill`.
 
 ### 7b: Run final checks
 

@@ -81,7 +81,7 @@ Focus on **clean scaffolding and visual accuracy** using DRY, convention-complia
 
 ### What to build
 
-- Schema, component, styles, query, and all four registrations
+- Schema, component, styles, query, and all four registrations (written by `yarn sections:register`)
 - Responsive layout matching desktop and mobile Figma designs (if provided)
 - Correct use of design tokens, spacing, typography, and theme variants
 - Standard UI patterns: grids, cards, accordions, tabs, carousels (via Embla), forms (via React Hook Form)
@@ -613,64 +613,47 @@ The fixture generator (`tools/storybook/generate-fixtures.ts`) reuses the app's 
 
 ## Step 3: Register the Section
 
-Make these additions to 4 existing files:
+Run the generator — do not hand-edit the registration files:
 
-### 3a. Schema Registry
-
-**File:** `tools/sanity/schema/index.ts`
-
-1. Add import at the top with other section imports:
-
-   ```typescript
-   import {camelCase}Section from './sections/{camelCase}Section';
-   ```
-
-   If the schema exports sub-types (like `gridCard`), use destructured import:
-
-   ```typescript
-   import { {camelCase}Section, {subTypeName} } from './sections/{camelCase}Section';
-   ```
-
-2. Add to the schema array in the `// Sections` block (alphabetical order):
-   ```typescript
-   {camelCase}Section,
-   ```
-   Add any sub-types to the `// Objects` block.
-
-### 3b. Page Sections List
-
-**File:** `tools/sanity/helpers/sections.ts`
-
-Add to the `pageSections` array (alphabetical order):
-
-```typescript
-{ type: '{camelCase}Section' },
+```bash
+yarn sections:register
 ```
 
-### 3c. Component Exports
+It rewrites all four registrations from the contents of `sections/`, deriving every name from the
+folder (`TwoColumnListSection` → `twoColumnListSection`), and prints what it changed:
 
-**File:** `sections/index.ts`
+| File                                               | What it writes                                                                   |
+| -------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `sections/index.ts`                                | whole file — the component barrel                                                |
+| `tools/sanity/helpers/sections.ts`                 | whole file — the `pageSections` placement list                                   |
+| `tools/sanity/schema/index.ts`                     | the `// #region section-imports` and `// #region section-types` spans only       |
+| `tools/sanity/projections/common/sections.groq.ts` | the `// #region section-imports` and `// #region section-projections` spans only |
 
-Add export (alphabetical order):
+The generator **fails loudly** if the section is half-built — it requires `index.tsx`,
+`queries.groq.ts` and `tools/sanity/schema/sections/{camelCase}Section.ts` to all exist, and names
+whichever is missing rather than emitting an import to a file that isn't there.
+
+### 3a. Sub-types still need registering by hand
+
+The generator owns the `// Sections` entries only. If the schema file exports sub-types alongside the
+section (e.g. `gridCard`), add those to the `// Objects` block of `tools/sanity/schema/index.ts`
+yourself — they are not derivable from the folder name:
 
 ```typescript
-export { default as {PascalCase}Section } from './{PascalCase}Section';
+import { {camelCase}Section, {subTypeName} } from './sections/{camelCase}Section';
 ```
 
-### 3d. GROQ Sections Projection
+The generator writes only the plain form of that import, so it **warns** when a schema file exports
+anything besides the section itself — widening the line by hand works until the next
+`yarn sections:register` narrows it again. The durable fix is to put sub-types in
+`tools/sanity/schema/objects/` and import them from there, which keeps the generated region
+generated.
 
-**File:** `tools/sanity/projections/common/sections.groq.ts`
+### 3b. Verify the registration took
 
-1. Add import at the top:
-
-   ```typescript
-   import {camelCase}SectionProjection from '@/sections/{PascalCase}Section/queries.groq';
-   ```
-
-2. Add projection inside the `sectionsProjection` template literal (alphabetical order):
-   ```typescript
-   ${{{camelCase}SectionProjection}}
-   ```
+`yarn test:unit` covers both directions — that everything registered has its files, and that every
+folder in `sections/` is registered. A failure names the section and tells you to re-run the
+generator.
 
 ---
 
