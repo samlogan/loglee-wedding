@@ -70,6 +70,28 @@ const config: StorybookConfig = {
     <style>@layer global, defaults;</style>
   `,
   /**
+   * Recolours and sizes the sidebar logo in the manager.
+   *
+   * `assets/logo/logo.svg` is authored with explicit near-black fills (`#131412`, the stone-900 the
+   * wordmark uses on the site's off-white header). The manager chrome is dark, so left alone the
+   * logo renders black-on-black and reads as an empty sidebar. `brightness(0) invert(1)` flattens it
+   * to white regardless of the source fills.
+   *
+   * The `max-width` is unconditional: Storybook's own `Img` sets `150px !important`, and this
+   * wordmark is roughly 9:1, so at 150px it lands around 17px tall.
+   *
+   * Matched on `alt`, which Storybook sets from `brandTitle` in `./theme.ts` — **rename there and
+   * this selector stops matching**, silently, with no warning.
+   */
+  managerHead: (head) => `${head}
+    <style>
+      img[alt='Sam & Lauren'] {
+        max-width: 150px;
+        filter: brightness(0) invert(1);
+      }
+    </style>
+  `,
+  /**
    * The modal portal target, present in the DOM before React renders anything.
    *
    * `Modal` calls `createPortal(…, document.querySelector('#modal'))` **during render**, and React
