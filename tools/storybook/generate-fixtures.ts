@@ -6,7 +6,7 @@
 // instance of each section type from the dataset and commit it as JSON. The
 // loader (sectionFixture.ts) prefers these over mock data.
 //
-// The second pass covers the site-wide singletons — header, footer, socials —
+// The second pass covers the site-wide singletons — header, footer, socials, wedding settings —
 // which sections never carry. The components reading them are async server
 // components that Storybook replaces with mocks, and a mock that hardcodes its
 // content is invisible drift by construction: it keeps rendering whatever was
@@ -29,7 +29,12 @@ import { fileURLToPath } from 'node:url';
 
 import { createClient } from '@sanity/client';
 
-import { FOOTER_QUERY, HEADER_QUERY, SOCIAL_MEDIA_QUERY } from '@/tools/sanity/lib/queries.groq';
+import {
+  FOOTER_QUERY,
+  HEADER_QUERY,
+  SOCIAL_MEDIA_QUERY,
+  WEDDING_SETTINGS_QUERY
+} from '@/tools/sanity/lib/queries.groq';
 import sectionsProjection from '@/tools/sanity/projections/common/sections.groq';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -125,7 +130,10 @@ const query = `*[_type == "page" && defined(sections) && !(pathname in $excluded
 const GLOBAL_QUERIES: Record<string, string> = {
   header: HEADER_QUERY,
   footer: FOOTER_QUERY,
-  socialMedia: SOCIAL_MEDIA_QUERY
+  socialMedia: SOCIAL_MEDIA_QUERY,
+  // The wedding singleton. `Header` reads `rsvpLabel` off it, and everything else site-wide that
+  // names the couple, the dates or the reply-by deadline will read the same document.
+  weddingSettings: WEDDING_SETTINGS_QUERY
 };
 
 // Rough "content richness" heuristic so we pick a populated instance.
