@@ -43,19 +43,36 @@ export const HEADER_QUERY = groq`
   *[_type == "headerDocument" && _id == "headerDocument"][0]{
     header {
       navItems[]{
+        _key,
         title,
-        link${linkProjection},
-        dropdown,
-        navSublinks[]{
-          title,
-          link${linkProjection}
-        }
+        link${linkProjection}
       },
       addButton,
-      button${buttonProjection},
-      addSecondaryButton,
-      secondaryButton${buttonProjection}
+      button${buttonProjection}
     }
+  }
+`;
+
+/**
+ * The wedding singleton, as the site chrome reads it.
+ *
+ * `rsvpLabel` is the "reply by 13 November" line the header pill carries, and the same field the
+ * home page's RSVP action will read — one field, so the date cannot say two different things in
+ * two places. The rest of the projection is the identity slice (who, when, where they are told to
+ * reply by), which is what anything site-wide needs; the venue and contribution groups are left
+ * to the sections that use them.
+ *
+ * Also one of the singletons `tools/storybook/generate-fixtures.ts` pulls into
+ * `fixtures/globals.json`, which is why it is a shared constant rather than an inline query.
+ */
+export const WEDDING_SETTINGS_QUERY = groq`
+  *[_type == "weddingSettings" && _id == "weddingSettings"][0]{
+    title,
+    coupleNames,
+    startDate,
+    endDate,
+    rsvpDeadline,
+    rsvpLabel
   }
 `;
 

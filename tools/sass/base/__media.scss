@@ -17,6 +17,26 @@ $breakpoints: (
   small-mobile: 340px
 );
 
+/*
+ * The header's one layout switch — inline links above, hamburger below.
+ *
+ * Not in the map above, and not a viewport breakpoint at all: it is the argument to a **container**
+ * query on the bar's own inline size, so it has to be a bare length rather than a `media-*` mixin
+ * call. It lives here because `resources.scss` auto-imports this file into every SCSS module, which
+ * is the only way three CSS modules — the bar, and each of the two navs — can agree on one value.
+ * They previously spelled it out five times.
+ *
+ * `rem`, not the map's `px`: at 900px the query would ignore a reader who has raised their root font
+ * size, handing them the desktop link list at a width where it no longer fits (WCAG 1.4.4). The
+ * number is the bar's widest content measured — see the note in `components/Header/styles.module.scss`.
+ *
+ * Mirrored in TypeScript as `HEADER_INLINE_SWITCH_REM` in `components/Header/hooks/useHeaderState.ts`,
+ * which has to close the menu at the same width — in `rem` there too, resolved against the root font
+ * size at the moment it is read, so the pair cannot disagree for a reader who changed it. Change
+ * one, change the other.
+ */
+$header-inline-switch: 56.25rem;
+
 /*=============================================>>>>>
 = Media Up =
 ===============================================>>>>>*/

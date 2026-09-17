@@ -1,78 +1,103 @@
-'use client';
+import type { Ref } from 'react';
 
-import { usePathname } from 'next/navigation';
-
-import Accordion from '@/components/Accordion';
 import Link from '@/components/Link';
-import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
 import { isCurrent } from '@/tools/helpers/link';
+import type { IButtonElement } from '@/tools/sanity/schema/elements/button';
 import type { IHeaderObject } from '@/tools/sanity/schema/objects/header';
 
 import styles from './styles.module.scss';
 
-interface HeaderNavigationMobileProps {
+export interface HeaderNavigationMobileProps {
   className?: string;
-  header?: IHeaderObject;
-  open: boolean;
+  /** Matches the toggle's `aria-controls`. */
+  id?: string;
+  open?: boolean;
+  navItems?: IHeaderObject['navItems'];
+  pathname?: string;
+  /** `weddingSettings.rsvpLabel` — the full "reply by" line, which has room to sit here. */
+  rsvpLabel?: string | null;
+  button?: IButtonElement;
+  /** React 19 ref-as-prop. The header focuses the panel itself when the menu opens. */
+  ref?: Ref<HTMLDivElement>;
 }
 
+/**
+ * The panel the hamburger discloses: the same five links stacked, and the RSVP action full width
+ * beneath them.
+ *
+ * No frame anywhere in the Figma file draws this state — not the design system board (node 1:968),
+ * which the ticket claimed had it and which in fact draws only the two *closed* bars, and not any
+ * page frame; confirmed by walking all 1568 nodes over the REST API. So the panel is composed from
+ * the vocabulary the rest of the design uses — the off-white surface, ink type, a hairline between
+ * rows and never after the last, and the 4px-radius accent UI pill for the action — rather than
+ * invented. Every value here traces to a token the drawn frames do use.
+ *
+ * Closed, it is hidden two ways on purpose. `visibility: hidden` takes it out of the tab order and
+ * the accessibility tree while still allowing the opacity transition (unlike `display: none`), and
+ * `inert` states the same thing in markup so it survives a stylesheet that fails to load and is
+ * visible to the header's focus trap, which reads `[inert]` to decide what is reachable. There is
+ * no sr-only utility in this project and nothing here needs one.
+ */
 const HeaderNavigationMobile = (props: HeaderNavigationMobileProps) => {
-  const { className, header, open } = props || {};
-  const { navItems, addButton, button, addSecondaryButton, secondaryButton } = header || {};
-  const pathname = usePathname();
-  const classes = classNames(styles.container, { [styles.open]: !!open }, className);
+  const { button, className, id, navItems, open = false, pathname = '', ref, rsvpLabel } = props;
+
+  // The reply-by line has room here, so the menu shows the long form. Gated on the action itself
+  // for the same reason the bar's pill is: a label with nowhere to go is not a control.
+  const actionLabel = button && (rsvpLabel || button.label);
 
   return (
-    <div className={classes} data-theme="dark">
-      <Accordion>
-        {navItems?.map((item, index) => {
-          const { title, link, dropdown, navSublinks } = item;
-          const hasCurrentSublink = dropdown && navSublinks?.some((sublink) => isCurrent(pathname, sublink?.link));
-          return (
-            <Accordion.Item
-              key={index}
-              classNameTrigger={classNames(
-                styles.dropdownTrigger,
-                { [styles.noDropdown]: !dropdown },
-                {
-                  [styles.current]: isCurrent(pathname, link) || hasCurrentSublink
-                }
-              )}
-              title={<Link {...link}>{title}</Link>}
-            >
-              {dropdown ? (
-                <div className={styles.dropdownLinks}>
-                  {navSublinks?.map((sublink, subindex) => (
-                    <Link
-                      {...sublink.link}
-                      className={classNames(styles.dropdownLink, {
-                        [styles.current]: isCurrent(pathname, sublink?.link)
-                      })}
-                      key={subindex}
-                    >
-                      {sublink.title}
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-            </Accordion.Item>
-          );
-        })}
-      </Accordion>
-      {(addButton || addSecondaryButton) && (
-        <div className={styles.buttonContainer}>
-          {addButton && (
-            <Link {...button?.link} className={styles.button} size="md" theme="primary">
-              <Text text={button?.label} weight="medium" />
-            </Link>
-          )}
-          {addSecondaryButton && (
-            <Link {...secondaryButton?.link} className={styles.button} size="md" theme="secondary">
-              <Text text={secondaryButton?.label} weight="medium" />
-            </Link>
-          )}
-        </div>
+    <div
+      className={classNames(styles.panel, { [styles.open]: open }, className)}
+      id={id}
+      /*
+       * A boolean attribute in React 19 — `inert={false}` omits it rather than writing
+       * `inert="false"`, which the older string form would have made truthy and permanently inert.
+       */
+      inert={!open}
+      ref={ref}
+      /* Focused when the menu opens, so the next Tab lands on the first link rather than back at
+       * the top of the page. Not in the tab order itself: -1 is excluded by the trap's selector. */
+      tabIndex={-1}
+    >
+      {!!navItems?.length && (
+        <nav aria-label="Primary" className={styles.navigation}>
+          <ul className={styles.list}>
+            {navItems.map((navItem, index) => {
+              const current = isCurrent(pathname, navItem?.link);
+              return (
+                <li className={styles.item} key={navItem?._key ?? index}>
+                  <Link
+                    {...navItem?.link}
+                    aria-current={current ? 'page' : undefined}
+                    className={classNames(styles.link, { [styles.current]: current })}
+                    // A row is a full-width target. The prop rather than `width: 100%` in the
+                    // stylesheet: the shared base sets no width, so `.fullWidth` wins with nothing
+                    // to out-specify.
+                    fullWidth
+                  >
+                    {navItem?.title}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      )}
+
+      {!!actionLabel && (
+        <Link
+          {...button?.link}
+          arrow="right"
+          className={styles.action}
+          fullWidth
+          mono
+          size="md"
+          theme="accent"
+          variant="ui"
+        >
+          {actionLabel}
+        </Link>
       )}
     </div>
   );

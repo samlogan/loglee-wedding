@@ -2,8 +2,9 @@
   .container {
     margin: 0 auto;
     max-width: var(--container-xl);
-    padding-left: 24px;
-    padding-right: 24px;
+    // The site gutter, fluid 20px → 40px. See `--container-gutter` in `tools/sass/global/_variables.scss`
+    // for why this is a token rather than the fixed 24px it used to be.
+    padding-inline: var(--container-gutter);
   }
 
   .width_xs {

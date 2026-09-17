@@ -38,7 +38,6 @@ export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement>, Butt
   target?: '_blank' | '_self' | '_parent' | '_top' | string;
   newWindow?: boolean;
   tabIndex?: number;
-  forceLinkWhenEmpty?: boolean;
 }
 
 const Link = (props: LinkProps) => {
@@ -60,7 +59,7 @@ const Link = (props: LinkProps) => {
     tabIndex = 0,
     arrow,
     /*
-     * Everything from here to `forceLinkWhenEmpty` is pulled out to keep it *off* the element, not
+     * Everything from here to `action` is pulled out to keep it *off* the element, not
      * because this function reads it — `buttonClasses` is handed `props` whole below.
      *
      * `rest` is spread onto an `<a>`, so any prop left in it becomes a DOM attribute. `action` is
@@ -77,7 +76,6 @@ const Link = (props: LinkProps) => {
     fullWidth,
     fullWidthMobile,
     action,
-    forceLinkWhenEmpty,
     ...rest
   } = props;
 
@@ -142,14 +140,14 @@ const Link = (props: LinkProps) => {
   if (linkType === 'internal' || !linkType) {
     let linkHref = internalLink?.pathname || href;
 
-    if (!linkHref && forceLinkWhenEmpty) {
-      return (
-        <a href="#" role="button" {...commonProps}>
-          {child}
-        </a>
-      );
-    }
-
+    /*
+     * There used to be a `forceLinkWhenEmpty` escape hatch above this, which rendered a
+     * destination-less link as `<a href="#" role="button">`. Its only caller was the header's
+     * dropdown parent, and it failed two criteria at once: an anchor is not activated by Space
+     * (WCAG 2.1.1), and a click on it navigates to the fragment rather than doing whatever the
+     * button role promised (WCAG 4.1.2). The header no longer has dropdowns, and anything that
+     * genuinely needs a control with no destination should render a `<Button>`.
+     */
     if (!linkHref) {
       return (
         <span className={inert} id={id} {...rest}>

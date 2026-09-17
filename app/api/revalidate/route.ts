@@ -124,6 +124,14 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ revalidated: true });
     }
 
+    // the header's reply-by line reads weddingSettings, so the layout has to come back too
+    if (type === 'weddingSettings') {
+      await revalidatePath('/', 'layout');
+      await revalidateTag('page', 'max');
+      console.log(`${logPrefix}Wedding settings changed. Layout and page tag have been successfully revalidated.`);
+      return NextResponse.json({ revalidated: true });
+    }
+
     // if footerDocument revalidate everything but not the build hook
     if (type === 'footerDocument') {
       await revalidatePath('/', 'layout');
