@@ -65,8 +65,23 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
        *
        * `ol` and not `ul` on both levels. Days run Friday → Sunday and events run down the clock;
        * reordering either changes the meaning, which is the whole test for an ordered list.
+       *
+       * Named, because nothing precedes it — a screen-reader user arriving at the section's first
+       * landmark otherwise meets "list, 3 items" with no idea what the items are. Same pattern as
+       * `HeaderDisplaySection`'s `aria-label="Key facts"`.
+       *
+       * The per-day event lists below are deliberately **not** named, and the reason is worth
+       * stating so it is not read as an oversight. Each is immediately preceded by its day's `h2`,
+       * which is how a list normally takes its context; the two alternatives both cost more than
+       * they return. `aria-labelledby` needs a page-unique id on the heading, and this is a server
+       * component — `useId` is a hook, so the id would have to be derived from `day._key`, which is
+       * unique only *within one section's array*. Two schedule sections on a page (or, today, the
+       * several stories on this section's own autodocs page) would then emit duplicate ids and the
+       * reference would silently resolve to the wrong heading. `aria-label={day.title}` avoids that
+       * but duplicates CMS copy into the accessibility tree, where it drifts from the visible
+       * heading the moment an editor renames the day.
        */}
-      <ol className={styles.days} role="list">
+      <ol className={styles.days} role="list" aria-label="Schedule by day">
         {days.map((day) => {
           /*
            * An event with neither a time nor a title is a row an editor added and abandoned. Both
@@ -160,6 +175,13 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
                          * means that first paint is correct visually *and* semantically. Only the
                          * wide branch reorders, lifting the location out from beside the time and
                          * parking it at the right of the title's line.
+                         *
+                         * Be precise about what that costs, because "only the wide branch reorders"
+                         * understates it: above the switch the painted order is time → **title** →
+                         * **location** → description, so those two are swapped against the source.
+                         * Both sequences read as a calendar entry, so 1.3.2 is satisfied either way,
+                         * and the `Desktop` story asserts the painted order explicitly so the swap
+                         * stays a decision rather than becoming a surprise.
                          *
                          * Nothing here is focusable, so WCAG 2.4.3 (Focus Order) has nothing to
                          * disagree with; 1.3.2 (Meaningful Sequence) is satisfied by the order

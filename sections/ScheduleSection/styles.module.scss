@@ -79,6 +79,17 @@ $schedule-summary-width: 25rem;
  */
 $schedule-time-gutter: 6.875rem;
 
+/*
+ * The intro's measure, at the design's `max-w-[320px]` (node 1:325) inside the 400px column — about
+ * 40 characters at the 16px it is set in, which is why it is a cap and not a width.
+ *
+ * Named here beside the other two rather than left inline 200 lines down, since it is the same kind
+ * of number: a constant the design states, read off one node, that a later reader will want to
+ * trace. Deliberately **not** a `--container-*` token — those start at 640px and cap a *page*
+ * column, and this is a paragraph measure inside one.
+ */
+$schedule-intro-measure: 20rem;
+
 @layer defaults {
   .days {
     /*
@@ -177,12 +188,25 @@ $schedule-time-gutter: 6.875rem;
     display: flex;
     flex-direction: column;
     /*
-     * 8px between the four parts (Figma's `gap-[8px]` on the desktop summary). The mobile frames
-     * set 0 and push the separation into each item's own `pt-`; the two resolve to within a few
-     * pixels once `--display-line-height: 0.86` has pulled the heading's box tighter than its
-     * glyphs, so one gap is used at both ends and the two per-item paddings below carry the rest.
+     * **No gap.** Each of the three items below carries its own `padding-top`, holding the
+     * separation the design draws *above that item* — which is the structure the mobile frame uses
+     * verbatim (`gap-0` plus `pt-[5px]` / `pt-[8px]` / `pt-[12px]` on 1:472, 1:474, 1:476).
+     *
+     * A single 8px `gap` was here, taken from the desktop frame's `gap-[8px]` (1:318), on the
+     * reasoning that the two ends resolved to within a few pixels. Measured, they do not: the three
+     * separations are 8 / 12 / 18 on desktop and 5 / 8 / 12 on mobile, so a fixed 8px is exact at
+     * the top of the desktop column and +3 / +4 / +4 on a phone — which compounded to a summary
+     * **12.5px taller than drawn at 375px** (159.53 against the frame's 147).
+     *
+     * They are three `fluid()` pairs rather than one because the three separations are not a
+     * constant ratio apart, and the design shrinks them unevenly towards the phone. Each pair below
+     * is the two numbers Figma states, nothing derived.
+     *
+     * A fourth item added here would therefore get no separation of its own — give it a
+     * `padding-top` in the same shape rather than reaching for a `gap`, which would land under all
+     * three of the existing ones as well.
      */
-    gap: var(--spacing-xs);
+
     /*
      * A flex item's automatic minimum is its `min-content` width, and an abbreviated day at
      * ~88px type is wider than a phone. Without this the summary would push the band past the
@@ -199,15 +223,23 @@ $schedule-time-gutter: 6.875rem;
    * which `Button`, `PlayerCard`, `StatMeter`, `FieldCheckbox`, `ModelViewer` and
    * `HeaderDisplaySection` all take too.
    *
-   * `--body-xs` = fluid(11px, 12px) against the design's 11px/13px — exact at the narrow end and a
-   * pixel under at 1280. Tracking in `em` (2.6px on 13px and 2.2px on 11px are both 0.2em) so it
-   * stays proportional as the fluid size moves.
+   * The size is the design's own pair — 11px on the mobile frame (1:471), 13px on the desktop one
+   * (1:320) — written out rather than taken from `--body-xs`, which is fluid(11px, 12px). That
+   * token's narrow anchor is already this label's drawn 11px, but its wide anchor is a pixel short
+   * of the 13 drawn here, and the shortfall is *not* the 1280-against-1440 undershoot every fluid
+   * token pays: measured at a 1440px viewport, where the token is at its wide anchor by definition,
+   * it renders 12.00 against the drawn 13. `--body-xs` is the floor of the shared body scale and
+   * also sizes `HeaderDisplaySection.metaItem` and the location chip below, so it cannot move at
+   * source for one label's sake.
+   *
+   * Tracking in `em` (2.6px on 13px and 2.2px on 11px are both 0.2em) so it stays proportional as
+   * the fluid size moves — fixing the size therefore fixes the tracking with it.
    */
   .eyebrow {
     @include mono-font();
 
     color: var(--fg-accent);
-    font-size: var(--body-xs);
+    font-size: #{fluid(11px, 13px)};
     font-weight: var(--font-weight-bold);
     letter-spacing: 0.2em;
     line-height: var(--body-line-height);
@@ -245,6 +277,12 @@ $schedule-time-gutter: 6.875rem;
 
     min-width: 0;
     overflow-wrap: break-word;
+    /*
+     * The separation above the heading: 5px on the mobile frame (`pt-[5px]` on 1:472), 8px on the
+     * desktop one (the `gap-[8px]` of 1:318). See the note on `.summary` for why the three
+     * separations are per-item paddings rather than one flex `gap`.
+     */
+    padding-top: #{fluid(5px, 8px)};
   }
 
   /*
@@ -270,23 +308,25 @@ $schedule-time-gutter: 6.875rem;
     --heading-xs: #{fluid(15px, 18px)};
     --heading-letter-spacing: 0;
 
-    // 4px above the date on desktop (`pt-[4px]` on 1:323), 8px on mobile. On top of the column gap.
-    padding-top: var(--spacing-xxs);
+    // The separation above the date: 8px on mobile (`pt-[8px]` on 1:474), 12px on desktop
+    // (`gap-[8px]` + `pt-[4px]` on 1:323). See `.summary`.
+    padding-top: #{fluid(8px, 12px)};
   }
 
   .intro {
-    // 10px above the intro on desktop (`pt-[10px]` on 1:325), 12px on mobile. On top of the gap.
-    padding-top: var(--spacing-xs);
+    // The separation above the intro: 12px on mobile (`pt-[12px]` on 1:476), 18px on desktop
+    // (`gap-[8px]` + `pt-[10px]` on 1:325). See `.summary`.
+    padding-top: #{fluid(12px, 18px)};
     // The measure guard for an unbreakable run — a pasted URL — since the column is fixed-width.
     overflow-wrap: break-word;
 
     @container schedule (width >= #{$schedule-inline-switch}) {
       /*
-       * `max-w-[320px]` in the design (1:325), inside a 400px column. Only above the switch: the
-       * mobile frames set the intro to the full 350px content width, and capping it there would
-       * leave a ragged 30px of unused measure on a phone.
+       * Only above the switch: the mobile frames set the intro to the full 350px content width, and
+       * capping it there would leave a ragged 30px of unused measure on a phone. See
+       * `$schedule-intro-measure` for the value's provenance.
        */
-      max-width: 20rem;
+      max-width: $schedule-intro-measure;
     }
   }
 
@@ -338,9 +378,14 @@ $schedule-time-gutter: 6.875rem;
     // title → chip (646.69 → 670.69) on node 1:328.
     column-gap: var(--spacing-lg);
     /*
-     * Between the stacked parts. The design draws 5px (`gap-[5px]` on the mobile row, and 21 → 53
-     * between the desktop title and its description); `--spacing-xxs` is 4px and is the nearest
-     * step, the scale being fixed below its 32px cutoff. 1px.
+     * Between the stacked parts. The design draws 5px between the title and its description
+     * (`gap-[5px]` on the mobile row, 48 → 53 on the desktop one); `--spacing-xxs` is 4px and is the
+     * nearest step, the scale being fixed below its 32px cutoff. 1px.
+     *
+     * It is deliberately the *smaller* of the two separations the stacked row needs — the design
+     * puts 8px above the title, not 5 — because one `row-gap` cannot be two numbers and this is the
+     * one that applies at both widths. `.eventTitle` tops the other up with a `padding-top` at the
+     * narrow width only; see the note there for why it cannot simply live here.
      *
      * A `row-gap` rather than margins because the rows are implicit: no `grid-template-rows` and no
      * `grid-template-areas`, so an event with no description creates no third row and pays no gap
@@ -375,9 +420,12 @@ $schedule-time-gutter: 6.875rem;
   /*
    * The mono micro-label in its quiet register — JetBrains Mono Medium, untracked.
    *
-   * `--body-sm` = fluid(12px, 14px) against the design's 12px/13px: exact at the narrow end and
-   * 0.7px over at 1280, which is the closest of the three small steps. Same `Text`-has-no-mono
-   * workaround as `.eyebrow`.
+   * The size is the design's own pair — 12px mobile (1:481), 13px desktop (1:330) — written out for
+   * the same reason `.eyebrow` states its own: `--body-sm` is fluid(12px, 14px), whose narrow anchor
+   * is already the drawn 12 but whose wide anchor is a pixel *over* the drawn 13. That is a miss at
+   * the token's own wide anchor (measured 14.00 at a 1440px viewport), not the 1280-against-1440
+   * undershoot, and it is the wrong direction for that undershoot to explain. Same
+   * `Text`-has-no-mono workaround as `.eyebrow`.
    *
    * Deliberately **not** `white-space: nowrap`, though Figma sets it on every time node. Above the
    * switch this sits in a fixed 110px track, so `nowrap` would trade a time that wraps onto two
@@ -389,7 +437,7 @@ $schedule-time-gutter: 6.875rem;
     grid-area: 1 / 1;
 
     color: var(--fg-accent);
-    font-size: var(--body-sm);
+    font-size: #{fluid(12px, 13px)};
     font-weight: var(--font-weight-medium);
     line-height: var(--body-line-height);
     margin: 0;
@@ -400,6 +448,16 @@ $schedule-time-gutter: 6.875rem;
   /*
    * The location chip — a bordered pill, flush to the row's right edge.
    *
+   * **Deliberately not a shared component, and this is the decision rather than the absence of
+   * one.** A bordered uppercase mono pill is generic enough to belong in `components/`, and there
+   * is no `Tag` / `Chip` / `Badge` there today — `Button` is the only chip-shaped thing in the repo
+   * and is the wrong reuse, because this is not interactive and `Button`/`Link` render a `<button>`
+   * or an `<a>`, which would put a fake control in the tab order. One instance is not a component,
+   * though: the second section that needs a pill should extract `components/Tag` (a presentational
+   * `<span>` taking `label`, `size` and `theme`, owning the border, radius, padding and type) and
+   * leave this rule holding only `grid-area`, `justify-self` and the container-query re-placement.
+   * Copying the block below into a second module instead is the outcome this note exists to prevent.
+   *
    * `border-color: currentColor` rather than a second token: the design draws the stroke and the
    * label in the same ink (`#1e4632`, which is `--fg-accent` on the light theme), so tying them
    * together means the dark theme's `--signal-300` moves both by construction.
@@ -408,8 +466,30 @@ $schedule-time-gutter: 6.875rem;
    * the button tokens set out: Figma hangs a stroke outside the padding box and we put it inside,
    * so 10×6 drawn is 9×5 here and the rendered box matches the drawn one.
    *
-   * `--radius-sm` is 4px against the drawn 3px, and `--body-xs` (fluid 11 → 12px) against the drawn
-   * 10/11px — both a pixel over, both the nearest step, neither worth a bespoke value.
+   * `--radius-sm` is 4px against the drawn 3px — the nearest step on a fixed scale, and a pixel of
+   * corner on a ~27px pill. Left as the token.
+   *
+   * The size and the leading are **not** left to the body scale, because on this element they are
+   * the box rather than the type. The chip's height is `2 × (padding + border) + line box`, so both
+   * feed it directly:
+   *
+   * - `--body-xs` is fluid(11px, 12px) against the drawn 10/11px (1:483, 1:337) — a pixel over at
+   *   both ends, and at the wide anchor that is a genuine miss rather than the 1280-against-1440
+   *   undershoot. `fluid(10px, 11px)` is the step below the floor of the body scale, which is
+   *   exactly the gap `PlayerCard`, `StatMeter` and `FieldCheckbox` already fill by computing this
+   *   same pair under three local names; this is the **fourth** caller, past the threshold
+   *   `StatMeter`'s note sets for promoting it to one shared token or a `mono` variant on `Text`.
+   *   That is a design-system change rather than a section one, so it stays local — but it is now
+   *   overdue, and this is the fourth line of evidence for it.
+   * - `--body-line-height` is 1.5, the paragraph ratio. Figma sets `leading-[normal]` on every mono
+   *   run in the file, which for JetBrains Mono is 1.32 — so 1.5 inflated the pill by ~2px at each
+   *   end and rendered it **30px tall against the drawn 27** at 1440. `normal` rather than a hard
+   *   1.32 so the number comes from the font's own metrics, exactly as the design's does; the
+   *   fallback stack in `mono-font()` then carries its own.
+   *
+   * Only the chip takes this. `.eyebrow` and `.time` keep `--body-line-height` — their line box is
+   * surrounding rhythm rather than a drawn edge, and every mono micro-label in the repo
+   * (`HeaderDisplaySection.metaItem`, `PlayerCard`, `StatMeter`) is set that way.
    */
   .location {
     @include mono-font();
@@ -422,10 +502,10 @@ $schedule-time-gutter: 6.875rem;
     border: 1px solid currentColor;
     border-radius: var(--radius-sm);
     color: var(--fg-accent);
-    font-size: var(--body-xs);
+    font-size: #{fluid(10px, 11px)};
     font-weight: var(--font-weight-medium);
     letter-spacing: 0.1em;
-    line-height: var(--body-line-height);
+    line-height: normal;
     margin: 0;
     min-width: 0;
     padding: #{fluid(4px, 5px)} #{fluid(7px, 9px)};
@@ -463,24 +543,52 @@ $schedule-time-gutter: 6.875rem;
 
     min-width: 0;
     overflow-wrap: break-word;
+    /*
+     * Tops the 4px `row-gap` up to the 8px the stacked row is drawn with: the mobile frame separates
+     * the time/chip line from the title by `gap-[5px]` plus `pt-[3px]` on 1:484, and it separates
+     * the title from the description by the `gap-[5px]` alone. One `row-gap` cannot be both numbers,
+     * so the larger of the two is carried here.
+     *
+     * Safe only because the title is the *sole* item in its row at this width. `align-items` is
+     * `baseline`, and padding above a baseline-aligned item shifts its baseline — which is exactly
+     * why the wide branch below has to take it off again, where the title shares row 1 with the time
+     * and the chip.
+     */
+    padding-top: var(--spacing-xxs);
 
     @container scheduleEvents (width >= #{$schedule-event-inline-switch}) {
       // Up onto the time's line, in the middle column.
       grid-area: 1 / 2;
+      // See above: it would push this title's baseline 4px below the time's and the chip's.
+      padding-top: 0;
     }
   }
 
   /*
-   * The supporting line. `--body-md` is fluid(14px, 16px) against the drawn 14px/15px and
-   * `--body-line-height` (1.5) is the drawn ratio exactly, so the type needs no override at all —
-   * `index.tsx` passes `size="md"` and `color="themeFgMuted"` through `TextBlock`'s config and this
-   * rule only carries placement.
+   * The supporting line. `index.tsx` passes `size="md"` and `color="themeFgMuted"` through
+   * `TextBlock`'s config; this rule carries the placement and one re-point.
+   *
+   * `--body-md` is fluid(14px, 16px) against the drawn 14px/15px (1:487, 1:335). Narrow anchor
+   * exact, wide anchor a pixel over — and because `--body-line-height` (1.5) is the drawn ratio
+   * exactly, that pixel becomes 1.5px of leading too: measured at a 1440px viewport, 16.00/24.00
+   * against the drawn 15/22.5. Re-pointed rather than overridden with `font-size`, the same
+   * mechanism `.eventTitle` and `.date` use — the rule that owns `font-size` is `Text`'s
+   * `.size_md`, at a specificity a single class here cannot beat, so the way to change what it
+   * resolves to is to change what it reads. The custom property inherits from this wrapper into the
+   * `<p>` `TextBlock` renders.
+   *
+   * `--body-md` is the mid step of the shared body scale and is read across the repo, so it cannot
+   * move at source; the leading needs no override at all once the size is right.
    *
    * The design's ink is `rgba(19,20,18,0.75)`, which composites to about `--stone-700` on the light
-   * page; `--fg-muted` is `--stone-600`, a step lighter, and is the muted-body role. 5.9:1 on the
-   * light page, comfortably past AA.
+   * page; `--fg-muted` is `--stone-600`, a step lighter, and is the muted-body role. Measured
+   * rather than estimated: `--stone-600` (#65635c) on `--stone-50` (#f3f1ea) is **5.32:1** and
+   * `--fg-muted` (`--pine-100`) on the dark page is 7.30:1 — both past the 4.5:1 WCAG 1.4.3 asks of
+   * body copy at this size.
    */
   .description {
+    --body-md: #{fluid(14px, 15px)};
+
     grid-area: 3 / 1 / auto / -1;
 
     min-width: 0;

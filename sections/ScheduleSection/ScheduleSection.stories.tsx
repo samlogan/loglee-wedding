@@ -259,6 +259,32 @@ export const Desktop: Story = {
     // The description sits under the *title*, not under the gutter — the second column, row two.
     await expect(descriptionRect.top).toBeGreaterThanOrEqual(titleRect.bottom - 0.5);
     await expect(descriptionRect.left).toBeCloseTo(titleRect.left, 0);
+
+    /*
+     * The painted order, sorted the same way `MobileReadingOrder` sorts it — and asserted to be
+     * **different** from the DOM order, which is the point.
+     *
+     * This is the one branch where the two genuinely diverge: the chip is placed in column 3, so it
+     * paints after the title even though it precedes it in the source. Left unasserted it reads as
+     * an accident; pinned here it is a decision, and `MobileReadingOrder`'s identical sort proves
+     * the narrow branch — the one a screen reader's first paint gets — still agrees with the DOM.
+     *
+     * Not a WCAG 1.3.2 failure. Both sequences are meaningful readings of a calendar entry, and
+     * nothing in a row is focusable, so 2.4.3 (Focus Order) is not engaged either.
+     */
+    const painted = partsOf(row).toSorted((a, b) => {
+      const first = a.getBoundingClientRect();
+      const second = b.getBoundingClientRect();
+      const sameLine = first.top < second.bottom && second.top < first.bottom;
+      return sameLine ? first.left - second.left : first.top - second.top;
+    });
+
+    await expect(textOf(painted)).toEqual([
+      '[from 2pm]',
+      'Arrivals & check in',
+      'Reception',
+      'Drop your bags, settle in, wander the gardens.'
+    ]);
   }
 };
 
