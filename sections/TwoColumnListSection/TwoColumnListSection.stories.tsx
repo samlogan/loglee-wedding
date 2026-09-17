@@ -102,9 +102,36 @@ const richTextData: ITwoColumnListSection = {
   }
 };
 
-/** The inset panel — the element that carries `data-theme` and paints the dark fill. */
-const panelOf = (canvasElement: HTMLElement) =>
-  canvasElement.querySelector('[data-name="TwoColumnListSection"] [data-theme]') as HTMLElement;
+/** The section element itself — the page the panel is inset into, and the owner of the page theme. */
+const sectionOf = (canvasElement: HTMLElement) =>
+  canvasElement.querySelector('[data-name="TwoColumnListSection"]') as HTMLElement;
+
+/** The inset panel — the element that carries `data-theme` and paints the fill. */
+const panelOf = (canvasElement: HTMLElement) => sectionOf(canvasElement).querySelector('[data-theme]') as HTMLElement;
+
+/** The drawn pair, as `getComputedStyle` resolves them. */
+const PINE_600 = 'rgb(30, 70, 50)';
+const STONE_50 = 'rgb(243, 241, 234)';
+
+/**
+ * The panel is the *inverse* of the page it sits on, asserted as both halves of the pair.
+ *
+ * Derived from the section's own resolved theme rather than pinned to `dark`, and that is a fix
+ * rather than a generalisation: `tools/storybook/sectionStory` feeds the toolbar's theme into
+ * `sectionFields` for every `Sections/*` story, so a hardcoded `'dark'` threw the moment a reader
+ * flipped the toolbar — a red interaction panel, on a client-facing Storybook, for a section that
+ * was behaving exactly as designed. What the AC actually claims is the *inversion*, so that is what
+ * this asserts, with the two drawn fills still pinned so a hardcoded colour past the theme fails it.
+ */
+const expectInvertedPanel = async (canvasElement: HTMLElement) => {
+  const section = sectionOf(canvasElement);
+  const panel = panelOf(canvasElement);
+  const onDarkPage = section.dataset.theme === 'dark';
+
+  await expect(panel.dataset.theme).toBe(onDarkPage ? 'light' : 'dark');
+  await expect(getComputedStyle(section).backgroundColor).toBe(onDarkPage ? PINE_600 : STONE_50);
+  await expect(getComputedStyle(panel).backgroundColor).toBe(onDarkPage ? STONE_50 : PINE_600);
+};
 
 /** The two-column flex row inside the panel. */
 const rowOf = (canvasElement: HTMLElement) => panelOf(canvasElement).firstElementChild as HTMLElement;
@@ -129,17 +156,63 @@ export const Default: Story = {
     await expect(within(canvas.getByRole('list')).getAllByRole('listitem')).toHaveLength(4);
 
     /*
-     * AC: the dark treatment comes from the theme. The panel carries `data-theme="dark"` while the
-     * section around it stays light — asserted as the *resolved* background rather than the
-     * attribute, so this fails if `--bg-default` is ever hardcoded past the theme. `--pine-600` is
-     * #1e4632, the drawn fill; the section is `--stone-50`, #f3f1ea.
+     * AC: the dark treatment comes from the theme rather than from hardcoded values. On the light
+     * page this story renders by default that is `--pine-600` (#1e4632) inside `--stone-50`
+     * (#f3f1ea); `OnDarkPage` below asserts the same helper with the pair the other way round.
      */
-    const panel = panelOf(canvasElement);
-    const section = canvasElement.querySelector('[data-name="TwoColumnListSection"]') as HTMLElement;
+    await expectInvertedPanel(canvasElement);
 
-    await expect(panel.dataset.theme).toBe('dark');
-    await expect(getComputedStyle(panel).backgroundColor).toBe('rgb(30, 70, 50)');
-    await expect(getComputedStyle(section).backgroundColor).toBe('rgb(243, 241, 234)');
+    /*
+     * The two micro-labels are drawn *quieter than the copy beside them*, and this pins that
+     * ordering rather than the two literal colours.
+     *
+     * Figma says it with `opacity` on a wrapper frame rather than with a fill — `opacity-80` on all
+     * four eyebrow containers, `opacity-70` on all seven ordinal containers — which is exactly the
+     * kind of thing that is invisible if you read only the text node, and this section shipped both
+     * at full strength because of it. Asserted as the resolved alpha so the intent survives a
+     * re-point of `--fg-default`: statement at full ink, eyebrow below it, ordinal below that.
+     */
+    const alphaOf = (element: Element) => {
+      /*
+       * The fourth number, whichever form the engine serialises the mix as — `color(srgb r g b / a)`
+       * and `rgba(r, g, b, a)` both yield four, and an opaque `rgb(r, g, b)` yields three. Matching
+       * on the slash alone would silently read 1 for the `rgba()` form and pass this assertion with
+       * the mute deleted.
+       */
+      const parts = getComputedStyle(element).color.match(/[\d.]+/g) ?? [];
+
+      return parts.length === 4 ? Number(parts[3]) : 1;
+    };
+
+    const statementAlpha = alphaOf(canvas.getByRole('heading', { level: 2 }));
+    const eyebrowAlpha = alphaOf(canvasElement.querySelectorAll('p')[0]);
+    const ordinalAlpha = alphaOf(within(canvas.getByRole('list')).getAllByRole('listitem')[0].children[0]);
+
+    await expect(statementAlpha).toBe(1);
+    await expect(eyebrowAlpha).toBeCloseTo(0.8, 2);
+    await expect(ordinalAlpha).toBeCloseTo(0.7, 2);
+  }
+};
+
+/**
+ * The page flipped to dark, so the panel flips to light — the inversion, pinned.
+ *
+ * A story-level `globals.theme` rather than `args.sectionFields`, and the difference matters: this
+ * is the *same* path the toolbar drives, so it exercises `tools/storybook/sectionStory`'s injection
+ * rather than stepping around it — and `ITwoColumnListSection` does not declare `sectionFields`, so
+ * passing one through `args` would not type. It exists because the Studio's Light/Dark radio is a
+ * real control an editor can reach, and until the projection started returning `themeOptions` nobody
+ * had noticed it did nothing — an inversion only a human flipping a toolbar ever exercises is an
+ * inversion that will break unnoticed.
+ *
+ * The same `expectInvertedPanel` as `Default`, which is the point: one assertion, both directions.
+ */
+export const OnDarkPage: Story = {
+  args: listData,
+  decorators: [atWidth('80rem')],
+  globals: { theme: 'dark' },
+  play: async ({ canvasElement }) => {
+    await expectInvertedPanel(canvasElement);
   }
 };
 

@@ -65,10 +65,12 @@ p + .divider {
  * an editor named a figure — a chip that pushed its own line 4px taller would make the copy reflow
  * the moment the toggle was flipped.
  *
- * `box-decoration-break: clone` so a chip unlucky enough to break across two lines keeps its radius
- * and padding on both fragments instead of drawing one open-ended box. `white-space: nowrap` stops
- * it breaking in the ordinary case — "$1" at the end of one line and "20" at the start of the next
- * is not a price.
+ * `white-space: nowrap` because "$1" at the end of one line and "20" at the start of the next is not
+ * a price. Note what that does to the line beneath it: a `nowrap` inline box never fragments at a
+ * *line* break — it is placed whole or it overflows — so `box-decoration-break: clone` is not the
+ * ordinary-case insurance an earlier version of this note claimed. It is kept for the one break
+ * `nowrap` does not govern, a fragmentainer break under `@media print` or in a multi-column
+ * ancestor, where a split chip would otherwise draw one open-ended box.
  *
  * ## The colours are the sentence's own
  *
@@ -76,8 +78,10 @@ p + .divider {
  * stone/50 *is* the text colour, so the fill is `currentColor` at 15% and the label needs no colour
  * of its own. That is what makes this reusable rather than section-specific: on a light section the
  * same rule gives ink-on-ink, with no `[data-theme]` branch and nothing for a theme to get wrong.
- * Measured on the drawn pairing (stone/50 over pine/600): the blend is #3e6050 and the label reads
- * 6.22:1 against it — WCAG 1.4.3 AA for normal text, with the surrounding paragraph at 9.40:1.
+ * Measured on the drawn pairing (stone/50 over pine/600) by compositing the resolved
+ * `getComputedStyle` values in the browser rather than by hand: the blend is #3e604e and the
+ * label reads 6.25:1 against it — WCAG 1.4.3 AA for normal text, with the surrounding paragraph
+ * at 9.40:1.
  *
  * `0.875em` is the design's ratio rather than a step on the type scale: the chip is 15px inside a
  * 17px paragraph on desktop and 13px inside 15px on mobile (0.88 and 0.87). Expressed against the

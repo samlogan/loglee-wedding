@@ -15,22 +15,53 @@
  *   Planner (1:426)  x = -999, w = 1280 — the full frame — no radius, 1px `#131412` top rule. A
  *                    full-bleed band.
  *
- * Planner's treatment is page composition rather than section design: it is the last of four sibling
- * `HorizontalBorder` frames on a page whose whole rhythm is full-width bands with a rule on the
- * join, and it inherits that rhythm from its neighbours. Stay's is the panel on its own. The ticket
- * specifies the inset rounded panel, and — more decisively — the `variant` field exists to switch
- * *what the right column holds*; making it also switch the panel's geometry would give one control
- * two unrelated jobs. So both render as Stay draws it. Reverting to Planner's band for the `list`
- * variant is a modifier class and a `full` on `Section`, if design review prefers it.
+ * Planner's treatment is page composition rather than section design. Three things say so, and the
+ * design review that went looking for a fourth found none:
+ *
+ *   1. **The rule is desktop-only.** 1:426 draws it; 1:566, the same band one breakpoint down, draws
+ *      no rule and no stroke at all. A treatment the section owns does not evaporate at 390px.
+ *   2. **It is the page's chrome, shared verbatim.** The rule, `pt-[41px] pb-[40px] px-[40px]` and
+ *      `gap-[40px]` on 1:426 are identical — value for value, and under the same `HorizontalBorder`
+ *      frame name — to `ScheduleSection`'s band (1:312) higher up the same page. A sibling section
+ *      already renders that band without owning the rule.
+ *   3. **On mobile the two frames are the same content box.** Planner's 390-wide band pads `px-20`,
+ *      which is `--container-gutter`'s narrow anchor, leaving 350px; Stay's inset panel *is* 350px
+ *      wide (1:737 is x=21 w=350 in the same 390 frame). At that width the only difference between
+ *      the two is whether the green runs into the gutter and whether the corners are round — a
+ *      surface decision taken at the page, not a different section.
+ *
+ * The ticket specifies the inset rounded panel, and the `variant` field exists to switch *what the
+ * right column holds*; making it also switch the panel's geometry would give one control two
+ * unrelated jobs. So both render as Stay draws it.
+ *
+ * State the cost rather than bury it: on Planner the columns come out ~540px at a 1280px viewport
+ * against the drawn 580px, and on mobile the content box is ~302px at 375px against the drawn 350px,
+ * because the unified treatment spends the page gutter *and* the panel's own padding where the
+ * full-bleed band spends only the gutter. Nothing the design draws stops fitting — the four list
+ * items and the two-line statement all hold — but the band reads tighter than the comp.
+ *
+ * The rule goes with the treatment it belongs to, so nothing here draws it — and that is the one
+ * drawn element this section does not reproduce. On Planner desktop the join between
+ * `ScheduleSection`'s last day band and this one loses a 1px `#131412` line the comp draws (the
+ * three joins above it keep theirs, because `ScheduleSection.day` draws its own `border-top`).
+ * Putting it back coherently is not a one-liner: on `.panel` it would cut across a rounded corner,
+ * and on `Section` it would be a full-bleed line above an inset panel, drawn on Stay where the comp
+ * has none unless it is gated on `variant` — which is the second job for one control this whole
+ * decision refuses. If design wants the line, it wants the band.
+ *
+ * Reverting to Planner's band for the `list` variant is a modifier class and a `full` on `Section`,
+ * if design review prefers it.
  *
  * ## Nothing here names a colour
  *
  * The panel carries `data-theme` (see index.tsx for why it is on the panel and not on `Section`), so
  * every colour below resolves through the theme block in `tools/sass/global/_variables.scss`.
  * `--bg-default` on the dark theme is `--pine-600` = #1e4632, which is the drawn fill, and
- * `--fg-default` is `--stone-50` = #f3f1ea, which is the drawn ink on all fourteen text nodes across
- * the four frames. The amount chip in `components/TextBlock` mixes from `currentColor`, so it
- * follows too.
+ * `--fg-default` is `--stone-50` = #f3f1ea, which is the drawn *fill* on all fourteen text nodes
+ * across the four frames — fill, not rendered colour: seven of the fourteen sit in a frame Figma
+ * marks `opacity-80` or `opacity-70`, and the two classes that own them mix `--fg-default` down to
+ * match. See `.eyebrow` and `.ordinal`; reading the fill alone is how they first shipped at full
+ * strength. The amount chip in `components/TextBlock` mixes from `currentColor`, so it follows too.
  *
  * ## The one breakpoint is a container query
  *
@@ -93,8 +124,12 @@ $two-column-list-body-measure: 27.5rem;
     /*
      * 40px desktop and 24px mobile, one fluid pair covering all four frames: Stay sets 40 and 24
      * flat, Planner sets 41/40/40/40 and 28/20/32/20 — where its horizontal 20 is the *page* gutter
-     * rather than panel padding, because that band is full-bleed. The one drawn value this misses is
-     * Planner's 28px top on mobile (+4px).
+     * rather than panel padding, because that band is full-bleed. Two drawn values this misses, both
+     * on Planner mobile and both in the same direction: its 28px top (−4px) and its 32px bottom
+     * (−8px). Accepted rather than chased, because they are the one frame of the four that is
+     * full-bleed — that band pays its vertical padding where the other three pay a page gutter plus
+     * panel padding, so matching it would over-pad the inset panel this renders. The three inset
+     * values (Stay 40/24, Planner desktop 40) are exact.
      *
      * A measured pair rather than a `--section-spacing-*` step, because this is the section's entire
      * vertical rhythm — `spacing="none"` on `Section` — and no step on that scale carries 24 → 40.
@@ -195,22 +230,43 @@ $two-column-list-body-measure: 27.5rem;
    * `fluid(11px, 13px)` is the comps' pair exactly, and 0.2em is their tracking exactly — 2.6px on
    * 13px and 2.2px on 11px both land on 0.2em, so holding it in `em` keeps it proportional as the
    * fluid size moves. Identical to `ScheduleSection.eyebrow`, which is the same label on the same
-   * page; the one departure is the colour.
+   * page; the two departures are the colour and its strength, both below.
    *
    * `--fg-default` and **not** `--fg-accent`, which is what `ScheduleSection.eyebrow` and
-   * `HeaderDisplaySection.metaItem` use. On the light theme those are near enough to pass unnoticed,
-   * but on this panel `--fg-accent` is `--signal-300` — a lime label the design does not draw. All
-   * four eyebrow nodes are `#f3f1ea`, the same ink as the statement beside them.
+   * `HeaderDisplaySection.metaItem` use — and the two are not interchangeable here. On this panel
+   * `--fg-accent` is `--signal-300`, a lime label the design does not draw; all four eyebrow nodes
+   * are `#f3f1ea`, the statement's own ink. `ScheduleSection` is the control rather than the
+   * counter-example: its eyebrow (1:320) is `#1e4632` at full strength, which *is* `--fg-accent` on
+   * the light band it sits on. Each section takes the ink its own surface is drawn with.
+   *
+   * ## …at 80%, which is the part the fill alone does not say
+   *
+   * Every one of the four eyebrows sits in a container marked `opacity-80` (1:428, 1:435, 1:568,
+   * 1:575), so the drawn label is `#f3f1ea` **over** `#1e4632` at 0.8 — `#c8cfc5`, visibly quieter
+   * than the statement next to it. Reading only the text node's fill misses that, which is how this
+   * shipped at full strength.
+   *
+   * `color-mix` against `transparent` rather than `opacity`, so the mute composites against whatever
+   * is actually behind the label without opening a stacking context, and rather than
+   * `--fg-muted` (`--pine-100`) because that is a *green* tint on a green panel where the drawn
+   * colour is the warm stone ink dimmed. `ModelViewer`'s hatch and `TextBlock`'s amount chip mix the
+   * same way.
+   *
+   * It survives the panel's inversion, which is the test a fixed hex would fail: 6.67:1 on the dark
+   * panel (#c8cfc5 on pine/600) and 9.19:1 on the light one (#40403d on stone/50), both past the
+   * 4.5:1 WCAG 1.4.3 asks of text this size.
    *
    * The drawn leading is 1.32 (17.16 on 13px, 14.52 on 11px) against `--body-line-height`'s 1.5, so
    * the label's line box is ~2px taller than the comp's. Left on the token to stay identical to
    * `ScheduleSection.eyebrow` — two sections drawing the same label on the same page should not
-   * disagree about its leading over 2px.
+   * disagree about its leading over 2px. This and `.ordinal` below are call sites twelve and
+   * thirteen for the missing `--mono-line-height` token `ScheduleSection.eventTime` counts at its
+   * line 532; the count there is now short by two.
    */
   .eyebrow {
     @include mono-font();
 
-    color: var(--fg-default);
+    color: color-mix(in srgb, var(--fg-default) 80%, transparent);
     font-size: #{fluid(11px, 13px)};
     font-weight: var(--font-weight-bold);
     letter-spacing: 0.2em;
@@ -249,8 +305,14 @@ $two-column-list-body-measure: 27.5rem;
    * `fluid(30px, 44px)` is Planner's pair (1:431, 1:571) exactly. Stay draws 48px (1:671) against the
    * same 30px mobile, which `.title_richText` re-points to — one drawn value each, rather than a
    * single 46px midpoint that would miss both by 2px at the 1440px anchor. The 4px between them is
-   * what the designer set, not a system decision; collapsing the two is deleting one line if design
-   * review says it is drift.
+   * what the designer set, not a system decision.
+   *
+   * Design review re-measured all four headings and **kept the split**: both 44 and 48 are values
+   * the file draws, the two share 30px at the narrow anchor, and `variant` already distinguishes the
+   * two instances, so the second re-point costs one line and no new control. It is flagged upward as
+   * probable drift — there is no systematic reason for it, and it runs the wrong way, since Stay's
+   * *narrower* 540px column carries the *larger* type against Planner's 580px — but unifying it is
+   * the designer's call, and deleting `.title_richText` is all it takes when they make it.
    */
   .title {
     --display-md: #{fluid(30px, 44px)};
@@ -258,12 +320,25 @@ $two-column-list-body-measure: 27.5rem;
     --display-letter-spacing: -0.03em;
 
     // `min-width: 0` on the column lets the item shrink; this lets the word break rather than
-    // overflow. Figma sets `word-break: break-word` on all four heading nodes.
+    // overflow. Figma sets `word-break: break-word` on all four heading nodes. (It restates the
+    // `break-word` already inherited from `body` in `_typography.scss` — measured inert on a probe
+    // element inside the panel. Kept only because the three siblings of it in this file and the
+    // seven in `ScheduleSection` / `HeaderDisplaySection` are the same restatement, and eleven call
+    // sites want one decision rather than a partial cleanup here.)
     overflow-wrap: break-word;
-  }
 
-  .title_richText {
-    --display-md: #{fluid(30px, 48px)};
+    /*
+     * Nested rather than written as a sibling rule, and that is a correctness fix rather than tidying.
+     *
+     * `.title` and `.title_richText` are both single-class selectors in the same layer, so as
+     * siblings the 48px wins on **source order alone** — reorder this file, or let a formatter sort
+     * it, and every Stay statement silently reverts to Planner's 44px with nothing to fail. Nested,
+     * it matches as `.title.title_richText` (0-2-0) and wins structurally. `classNames` already emits
+     * both classes (`index.tsx`), so the markup is unchanged.
+     */
+    &.title_richText {
+      --display-md: #{fluid(30px, 48px)};
+    }
   }
 
   .body {
@@ -314,6 +389,13 @@ $two-column-list-body-measure: 27.5rem;
    * The ordinal. `--body-xs` is `fluid(11px, 12px)`, which is the drawn pair exactly (12px on 1:440,
    * 11px on 1:580) — the only token in this file that needs no adjustment at either end.
    *
+   * 70% of the ink, and it is drawn rather than chosen: every ordinal on both frames sits in a
+   * container marked `opacity-70` (1:439, 1:443, 1:447, 1:451 desktop; 1:579, 1:583, 1:587 mobile),
+   * a full step quieter than the 80% the eyebrows carry. That ordering is the point of the numbering
+   * — the eye should land on the item, not on its index — and at full strength the column of
+   * numbers competes with the text beside it. Same `color-mix` mechanism and the same reasons as
+   * `.eyebrow` above; 5.52:1 on the dark panel and 6.49:1 on the light one.
+   *
    * `min-width: 2ch` rather than the drawn 15px / 14px, and it is doing real work rather than
    * approximating. `ch` in a monospace face is one character, so this reserves exactly two digits —
    * which at 12px JetBrains Mono is 14.4px, within a pixel of the comp — and, more to the point,
@@ -326,7 +408,7 @@ $two-column-list-body-measure: 27.5rem;
   .ordinal {
     @include mono-font();
 
-    color: var(--fg-default);
+    color: color-mix(in srgb, var(--fg-default) 70%, transparent);
     flex: 0 0 auto;
     font-size: var(--body-xs);
     font-weight: var(--font-weight-medium);
