@@ -1,0 +1,217 @@
+/*
+ * The shared page header: oversized display heading on the left, an optional lede and an optional
+ * block of short uppercase meta items on the right, all sitting on one bottom edge.
+ *
+ * Drawn six times — Planner (nodes 1:307 desktop, 1:464 mobile), Stay (1:615, 1:688) and The Lodge
+ * (16:121, 16:277). The structure agrees across all six; what differs is which optional part is
+ * filled in, so this is one section with two optional fields rather than three sections.
+ *
+ * ## The one breakpoint, and why it is a container query
+ *
+ * Everything that scales here scales through `fluid()`. The single thing `fluid()` cannot
+ * interpolate is a change of *direction* — the row becomes a column — so that needs a query, and it
+ * is a **container** query on the section's own content box rather than a viewport media query.
+ *
+ * In the app the two are equivalent: the section is full width, so its container's inline size is
+ * the viewport minus the gutters. Keying it to the container is what makes the switch testable — the
+ * `Mobile` story renders the section in a 375px column and gets the stacked layout without owning
+ * the window, which is the distinction that bit `FieldCheckbox` and `PlayerCard`.
+ *
+ * 60rem (960px) is the switch, and it is measured against what the two columns have to hold rather
+ * than taken from the breakpoint map. At a 960px container each column is ~460px: enough for roughly
+ * 45 characters of the 20px lede, and enough for a five- or six-letter display word at the ~95px
+ * `--display-md` resolves to around there. Below that the lede's measure collapses and the heading
+ * starts breaking mid-word, so the column layout stops being better than the stacked one.
+ *
+ * `rem` rather than `px`, for the same reason `$header-inline-switch` is: at a fixed 960px the query
+ * would ignore a reader who raised their root font size and hand them a two-column header at a width
+ * where neither column fits (WCAG 1.4.4).
+ *
+ * Local to this module — unlike `$header-inline-switch`, which lives in `tools/sass/base/__media.scss`
+ * because three separate modules have to agree on it. Only this file uses this one.
+ */
+$stack-switch: 60rem;
+
+@layer defaults {
+  /*
+   * The query container is the `Container` element, via `containerClassName`, so the queried inline
+   * size is the content width the design measures its columns against — frame minus gutters.
+   *
+   * `inline-size` and not `size`: the header's width comes from the page, its height from its
+   * content, and containing the height would collapse it.
+   */
+  .container {
+    container: headerDisplay / inline-size;
+  }
+
+  .row {
+    display: flex;
+    /*
+     * Stacked is the default and the row is the override, mobile-first. A container query cannot be
+     * evaluated before its container has been laid out, so on the first style pass neither branch
+     * matches; making the narrow layout the unconditional default means that frame paints the
+     * stacked header rather than an unstyled one. Same trap the header's two RSVP labels hit.
+     */
+    flex-direction: column;
+    // 11px (node 1:464) to 14.9px (16:277) between the heading and what follows it on the mobile
+    // frames — `--spacing-sm` is 12px and fixed, which is the scale's rule below the 32px cutoff.
+    gap: var(--spacing-sm);
+
+    @container headerDisplay (width >= #{$stack-switch}) {
+      /*
+       * `flex-end` is the whole layout idea: the meta block hangs off the *bottom* of the heading,
+       * not the top. Figma sets `items-end` on all three desktop frames, and on Planner the heading
+       * and the meta share a bottom edge to the pixel (both end at y = 265.75 in node 1:307).
+       */
+      align-items: flex-end;
+      flex-direction: row;
+      /*
+       * 40px between the columns on Stay and The Lodge. Fluid rather than fixed because the row only
+       * exists above the switch, so this interpolates across a short band and tops out at the
+       * drawn value; a fixed 40px would be 40px at every width the row is ever shown at, including
+       * the ones just above the switch where it is proportionally much larger.
+       */
+      gap: #{fluid(24px, 40px)};
+      justify-content: space-between;
+    }
+  }
+
+  /*
+   * With a lede the two columns split the row evenly — Figma gives both `flex-[1_0_0]` on Stay
+   * (1:615) and The Lodge (16:121).
+   *
+   * Without one there is nothing to give half a row to, so the aside keeps its default
+   * `flex: 0 1 auto`, hugs its content, and `space-between` parks it against the right edge while
+   * the heading takes everything else. That is Planner (1:307), where the heading measures 806px and
+   * the meta 203px rather than 580px each.
+   */
+  .row_split {
+    @container headerDisplay (width >= #{$stack-switch}) {
+      .aside,
+      .heading {
+        flex: 1 1 0;
+      }
+
+      .aside {
+        align-items: stretch;
+      }
+
+      .meta {
+        justify-content: flex-start;
+      }
+    }
+  }
+
+  .heading {
+    /*
+     * All six frames type the heading in capitals. Applied here rather than left to the editor so
+     * the treatment holds whatever case somebody types, and applied as a section rule rather than
+     * pushed into `Text` because it is this header's typographic register, not the display tier's.
+     */
+    text-transform: uppercase;
+
+    /*
+     * A flex item's automatic minimum is its `min-content` width, which for a single long word at
+     * ~120px type is wider than half the row — left alone "WEEKEND" would push the aside out of the
+     * container rather than wrap. `min-width: 0` lets the item shrink and `overflow-wrap` lets the
+     * word break rather than overflow, which is what Figma does too (`word-break: break-word` on
+     * every one of the six heading nodes).
+     */
+    min-width: 0;
+    overflow-wrap: break-word;
+
+    /*
+     * Known divergence, deliberately not corrected here. The comps set every display heading at
+     * 0.84 leading and -0.045em tracking — the home hero (node 1:65, 176px/147.84px/-7.92px) and all
+     * three of these headers (132px/110.88px/-5.94px) agree exactly. The tokens
+     * `--display-line-height` and `--display-letter-spacing` are 1.05 and -0.03em, so a two-line
+     * heading renders about 25% taller here than it is drawn.
+     *
+     * Overriding it in this one section would make this heading disagree with every other use of the
+     * display tier and hide the mismatch rather than resolve it. It belongs in
+     * `tools/sass/global/_variables.scss` if design confirms 0.84 is the intent — raised at review.
+     */
+  }
+
+  .aside {
+    display: flex;
+    flex-direction: column;
+    // 20px desktop (1:618, 16:124), ~16px mobile (1:688) between the lede and the meta row. The
+    // design states two values, which is what `fluid()` is for.
+    gap: #{fluid(16px, 20px)};
+    min-width: 0;
+
+    @container headerDisplay (width >= #{$stack-switch}) {
+      // Meta-only. Shrink-to-fit against the right edge; `.row_split` above restores `stretch` when
+      // there is a lede to fill the column.
+      align-items: flex-end;
+    }
+  }
+
+  /*
+   * A wrapping repeater, not a truncation rule.
+   *
+   * The comps drop meta items on mobile — The Lodge drops the row entirely (16:277) and Planner
+   * drops its first line (1:464 keeps only "ALL TIMES AEDT · TBC"). Encoding that as a rule would
+   * mean deciding in code which of an editor's items matter, so the items wrap onto as many lines as
+   * they need instead and an editor who wants fewer on a phone removes them. Raised at design
+   * review.
+   */
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    // 28px desktop (1:621, 16:127), 18px mobile (1:693).
+    column-gap: #{fluid(18px, 28px)};
+    margin: 0;
+    padding: 0;
+    // Between wrapped lines. Fixed, per the scale's rule below the 32px cutoff.
+    row-gap: var(--spacing-xs);
+
+    @container headerDisplay (width >= #{$stack-switch}) {
+      // Meta-only: wrapped lines stack against the right edge, as Planner's two lines do.
+      justify-content: flex-end;
+    }
+  }
+
+  /*
+   * The mono micro-label, in its quiet register — JetBrains Mono Medium, uppercase, tracked.
+   *
+   * Declared here rather than taken through `Text` because `Text` has no `mono` variant; that is a
+   * known gap and re-declaring `font-family` in the module is the accepted workaround, which
+   * `Button`, `PlayerCard`, `StatMeter`, `FieldCheckbox` and `ModelViewer` all take too.
+   *
+   * `--body-xs` = fluid(11px, 12px) is the comps' pair exactly: 12px on Stay and The Lodge desktop,
+   * 11px on Stay mobile. Planner sets 13px/11px, which the same token covers to within a pixel.
+   * Tracking in `em` — 1.2px on 12px is 0.1em — so it stays proportional as the fluid size moves.
+   * Weight and tracking follow Stay and The Lodge; Planner's line is untracked Regular, the only
+   * disagreement between the three, and two of three win.
+   */
+  .metaItem {
+    @include mono-font();
+
+    color: var(--fg-accent);
+    font-size: var(--body-xs);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.1em;
+    line-height: var(--body-line-height);
+    text-transform: uppercase;
+    /*
+     * Deliberately **not** `white-space: nowrap`, even though Figma sets it on all six meta nodes.
+     *
+     * A flex item's automatic minimum is its `min-content` width, so the row already prefers to wrap
+     * *between* items rather than break one: "39 ROOMS" is placed whole while the line has room for
+     * it, and only an item longer than the whole line can break at all. `nowrap` would swap that
+     * graceful case for a horizontally scrolling page the first time an editor writes a long item on
+     * a phone, and the AC here is "wraps rather than truncating".
+     */
+  }
+
+  /*
+   * Size and colour come from `TextBlock`'s `config` prop (see index.tsx) and the measure comes from
+   * the column, so the only thing left is the guard against an unbreakable run — a pasted URL — and
+   * the hook a design review measures against.
+   */
+  .lede {
+    overflow-wrap: break-word;
+  }
+}
