@@ -36,7 +36,7 @@ const meta = {
   parameters: {
     design: {
       type: 'figma',
-      url: 'https://www.figma.com/design/KxvsJuCNaG4n2QVp3iD4jd/Wedding?node-id=1-752'
+      url: 'https://www.figma.com/design/KxvsJuCNaG4n2QVp3iD4jd/Wedding?node-id=1-798'
     }
   },
   args: {
@@ -72,6 +72,9 @@ const boxes = (canvasElement: HTMLElement) => {
   const group = within(canvasElement).getByRole('group', { name: /attending/i });
   return within(group).getAllByRole('checkbox');
 };
+
+/** The card is the input's next sibling — the painted box, and where every state style lands. */
+const cardOf = (box: HTMLElement) => box.nextElementSibling as HTMLElement;
 
 /** Nothing selected — the state the comp does not draw, inferred from the `Chip` design-system pair. */
 export const Default: Story = {
@@ -163,6 +166,57 @@ export const KeyboardOperation: Story = {
       await expect(sat).not.toBeChecked();
       await expect(fri).toBeChecked();
     });
+  }
+};
+
+/**
+ * A column too narrow to seat two cards — a phone, or a sidebar on a desktop — where the comp lays
+ * the card out along its length instead of stacking it (Figma node 1:892).
+ *
+ * The narrow wrapper is the whole point, and it is a width rather than a viewport on purpose. The
+ * card's direction is a container query on the options grid, because its width is its grid track's
+ * and never the window's; a story that reached this branch by shrinking the viewport would pass just
+ * as well against the viewport media query this replaced, which got the middle of the range
+ * backwards — three 224px cards laid out lengthwise at a 768px window. Keying the story to the
+ * container is what makes it a test of the rule rather than of one screen size.
+ */
+export const NarrowColumn: Story = {
+  parameters: { formDefaults: { attending: ['sat'] } },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '20.4375rem' }}>
+        <Story />
+      </div>
+    )
+  ],
+  play: async ({ canvasElement }) => {
+    for (const box of boxes(canvasElement)) {
+      await expect(getComputedStyle(cardOf(box)).flexDirection).toBe('row');
+    }
+  }
+};
+
+/**
+ * Invalid — and the reason this is a story rather than a note.
+ *
+ * `.card.error` is two classes, and it sits below both `.input:disabled + .card` and
+ * `.input:checked:not(:disabled):hover + .card` in the cascade; each of those also sets
+ * `border-color`, so the red border used to vanish on a disabled invalid field and under the pointer
+ * on a selected one. Nothing caught it because nothing rendered the state. The border ink is now
+ * routed through a custom property so the low-specificity rule still wins, and this asserts the
+ * result the way a reader sees it: on a valid card the border matches the label, and on this one it
+ * does not.
+ */
+export const Invalid: Story = {
+  args: { required: true, errors: { attending: { message: 'Pick at least one.', type: 'required' } } },
+  parameters: { formDefaults: {} },
+  play: async ({ canvasElement }) => {
+    const [fri] = boxes(canvasElement);
+
+    await expect(fri).toHaveAttribute('aria-invalid', 'true');
+
+    const card = getComputedStyle(cardOf(fri));
+    await expect(card.borderTopColor).not.toBe(card.color);
   }
 };
 
