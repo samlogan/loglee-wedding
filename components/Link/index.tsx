@@ -3,19 +3,10 @@
 import NextLink from 'next/link';
 import type { AnchorHTMLAttributes, ReactNode } from 'react';
 
+import type { ButtonAppearanceProps } from '@/components/Button/appearance';
+import { ButtonArrow, buttonClasses, inertClasses } from '@/components/Button/appearance';
 import stringClean from '@/tools/helpers/stringClean';
 import type { ILinkElement } from '@/tools/sanity/schema/elements/link';
-
-import type { ButtonAppearanceProps } from '../Button/appearance';
-import { ButtonArrow, buttonClasses } from '../Button/appearance';
-
-export type {
-  ButtonAppearanceProps,
-  ButtonArrowDirection,
-  ButtonSize,
-  ButtonTheme,
-  ButtonVariant
-} from '../Button/appearance';
 
 /*
  * `ButtonAppearanceProps` rather than a parallel copy of the same six props.
@@ -29,6 +20,11 @@ export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement>, Butt
   className?: string;
   id?: string;
   href?: string;
+  /*
+   * `string`, where `ButtonProps.text` is `string | number`. The two deliberately differ: this
+   * one doubles as the accessible-name fallback (`ariaLabel = text || title || ''`) and
+   * `aria-label` takes a string, so widening it only buys a `String()` coercion on the name path.
+   */
   text?: string;
   title?: string;
   ariaLabel?: string;
@@ -62,14 +58,25 @@ const Link = (props: LinkProps) => {
     target = '_self',
     newWindow = false,
     tabIndex = 0,
+    arrow,
+    /*
+     * Everything from here to `forceLinkWhenEmpty` is pulled out to keep it *off* the element, not
+     * because this function reads it — `buttonClasses` is handed `props` whole below.
+     *
+     * `rest` is spread onto an `<a>`, so any prop left in it becomes a DOM attribute. `action` is
+     * the one that bites in production: `linkProjection` returns it and consumers spread the whole
+     * link object (`<Link {...button?.link}>`), so an editor picking "Action" in the Studio used to
+     * emit `<a action="…">`. React passes unknown attributes through to the DOM without warning, so
+     * nothing flagged it. The appearance props below are the same problem in waiting.
+     */
     variant,
     size,
     theme,
-    outline = false,
-    mono = false,
-    arrow,
-    fullWidth = false,
-    fullWidthMobile = false,
+    outline,
+    mono,
+    fullWidth,
+    fullWidthMobile,
+    action,
     forceLinkWhenEmpty,
     ...rest
   } = props;
@@ -81,7 +88,19 @@ const Link = (props: LinkProps) => {
 
   const linkType = stringClean(rawLinkType);
 
-  const classes = buttonClasses({ theme, size, variant, outline, mono, arrow, fullWidth, fullWidthMobile }, className);
+  /*
+   * `props` whole, rather than a hand-assembled copy of the appearance axes.
+   *
+   * The copy had already gone stale — it passed `arrow`, which `buttonClasses` does not read — and
+   * it is one of the two lists a ninth appearance prop would have had to be added to. Passing the
+   * props object means `ButtonAppearanceProps` is the only place that list lives.
+   */
+  const classes = buttonClasses(props, className);
+  /*
+   * The same list plus the inert modifier, for the two `<span>` branches below. Built here
+   * rather than at each `return` so the two cannot drift.
+   */
+  const inert = inertClasses(props, className);
 
   const linkTarget = newWindow ? '_blank' : target;
 
@@ -133,7 +152,7 @@ const Link = (props: LinkProps) => {
 
     if (!linkHref) {
       return (
-        <span className={classes} id={id} {...rest}>
+        <span className={inert} id={id} {...rest}>
           {child}
         </span>
       );
@@ -212,7 +231,7 @@ const Link = (props: LinkProps) => {
    * behavioural prop has to do to be worth anything.
    */
   return (
-    <span className={classes} id={id} {...rest}>
+    <span className={inert} id={id} {...rest}>
       {child}
     </span>
   );

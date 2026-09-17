@@ -68,9 +68,35 @@ export const Ghost: Story = {
   }
 };
 
-/** "← BACK" — no box at all, ink only, accent on hover. */
+/**
+ * "← BACK" — no box at all, ink only, accent on hover.
+ *
+ * The two halves of that are asserted below, because they pull against each other: the *ink* is
+ * deliberately short (a boxless control that reserved 24px would not be boxless), while the
+ * *target* has to reach the 24 CSS px WCAG 2.5.8 asks for. An overlay buys the second without
+ * spending the first — see `.variant_bare::after` in `styles.module.scss`.
+ */
 export const Bare: Story = {
-  args: { variant: 'bare', size: 'sm', mono: true, arrow: 'left', text: 'Back' }
+  args: { variant: 'bare', size: 'sm', mono: true, arrow: 'left', text: 'Back' },
+  play: async ({ canvas }) => {
+    const button = canvas.getByRole('button', { name: 'Back' });
+    const box = button.getBoundingClientRect();
+
+    // Zeroed padding, so the layout box is just the line box. Measured at 15.2px at 375px.
+    await expect(box.height).toBeLessThan(24);
+
+    /*
+     * The hit area, probed the way a thumb lands rather than read off a property — `getBoundingClientRect`
+     * reports the layout box and would keep passing if the overlay were deleted. 11px either side of
+     * the label's centre is inside a 24px band and outside a 15px one, so this fails the moment the
+     * target shrinks back to the ink.
+     */
+    const x = box.left + box.width / 2;
+    const y = box.top + box.height / 2;
+    for (const offset of [-11, 11]) {
+      await expect(button.contains(document.elementFromPoint(x, y + offset))).toBe(true);
+    }
+  }
 };
 
 /**

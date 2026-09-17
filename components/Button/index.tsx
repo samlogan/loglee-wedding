@@ -19,7 +19,6 @@ export interface ButtonProps extends ButtonAppearanceProps {
   text?: string | number;
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
-  to?: string;
   ariaLabel?: string;
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
   icon?: IconProps['title'];
@@ -34,15 +33,8 @@ const Button = (props: ButtonProps) => {
     id,
     children,
     type = 'button',
-    theme,
-    size,
-    variant,
     disabled = false,
-    outline = false,
-    mono = false,
     arrow,
-    fullWidth = false,
-    fullWidthMobile = false,
     ariaLabel = '',
     iconPosition = 'left',
     text,
@@ -50,13 +42,16 @@ const Button = (props: ButtonProps) => {
     tabIndex
   } = props;
 
-  const classes = buttonClasses({ theme, size, variant, outline, mono, arrow, fullWidth, fullWidthMobile }, className);
-
-  const onClickHandler = (event: MouseEvent<HTMLButtonElement>) => {
-    if (onClick) {
-      onClick(event);
-    }
-  };
+  /*
+   * `props` whole, rather than a hand-assembled copy of the appearance axes.
+   *
+   * Nothing here renders from `theme`/`size`/`variant`/`outline`/`mono`/`fullWidth` directly — they
+   * only ever became classes — and the copy had already gone stale, passing `arrow`, which
+   * `buttonClasses` does not read. `ButtonProps` extends `ButtonAppearanceProps`, so handing the
+   * object over keeps that list in exactly one place. (`Link` still destructures the same props, but
+   * for a different reason: it spreads its rest onto an `<a>` and has to keep them off it.)
+   */
+  const classes = buttonClasses(props, className);
 
   return (
     <button
@@ -70,7 +65,7 @@ const Button = (props: ButtonProps) => {
       className={classes}
       disabled={disabled}
       id={id}
-      onClick={onClickHandler}
+      onClick={onClick}
       tabIndex={tabIndex}
       type={type}
     >

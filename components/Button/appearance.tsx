@@ -36,10 +36,25 @@ export type ButtonArrowDirection = 'left' | 'right';
  * the two drifting.
  */
 export interface ButtonAppearanceProps {
+  /**
+   * Omit all three of `theme`, `size` and `variant` and you get an unstyled control: no fill, a
+   * transparent border, `currentColor` ink, `font: inherit` and no padding. That is a deliberate
+   * seventh appearance and roughly half the call sites in this repo depend on it — the logo, the
+   * breadcrumb crumbs, the nav tabs, the modal close. It is *not* `variant="bare"`, which
+   * additionally pins the ink to `--fg-default`, picks the quiet mono register and lights the accent
+   * on hover. If you want a plain wrapper, pass nothing; if you want the design's ink-only control,
+   * pass `variant="bare"`.
+   */
   theme?: ButtonTheme;
   size?: ButtonSize;
   variant?: ButtonVariant;
-  /** Draw the control instead of filling it: transparent fill, border and label in the theme colour. */
+  /**
+   * Draw the control instead of filling it: transparent fill, border and label in the theme colour.
+   *
+   * Requires `theme` — the colour is derived from that theme's fill, so `outline` on its own has
+   * nothing to draw with and is a silent no-op (the base border is already transparent, so the
+   * result is pixel-identical to omitting it).
+   */
   outline?: boolean;
   /** Set the label in JetBrains Mono, uppercase and tracked — the design's UI-chrome controls. */
   mono?: boolean;
@@ -80,6 +95,21 @@ export const buttonClasses = (props: ButtonAppearanceProps, className?: string):
     className
   );
 };
+
+/**
+ * The class list for a control that looks like one but has nowhere to go.
+ *
+ * `Link` falls back to a `<span>` when it cannot resolve a destination — an editor selected "Email"
+ * in the Studio and left the field blank, which this dataset contains. That span used to carry
+ * `buttonClasses` unmodified, so it kept the pointer cursor and every hover swap: it looked and felt
+ * like a working control to a sighted user while a screen reader correctly announced nothing at all.
+ * This adds the modifier that takes the interactive affordances back off.
+ *
+ * Composed here rather than in `Link` so the class list still has exactly one origin, which is the
+ * whole reason this module exists.
+ */
+export const inertClasses = (props: ButtonAppearanceProps, className?: string): string | undefined =>
+  classNames(buttonClasses(props, className), styles.inert);
 
 const ARROW_GLYPHS: Record<ButtonArrowDirection, string> = {
   left: '←',

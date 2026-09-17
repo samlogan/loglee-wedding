@@ -282,7 +282,6 @@ const TextBlock = (props: TextBlockProps) => {
              * on colour alone.
              */
             variant="content"
-            className={styles.link}
           >
             {children}
           </Link>
@@ -400,11 +399,7 @@ const TextBlock = (props: TextBlockProps) => {
       )}
 
       {content?.readMoreEnabled && (
-        <Button
-          onClick={toggleReadMore}
-          className={classNames(styles.readMore, { [styles.active]: showMore })}
-          ariaLabel="Read more"
-        >
+        <Button onClick={toggleReadMore} className={classNames(styles.readMore, { [styles.active]: showMore })}>
           <Text
             text={showMore ? 'Read less' : 'Read more'}
             size="lg"

@@ -269,6 +269,18 @@
   --button-focus-ring-width: 3px;
   --button-focus-ring-offset: 3px;
 
+  // The pointer target a boxless control has to reach. `variant="bare"` zeroes its padding, so its
+  // border box is only the line box: measured at 375px it is 15.2px tall at `sm` and 18.8px at
+  // `md`, against the 24 CSS px WCAG 2.5.8 (Target Size Minimum, AA) asks for. `variant="content"`
+  // is exempt under that criterion's "Inline" clause — it sits in a sentence and is sized by the
+  // surrounding line-height — but `bare` is the standalone "← BACK" control and is not.
+  //
+  // Deliberately *not* fluid, and this is the one place in the file where that is the point: 24px
+  // is a floor the spec states in CSS px, so interpolating it would put the narrow end below the
+  // number it exists to clear. `bare` never grows past ~22px tall even at `lg`, so one fixed value
+  // covers every size.
+  --button-bare-target-height: 24px;
+
   // Small — the mono UI controls: the nav RSVP pill, the switch-player button. Not the room chips,
   // which the design sets in 15px body type on a 44px box — that is `md`, not this.
   --button-sm-font-size: #{fluid(11px, 12px)};
@@ -409,8 +421,15 @@
    * where the accent earns its keep.
    *
    * `pine-400` / `pine-200` was the disabled pair and measured 2.25:1. Sinking the fill below the
-   * page instead (`pine-700`) and muting the label to `pine-300` gets 4.58:1 — an inactive control
-   * is exempt from 1.4.3, but "exempt" is not the same as "unreadable".
+   * page instead (`pine-700`) and muting the label gets that back — an inactive control is exempt
+   * from 1.4.3, but "exempt" is not the same as "unreadable".
+   *
+   * The disabled label is `pine-200`, not `pine-300`, and the difference is the *outline* form.
+   * `.outline:disabled` forces `background-color: transparent`, so its label does not sit on the
+   * disabled fill at all — it sits on the page. `pine-300` measured 4.58:1 on `pine-700` (filled)
+   * but only 3.78:1 on `pine-600` (outlined), so the figure this comment used to quote held for one
+   * of the two forms and the other quietly missed the bar the rest of the set clears. `pine-200`
+   * covers both: 6.66:1 filled, 5.49:1 outlined.
    */
   --button-primary-bg: var(--stone-50);
   --button-primary-bg-hover: var(--signal-300);
@@ -419,7 +438,7 @@
   --button-primary-fg: var(--pine-600);
   --button-primary-fg-hover: var(--stone-900);
   --button-primary-fg-active: var(--stone-900);
-  --button-primary-fg-disabled: var(--pine-300);
+  --button-primary-fg-disabled: var(--pine-200);
   --button-primary-focus-ring: var(--signal-300);
 
   /* Button - Secondary */
@@ -430,7 +449,7 @@
   --button-secondary-fg: var(--pine-600);
   --button-secondary-fg-hover: var(--pine-600);
   --button-secondary-fg-active: var(--pine-600);
-  --button-secondary-fg-disabled: var(--pine-300);
+  --button-secondary-fg-disabled: var(--pine-200);
   --button-secondary-focus-ring: var(--signal-300);
 
   /* Button - Accent — the same lime-under-ink pairing as the light theme. */
@@ -441,7 +460,7 @@
   --button-accent-fg: var(--stone-900);
   --button-accent-fg-hover: var(--stone-900);
   --button-accent-fg-active: var(--stone-900);
-  --button-accent-fg-disabled: var(--pine-300);
+  --button-accent-fg-disabled: var(--pine-200);
   --button-accent-focus-ring: var(--signal-300);
 
   /* Input */

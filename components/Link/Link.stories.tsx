@@ -230,8 +230,35 @@ export const PhoneLink: Story = {
 //
 // There is deliberately no `ActionLink` story to match. One was added here and removed on review:
 // `linkType: 'action'` takes no branch in the component and falls through to the plain `<span>`, so
-// the story rendered a span and asserted nothing while its name claimed otherwise — the same defect
-// as the two SocialsShare stories deleted in this branch. See the note in the component.
+// the story rendered a span and asserted nothing while its name claimed otherwise. A story named
+// for a behaviour the component does not have is worse than no story — it reads as coverage. See
+// the note on the fallback branch in the component.
 export const EmailLink: Story = {
   args: { text: 'Email us', linkType: 'email', email: 'hello@example.com' }
+};
+
+/**
+ * No destination — an editor picked a link type in the Studio and left the field blank, which this
+ * dataset contains.
+ *
+ * The label still shows, but nothing pretends to be actionable: it renders a `<span>`, so no role
+ * and no tab stop, and it carries the `inert` modifier so it does not keep the pointer cursor, the
+ * hover swap or (under `variant="content"`) the underline. That last part is the point — before the
+ * modifier existed a blank rich-text link rendered as underlined, link-coloured prose that did
+ * nothing, so a sighted user saw a link exactly where a screen reader correctly announced none.
+ */
+export const NoDestination: Story = {
+  args: { text: 'Email us', linkType: 'email', email: '', href: '', variant: 'content' },
+  play: async ({ canvas }) => {
+    // Not a link, to anyone: `queryByRole` is the assertion, not a class check.
+    await expect(canvas.queryByRole('link')).toBeNull();
+
+    const span = canvas.getByText('Email us');
+    await expect(span.tagName).toBe('SPAN');
+
+    // And not dressed as one. `pointer-events: none` is what takes the cursor and the hover with it.
+    const styles = getComputedStyle(span);
+    await expect(styles.pointerEvents).toBe('none');
+    await expect(styles.textDecorationLine).toBe('none');
+  }
 };
