@@ -135,16 +135,16 @@ For every instance of these components in the section, verify the props are doin
 
 **Font size leniency and design system token modification:**
 
-The type scale is defined as CSS custom properties in `tools/sass/global/_variables.scss`:
+The type scale is defined as CSS custom properties in `tools/sass/global/_variables.scss`. Each token is a **single fluid `clamp()`** interpolating between the two columns below across the viewport range (375px → 1440px) — there are no `-mobile` tokens and no breakpoint:
 
-| Heading | Desktop | Mobile | Body | Desktop | Mobile |
-| ------- | ------- | ------ | ---- | ------- | ------ |
-| 2xl     | 72px    | 48px   | 2xl  | 22px    | 20px   |
-| xl      | 60px    | 40px   | xl   | 20px    | 18px   |
-| lg      | 48px    | 32px   | lg   | 18px    | 16px   |
-| md      | 40px    | 28px   | md   | 16px    | 14px   |
-| sm      | 32px    | 24px   | sm   | 14px    | 12px   |
-| xs      | 24px    | 20px   | xs   | 12px    | 11px   |
+| Display | 375px | 1440px | Heading | 375px | 1440px | Body | 375px | 1440px |
+| ------- | ----- | ------ | ------- | ----- | ------ | ---- | ----- | ------ |
+| lg      | 64px  | 176px  | 2xl     | 48px  | 72px   | 2xl  | 20px  | 22px   |
+| md      | 56px  | 128px  | xl      | 40px  | 60px   | xl   | 18px  | 20px   |
+|         |       |        | lg      | 32px  | 48px   | lg   | 16px  | 18px   |
+|         |       |        | md      | 28px  | 40px   | md   | 14px  | 16px   |
+|         |       |        | sm      | 24px  | 32px   | sm   | 12px  | 14px   |
+|         |       |        | xs      | 20px  | 24px   | xs   | 11px  | 12px   |
 
 **Rounding rules:**
 
@@ -173,7 +173,7 @@ The type scale is defined as CSS custom properties in `tools/sass/global/_variab
   letter-spacing: -0.05em; // BORDERLINE — consider adding to design system
 
   @include media-down(tablet) {
-    font-size: var(--heading-sm-mobile); // BAD — Text handles responsive sizing automatically
+    font-size: 24px; // BAD twice over — the type tokens are fluid, so there is no breakpoint to write
     letter-spacing: -0.06em; // BORDERLINE
   }
 }

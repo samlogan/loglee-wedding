@@ -448,10 +448,16 @@ Defined in `tools/sass/global/_variables.scss`:
 
 - **Base colors**: three ramps, each `25`–`900` — `var(--stone-500)` (warm neutral base), `var(--pine-500)` (brand green), `var(--signal-300)` (bright accent, reserved for interactive states) — plus `var(--shades-black)`, `var(--shades-white)` and the `var(--system-*)` ramps. Prefer the theme-aware tokens below; no component currently references a primitive directly.
 - **Theme-aware** (change with `[data-theme]`): `var(--bg-default)`, `var(--bg-accent)`, `var(--bg-raised)`, `var(--fg-default)`, `var(--fg-link)`, `var(--fg-icon)`, `var(--fg-accent)`, `var(--stroke-cards)`, `var(--stroke-divider)`. **Two themes only** — `light` and `dark`.
-- **Section spacing**: `var(--section-spacing-sm-desktop)`, `var(--section-spacing-md-desktop)`, `var(--section-spacing-lg-desktop)`, `var(--section-spacing-xl-desktop)` (+ `-mobile` variants)
-- **Button tokens**: `var(--button-primary-bg)`, `var(--button-primary-fg)`, `var(--button-secondary-bg)`, `var(--button-secondary-fg)` (+ `-hover` variants). Outline styling is derived from theme fill colors in SCSS.
-- **Container widths**: `var(--container-xs)` (640px), `var(--container-sm)` (768px), `var(--container-md)` (1024px), `var(--container-lg)` (1280px), `var(--container-xl)` (1440px). Use the `Container` component `width` prop instead of manual `max-width` where possible.
+- **Type scale** (fluid): `var(--display-lg)`, `var(--display-md)`, `var(--heading-2xl)` … `var(--heading-xs)`, `var(--body-2xl)` … `var(--body-xs)`. **There are no `-mobile` variants** — each token is a single `clamp()` covering the whole viewport range. Set type through `Text`'s `variant` + `size` props, never a raw `font-size`.
+- **Section spacing** (fluid): `var(--section-spacing-xs)`, `var(--section-spacing-sm)`, `var(--section-spacing-md)`, `var(--section-spacing-lg)`, `var(--section-spacing-xl)` — one token per step, no `-desktop` / `-mobile` pair.
+- **Component spacing**: `var(--spacing-xxs)` … `var(--spacing-3xl)`. Fixed up to `lg` (24px); `xl` and above are fluid.
+- **Button tokens**: `var(--button-primary-bg)`, `var(--button-primary-fg)`, `var(--button-secondary-bg)`, `var(--button-secondary-fg)` (+ `-hover` variants). Outline styling is derived from theme fill colors in SCSS. Button sizing tokens are deliberately fixed, not fluid — padding sets the tap target.
+- **Container widths**: `var(--container-xs)` (640px), `var(--container-sm)` (768px), `var(--container-md)` (1024px), `var(--container-lg)` (1280px), `var(--container-xl)` (1440px). Fixed — these are caps. Use the `Container` component `width` prop instead of manual `max-width` where possible.
 - **System colors**: `var(--system-error-500)`, `var(--system-success-500)`, `var(--system-warning-500)`
+
+#### Fluid Sizing
+
+`tools/sass/base/__fluid.scss` defines `fluid($narrow-px, $wide-px)`, which emits a `rem`-based `clamp()` interpolating between the two anchors across a single pair of viewport anchors (375px → 1440px, i.e. `--container-xl`) shared by every token. Every type, section-spacing and large-gap token in `_variables.scss` is derived through it — **do not hand-write a `clamp()`**, and do not add a `media-up()` font-size or section-padding override: the token already covers the whole range, and a breakpoint reintroduces the jump the fluid scale removed.
 
 #### Sass Module Syntax
 

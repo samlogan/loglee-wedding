@@ -111,7 +111,7 @@ NOT acceptable: `font-size`, `font-weight`, `font-family`, `line-height`, `lette
   text-transform: uppercase; // BAD — use Text textTransform="uppercase"
   color: var(--fg-default); // BAD — use Text color="themeFgDefault"
   @include media-down(tablet) {
-    font-size: var(--heading-sm-mobile); // BAD — Text handles responsive sizing
+    font-size: 24px; // BAD twice over — the type tokens are fluid, so there is no breakpoint to write
   }
 }
 ```

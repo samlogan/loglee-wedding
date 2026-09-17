@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 
 /**
  * Reads the design tokens out of the running page rather than out of the stylesheet source.
@@ -160,3 +160,57 @@ export const px = (value: string): number | null => {
   const match = value.match(/^(-?[\d.]+)px$/);
   return match ? Number(match[1]) : null;
 };
+
+/**
+ * Resolve a length token to the pixels the browser applies at the current viewport width.
+ *
+ * `px()` above parses a literal, which is all a stepped token ever was. The type and section-spacing
+ * tokens are now `clamp()` expressions, and an unregistered custom property computes to its declared
+ * token stream — `getComputedStyle` hands back the literal string
+ * `clamp(3rem, 2.4718rem + 2.2535vw, 4.5rem)`, not a length. Parsing that here would mean
+ * reimplementing `clamp`, `rem` and `vw`; putting it on a probe and reading the result back asks the
+ * browser instead, which is the principle the rest of this file already works on.
+ *
+ * `font-size` is the carrier property because it computes to an absolute pixel value without the
+ * element needing to be laid out. The one thing it would resolve differently from, say, `padding` is
+ * `em`, which resolves against the *parent* font size for `font-size` and against the element's own
+ * for everything else — no token in this system uses `em` for a size, and a percentage would have
+ * the same caveat.
+ */
+export const resolveLength = (expression: string): number | null => {
+  const probe = document.createElement('div');
+  probe.style.fontSize = expression;
+  // An invalid value is dropped by the CSSOM rather than throwing, leaving the property empty. Without
+  // this check the probe would simply inherit `<body>`'s 16px and report a confident, wrong number.
+  if (!probe.style.fontSize) {
+    return null;
+  }
+  probe.style.position = 'absolute';
+  probe.style.visibility = 'hidden';
+  document.body.append(probe);
+  try {
+    return px(getComputedStyle(probe).fontSize);
+  } finally {
+    // `finally` so a throw cannot leak a hidden probe into `<body>`.
+    probe.remove();
+  }
+};
+
+const subscribeToViewport = (onStoreChange: () => void) => {
+  window.addEventListener('resize', onStoreChange);
+  return () => window.removeEventListener('resize', onStoreChange);
+};
+
+/**
+ * The current viewport width, as a subscription rather than state synced in an effect.
+ *
+ * Its value is rarely read directly — it exists so a component calling `resolveLength` re-renders
+ * (and therefore re-resolves) when the canvas is dragged. With fluid tokens that is the difference
+ * between a page that reports the system and a page that reports the width it happened to mount at.
+ */
+export const useViewportWidth = (): number =>
+  useSyncExternalStore(
+    subscribeToViewport,
+    () => window.innerWidth,
+    () => 0
+  );

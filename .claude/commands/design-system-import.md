@@ -138,7 +138,7 @@ JSON keys use camelCase naming. Parse them into structured tokens using these co
 
 **Responsive (`responsive.desktop` / `.tablet` / `.mobile`):**
 
-- `sections{Size}` → section spacing (e.g., `sectionsXl` → `--section-spacing-xl-desktop: 96px`)
+- `sections{Size}` → section spacing. The desktop and mobile tiers become the two anchors of one fluid token: `responsive.mobile.sectionsXl` + `responsive.desktop.sectionsXl` → `--section-spacing-xl: #{fluid(48px, 96px)}`
 - `components{Size}` → component spacing
 - `container{Name}` → container widths
 - `typographyFontSize{Size}` → responsive font sizes
@@ -224,9 +224,9 @@ Map to: `tools/sass/global/_variables.scss` (`:root` for primitives, `[data-them
 - Section-level top/bottom padding values (distinct from component spacing)
 - Map to: CSS custom properties in `tools/sass/global/_variables.scss` (`--section-spacing-*`)
 - Used by: `components/Section/style.module.scss` for `spacing_top_*` / `spacing_bottom_*` classes
-- Each size has two variants: `--section-spacing-{size}-desktop` and `--section-spacing-{size}-mobile`
-- Current sizes: `sm`, `md`, `lg`, `xl`
-- **Responsive mapping**: `responsive.desktop.sections{Size}` → `--section-spacing-{size}-desktop`, `responsive.mobile.sections{Size}` → `--section-spacing-{size}-mobile`
+- **One fluid token per size** — `--section-spacing-{size}: #{fluid($mobile, $desktop)}`. There is no `-desktop` / `-mobile` pair; do not reintroduce one
+- Current sizes: `xs`, `sm`, `md`, `lg`, `xl`
+- **Responsive mapping**: `responsive.mobile.sections{Size}` is the narrow anchor and `responsive.desktop.sections{Size}` the wide one, passed to `fluid()` in that order
 
 ### Border Radius
 
@@ -398,11 +398,11 @@ This ensures colors are managed from a single source (the `:root` primitives) an
 
 ### 6c. Typography — `tools/sass/global/_variables.scss` + `components/Text/styles.module.scss` + `config/fonts.ts`
 
-- Update font size tokens in `:root` — both desktop (`--heading-2xl`, `--body-md`, etc.) and mobile (`--heading-2xl-mobile`, `--body-md-mobile`, etc.)
-- Update font weight tokens in `:root` (`--font-weight-*`, `--body-default-font-weight`, `--body-bold-font-weight`, `--heading-default-font-weight`)
-- Text component uses mobile-first sizing: mobile size by default, desktop at `@include media-up(tablet)`
-- Font weight is wired via tokens: `.variant_heading` uses `--heading-default-font-weight`, `.variant_body` uses `--body-default-font-weight`
-- If Figma has "display" as a distinct type category, consider adding a `variant_display` if it differs meaningfully from heading (larger sizes, different line height). Otherwise map display->heading.
+- Update font size tokens in `:root`. Each is **one fluid token**, not a desktop/mobile pair: `--heading-2xl: #{fluid($mobile, $desktop)}`. The mobile tier is the narrow anchor, the desktop tier the wide one. Never emit a `-mobile` token
+- Update font weight tokens in `:root` (`--font-weight-*`, `--body-default-font-weight`, `--body-bold-font-weight`, `--heading-default-font-weight`, `--display-default-font-weight`)
+- Text component sets each size **once** — no `media-up(tablet)` font-size override. The clamp covers the whole viewport range; a breakpoint would reintroduce the jump it removed
+- Font weight is wired via tokens: `.variant_display` uses `--display-default-font-weight`, `.variant_heading` uses `--heading-default-font-weight`, `.variant_body` uses `--body-default-font-weight`
+- A `display` tier already exists (`--display-lg`, `--display-md`, plus `--display-line-height` / `--display-letter-spacing`) and is wired to `variant="display"` on `Text`. Map Figma's display category onto it rather than adding a third heading step.
 
 #### Font family handling
 
@@ -467,10 +467,10 @@ Then replace all hardcoded `border-radius` values in component styles with the c
 
 ### 6e. Section Spacing — `tools/sass/global/_variables.scss`
 
-- Update `--section-spacing-{size}-desktop` and `--section-spacing-{size}-mobile` tokens in `:root`
-- Current sizes: `sm`, `md`, `lg`, `xl` — each has a `-desktop` and `-mobile` variant
+- Update the `--section-spacing-{size}` tokens in `:root`, each written as `#{fluid($mobile, $desktop)}`
+- Current sizes: `xs`, `sm`, `md`, `lg`, `xl` — one fluid token each, no `-desktop` / `-mobile` variants
 - These are consumed by `components/Section/style.module.scss` — do NOT edit that file, only update the token values
-- **Mapping from responsive JSON**: use `responsive.desktop.sections{Size}` for desktop values and `responsive.mobile.sections{Size}` for mobile values
+- **Mapping from responsive JSON**: `responsive.mobile.sections{Size}` is the narrow anchor, `responsive.desktop.sections{Size}` the wide one
 - If the JSON provides additional sizes (e.g., `xs`, `2xl`, `3xs`), add them following the same naming pattern
 
 ### 6f. Other tokens
@@ -510,12 +510,12 @@ After syncing, compare what was received against what the codebase needs. The fo
 | Category                  | Codebase usage                                                                                                         | Status if missing              |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
 | **Colors**                | `--primary-*`, `--gray-*`, etc. in `:root`                                                                             | Ask for color palette          |
-| **Typography**            | Text component sizes, `--font-weight-*`, `--heading-*-mobile`, `--body-*-mobile`                                       | Ask for type scale             |
+| **Typography**            | Text component sizes, `--font-weight-*`, fluid `--display-*` / `--heading-*` / `--body-*`                              | Ask for type scale             |
 | **Border radius**         | `--radius-sm`, `--radius-md`, `--radius-lg` (placeholders set in 6f)                                                   | Ask for actual values          |
 | **Button tokens**         | `--button-primary-*`, `--button-secondary-*` (4 tokens each: bg, bg-hover, fg, fg-hover)                               | Ask for button colors          |
 | **Semantic theme tokens** | `--bg-default`, `--bg-accent`, `--fg-default`, `--fg-link`, `--fg-icon`, `--fg-accent`, `--stroke-*` in `[data-theme]` | Ask for theme mappings         |
 | **Spacing**               | `--spacing-*` scale in `:root`                                                                                         | Ask for spacing scale          |
-| **Section spacing**       | `--section-spacing-{size}-desktop`, `--section-spacing-{size}-mobile`                                                  | Ask for section padding values |
+| **Section spacing**       | fluid `--section-spacing-{size}`                                                                                       | Ask for section padding values |
 | **Font families**         | `config/fonts.ts` — heading and body fonts loaded via `next/font/google` or `next/font/local`                          | Check Google Fonts, ask user   |
 
 ### Output format
@@ -646,7 +646,7 @@ Post a status update to Linear so the team has visibility on token sync progress
 - **Don't bloat**: Only add variables that are actually different from existing ones. If the input has 30 shades and we have 10, keep 10 unless the extras are genuinely used.
 - **Follow existing conventions**: `--kebab-case` for all CSS custom properties, 25-900 scales for colors. All tokens live in `tools/sass/global/_variables.scss` — there are no SCSS variable files.
 - **Prefer source naming for typography** if it's clearer than the current heading/body xs-2xl system, but maintain backward compatibility with the Text component's prop API.
-- **Section spacing** is defined as CSS custom properties with `-desktop` and `-mobile` suffixes (e.g., `--section-spacing-md-desktop`, `--section-spacing-md-mobile`). These are consumed by `components/Section/style.module.scss` — only update the token values in `tools/sass/global/_variables.scss`, never the Section component.
+- **Fluid sizing**: type, section-spacing and large component-spacing tokens are written with `fluid($narrow-px, $wide-px)` from `tools/sass/base/__fluid.scss`, which emits a shared-formula `rem`-based `clamp()`. Never hand-write a `clamp()` and never split a token back into a `-desktop` / `-mobile` pair. Section spacing is consumed by `components/Section/style.module.scss` — only update the token values in `tools/sass/global/_variables.scss`, never the Section component.
 - **Color classes in Icon and Text** are explicit (not generated from a Sass map). If new color tokens are added, add corresponding `.color_{name}` classes in `components/Icon/styles.module.scss` and `components/Text/styles.module.scss`, and update `ProjectColor` type in `tools/types/ProjectColor.d.ts`.
 - **Prefer Google Fonts** — always check if a font is available on Google Fonts before falling back to local fonts. Google Fonts are self-hosted by Next.js (no browser requests to Google) and require zero file management. Only use `localFont` when the font genuinely isn't on Google Fonts. Don't touch `config/fonts.ts` unless the input specifies different font families than what's currently loaded.
 - **JSON takes precedence** over Figma when both provide the same token — the JSON export is considered the more intentional/curated source.

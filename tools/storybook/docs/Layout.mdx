@@ -19,12 +19,19 @@ Vertical padding above and below a section. A section takes one step for both ed
 different top and bottom values, and `removeTopSpacing` / `removeBottomSpacing` zero one side —
 which is how two adjacent sections in the same theme are made to read as one block.
 
+Each step is a single fluid token — a `clamp()` interpolating between a phone value and a desktop one
+across the viewport range, so vertical rhythm grows with the page instead of stepping at a
+breakpoint. The table prints the expression and what it resolves to at the width you are reading at.
+
 <SpacingScale />
 
 ## Container widths
 
 The horizontal cap on content. A container also applies a gutter, so on a narrow viewport content
 never touches the edge.
+
+These stay fixed while the spacing above is fluid, and deliberately: a container is already fluid
+below its cap, so interpolating the cap itself would mean it never caps anything.
 
 <ContainerWidths />
 

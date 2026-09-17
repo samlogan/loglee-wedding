@@ -84,10 +84,11 @@ const SpacingRow = ({ step }: { step: SectionSpacing }) => {
 /**
  * The whole spacing scale, measured rather than described.
  *
- * Every number is read off the DOM at the current viewport and re-read on resize, so dragging the
- * canvas across the `tablet` breakpoint (769px) shows the mobile values without a reload. A
- * hand-written table would report the value the author intended; this reports the value the browser
- * applied, which is the difference that catches a typo'd token rendering silently as `0px`.
+ * Every number is read off the DOM at the current viewport and re-read on resize. The spacing tokens
+ * are `clamp()` expressions, so dragging the canvas moves every value continuously rather than
+ * stepping at a breakpoint — that continuity is the thing to watch for here. A hand-written table
+ * would report the value the author intended; this reports the value the browser applied, which is
+ * the difference that catches a typo'd token rendering silently as `0px`.
  */
 export const SpacingScale: Story = {
   parameters: { controls: { disable: true } },

@@ -36,6 +36,43 @@
     border-left: 4px solid var(--stroke-divider);
   }
 
+  /*
+   * The oversized tier — Archivo Black, used for the hero and hero-adjacent headings.
+   *
+   * Sits above `--heading-2xl` at every viewport width, so it is a tier rather than a larger step of
+   * the same one. The family is stated here rather than inherited from the global `h1…h6` rules
+   * because display type is not always a heading element — `as="span"` has to look the same.
+   */
+  .variant_display {
+    @include heading-font();
+    font-weight: var(--display-default-font-weight);
+
+    // ------------------
+    // Sizes
+    &.size {
+      &_lg {
+        font-size: var(--display-lg);
+        line-height: var(--display-line-height);
+        letter-spacing: var(--display-letter-spacing);
+      }
+
+      &_md {
+        font-size: var(--display-md);
+        line-height: var(--display-line-height);
+        letter-spacing: var(--display-letter-spacing);
+      }
+    }
+  }
+
+  /*
+   * One `font-size` per step, no breakpoint.
+   *
+   * The size tokens are `clamp()` expressions (see `tools/sass/base/__fluid.scss`), so the browser
+   * interpolates between the phone and desktop values across the whole viewport range. The
+   * `media-up(tablet)` overrides that used to sit in each block — swapping a `--heading-*-mobile`
+   * token for its desktop counterpart at 769px — are not just redundant now, they would reintroduce
+   * the jump the fluid tokens exist to remove.
+   */
   .variant_heading {
     font-weight: var(--heading-default-font-weight);
 
@@ -43,63 +80,39 @@
     // Sizes
     &.size {
       &_2xl {
-        font-size: var(--heading-2xl-mobile);
+        font-size: var(--heading-2xl);
         line-height: var(--heading-line-height);
         letter-spacing: var(--heading-letter-spacing);
-
-        @include media-up(tablet) {
-          font-size: var(--heading-2xl);
-        }
       }
 
       &_xl {
-        font-size: var(--heading-xl-mobile);
+        font-size: var(--heading-xl);
         line-height: var(--heading-line-height);
         letter-spacing: var(--heading-letter-spacing);
-
-        @include media-up(tablet) {
-          font-size: var(--heading-xl);
-        }
       }
 
       &_lg {
-        font-size: var(--heading-lg-mobile);
+        font-size: var(--heading-lg);
         line-height: var(--heading-line-height);
         letter-spacing: var(--heading-letter-spacing);
-
-        @include media-up(tablet) {
-          font-size: var(--heading-lg);
-        }
       }
 
       &_md {
-        font-size: var(--heading-md-mobile);
+        font-size: var(--heading-md);
         line-height: var(--heading-line-height);
         letter-spacing: var(--heading-letter-spacing);
-
-        @include media-up(tablet) {
-          font-size: var(--heading-md);
-        }
       }
 
       &_sm {
-        font-size: var(--heading-sm-mobile);
+        font-size: var(--heading-sm);
         line-height: var(--heading-line-height);
         letter-spacing: var(--heading-letter-spacing);
-
-        @include media-up(tablet) {
-          font-size: var(--heading-sm);
-        }
       }
 
       &_xs {
-        font-size: var(--heading-xs-mobile);
+        font-size: var(--heading-xs);
         line-height: var(--heading-line-height);
         letter-spacing: var(--heading-letter-spacing);
-
-        @include media-up(tablet) {
-          font-size: var(--heading-xs);
-        }
       }
     }
   }
@@ -109,57 +122,33 @@
 
     &.size {
       &_2xl {
-        font-size: var(--body-2xl-mobile);
+        font-size: var(--body-2xl);
         line-height: var(--body-line-height);
-
-        @include media-up(tablet) {
-          font-size: var(--body-2xl);
-        }
       }
 
       &_xl {
-        font-size: var(--body-xl-mobile);
+        font-size: var(--body-xl);
         line-height: var(--body-line-height);
-
-        @include media-up(tablet) {
-          font-size: var(--body-xl);
-        }
       }
 
       &_lg {
-        font-size: var(--body-lg-mobile);
+        font-size: var(--body-lg);
         line-height: var(--body-line-height);
-
-        @include media-up(tablet) {
-          font-size: var(--body-lg);
-        }
       }
 
       &_md {
-        font-size: var(--body-md-mobile);
+        font-size: var(--body-md);
         line-height: var(--body-line-height);
-
-        @include media-up(tablet) {
-          font-size: var(--body-md);
-        }
       }
 
       &_sm {
-        font-size: var(--body-sm-mobile);
+        font-size: var(--body-sm);
         line-height: var(--body-line-height);
-
-        @include media-up(tablet) {
-          font-size: var(--body-sm);
-        }
       }
 
       &_xs {
-        font-size: var(--body-xs-mobile);
+        font-size: var(--body-xs);
         line-height: var(--body-line-height);
-
-        @include media-up(tablet) {
-          font-size: var(--body-xs);
-        }
       }
     }
   }

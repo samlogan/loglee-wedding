@@ -1,5 +1,5 @@
 import { DOCS_FONT, DOCS_TEXT } from './docsChrome';
-import { px, useTokens } from './tokens';
+import { resolveLength, useTokens, useViewportWidth } from './tokens';
 
 /**
  * The type system, read from the running page.
@@ -25,35 +25,51 @@ const block = { color: DOCS_TEXT, fontFamily: 'var(--body-font), sans-serif' } a
 const tableStyle = { width: 'auto', borderCollapse: 'separate', borderSpacing: '8px 5px' } as const;
 const cell = { fontSize: 12, textAlign: 'left', verticalAlign: 'baseline' } as const;
 
-/** `--heading-lg` → `lg`. Excludes the `-mobile` variants and the non-scale tokens. */
-const stepsFor = (family: 'heading' | 'body', names: string[]) => {
+/**
+ * The families a size scale can belong to. Derived nowhere — this is the set of token *prefixes*,
+ * which is the one thing a page has to name in order to ask a question of the tokens at all.
+ */
+export type TypeFamily = 'display' | 'heading' | 'body';
+
+/** `--heading-lg` → `lg`. Excludes the non-scale tokens that share the prefix. */
+const stepsFor = (family: TypeFamily, names: string[]) => {
   const prefix = `--${family}-`;
   return (
     names
-      .filter((name) => name.startsWith(prefix) && !name.endsWith('-mobile'))
+      .filter((name) => name.startsWith(prefix))
       .map((name) => name.slice(prefix.length))
-      // `--heading-line-height` / `--heading-letter-spacing` / `--body-default-font-weight` share the
+      // `--heading-line-height` / `--display-letter-spacing` / `--body-default-font-weight` share the
       // prefix but are not sizes. A step is a single word with no dashes.
       .filter((step) => !step.includes('-'))
   );
 };
 
-export const TypeScale = ({ family }: { family: 'heading' | 'body' }) => {
+/** One decimal is the difference between a readable table and one full of floating-point tails. */
+const round = (value: number) => Math.round(value * 10) / 10;
+
+export const TypeScale = ({ family }: { family: TypeFamily }) => {
   const tokens = useTokens();
+  /*
+   * Subscribed, not read. Every size below is a `clamp()`, so its resolved value is a function of the
+   * canvas width — without this the table would report the width the page happened to mount at and
+   * keep reporting it while you dragged, which is the one claim a fluid scale most needs to back up.
+   */
+  useViewportWidth();
+
   if (!tokens) {
     return null;
   }
 
-  const fontVar = family === 'heading' ? '--heading-font' : '--body-font';
+  const fontVar = family === 'body' ? '--body-font' : '--heading-font';
   const steps = stepsFor(family, tokens.root)
-    .map((step) => ({
-      step,
-      desktop: tokens.rootValues[`--${family}-${step}`],
-      mobile: tokens.rootValues[`--${family}-${step}-mobile`]
-    }))
-    // Only sizes belong on a size scale; anything that did not resolve to a length is not one.
-    .filter((row) => px(row.desktop) !== null)
-    .toSorted((a, b) => (px(b.desktop) ?? 0) - (px(a.desktop) ?? 0));
+    .map((step) => {
+      const name = `--${family}-${step}`;
+      const declared = tokens.rootValues[name];
+      return { step, name, declared, resolved: resolveLength(declared) };
+    })
+    // Only sizes belong on a size scale; anything the browser would not accept as a length is not one.
+    .filter((row) => row.resolved !== null)
+    .toSorted((a, b) => (b.resolved ?? 0) - (a.resolved ?? 0));
 
   if (!steps.length) {
     return (
@@ -65,20 +81,20 @@ export const TypeScale = ({ family }: { family: 'heading' | 'body' }) => {
 
   return (
     <div className={`${DOCS_FONT} sb-unstyled`} style={block}>
-      {steps.map(({ step, desktop, mobile }) => (
+      {steps.map(({ step, name, declared, resolved }) => (
         <div key={step} style={{ marginBottom: 18, borderBottom: '1px solid rgba(128,128,128,0.25)' }}>
           <p style={{ margin: '0 0 2px', fontSize: 11, opacity: 0.7 }}>
-            <code>
-              --{family}-{step}
-            </code>{' '}
-            {/* A missing mobile token is stated, not quietly rendered as "identical". */}· {desktop} desktop ·{' '}
-            {mobile ? (mobile === desktop ? 'same on mobile' : `${mobile} mobile`) : 'no mobile token'}
+            <code>{name}</code> · {round(resolved ?? 0)}px at this width · <code>{declared}</code>
           </p>
+          {/*
+           * Set from the token rather than from the number resolved above, so the specimen is itself
+           * fluid — drag the canvas and it grows with the page instead of being re-rendered in steps.
+           */}
           <p
             style={{
               margin: '0 0 10px',
               fontFamily: `var(${fontVar}), sans-serif`,
-              fontSize: desktop,
+              fontSize: `var(${name})`,
               lineHeight: 1.15
             }}
           >
