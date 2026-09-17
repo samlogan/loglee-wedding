@@ -51,10 +51,14 @@ const isMeterStat = (stat: IPlayerStat): stat is IPlayerMeterStat => stat._type 
  * still draw its separating rule and its padding.
  *
  * A plain `<div>` at the root, and a plain `<div>` for the header band. `<header>` is tempting and
- * wrong: it maps to the `banner` landmark unless it is nested inside `article`, `aside`, `main`,
- * `nav` or `section`, so a card sitting in a page would contribute a second banner to the document.
- * Reaching for `<article>` to suppress that only trades it for an `article` node in every screen
- * reader's element list. The band is chrome; it needs no role at all.
+ * wrong — though not for the reason it first looks. It maps to the `banner` landmark only when it is
+ * *not* nested inside `article`, `aside`, `main`, `nav` or `section`, and `Layout` already renders
+ * `<main>`; measured on Chromium, a `<header>` inside `main` maps to `sectionheader`, never
+ * `banner`. So the cost is not a duplicate banner on the page as it stands. It is a node in every
+ * screen reader's element list that names nothing, repeated on every card — plus a real `banner` the
+ * day a card is rendered outside `main`. Reaching for `<article>` to suppress it only trades one
+ * such node for another. The band is chrome; a plain `<div>` contributes nothing at all, which is
+ * exactly what it is worth.
  *
  * The text stats *are* a description list, though, and that is worth the markup: `<dt>`/`<dd>` is
  * what ties "Home town" to "Wollongong" programmatically rather than leaving two adjacent spans and

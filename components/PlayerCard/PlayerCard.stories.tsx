@@ -13,8 +13,11 @@ import PlayerCard from '.';
  * rather than content. These are real values of comparable length, so the first `/review-design`
  * compares like for like instead of measuring the brackets.
  *
- * Sentence case throughout: the capitals are `text-transform` in the stylesheet, so baking them into
- * the data would put the shouting in the accessible name.
+ * Sentence case throughout — the right content model, but *not* because it keeps capitals out of the
+ * accessible tree. Measured, Chromium names these terms "HOME TOWN" and "SPECIAL MOVE": it computes
+ * a name from rendered text, and `text-transform` is part of what is rendered. What sentence case
+ * actually protects is the one name the stylesheet cannot reach — each meter's `aria-label`, which
+ * `StatMeter` takes verbatim from `label`.
  */
 const STATS: IPlayerStat[] = [
   { _key: 'home', _type: 'playerTextStat', label: 'Home town', value: 'Wollongong, NSW', fullWidth: false },
@@ -239,16 +242,57 @@ export const Default: Story = {
     });
 
     /*
-     * The capitals are `text-transform`, not the data — the args are sentence case throughout so the
-     * shouting stays out of the accessible name. Which means every text assertion in this file
+     * The capitals are `text-transform`, not the data, which means every text assertion in this file
      * queries the untransformed string and none of them can see the transform at all: drop it from
      * the stylesheet and the whole suite stays green while every label in the card renders in the
      * wrong case. Checked on both registers, the header's bold and the stat's regular.
+     *
+     * Worth being clear about which side of the fence that transform sits on. Testing Library finds
+     * these nodes by their sentence-case text content, while Chromium's accessible name for the same
+     * `<dt>` is "HOME TOWN" — the transform reaches the name and not the text node. It costs nothing
+     * here, and it is the whole reason `StatMeter` names its meter with `aria-label` rather than
+     * `aria-labelledby`.
      */
     await waitFor(async () => {
       await expect(getComputedStyle(canvas.getByText('Player card')).textTransform).toBe('uppercase');
       await expect(getComputedStyle(ordinary.querySelector('dt') as HTMLElement).textTransform).toBe('uppercase');
     });
+
+    /*
+     * A meter's label and the stat label above it are one type role, and `.meters` makes that true
+     * by setting `--meter-label-size` from the card's own `--card-label-size`.
+     *
+     * Asserting the two rendered sizes match is **not** enough, and that is the whole point of this
+     * block. They matched for the entire life of the component while the override was dead —
+     * `StatMeter` declared `--meter-label-size` on `.meter` itself, and a custom property declared
+     * on an element beats the same property inherited from an ancestor, so the band's value never
+     * reached the label. The two agreed only because both computed the same `fluid(10px, 11px)`
+     * independently, which is exactly the drift the override exists to prevent.
+     *
+     * So the card's knob is moved and the meter label has to follow it. `finally` rather than a
+     * trailing line, because a failed assertion would otherwise leave a 40px label on the canvas
+     * for every story that runs after this one.
+     */
+    const card = cardOf(canvasElement);
+    const meterLabel = canvas.getAllByRole('meter')[0].querySelector('span > span') as HTMLElement;
+    const statLabel = ordinary.querySelector('dt') as HTMLElement;
+
+    await waitFor(async () => {
+      const size = getComputedStyle(statLabel).fontSize;
+      await expect(size).not.toBe('');
+      await expect(getComputedStyle(meterLabel).fontSize).toBe(size);
+    });
+
+    try {
+      card.style.setProperty('--card-label-size', '40px');
+
+      await waitFor(async () => {
+        await expect(getComputedStyle(statLabel).fontSize).toBe('40px');
+        await expect(getComputedStyle(meterLabel).fontSize).toBe('40px');
+      });
+    } finally {
+      card.style.removeProperty('--card-label-size');
+    }
   }
 };
 
@@ -563,6 +607,66 @@ export const DarkTheme: Story = {
       // The card's own border resolves on the same theme, so it standing up is what makes the two
       // assertions above mean "inverted" rather than "no token has resolved yet".
       await expect(getComputedStyle(card).borderTopStyle).toBe('solid');
+    });
+  }
+};
+
+/**
+ * A long authored level on a narrow card — the header band's one overflow case.
+ *
+ * `level` is free text with no length validation in the Studio, so "LVL 33" is the Studio's example
+ * rather than a contract, and the default title is left in place: this is the shape the CMS can
+ * actually produce without anybody doing anything unusual.
+ *
+ * The band is a single row whose level is `flex-shrink: 0`, and the card clips, so the *title* has
+ * to be able to give way as far as its own last character — which is what `min-width: 0` and
+ * `overflow-wrap: anywhere` buy it. Without them a flex item's automatic minimum is its longest
+ * word, the title stops there, the row lays out wider than its box, and the run that disappears
+ * under `overflow: hidden` is the level: the one thing in the band that cannot shrink. Measured at
+ * exactly this width and this string — 25px of header over the edge before the fix, none after, with
+ * no cue either way that anything had been cut.
+ *
+ * **Where the guarantee stops, and it is worth being exact.** It holds while the level *itself*
+ * fits the row — at 320px that is around 31 monospace characters. Past that the level alone exceeds
+ * the 282px content box and clips again, because `flex-shrink: 0` is the whole point of it: the
+ * readout is the run that must stay whole, and no amount of collapsing the title can make a
+ * 34-character level fit. This story pins the boundary reachable with plausible content, not the one
+ * that needs abuse.
+ *
+ * Asserted as "the row fits its box", which is the property that actually matters and holds however
+ * the two runs are balanced, rather than as a wrap count that would pin one particular reflow.
+ */
+export const LongHeaderText: Story = {
+  args: { level: 'LVL 33 — GRANDMASTER OF ARMS' },
+  decorators: [
+    (Story) => (
+      <div style={{ width: '320px' }}>
+        <Story />
+      </div>
+    )
+  ],
+  play: async ({ canvasElement }) => {
+    const card = cardOf(canvasElement);
+    const header = card.children[0] as HTMLElement;
+
+    await waitFor(async () => {
+      // Nothing overflows, so `overflow: hidden` has nothing to clip …
+      await expect(header.scrollWidth).toBeLessThanOrEqual(header.clientWidth);
+      await expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth);
+
+      // … and the level is the run that stayed whole, which is what the title gives way for.
+      const level = header.children[1] as HTMLElement;
+      await expect(level.scrollWidth).toBeLessThanOrEqual(level.clientWidth);
+      await expect(level.getBoundingClientRect().right).toBeLessThanOrEqual(header.getBoundingClientRect().right + 0.5);
+
+      /*
+       * And the title gave way by *truncating*. Asserted because "the row fits" on its own is also
+       * satisfied by a title collapsed into a column of single characters, which is what the first
+       * version of this fix actually produced — lossless, and worse to look at than the clip.
+       */
+      const title = header.children[0] as HTMLElement;
+      await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
+      await expect(getComputedStyle(title).textOverflow).toBe('ellipsis');
     });
   }
 };

@@ -7,9 +7,12 @@ export interface StatMeterProps {
   /**
    * The stat's name — "Dance", "BBQ", "Navigation".
    *
-   * Sentence case, not the comp's capitals: the uppercasing is `text-transform` in the stylesheet,
-   * so the shouting stays out of the accessible name. This string *is* the accessible name (see the
-   * note on `aria-label` below), so it has to read as a label rather than as a heading.
+   * Sentence case, not the comp's capitals — though not for the reason it looks like. The
+   * uppercasing is `text-transform`, and that does *not* keep capitals out of the accessible tree:
+   * Chromium names an element from its *rendered* text, so the visible run here is exposed as
+   * "DANCE". What sentence case protects is the one name the stylesheet cannot reach — this string
+   * is handed verbatim to `aria-label` (see the note below), so it has to read as a label rather
+   * than a heading, and it has to arrive in the case it should be spoken in.
    */
   label: string;
   /** Where the bar fills to, on a `0`–`max` scale. Clamped rather than trusted. */
@@ -60,8 +63,19 @@ const LOW_SCORE_RATIO = 0.5;
  * behind a domain component and imply it only exists inside one.
  *
  * Deliberately not a client component. `aria-labelledby` would need a generated id and so a
- * `useId()` — and therefore `'use client'` — for no gain: `aria-label` carries the same string, and
- * because that string *is* the visible label, WCAG 2.5.3 (Label in Name) holds by construction.
+ * `useId()`, and therefore `'use client'` — but avoiding that is the smaller half of the reason.
+ *
+ * The larger half is that `aria-label` is the only naming path the stylesheet cannot reach. Chromium
+ * computes a name from *rendered* text, so `text-transform` is part of it: measured side by side in
+ * one accessibility tree, a meter named through `aria-labelledby` pointed at the visible span comes
+ * out as "DANCE", and the same meter named through `aria-label` comes out as "Dance". Every
+ * name-from-contents node measured alongside them behaves the same way — the card's own
+ * `term "HOME TOWN"`, and a plain upper-cased `<button>` probe exposed as "SWITCH PLAYER". So the
+ * attribute is not the cheap substitute for the id; it is the correct one, and the `useId()` it
+ * saves is a bonus.
+ *
+ * (The name matching the visible label is good practice rather than a criterion being satisfied:
+ * WCAG 2.5.3 Label in Name governs *operable* user-interface components, and a meter is not one.)
  */
 const StatMeter = (props: StatMeterProps) => {
   const { className, label, max = DEFAULT_MAX, score } = props;
@@ -112,9 +126,14 @@ const StatMeter = (props: StatMeterProps) => {
      *    score disappearing outright in any that do not — verbosity against loss, which is not a
      *    close call.
      * 2. `aria-valuetext` appears as an empty string in the CDP dump, which reads like Chromium
-     *    ignoring it. It is not: a `role="slider"` probe *with* the attribute serialises identically
-     *    to one *without* it, and `aria-valuetext` on a slider is supported everywhere. The empty
-     *    string is how that endpoint reports the property, not what the engine holds.
+     *    ignoring it. It is not, and the controls settle it: in a single
+     *    `Accessibility.getFullAXTree` call, a `role="slider"` *with* the attribute, a slider
+     *    *without* it, a second meter with a completely different valuetext, and a native
+     *    `<progress>` all report `valuetext: ""` — the same empty string whatever the DOM holds.
+     *    `aria-valuetext` on a slider is supported everywhere, so the only thing that can be empty
+     *    is the serialisation. It is how that endpoint reports the property, not what the engine
+     *    holds. Stated at this length because the dump is persuasive and wrong, and the obvious
+     *    reading of it is that the attribute should be removed.
      *
      * `aria-valuetext` is set for the reason it exists: the bare number is ambiguous, and a screen
      * reader is entitled to report a range widget as a percentage — "80%" for 8/10 — where a stat is

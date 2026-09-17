@@ -105,9 +105,11 @@ export const Default: Story = {
     const meter = meterOf(canvasElement, /^dance$/i);
 
     /*
-     * The name comes from `aria-label`, which carries the same string as the visible label — the
-     * uppercasing is `text-transform`, so it is a presentation difference rather than a different
-     * word, and WCAG 2.5.3 (Label in Name) holds.
+     * The name comes from `aria-label`, which carries the sentence-case string. The visible run is
+     * the same word upper-cased by `text-transform` — and that transform *does* reach a name computed
+     * from contents, so an `aria-labelledby` pointed at that span would name this element "DANCE"
+     * instead. The attribute is the one naming path the stylesheet cannot touch, which is why it is
+     * the one used.
      */
     await expect(meter).toHaveAccessibleName(/^dance$/i);
     await expect(meter).toHaveAttribute('aria-valuenow', '8');
@@ -115,8 +117,18 @@ export const Default: Story = {
     await expect(meter).toHaveAttribute('aria-valuemax', '10');
     await expect(meter).toHaveAttribute('aria-valuetext', '8 of 10');
 
-    // The score is legible without the bar — the whole reason a colour rule is allowed to exist here.
+    /*
+     * The score is legible without the bar — the whole reason a colour rule is allowed to exist here,
+     * and the whole reason the low fill's 1.23:1 against its track is exempt from WCAG 1.4.11 rather
+     * than failing it: the bar is a redundant second presentation of a datum that is already text.
+     *
+     * `toBeVisible()` is not enough on its own to protect that. It reads `display`, `visibility`,
+     * `opacity` and `hidden`, and knows nothing about `aria-hidden` — so hiding the fraction from
+     * assistive technology, which is the tempting fix for the double-announcement noted in
+     * `index.tsx`, would keep this line green while removing the exemption underneath it.
+     */
     await expect(within(meter).getByText('8/10')).toBeVisible();
+    await expect(within(meter).getByText('8/10')).not.toHaveAttribute('aria-hidden');
 
     await waitFor(async () => {
       await expect(filledPercent(meter)).toBe(80);

@@ -19,7 +19,7 @@
  * fill is; it resolves to pine/100 on the dark theme, keeping the *relationship* the comp draws —
  * the low fill stays the louder of the two on both surfaces — where `--button-primary-bg` (off-white
  * on dark) would have put them at roughly equal weight. Measured on the dark theme, the fill reads
- * 4.66:1 against the track at pine/100 and 5.88:1 at signal/300; on the light theme those are 7.08:1
+ * 4.66:1 against the track at pine/100 and 5.88:1 at signal/300; on the light theme those are 7.52:1
  * and 1.23:1, so the *low* bar is the one carried by its fraction rather than by its contrast, and
  * that is the comp's own choice rather than this file's.
  */
@@ -57,24 +57,6 @@
     --meter-radius: var(--radius-full);
     --meter-track: var(--stroke-divider);
     --meter-fill: var(--fg-icon);
-    /*
-     * The two mono micro-labels, below `--body-xs` (11→12px) which is the floor of the body scale,
-     * so there is no token — the same call `FieldCheckbox` makes for its `--micro-font-size`, and
-     * for the same reason: a new rung on the shared scale would show up in the client-facing type
-     * documentation on the strength of a handful of labels. (Three components now compute the same
-     * `fluid(10px, 11px)` under three names, which is the threshold at which that trade is worth
-     * re-opening — as one token, or as a `mono` variant on `Text`. Noted rather than done here: it
-     * is a design-system change and this is a component.)
-     *
-     * The comp sets the desktop meter label at 11px; the narrow anchor is the player card's own
-     * label step (10px, node 1:252), since the two are the same type role in the same card and
-     * should not diverge across the range. That last clause used to be a claim in a comment with
-     * nothing holding it up — `PlayerCard`'s `.meters` now overrides this property with its own
-     * `--card-label-size`, so inside a card the two are the same declaration and cannot drift. The
-     * value here is the standalone default, for a meter used anywhere else.
-     */
-    --meter-label-size: #{fluid(10px, 11px)};
-
     display: flex;
     flex-direction: column;
     gap: var(--meter-head-gap);
@@ -118,7 +100,30 @@
     @include mono-font();
 
     color: var(--fg-accent);
-    font-size: var(--meter-label-size);
+    /*
+     * The two mono micro-labels, below `--body-xs` (11→12px) which is the floor of the body scale,
+     * so there is no token — the same call `FieldCheckbox` makes for its `--micro-font-size`, and
+     * for the same reason: a new rung on the shared scale would show up in the client-facing type
+     * documentation on the strength of a handful of labels. (Three components now compute the same
+     * `fluid(10px, 11px)` under three names, which is the threshold at which that trade is worth
+     * re-opening — as one token, or as a `mono` variant on `Text`. Noted rather than done here: it
+     * is a design-system change and this is a component.)
+     *
+     * The comp sets the desktop meter label at 11px; the narrow anchor is the player card's own
+     * label step (10px, node 1:252), since the two are the same type role in the same card and
+     * should not diverge across the range. `PlayerCard`'s `.meters` is what makes that true, by
+     * setting `--meter-label-size` on the band from its own `--card-label-size`.
+     *
+     * Which is why the standalone default is a `var()` **fallback** here rather than a declaration
+     * on `.meter`. It was the latter, and that silently disabled the override: a custom property
+     * declared on an element wins over the same property inherited from an ancestor, so the band's
+     * value reached `.meters` and stopped there. The two sizes agreed only because both happened to
+     * compute `fluid(10px, 11px)` independently — which is the drift the override exists to
+     * prevent, one retune away. Measured rather than reasoned: setting `--card-label-size` on the
+     * card moved the stat label to 40px and left the meter label at 11px. Left undeclared, the
+     * property inherits through when a consumer sets one and falls back to this when nobody does.
+     */
+    font-size: var(--meter-label-size, #{fluid(10px, 11px)});
     font-weight: var(--font-weight-regular);
     line-height: var(--body-line-height);
     letter-spacing: 0.1em;
