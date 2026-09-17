@@ -2,7 +2,7 @@ import { buildLegacyTheme } from 'sanity';
 
 const props = {
   '--custom-nav-bg': '#FFF',
-  '--custom-primary': '#000000'
+  '--custom-primary': '#0B1C14'
 };
 
 const theme = buildLegacyTheme({

@@ -96,53 +96,241 @@
       "modes": ["light", "dark"],
       "name": "Semantic",
       "variables": [
-        { "name": "bg/default", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } } },
-        { "name": "bg/accent", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/100" }, "dark": { "alias": "Primitives/pine/700" } } },
-        { "name": "fg/default", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } } },
-        { "name": "fg/muted", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/600" }, "dark": { "alias": "Primitives/pine/100" } } },
-        { "name": "fg/subtle", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/400" }, "dark": { "alias": "Primitives/pine/200" } } },
-        { "name": "fg/link", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } } },
-        { "name": "fg/icon", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/pine/100" } } },
-        { "name": "fg/accent", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/signal/300" } } },
-        { "name": "stroke/cards", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } } },
-        { "name": "stroke/divider", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/300" }, "dark": { "alias": "Primitives/pine/500" } } },
+        {
+          "name": "bg/default",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } }
+        },
+        {
+          "name": "bg/accent",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/100" }, "dark": { "alias": "Primitives/pine/700" } }
+        },
+        {
+          "name": "fg/default",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } }
+        },
+        {
+          "name": "fg/muted",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/600" }, "dark": { "alias": "Primitives/pine/100" } }
+        },
+        {
+          "name": "fg/subtle",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/400" }, "dark": { "alias": "Primitives/pine/200" } }
+        },
+        {
+          "name": "fg/link",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } }
+        },
+        {
+          "name": "fg/icon",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/pine/100" } }
+        },
+        {
+          "name": "fg/accent",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/signal/300" } }
+        },
+        {
+          "name": "stroke/cards",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } }
+        },
+        {
+          "name": "stroke/divider",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/300" }, "dark": { "alias": "Primitives/pine/500" } }
+        },
 
-        { "name": "button/primary/bg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/stone/50" } } },
-        { "name": "button/primary/bg-hover", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/signal/300" } } },
-        { "name": "button/primary/bg-active", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/pine/800" }, "dark": { "alias": "Primitives/signal/400" } } },
-        { "name": "button/primary/bg-disabled", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/300" }, "dark": { "alias": "Primitives/pine/400" } } },
-        { "name": "button/primary/fg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } } },
-        { "name": "button/primary/fg-hover", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/stone/900" } } },
-        { "name": "button/primary/fg-active", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/stone/900" } } },
-        { "name": "button/primary/fg-disabled", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/500" }, "dark": { "alias": "Primitives/pine/200" } } },
-        { "name": "button/primary/focus-ring", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/signal/300" }, "dark": { "alias": "Primitives/signal/300" } } },
+        {
+          "name": "button/primary/bg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/stone/50" } }
+        },
+        {
+          "name": "button/primary/bg-hover",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/signal/300" } }
+        },
+        {
+          "name": "button/primary/bg-active",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/pine/800" }, "dark": { "alias": "Primitives/signal/400" } }
+        },
+        {
+          "name": "button/primary/bg-disabled",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/300" }, "dark": { "alias": "Primitives/pine/400" } }
+        },
+        {
+          "name": "button/primary/fg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } }
+        },
+        {
+          "name": "button/primary/fg-hover",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/stone/900" } }
+        },
+        {
+          "name": "button/primary/fg-active",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/stone/900" } }
+        },
+        {
+          "name": "button/primary/fg-disabled",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/500" }, "dark": { "alias": "Primitives/pine/200" } }
+        },
+        {
+          "name": "button/primary/focus-ring",
+          "type": "COLOR",
+          "valuesByMode": {
+            "light": { "alias": "Primitives/signal/300" },
+            "dark": { "alias": "Primitives/signal/300" }
+          }
+        },
 
-        { "name": "button/secondary/bg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } } },
-        { "name": "button/secondary/bg-hover", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/800" }, "dark": { "alias": "Primitives/stone/200" } } },
-        { "name": "button/secondary/bg-active", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/700" }, "dark": { "alias": "Primitives/stone/300" } } },
-        { "name": "button/secondary/bg-disabled", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/300" }, "dark": { "alias": "Primitives/pine/400" } } },
-        { "name": "button/secondary/fg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } } },
-        { "name": "button/secondary/fg-hover", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } } },
-        { "name": "button/secondary/fg-active", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } } },
-        { "name": "button/secondary/fg-disabled", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/500" }, "dark": { "alias": "Primitives/pine/200" } } },
-        { "name": "button/secondary/focus-ring", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/signal/300" }, "dark": { "alias": "Primitives/signal/300" } } },
+        {
+          "name": "button/secondary/bg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } }
+        },
+        {
+          "name": "button/secondary/bg-hover",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/800" }, "dark": { "alias": "Primitives/stone/200" } }
+        },
+        {
+          "name": "button/secondary/bg-active",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/700" }, "dark": { "alias": "Primitives/stone/300" } }
+        },
+        {
+          "name": "button/secondary/bg-disabled",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/300" }, "dark": { "alias": "Primitives/pine/400" } }
+        },
+        {
+          "name": "button/secondary/fg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } }
+        },
+        {
+          "name": "button/secondary/fg-hover",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } }
+        },
+        {
+          "name": "button/secondary/fg-active",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } }
+        },
+        {
+          "name": "button/secondary/fg-disabled",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/500" }, "dark": { "alias": "Primitives/pine/200" } }
+        },
+        {
+          "name": "button/secondary/focus-ring",
+          "type": "COLOR",
+          "valuesByMode": {
+            "light": { "alias": "Primitives/signal/300" },
+            "dark": { "alias": "Primitives/signal/300" }
+          }
+        },
 
-        { "name": "input/bg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } } },
-        { "name": "input/fg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/500" }, "dark": { "alias": "Primitives/pine/200" } } },
-        { "name": "input/border", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } } },
-        { "name": "input/icon", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/pine/100" } } },
-        { "name": "input/active-bg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } } },
-        { "name": "input/active-fg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } } },
-        { "name": "input/active-border", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/signal/300" } } },
-        { "name": "input/active-icon", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/signal/300" } } },
-        { "name": "input/disabled-bg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/200" }, "dark": { "alias": "Primitives/pine/700" } } },
-        { "name": "input/disabled-fg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/400" }, "dark": { "alias": "Primitives/pine/300" } } },
-        { "name": "input/disabled-border", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/300" }, "dark": { "alias": "Primitives/pine/400" } } },
-        { "name": "input/disabled-icon", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/400" }, "dark": { "alias": "Primitives/pine/300" } } },
-        { "name": "input/error-bg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } } },
-        { "name": "input/error-fg", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } } },
-        { "name": "input/error-border", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/system/error/500" }, "dark": { "alias": "Primitives/system/error/300" } } },
-        { "name": "input/error-icon", "type": "COLOR", "valuesByMode": { "light": { "alias": "Primitives/system/error/500" }, "dark": { "alias": "Primitives/system/error/300" } } }
+        {
+          "name": "input/bg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } }
+        },
+        {
+          "name": "input/fg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/500" }, "dark": { "alias": "Primitives/pine/200" } }
+        },
+        {
+          "name": "input/border",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } }
+        },
+        {
+          "name": "input/icon",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/pine/100" } }
+        },
+        {
+          "name": "input/active-bg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } }
+        },
+        {
+          "name": "input/active-fg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } }
+        },
+        {
+          "name": "input/active-border",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/signal/300" } }
+        },
+        {
+          "name": "input/active-icon",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/pine/600" }, "dark": { "alias": "Primitives/signal/300" } }
+        },
+        {
+          "name": "input/disabled-bg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/200" }, "dark": { "alias": "Primitives/pine/700" } }
+        },
+        {
+          "name": "input/disabled-fg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/400" }, "dark": { "alias": "Primitives/pine/300" } }
+        },
+        {
+          "name": "input/disabled-border",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/300" }, "dark": { "alias": "Primitives/pine/400" } }
+        },
+        {
+          "name": "input/disabled-icon",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/400" }, "dark": { "alias": "Primitives/pine/300" } }
+        },
+        {
+          "name": "input/error-bg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/50" }, "dark": { "alias": "Primitives/pine/600" } }
+        },
+        {
+          "name": "input/error-fg",
+          "type": "COLOR",
+          "valuesByMode": { "light": { "alias": "Primitives/stone/900" }, "dark": { "alias": "Primitives/stone/50" } }
+        },
+        {
+          "name": "input/error-border",
+          "type": "COLOR",
+          "valuesByMode": {
+            "light": { "alias": "Primitives/system/error/500" },
+            "dark": { "alias": "Primitives/system/error/300" }
+          }
+        },
+        {
+          "name": "input/error-icon",
+          "type": "COLOR",
+          "valuesByMode": {
+            "light": { "alias": "Primitives/system/error/500" },
+            "dark": { "alias": "Primitives/system/error/300" }
+          }
+        }
       ]
     },
     {
@@ -161,8 +349,19 @@
         { "name": "heading/sm", "type": "FLOAT", "valuesByMode": { "desktop": 32, "mobile": 24 } },
         { "name": "heading/xs", "type": "FLOAT", "valuesByMode": { "desktop": 24, "mobile": 20 } },
         { "name": "heading/line-height", "type": "FLOAT", "valuesByMode": { "desktop": 1.2, "mobile": 1.2 } },
-        { "name": "heading/letter-spacing", "type": "STRING", "valuesByMode": { "desktop": "-0.02em", "mobile": "-0.02em" } },
-        { "name": "heading/default-font-weight", "type": "FLOAT", "valuesByMode": { "desktop": { "alias": "Typography/font-weight/regular" }, "mobile": { "alias": "Typography/font-weight/regular" } } },
+        {
+          "name": "heading/letter-spacing",
+          "type": "STRING",
+          "valuesByMode": { "desktop": "-0.02em", "mobile": "-0.02em" }
+        },
+        {
+          "name": "heading/default-font-weight",
+          "type": "FLOAT",
+          "valuesByMode": {
+            "desktop": { "alias": "Typography/font-weight/regular" },
+            "mobile": { "alias": "Typography/font-weight/regular" }
+          }
+        },
         { "name": "body/2xl", "type": "FLOAT", "valuesByMode": { "desktop": 22, "mobile": 20 } },
         { "name": "body/xl", "type": "FLOAT", "valuesByMode": { "desktop": 20, "mobile": 18 } },
         { "name": "body/lg", "type": "FLOAT", "valuesByMode": { "desktop": 18, "mobile": 16 } },
@@ -170,8 +369,22 @@
         { "name": "body/sm", "type": "FLOAT", "valuesByMode": { "desktop": 14, "mobile": 12 } },
         { "name": "body/xs", "type": "FLOAT", "valuesByMode": { "desktop": 12, "mobile": 11 } },
         { "name": "body/line-height", "type": "FLOAT", "valuesByMode": { "desktop": 1.5, "mobile": 1.5 } },
-        { "name": "body/default-font-weight", "type": "FLOAT", "valuesByMode": { "desktop": { "alias": "Typography/font-weight/regular" }, "mobile": { "alias": "Typography/font-weight/regular" } } },
-        { "name": "body/bold-font-weight", "type": "FLOAT", "valuesByMode": { "desktop": { "alias": "Typography/font-weight/bold" }, "mobile": { "alias": "Typography/font-weight/bold" } } }
+        {
+          "name": "body/default-font-weight",
+          "type": "FLOAT",
+          "valuesByMode": {
+            "desktop": { "alias": "Typography/font-weight/regular" },
+            "mobile": { "alias": "Typography/font-weight/regular" }
+          }
+        },
+        {
+          "name": "body/bold-font-weight",
+          "type": "FLOAT",
+          "valuesByMode": {
+            "desktop": { "alias": "Typography/font-weight/bold" },
+            "mobile": { "alias": "Typography/font-weight/bold" }
+          }
+        }
       ]
     },
     {
@@ -214,7 +427,11 @@
       "modes": ["Value"],
       "name": "Button",
       "variables": [
-        { "name": "font-weight", "type": "FLOAT", "valuesByMode": { "Value": { "alias": "Typography/font-weight/semibold" } } },
+        {
+          "name": "font-weight",
+          "type": "FLOAT",
+          "valuesByMode": { "Value": { "alias": "Typography/font-weight/semibold" } }
+        },
         { "name": "border-width", "type": "FLOAT", "valuesByMode": { "Value": 2 } },
         { "name": "gap", "type": "FLOAT", "valuesByMode": { "Value": 4 } },
         { "name": "sm/font-size", "type": "FLOAT", "valuesByMode": { "Value": 14 } },

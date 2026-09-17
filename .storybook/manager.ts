@@ -12,12 +12,14 @@ import { addons } from 'storybook/manager-api';
  * `import logo from '../assets/logo/logo.svg'` would resolve identically at build time but be typed
  * as a React component, and `yarn ts:check` would fail.
  *
- * Note on recolouring: this project's `assets/logo/logo.svg` is authored with `fill="white"`, so it
- * already reads correctly on the dark chrome and needs no filter. A logo authored with
- * `fill="currentColor"` would render black instead — inside an `<img>` there is no inherited colour,
- * so `currentColor` resolves to `canvastext` — and would need recolouring in `managerHead`
- * (`filter: brightness(0) invert(1)`, matched on `img[alt='<brandTitle>']`). Only the `max-width`
- * rule below is unconditional, because Storybook's own `Img` sets `150px !important`.
+ * Note on recolouring: this project's `assets/logo/logo.svg` is authored with explicit near-black
+ * fills (`#131412`), because that is how the wordmark reads on the site's off-white header. The
+ * manager chrome is dark, so it is recoloured to white in `managerHead` in `./main.ts`
+ * (`filter: brightness(0) invert(1)`, matched on `img[alt='<brandTitle>']`). A logo authored with
+ * `fill="currentColor"` would need the same treatment for a different reason — inside an `<img>`
+ * there is no inherited colour, so `currentColor` resolves to `canvastext`. Only a logo already
+ * authored `fill="white"` would need no filter at all. The `max-width` rule alongside it is
+ * unconditional, because Storybook's own `Img` sets `150px !important`.
  */
 import logoUrl from '../assets/logo/logo.svg?url';
 import projectTheme from './theme';

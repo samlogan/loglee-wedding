@@ -1,4 +1,4 @@
-# PLACEHOLDER_PROJECT_NAME
+# Loglee Wedding
 
 ## Overview
 

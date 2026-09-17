@@ -63,3 +63,6 @@ next-env.d.ts
 # Screaming Frog crawl data (sensitive client data)
 docs/screaming-frog.csv
 
+
+# Playwright MCP artefacts
+.playwright-mcp/

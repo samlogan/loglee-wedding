@@ -1,12 +1,1 @@
-export { default as ClosingCtaSection } from './ClosingCtaSection';
-export { default as FormSection } from './FormSection';
 export { default as FaqSection } from './FaqSection';
-export { default as GridSection } from './GridSection';
-export { default as HeaderHeroSection } from './HeaderHeroSection';
-export { default as HeaderSimpleSection } from './HeaderSimpleSection';
-export { default as LogosSection } from './LogosSection';
-export { default as MediaSection } from './MediaSection';
-export { default as TwoColDefaultSection } from './TwoColumnDefaultSection';
-export { default as EmbedSection } from './EmbedSection';
-export { default as ThreeColSection } from './ThreeColumnDefaultSection';
-export { default as ThreeColBlogSection } from './ThreeColumnBlogSection';
