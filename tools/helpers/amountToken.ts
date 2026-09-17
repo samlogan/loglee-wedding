@@ -139,6 +139,20 @@ export const substituteAmountToken = (blocks: SanityTextBlock[], formatted: stri
          * token goes *between* parts, which is what makes the two-occurrence case fall out of the
          * shape rather than needing a branch.
          */
+        /*
+         * ## The keys below are unique, and the assumption that makes them so
+         *
+         * Within one child they cannot collide: part 0 is `${_key}-0`, and every part after it is
+         * preceded by `${_key}-amount-${i}` and followed by `${_key}-${i}`, all distinct.
+         *
+         * Across *siblings* there is one shape that could: a child whose own `_key` is literally
+         * `${anotherChild._key}-${n}` would collide with that child's n-th text part. It rests on
+         * keys not containing a hyphen followed by digits — which holds for Sanity's generated keys
+         * (`randomKey` emits alphanumerics) but is an assumption rather than a guarantee, since keys
+         * survive imports and migrations verbatim. Worth knowing before this helper is reused on
+         * hand-authored content; not worth a uniqueness pass for a wedding site's one sentence.
+         * `amountToken.test.ts` asserts distinctness on the shapes that are reachable today.
+         */
         const parts = child.text.split(AMOUNT_PLACEHOLDER);
         const marks = child.marks ?? [];
 

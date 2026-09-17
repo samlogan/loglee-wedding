@@ -2,6 +2,8 @@ import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 
 import { AMOUNT_PLACEHOLDER } from '@/helpers/amountToken';
+import hasBlockContent from '@/helpers/hasBlockContent';
+import stripTitleTags from '@/helpers/stripTitleTags';
 import type { ITwoColumnListSection } from '@/tools/sanity/schema/sections/twoColumnListSection';
 import { mockBlock } from '@/tools/storybook/mockBlockContent';
 import sectionFixture from '@/tools/storybook/sectionFixture';
@@ -47,8 +49,9 @@ const atWidth =
   );
 
 /**
- * Real Sanity data when there is any, design-faithful mock otherwise — and today it is always the
- * mock: the dataset has no content documents yet, so `sectionFixture` returns `undefined`.
+ * Planner's dress-code band as a design-faithful mock — the fallback `listData` below resolves to
+ * whenever the dataset has no `list` instance, which today is always (there are no content documents
+ * yet).
  *
  * The copy, the four items and their lengths are Planner's (node 1:426). Two deliberate departures.
  * **Case**: Figma types "DRESS CODE" and "WHAT TO BRING" in capitals, and this passes sentence case
@@ -59,7 +62,7 @@ const atWidth =
  * marking the whole band as copy-TBC rather than a type treatment, unlike `ScheduleSection`'s event
  * times where the brackets really are drawn furniture. The sentences are kept; the brackets are not.
  */
-const listData = sectionFixture<ITwoColumnListSection>('twoColumnListSection') ?? {
+const LIST_MOCK: ITwoColumnListSection = {
   variant: 'list' as const,
   eyebrow: 'Dress code',
   title: '<h2>Cocktail, but comfortable</h2>',
@@ -78,6 +81,28 @@ const listData = sectionFixture<ITwoColumnListSection>('twoColumnListSection') ?
   ]
 };
 
+/*
+ * **Variant-gated**, and this is the first section in the repo that needs to be.
+ *
+ * `sectionFixture` is keyed by `_type` alone, and `generate-fixtures.ts` keeps the *richest*
+ * instance of each type (`sections.filter(…).toSorted((a, b) => size(b) - size(a))[0]`). This
+ * section is the first whose one `_type` has two mutually exclusive shapes — and the `richText`
+ * instance carries two joined `blockContent` arrays where the `list` one carries four short strings,
+ * so it will almost certainly serialise larger. A bare `sectionFixture(…) ?? LIST_MOCK` would
+ * therefore hand `listData` a `richText` fixture the moment both bands are published: `hasList`
+ * false, no `<ol>`, and `canvas.getByRole('list')` throwing in eight play functions. Overriding
+ * `items` in those stories would not save them, because `variant` would still say `richText`.
+ *
+ * Checking the variant makes the fallback correct in every combination — a `list` fixture is used, a
+ * `richText` fixture is declined, and a missing one falls through to the mock as before.
+ *
+ * The cost is the generator's, not this file's: one fixture per `_type` means only one of the two
+ * bands can ever be fixture-backed. If a second variant-bearing section lands, that is the trigger
+ * to key fixtures by shape rather than by type.
+ */
+const fixture = sectionFixture<ITwoColumnListSection>('twoColumnListSection');
+const listData: ITwoColumnListSection = fixture?.variant === 'list' ? fixture : LIST_MOCK;
+
 /** Stay's contribution sentence (node 1:673), reassembled from the three text nodes Figma splits it across. */
 const CONTRIBUTION_WITH_AMOUNT = `We’ve booked and paid for the rooms upfront so no one has to worry about logistics. If you’re able to, we’d be grateful for a contribution of ${AMOUNT_PLACEHOLDER} per room, per night. We’ll share the details with your RSVP, and if that’s tricky for any reason, just let us know.`;
 
@@ -90,6 +115,13 @@ const CONTRIBUTION_WITHOUT_AMOUNT =
  *
  * `contribution` is joined in by the projection from `weddingSettings`, not authored on the section,
  * so the mock stands in for the singleton rather than for a section field.
+ *
+ * Mock and **not** fixture-backed, unlike `listData` above, and deliberately so. Every `richText`
+ * story below asserts a specific branch of `resolveAmountCopy` — the toggle off, the figure missing,
+ * the placeholder repeated, the placeholder never written — by overriding `contribution` into that
+ * state. Those are logic assertions and need a controlled input; against the couple's live copy they
+ * would be asserting whatever sentence is published this week. The `{amount}` contract is pinned
+ * here and in `tools/helpers/amountToken.test.ts`; the CMS's own wording is not this file's subject.
  */
 const richTextData: ITwoColumnListSection = {
   variant: 'richText',
@@ -142,18 +174,33 @@ const ordinalsOf = (canvas: ReturnType<typeof within>) =>
     .getAllByRole('listitem')
     .map((item) => item.firstElementChild?.textContent);
 
-/** The section at the canvas's own width — how it behaves on a real page. */
+/**
+ * The section at the canvas's own width — how it behaves on a real page.
+ *
+ * Every assertion here is derived from `listData` rather than written out, because `listData` is
+ * fixture-backed and the fixtures self-heal: `story-fixture-checker` regenerates and stages them
+ * during `/commit`, so a literal `'Cocktail, but comfortable'` would go red the first time this band
+ * is published with different copy — a red test reporting nothing but that an editor wrote a
+ * sentence. What this story is *for* is the structure around the copy: an `<h2>`, a real list with
+ * one item per filled row, the theme inversion, and the two mutes. Those hold whatever the words
+ * are, and they are what breaks if the section does.
+ */
 export const Default: Story = {
   args: listData,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     // AC: the statement is an `<h2>`, forced rather than taken from the editor's tag selector.
-    await expect(canvas.getByRole('heading', { level: 2 })).toHaveTextContent('Cocktail, but comfortable');
+    await expect(canvas.getByRole('heading', { level: 2 })).toHaveTextContent(
+      stripTitleTags(listData.title).text.trim()
+    );
 
     // AC: the list is a repeater, and `role="list"` is on the element for WebKit's benefit — this
-    // asserts the semantics it buys.
-    await expect(within(canvas.getByRole('list')).getAllByRole('listitem')).toHaveLength(4);
+    // asserts the semantics it buys. Counted off the filtered array, which is what the section
+    // renders from.
+    await expect(within(canvas.getByRole('list')).getAllByRole('listitem')).toHaveLength(
+      (listData.items ?? []).filter((item) => Boolean(item?.trim())).length
+    );
 
     /*
      * AC: the dark treatment comes from the theme rather than from hardcoded values. On the light
@@ -382,9 +429,17 @@ export const WithoutEyebrows: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // The only paragraph left is the statement body — no stray uppercase mono lines.
-    await expect(canvasElement.querySelectorAll('p')).toHaveLength(1);
-    await expect(within(canvas.getByRole('list')).getAllByRole('listitem')).toHaveLength(4);
+    /*
+     * The only paragraph left is the statement body — no stray uppercase mono lines. Derived from
+     * the data rather than pinned at 1, because `listData` is fixture-backed and a published band
+     * with no body copy would legitimately leave none.
+     */
+    await expect(canvasElement.querySelectorAll('p')).toHaveLength(hasBlockContent(listData.content) ? 1 : 0);
+    // …and no label heading either, which is the other element an eyebrow can be.
+    await expect(canvas.queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
+    await expect(within(canvas.getByRole('list')).getAllByRole('listitem')).toHaveLength(
+      (listData.items ?? []).filter((item) => Boolean(item?.trim())).length
+    );
   }
 };
 
@@ -406,6 +461,112 @@ export const WithoutList: Story = {
     // One column, and it is not flexed to half the row.
     await expect(row.children).toHaveLength(1);
     await expect(getComputedStyle(row.children[0]).flexGrow).toBe('0');
+  }
+};
+
+/**
+ * A list an editor has left duplicate rows in.
+ *
+ * `items` carries `Rule.unique()`, but a Sanity validation rule is **publish-time** and Presentation
+ * renders drafts — so this state is reachable in exactly the environment an editor is looking at.
+ * With `key={item}` it handed React two identical keys: a console error and undefined
+ * reconciliation. The keys are now disambiguated by occurrence, which leaves the unique case
+ * unchanged and makes this one merely repetitive.
+ *
+ * Asserted through the numbering, because that is what a dropped or merged row shows up as: four
+ * rows in, four ordinals out, contiguous.
+ */
+export const DuplicateItems: Story = {
+  args: {
+    ...listData,
+    items: [
+      'Swimmers — pool, hot tub, river',
+      'A hat for Saturday afternoon',
+      'Swimmers — pool, hot tub, river',
+      'A hat for Saturday afternoon'
+    ]
+  },
+  decorators: [atWidth('80rem')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const items = within(canvas.getByRole('list')).getAllByRole('listitem');
+
+    await expect(items).toHaveLength(4);
+    await expect(ordinalsOf(canvas)).toEqual(['01', '02', '03', '04']);
+    // Both copies of each line are rendered, in the order they were authored.
+    await expect(items[0]).toHaveTextContent('Swimmers — pool, hot tub, river');
+    await expect(items[2]).toHaveTextContent('Swimmers — pool, hot tub, river');
+  }
+};
+
+/**
+ * A section whose statement is empty but whose aside is not — the mirror of `WithoutList`.
+ *
+ * Both columns are optional here, which is what makes this section different from
+ * `HeaderDisplaySection` and `ScheduleSection`, where only the aside can be absent. The split
+ * modifier is therefore gated on *both*, not on the aside alone: gated on one, an empty
+ * `.statement` still took `flex: 1 1 0` and gave away half the panel to nothing.
+ *
+ * `'<h2></h2>'` rather than `undefined`, because that is the shape the failure actually arrives in:
+ * `TitleInput` stores markup, so an emptied field is a non-empty string and `title.trim()` reported
+ * it as filled. This is the case `stripTitleTags(title).text.trim()` exists to catch.
+ */
+export const WithoutStatement: Story = {
+  args: { ...listData, content: undefined, eyebrow: undefined, title: '<h2></h2>' },
+  decorators: [atWidth('80rem')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = rowOf(canvasElement);
+
+    // No heading, and no empty column standing in for one.
+    await expect(canvas.queryByRole('heading', { level: 2 })).not.toBeInTheDocument();
+    await expect(row.children).toHaveLength(1);
+    await expect(getComputedStyle(row.children[0]).flexGrow).toBe('0');
+    // The aside is what survived.
+    await expect(within(canvas.getByRole('list')).getAllByRole('listitem').length).toBeGreaterThan(0);
+  }
+};
+
+/**
+ * The `richText` variant *with* a right-column eyebrow.
+ *
+ * The schema offers `asideEyebrow` on both variants — "Optional, and shown on both variants" — and
+ * nothing covered it on this one, so the eyebrow-over-a-paragraph pairing was advertised and
+ * untested. Stay draws neither eyebrow, but the control exists, and a section built from the schema
+ * rather than from the comp can reach this.
+ *
+ * It is also the case where the eyebrow's element matters most: over a list the `<h3>` labels four
+ * items, and over a paragraph it labels prose that has no list role to lean on.
+ */
+export const RichTextWithAsideEyebrow: Story = {
+  args: { ...richTextData, asideEyebrow: 'The rooms' },
+  decorators: [atWidth('80rem')],
+  parameters: { design: { type: 'figma', url: `${FIGMA}1-669` } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const label = canvas.getByRole('heading', { level: 3 });
+    const paragraph = canvasElement.querySelector('[data-theme] p') as HTMLElement;
+
+    // The label is a heading, so it reaches the accessibility tree and heading navigation — and it
+    // sits under the statement's h2 rather than beside it.
+    await expect(label).toHaveTextContent('The rooms');
+    await expect(canvas.getByRole('heading', { level: 2 })).toBeInTheDocument();
+    /*
+     * Visually it is still the mono micro-label rather than heading type, which is the half of this
+     * change that could have regressed. `.eyebrow` is in `@layer defaults` and the global
+     * `h1…h6 { @include heading-font(); }` is in `@layer global`, which `defaults` beats — so the
+     * element changed and the appearance did not. Asserted against the statement's own family so it
+     * fails if either end moves, rather than against a font name the config could rename.
+     */
+    const statement = canvas.getByRole('heading', { level: 2 });
+
+    await expect(getComputedStyle(label).textTransform).toBe('uppercase');
+    await expect(getComputedStyle(label).fontFamily).not.toBe(getComputedStyle(statement).fontFamily);
+    await expect(getComputedStyle(label).fontFamily).toContain('mono');
+    // It labels the copy *beneath* it — same column, drawn above — and the copy still renders.
+    await expect(label.parentElement?.contains(paragraph)).toBe(true);
+    await expect(label.getBoundingClientRect().bottom).toBeLessThanOrEqual(paragraph.getBoundingClientRect().top);
+    await expect(paragraph).toHaveTextContent('a contribution of $120 per room, per night');
   }
 };
 
@@ -613,8 +774,17 @@ export const EmptyBody: Story = {
   args: { ...listData, content: [mockBlock('normal', '   ')], eyebrow: undefined },
   decorators: [atWidth('80rem')],
   play: async ({ canvasElement }) => {
-    // The statement column renders the heading alone — no paragraph at all, empty or otherwise.
-    await expect(canvasElement.querySelectorAll('[data-theme] p')).toHaveLength(1);
+    const canvas = within(canvasElement);
+
+    /*
+     * The statement column renders the heading alone — no paragraph at all, empty or otherwise.
+     * Zero and not one: `eyebrow` is overridden away here, and `asideEyebrow` is an `<h3>` (it
+     * labels the list beneath it), so a `<p>` in this panel could only be the body under test.
+     */
+    await expect(canvasElement.querySelectorAll('[data-theme] p')).toHaveLength(0);
+    // The section is otherwise intact, so the assertion above is about the body and not about a
+    // panel that failed to render.
+    await expect(canvas.getByRole('heading', { level: 2 })).toBeInTheDocument();
   }
 };
 

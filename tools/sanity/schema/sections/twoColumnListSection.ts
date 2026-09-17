@@ -195,7 +195,15 @@ const twoColumnListSection = defineType({
   name: 'twoColumnListSection',
   preview: {
     prepare(selection: { internalLabel?: string; items?: string[]; title?: string; variant?: string }) {
-      const count = selection?.items?.length ?? 0;
+      /*
+       * Counted the way the page counts them — blanks filtered — rather than `items.length`.
+       *
+       * An array of plain strings keeps every row an editor tabbed through and moved on from, and
+       * the component drops those before numbering. A raw `.length` therefore promised "7 items" in
+       * the document list for a band that renders 4, which is the kind of disagreement an editor
+       * reads as the page being wrong rather than the preview.
+       */
+      const count = selection?.items?.filter((item) => Boolean(item?.trim())).length ?? 0;
       const detail = selection?.variant === 'richText' ? 'Contribution copy' : `${count} item${count === 1 ? '' : 's'}`;
 
       return {

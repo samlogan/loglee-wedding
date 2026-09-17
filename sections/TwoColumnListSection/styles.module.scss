@@ -75,6 +75,27 @@
  * **Stacked is the unconditional default.** A container query cannot be evaluated before its
  * container has been laid out, so on the first style pass neither branch matches and the narrow
  * layout has to be what an unmatched query leaves behind.
+ *
+ * ## `overflow-wrap: break-word` is not written anywhere in this file, deliberately
+ *
+ * Four rules here used to restate it — and seven more across `ScheduleSection` and
+ * `HeaderDisplaySection`, each with its own paragraph explaining the restatement. All eleven were
+ * inert. `tools/sass/global/_typography.scss` sets `word-wrap: break-word` on `body`, `word-wrap` is
+ * the legacy alias for the same property, and `overflow-wrap` is inherited — so a fresh class-less
+ * `<div>` appended inside this panel already computes `break-word` (measured with
+ * `getComputedStyle`, not assumed). Restating an inherited value that nothing in between resets
+ * cannot change a rendered pixel.
+ *
+ * They are gone rather than kept as documentation, because they did not read as documentation: each
+ * looked like the line doing the work, which meant `.copy` existed as a whole class holding nothing
+ * else, and it hid the line that *is* load-bearing. That one is `min-width: 0`. The two are easy to
+ * confuse and do opposite things — `overflow-wrap: break-word` explicitly does **not** reduce a
+ * box's `min-content` contribution, so on a flex item it does nothing about an unbreakable run
+ * pushing the column past the viewport (WCAG 1.4.10); only `min-width: 0` (or `overflow-wrap:
+ * anywhere`, which is a different value and is *not* inherited from `body`) does. Every
+ * `min-width: 0` below is real and keeps its note.
+ *
+ * If the `body` rule is ever removed, this is the one place to put the property back.
  */
 
 /*
@@ -319,14 +340,6 @@ $two-column-list-body-measure: 27.5rem;
     --display-line-height: 0.95;
     --display-letter-spacing: -0.03em;
 
-    // `min-width: 0` on the column lets the item shrink; this lets the word break rather than
-    // overflow. Figma sets `word-break: break-word` on all four heading nodes. (It restates the
-    // `break-word` already inherited from `body` in `_typography.scss` — measured inert on a probe
-    // element inside the panel. Kept only because the three siblings of it in this file and the
-    // seven in `ScheduleSection` / `HeaderDisplaySection` are the same restatement, and eleven call
-    // sites want one decision rather than a partial cleanup here.)
-    overflow-wrap: break-word;
-
     /*
      * Nested rather than written as a sibling rule, and that is a correctness fix rather than tidying.
      *
@@ -342,9 +355,6 @@ $two-column-list-body-measure: 27.5rem;
   }
 
   .body {
-    // The measure guard for an unbreakable run — a pasted URL — since the column is fixed-width.
-    overflow-wrap: break-word;
-
     @container twoColumnList (width >= #{$two-column-list-inline-switch}) {
       /*
        * Only above the switch. The mobile frame sets this paragraph to the full 350px content width
@@ -428,19 +438,15 @@ $two-column-list-body-measure: 27.5rem;
    * (22.4 on 16px, 19.6 on 14px). That is the same role-not-size argument `--body-lede` is built on,
    * kept local because two nodes is not a tier.
    *
-   * `min-width: 0` so the text column can shrink, and `overflow-wrap` so a long unbroken run breaks
-   * inside it rather than widening the panel. Wrapped lines stay in this column and clear of the
-   * ordinal — the hanging indent falls out of the flex row and needs no `padding-left`.
+   * `min-width: 0` so the text column can shrink, which is what keeps a long unbroken run inside the
+   * panel rather than widening it — a flex item's automatic minimum is its `min-content` width, and
+   * the inherited `break-word` does not reduce that. Wrapped lines stay in this column and clear of
+   * the ordinal — the hanging indent falls out of the flex row and needs no `padding-left`.
    */
   .itemText {
     --body-line-height: 1.4;
 
     min-width: 0;
-    overflow-wrap: break-word;
-  }
-
-  .copy {
-    overflow-wrap: break-word;
   }
 
   /*

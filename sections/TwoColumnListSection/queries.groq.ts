@@ -24,13 +24,25 @@ import blockContentProjection from '@/tools/sanity/projections/common/blockConte
  * (3). The cost is that this projection reaches outside its own document, which is unusual for a
  * section and is why it is spelled out at this length.
  *
- * ## The conditional is load-bearing, not tidiness
+ * ## The conditionals are load-bearing, not tidiness
  *
  * `variant == 'richText' =>` wraps the join, so a `list` section never evaluates the sub-query and
  * the `contribution` key is **absent** from it rather than null. Verified against groq-js with a
  * hand-built dataset holding one of each variant: the list section came back with no `contribution`
- * key at all. That is what keeps the weight `yarn audit:projections` reports proportional to what a
- * page actually uses — the dress-code band on Planner pays nothing for Stay's join.
+ * key at all — so the dress-code band on Planner pays nothing for Stay's join.
+ *
+ * `items` is gated the same way, and it was not — which made the pair asymmetric in the direction
+ * that actually ships data. A Sanity `hidden` predicate is a Studio display rule and nothing more:
+ * the array an editor filled in on the `list` variant stays in the document when they switch to
+ * `richText`, so an ungated `items` put a stale list on the wire for every `/stay` request that
+ * would never render one.
+ *
+ * `!=` rather than `variant == 'list'`, and the difference is reachable. `variant` is `required()`
+ * with `initialValue: 'list'`, but a draft can hold it unset — and the component destructures
+ * `variant = 'list'`, so an unset variant *renders* the list. `variant == 'list'` would drop `items`
+ * from exactly that document and blank the column; `!= 'richText'` matches the component's own
+ * default. Both were run against groq-js on a three-section fixture (list / richText / unset): the
+ * strict form returned no `items` key for the unset section, the negated form returned it.
  *
  * `_id == 'weddingSettings'` pins the singleton the same way `WEDDING_SETTINGS_QUERY` does, so the
  * drafts perspective resolves `drafts.weddingSettings` onto it in Presentation.
@@ -50,7 +62,9 @@ const twoColumnListSectionProjection = groq`
     title,
     content[]${blockContentProjection},
     asideEyebrow,
-    items,
+    variant != 'richText' => {
+      items
+    },
     variant == 'richText' => {
       "contribution": *[_type == 'weddingSettings' && _id == 'weddingSettings'][0].contribution{
         showAmount,

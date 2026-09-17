@@ -190,11 +190,26 @@ const TextBlock = (props: TextBlockProps) => {
       spacing: 'md',
       ...providedConfig?.listNumber
     },
+    /*
+     * `spacing: 'sm'` here rather than on the handler below, which is where it used to be —
+     * `<Text as="p" {...config?.p} spacing="sm">`, written **after** the spread and therefore
+     * unconditional. A caller passing `config={{ p: { spacing: 'lg' } }}` typed against the declared
+     * API, saw the value land in this object, and got `sm` anyway.
+     *
+     * The value is unchanged, deliberately: `sm` is what every `p` block has rendered at, so moving
+     * it here restores the override without moving any existing caller. It is the same
+     * written-after-the-spread trap `TwoColumnListSection` documents on its own `spacing="none"`,
+     * sitting in a shared component where it silently discarded declared API instead.
+     *
+     * `span` below keeps `md`. It spreads `providedConfig?.p` rather than this object, so the two
+     * defaults are independent — and `normal`, the style every `blockContent*` schema actually
+     * emits, routes through `span`.
+     */
     p: {
       alignment,
       color,
       size: 'md',
-      spacing: 'md',
+      spacing: 'sm',
       ...providedConfig?.p
     },
     span: {
@@ -250,7 +265,7 @@ const TextBlock = (props: TextBlockProps) => {
         </Text>
       ),
       p: ({ children }: ComponentProps) => (
-        <Text as="p" {...config?.p} spacing="sm">
+        <Text as="p" {...config?.p}>
           {children}
         </Text>
       ),
@@ -423,8 +438,15 @@ const TextBlock = (props: TextBlockProps) => {
       setScrollPosition(window.scrollY);
       setShowMore(!showMore);
     } else {
+      /*
+       * `behavior` is read from the user's preference rather than pinned to `smooth`. A
+       * programmatic smooth scroll is motion the reader did not ask for and cannot stop, and it is
+       * the one piece of animation in this component that CSS cannot reach — the two `transition`
+       * rules in `styles.module.scss` now carry their own `prefers-reduced-motion` override, which
+       * twelve other modules in the repo already did and this one did not.
+       */
       window.scrollTo({
-        behavior: 'smooth',
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
         top: scrollPosition
       });
 

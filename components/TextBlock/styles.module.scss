@@ -2,6 +2,16 @@
   transition: all 0.4s ease;
   overflow: hidden;
 
+  // Twelve other modules in the repo carry this override and this one did not — see the note on the
+  // programmatic scroll in `index.tsx`, which is the half of the same animation CSS cannot reach.
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    .hiddenContentContainer {
+      transition: none;
+    }
+  }
+
   .hiddenContentContainer {
     opacity: 0;
     transition: all 0.6s ease;
@@ -24,6 +34,10 @@
 
   .icon {
     transition: transform 0.3s ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   &.active {
@@ -43,9 +57,31 @@ p + .divider {
   margin-top: 8px; // for the case when divider is after p, remove p padding bottom from top margin
 }
 
+/*
+ * The highlighter mark.
+ *
+ * Theme-safe rather than a fixed pair, and the fix is worth reading because the rule directly
+ * beneath it was written to avoid exactly this. It was `color: var(--shades-white)` on
+ * `background-color: var(--fg-accent)`: fine on a light surface, where `--fg-accent` is
+ * `--pine-600` and the pairing measures 9.40:1 — and **1.15:1** on `[data-theme='dark']`, where
+ * `--fg-accent` is `--signal-300` (#d6ff3b) and white sits on lime. Nothing had noticed because
+ * `TextBlock` had never been rendered on a dark surface; `TwoColumnListSection`'s inverted panel is
+ * the first, so this ticket is what armed it.
+ *
+ * Unreachable today either way — `markerFont` is registered as a mark renderer in `index.tsx` but no
+ * `blockContent*` schema offers it as a decorator, so no editor can author one. Left in place rather
+ * than deleted (a mark renderer is cheap and removing one is a judgement about imported content),
+ * but made correct, so enabling the decorator is a one-line schema change and not a WCAG 1.4.3
+ * failure on every dark section.
+ *
+ * `--fg-default` on a mix of the accent is the same mechanism `.amountToken` below uses and the same
+ * reason: both ends of the pairing come from the surface, so the mark follows the theme instead of
+ * asserting one. 60% keeps the highlight obvious while leaving the ink legible — 6.31:1 on the dark
+ * panel and 5.93:1 on the light one.
+ */
 .markerFont {
-  background-color: var(--fg-accent);
-  color: var(--shades-white);
+  background-color: color-mix(in srgb, var(--fg-accent) 60%, var(--bg-default));
+  color: var(--fg-default);
 }
 
 /*

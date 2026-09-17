@@ -82,8 +82,12 @@ $schedule-summary-width: 25rem;
  * requirement is that the times line up down the column: sizing it to content would give each row
  * its own gutter, since each row is its own grid.
  *
- * What keeps an over-long time inside the gutter is `.time`'s own `overflow-wrap`. It is *not*
- * `min-width: 0`, which this note used to credit: a grid item's automatic minimum applies only when
+ * What keeps an over-long time inside the gutter is the `overflow-wrap: break-word` every element
+ * inherits from `body` in `_typography.scss`. It is *not* `.time`'s own declaration of it, which
+ * this note used to credit and which was a measurably inert restatement of that inheritance — see
+ * the note at the head of `TwoColumnListSection/styles.module.scss`, where the same restatement was
+ * removed from all eleven sites at once. Nor is it
+ * `min-width: 0`, which an earlier version of this note credited: a grid item's automatic minimum applies only when
  * it spans a track whose **min** sizing function is `auto` (CSS Grid §6.6), and this track's is a
  * fixed 6.875rem. `min-width: auto` therefore already computes to 0 here, which is why the
  * declaration was removed rather than kept — verified by toggling it at 375px and 1440px with a
@@ -299,7 +303,6 @@ $schedule-intro-measure: 20rem;
   .dayTitle {
     --display-md: #{fluid(56px, 88px)};
 
-    overflow-wrap: break-word;
     /*
      * The separation above the heading: 5px on the mobile frame (`pt-[5px]` on 1:472), 8px on the
      * desktop one (the `gap-[8px]` of 1:318). See the note on `.summary` for why the three
@@ -340,8 +343,6 @@ $schedule-intro-measure: 20rem;
     // The separation above the intro: 12px on mobile (`pt-[12px]` on 1:476), 18px on desktop
     // (`gap-[8px]` + `pt-[10px]` on 1:325). See `.summary`.
     padding-top: #{fluid(12px, 18px)};
-    // The measure guard for an unbreakable run — a pasted URL — since the column is fixed-width.
-    overflow-wrap: break-word;
 
     @container schedule (width >= #{$schedule-inline-switch}) {
       /*
@@ -471,10 +472,9 @@ $schedule-intro-measure: 20rem;
     font-size: #{fluid(12px, 13px)};
     font-weight: var(--font-weight-medium);
     line-height: var(--body-line-height);
+    // What keeps a long time inside the fixed 110px gutter is the inherited `overflow-wrap`, not
+    // anything declared here — see `$schedule-time-gutter`.
     margin: 0;
-    // What actually keeps a long time inside the fixed 110px gutter — see `$schedule-time-gutter`,
-    // which used to credit a `min-width: 0` that never applied to this track.
-    overflow-wrap: break-word;
   }
 
   /*
@@ -609,7 +609,6 @@ $schedule-intro-measure: 20rem;
 
     grid-area: 2 / 1 / auto / -1;
 
-    overflow-wrap: break-word;
     /*
      * Tops the 4px `row-gap` up to the 8px the stacked row is drawn with: the mobile frame separates
      * the time/chip line from the title by `gap-[5px]` plus `pt-[3px]` on 1:484, and it separates
@@ -671,8 +670,6 @@ $schedule-intro-measure: 20rem;
     --body-md: #{fluid(14px, 15px)};
 
     grid-area: 3 / 1 / auto / -1;
-
-    overflow-wrap: break-word;
 
     @container scheduleEvents (width >= #{$schedule-event-inline-switch}) {
       // Under the title, still in the middle column — never under the time gutter.

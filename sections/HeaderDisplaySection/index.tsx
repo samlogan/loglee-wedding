@@ -89,11 +89,7 @@ const HeaderDisplaySection: FC<IHeaderDisplaySection> = (props) => {
                * through `config.span`, which itself spreads `config.p`, so the one override covers
                * `normal` and `p` alike.
                */
-              <TextBlock
-                className={styles.lede}
-                blocks={content}
-                config={{ p: { className: styles.ledeText, size: '2xl' } }}
-              />
+              <TextBlock blocks={content} config={{ p: { className: styles.ledeText, size: '2xl' } }} />
             )}
             {hasMeta && (
               /*

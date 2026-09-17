@@ -118,12 +118,15 @@ $header-display-inline-switch: 60rem;
     /*
      * A flex item's automatic minimum is its `min-content` width, which for a single long word at
      * ~120px type is wider than half the row — left alone "WEEKEND" would push the aside out of the
-     * container rather than wrap. `min-width: 0` lets the item shrink and `overflow-wrap` lets the
-     * word break rather than overflow, which is what Figma does too (`word-break: break-word` on
-     * every one of the six heading nodes).
+     * container rather than wrap. `min-width: 0` is what lets the item shrink.
+     *
+     * The breaking itself needs nothing here: `overflow-wrap: break-word` is inherited from `body`
+     * in `_typography.scss` (under its legacy `word-wrap` alias), which is what Figma's
+     * `word-break: break-word` on all six heading nodes resolves to. This rule used to restate it,
+     * measurably inert — see the note at the head of `TwoColumnListSection/styles.module.scss`,
+     * where the same restatement was removed from all eleven sites at once.
      */
     min-width: 0;
-    overflow-wrap: break-word;
 
     /*
      * No type declared here on purpose. The leading and tracking this header needs are the display
@@ -238,18 +241,19 @@ $header-display-inline-switch: 60rem;
   }
 
   /*
+   * There is no `.lede` wrapper class, and the absence is the note.
+   *
+   * It existed to carry one `overflow-wrap: break-word`, which was inherited from `body` and
+   * therefore inert — so removing the declaration left an empty rule and a `className` threaded
+   * through `index.tsx` for nothing. The measure comes from the column and the type from
+   * `.ledeText` below.
+   *
    * Colour is `TextBlock`'s own default — it hardcodes `color: 'themeFgDefault'` on every block
    * handler, so the lede reads `--fg-default`, the same ink as the heading beside it. `index.tsx`
    * passes no `color`, deliberately: that is what the comps draw. Stated here because an earlier
    * version of this comment claimed the colour was set through the `config` prop, which it never
    * was.
-   *
-   * The measure comes from the column, so all this rule carries is the guard against an unbreakable
-   * run — a pasted URL — and the hook a design review measures against.
    */
-  .lede {
-    overflow-wrap: break-word;
-  }
 
   /*
    * The lede's type, re-pointed rather than re-declared.
