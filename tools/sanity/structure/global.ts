@@ -1,4 +1,4 @@
-import { TbMoodSmile, TbWorld, TbLayoutNavbar, TbLayoutBottombar, TbBrandInstagram } from 'react-icons/tb';
+import { TbWorld, TbLayoutNavbar, TbLayoutBottombar, TbBrandInstagram } from 'react-icons/tb';
 import type { StructureBuilder } from 'sanity/structure';
 
 const GlobalMenuItem = (S: StructureBuilder) =>
@@ -23,17 +23,7 @@ const GlobalMenuItem = (S: StructureBuilder) =>
           S.listItem()
             .title('Social Media')
             .child(S.document().schemaType('socialMediaDocument').documentId('socialMediaDocument'))
-            .icon(TbBrandInstagram),
-          S.divider(),
-          // Global Logos
-          S.listItem()
-            .title('Logos')
-            .icon(TbMoodSmile)
-            .child(() =>
-              S.documentTypeList('globalLogos')
-                .title('Logos')
-                .menuItems(S.documentTypeList('globalLogos').getMenuItems())
-            )
+            .icon(TbBrandInstagram)
         ])
     );
 
