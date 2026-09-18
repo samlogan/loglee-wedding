@@ -26,6 +26,38 @@ $hero-inline-switch: 60rem;
 
 @layer defaults {
   /*
+   * The section's two edges, re-pointed to the pairs the design draws for them.
+   *
+   *   edge     phone (1:112)   desktop (1:63)   step   stock step            re-pointed
+   *   top      28px            42.9px           `sm`   fluid(16px, 48px)     fluid(28px, 43px)
+   *   bottom   23.1px          36px             `xs`   fluid(12px, 32px)     fluid(23px, 36px)
+   *
+   * The bottom edge is the gap to the player-select panel (1:79 on 1:44, 1:124 on 1:102), which this
+   * section carries under the flush-top convention `specCardGridSection` states.
+   *
+   * Re-pointed rather than hand-written as padding, for the reason `specCardGridSection`'s `.section`
+   * sets out at length: the `spacing` prop stays the mechanism, so the editor's remove-spacing
+   * toggles still swap `Section`'s class for `.spacing_*_none` and still win. A `padding-block` here
+   * would survive both toggles.
+   *
+   * Anchored on the drawn numbers rather than extrapolated to the 1440px anchor, per the same
+   * convention: 28.2px / 23.2px at 390, 40.7px / 34.1px at 1280, 43px / 36px at 1440.
+   *
+   * Local, and the stock `sm` is the thing actually wrong. Every consumer of it is short on a phone —
+   * `headerDisplaySection` draws 28px there on three frames and still renders 16, and
+   * `specCardGridSection` re-points it to `fluid(24px, 48px)` — so a narrower anchor of ~24px in
+   * `_variables.scss` is the durable fix. That is a change to a shared token under two other sections,
+   * not this ticket's, and is raised at design review.
+   *
+   * Declared on the section root, so the re-points also reach the subtree; nothing inside reads a
+   * `--section-spacing-*` token.
+   */
+  .section {
+    --section-spacing-sm: #{fluid(28px, 43px)};
+    --section-spacing-xs: #{fluid(23px, 36px)};
+  }
+
+  /*
    * The query container is the `Container` element, via `containerClassName`, so the queried inline
    * size is the content width the design measures against — frame minus gutters. `inline-size` and
    * not `size`: the hero's height comes from its content, and containing it would collapse it.
@@ -131,11 +163,22 @@ $hero-inline-switch: 60rem;
     @container hero (width >= #{$hero-inline-switch}) {
       // Against the right edge whether it shares the line with the dates or has wrapped beneath them.
       margin-inline-start: auto;
-      /*
-       * Right-aligned as a block, so a line long enough to wrap inside itself keeps its second line
-       * against the right edge too. `Text`'s `alignment` prop cannot say this: it applies at every
-       * width, and on a phone the line is left-aligned under the dates.
-       */
+    }
+  }
+
+  /*
+   * Right-aligned as a block above the switch, so a line long enough to wrap inside itself keeps its
+   * second line against the right edge too. `Text`'s `alignment` prop cannot say this: it applies at
+   * every width, and on a phone the line is left-aligned under the dates.
+   *
+   * Two classes, and that is the point of the selector. `Text` always emits an alignment class —
+   * `alignment` defaults to `left` — and `.alignment_left` is a single class in the same layer, so
+   * `.directions` alone would tie with it and the winner would be whichever module the bundler
+   * happened to emit last. Descending from `.meta` settles it by specificity instead. A container
+   * query adds nothing to specificity, which is why the tie was real.
+   */
+  .meta .directions {
+    @container hero (width >= #{$hero-inline-switch}) {
       text-align: right;
     }
   }

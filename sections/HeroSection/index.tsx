@@ -90,6 +90,12 @@ const HeroSection: FC<IHeroSection> = (props) => {
     <Section
       name="HeroSection"
       theme={getSectionTheme(props, 'light')}
+      /*
+       * Carries the two spacing re-points — each edge's step, pointed at the pair the design draws
+       * for it. On the section root because that is the element `Section`'s `.spacing_*` classes sit
+       * on and read the tokens from. See `.section` in styles.module.scss.
+       */
+      className={styles.section}
       containerClassName={styles.container}
       {...getSectionSpacingProps(props)}
       /*
@@ -98,20 +104,19 @@ const HeroSection: FC<IHeroSection> = (props) => {
        * reports exactly that ordering. The editor's two remove-spacing toggles still come through
        * the spread and still win inside `Section`.
        *
-       * `sm`, matching `headerDisplaySection` — the other section that opens a page under the bar.
+       * Two steps, because the design draws two different separations:
        *
-       * Top: the design draws 42.9px between the bar and the names (node 1:63's `pt`), and
-       * `--section-spacing-sm` measures 43.19px at a 1280px viewport. On a phone it is 16px against
-       * the drawn 28px (1:112), the same shortfall the header display carries and raised at review
-       * for the same reason: no step on the scale carries the design's 28 → 43 ramp.
+       * - **Top**, from the bar to the names: 28px on the phone frame (1:112), 42.9px on the desktop
+       *   one (1:63). `sm`, the step `headerDisplaySection` uses for the same edge on every other page.
+       * - **Bottom**, from the meta row to the player-select panel: 23px and 36px. It is this
+       *   section's to carry — the convention on these pages is that a band's top edge is flush and
+       *   the gap above it belongs to the section before (see `specCardGridSection`). `xs`, the next
+       *   step down, because the gap is.
        *
-       * Bottom: the gap to the player-select panel is drawn 36px on desktop and 23px on mobile, and
-       * it is this section's to carry — the convention on these pages is that a band's top edge is
-       * flush and the gap above it belongs to the section before (see `specCardGridSection`). `sm`
-       * lands 7px either side of it (43 against 36, 16 against 23); `xs` would be 7px short on
-       * desktop and 11px short on a phone, so `sm` is the nearer step at both ends.
+       * Neither stock step is drawn at these values — `sm` is 16px on a phone and `xs` 29px at a
+       * 1280px viewport — so `styles.section` re-points both to the measured pairs.
        */
-      spacing="sm"
+      spacing={['sm', 'xs']}
     >
       {/*
        * The names are the page's `<h1>` — the AC — and there is no editor choice to override: the

@@ -226,6 +226,41 @@ export const Default: Story = {
 
     await expect(lineText(summaryIn(canvasElement))).toBe('12–14.02.27 · The Lodge Jamberoo');
     await expect(lineText(directionsIn(canvasElement))).toBe('406 Jamberoo Mountain Rd · 90 min south of Sydney');
+
+    /*
+     * Two edges, two drawn separations: the bar-to-names gap is wider than the gap under the meta
+     * row at every width (28 → 43 against 23 → 36). Equal paddings would mean the section had fallen
+     * back to one step for both — which is what it did before the re-points, 7px wrong on each edge.
+     */
+    const section = canvasElement.querySelector('section') as HTMLElement;
+    const top = Number.parseFloat(getComputedStyle(section).paddingTop);
+    const bottom = Number.parseFloat(getComputedStyle(section).paddingBottom);
+
+    await expect(bottom).toBeGreaterThan(0);
+    await expect(top).toBeGreaterThan(bottom);
+  }
+};
+
+const NO_SPACING: HeroArgs = {
+  ...MOCK,
+  sectionFields: mockSectionFields({ removeBottomSpacing: true, removeTopSpacing: true })
+};
+
+/**
+ * Both of the editor's remove-spacing toggles on.
+ *
+ * The section re-points the two spacing tokens its edges read rather than writing its own padding,
+ * and this is the story that proves why: the toggles swap `Section`'s spacing classes for
+ * `.spacing_*_none`, and a re-pointed token has nothing left to say once its class is gone. A
+ * hand-written `padding-block` would have survived both toggles.
+ */
+export const WithoutSpacing: Story = {
+  args: NO_SPACING,
+  play: async ({ canvasElement }) => {
+    const section = canvasElement.querySelector('section') as HTMLElement;
+
+    await expect(getComputedStyle(section).paddingTop).toBe('0px');
+    await expect(getComputedStyle(section).paddingBottom).toBe('0px');
   }
 };
 
@@ -253,6 +288,13 @@ export const Desktop: Story = {
     await expect(rect(summary).left).toBeCloseTo(rect(heading).left, 0);
     await expect(rect(directions).right).toBeCloseTo(rect(meta).right, 0);
     await expect(rect(directions).bottom).toBeCloseTo(rect(summary).bottom, 0);
+
+    /*
+     * Right-aligned text, not only a right-hand box. `Text` stamps `.alignment_left` on the same
+     * element, so this reads which of the two rules actually won — the section's selector is two
+     * classes deep so that it always does, whatever order the bundler emits the modules in.
+     */
+    await expect(getComputedStyle(directions).textAlign).toBe('right');
   }
 };
 
@@ -287,9 +329,10 @@ export const Mobile: Story = {
     // eslint-disable-next-line unicorn/prefer-dom-node-text-content -- the rendered text is what is under test
     await expect(directions.innerText.trim()).toBe(TRAVEL_NOTE.toUpperCase());
 
-    // Two lines, left-aligned under each other.
+    // Two lines, left-aligned under each other — the box and the text in it.
     await expect(rect(directions).left).toBeCloseTo(rect(summary).left, 0);
     await expect(rect(directions).top).toBeGreaterThanOrEqual(rect(summary).bottom);
+    await expect(getComputedStyle(directions).textAlign).toBe('left');
   }
 };
 
