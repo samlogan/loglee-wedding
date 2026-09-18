@@ -1,0 +1,271 @@
+/*
+ * The aerial site-orientation block — one wide photograph with two overlays in opposite corners.
+ *
+ * ## Nothing here names a colour, because nothing here paints
+ *
+ * Both overlays are `components/Tag`, which owns its own fill, ink, radius, padding and type and
+ * resolves all of them through `[data-theme]`. This file holds the frame and the two placements,
+ * which is exactly the split `Tag`'s stylesheet asks consuming sections for.
+ *
+ * ## The one breakpoint, and why it is a container query
+ *
+ * Two things change between the frames: the frame's aspect ratio (1200×520 on node 16:257, 350×200
+ * on 16:403) and whether the location pills are visible. Neither is something `fluid()` can
+ * interpolate — one is a unitless ratio and the other is a presence — so both need a query, and it
+ * is a **container** query on the section's own content box rather than a viewport media query.
+ *
+ * In the app the two are equivalent: the section is full width, so the container's inline size is
+ * the viewport minus the gutters. Keying it to the container is what makes the switch testable — the
+ * `Mobile` story renders the section in a 375px column and gets the mobile treatment without owning
+ * the window, the distinction `HeaderDisplaySection`, `ScheduleSection` and `PlayerCard` all record.
+ * It is also the more honest question: the pills stop fitting because the *picture* got narrow, not
+ * because the window did, and this section could be dropped into a narrower column tomorrow.
+ *
+ * 640px of container is the switch, measured against what the pill row has to hold rather
+ * than taken from the breakpoint map. The three drawn pills measure 317px end to end (131 + 8 + 116
+ * + 8 + 54 on node 16:260) and sit 24px in from the left edge. At a 640px frame that row occupies
+ * just over half the width and the frame is 277px tall, so the pills stay a label in a corner at
+ * roughly the proportion the desktop comp draws them. Below it the row starts reading as a band
+ * across the middle of the picture, which is the thing the mobile frame drops them to avoid.
+ *
+ * ## `px` and not `rem`, which is the opposite of every other switch in this repo
+ *
+ * `$header-display-inline-switch` and friends are `rem` so that a reader who raises their root font
+ * size crosses the switch sooner, and WCAG 1.4.4 is the reason given. That argument depends on what
+ * crossing the switch *does*: there, it reflows two columns into one, so arriving early is help.
+ *
+ * Here it **deletes content**. Below the switch the pill row is clipped away, so a `rem` threshold
+ * hands a low-vision reader the one outcome 1.4.4 exists to prevent — measured in Chromium, which
+ * resolves `rem` inside a container query against the live root size: at a 1280px viewport the three
+ * place names vanish at a 32px root, and at 1024px they vanish at 24px. The viewport never changed;
+ * only the text size did, and content disappeared.
+ *
+ * So the threshold is decoupled from text size. The cost is real and is the lesser one: a reader at
+ * a large root gets a proportionally bigger row covering more of the photograph. 1.4.4 is about
+ * content loss, not overlap.
+ *
+ * The honest fix is the one `index.tsx` already flags for design review — show the pills *below* the
+ * frame at narrow widths instead of removing them, which makes the whole question go away. That is a
+ * structural change and a design decision, so it is raised rather than assumed.
+ *
+ * Local to this module; the family is `$<owner>-inline-switch`.
+ */
+$media-tags-inline-switch: 640px;
+
+@layer defaults {
+  /*
+   * The query container is the `Container` element, via `containerClassName`, so the queried inline
+   * size is the frame's own width — page minus gutters, which is what the design measures.
+   *
+   * `inline-size` and not `size`: the width comes from the page and the height from `aspect-ratio`
+   * below, so containing the block axis as well would make that circular.
+   *
+   * The cost of that containment is the one every other container in this repo documents: an
+   * inline-size container does not contribute its contents to its own intrinsic width, so in a
+   * shrink-to-fit ancestor — `inline-block`, a float, `width: max-content` — it collapses to its
+   * padding. Safe here because sections render as block children of `<main>` (`components/Layout`)
+   * and of a plain `<div>` in Storybook, both of which size from the outside in.
+   */
+  .container {
+    container: mediaTags / inline-size;
+  }
+
+  .mediaFrame {
+    /*
+     * The positioning context for both overlays. `Tag` sets no `position`, no inset and no
+     * `z-index` by design — placement belongs to whatever owns the media, which is this.
+     */
+    position: relative;
+    /*
+     * The narrow ratio is the unconditional default and the wide one is the override, and that
+     * asymmetry is load-bearing rather than stylistic.
+     *
+     * A container query cannot be evaluated before its container has been laid out, so on the first
+     * style pass *neither* branch matches. Whichever ratio is not in the query is what paints for
+     * that frame — so making the mobile one the default means a phone never reflows, and a desktop
+     * reader sees one frame of a slightly tall image rather than a tall one collapsing. Written the
+     * other way round the pills would also flash in and out. Same trap the header's two RSVP labels
+     * hit, recorded in `components/Header/styles.module.scss`.
+     *
+     * Both values are the drawn boxes rather than rounded ratios: 350×200 is 1.75 and 1200×520 is
+     * 2.3077, and neither is a named ratio anybody would recognise written as a decimal.
+     */
+    aspect-ratio: 350 / 200;
+    /*
+     * `clip` rather than `hidden`, which is what both nodes actually specify ("overflow clip") and
+     * not a synonym: `hidden` makes this a scroll *container* — programmatically scrollable, a
+     * scroll-anchoring participant, and a scroll target — where `clip` only clips. That matters
+     * because `tags` is an unbounded repeater on a wrapping flex row, so the overlay genuinely can
+     * overrun. Costs no browser support that is not already required: `container-type` above needs
+     * Safari 16, and `overflow: clip` landed in 16 as well.
+     *
+     * 8px radius on both frames — `--radius-md`. The clip respects it, so the photograph takes the
+     * corners and the two overlays are cut to the same shape if they ever reach an edge.
+     */
+    overflow: clip;
+    border-radius: var(--radius-md);
+
+    @container mediaTags (width >= #{$media-tags-inline-switch}) {
+      aspect-ratio: 1200 / 520;
+    }
+  }
+
+  /*
+   * Placement only, per the note on `Tag`'s stylesheet — plus the two custom properties `Tag`
+   * explicitly hands to a consumer. (Not "a `Tag` prop": `Tag` has props for the box and the weight
+   * but none for tracking or type size, which is exactly why it exposes `--tag-font-size` and why
+   * `Text` exposes `--mono-letter-spacing`.)
+   *
+   * The insets are a **container** query rather than `fluid()`, and that is a correction rather than
+   * a preference. They were interpolated on the viewport, which contradicted the argument at the top
+   * of this file: the frame's width is the container's, not the window's, so in a 350px column at a
+   * 1440px viewport the frame took the mobile ratio while the chip kept the desktop 16px inset —
+   * nearly twice what node 16:404 draws on a frame that size. It also made the `Mobile` story lie,
+   * since it pins a 375px container inside whatever viewport the test canvas happens to be.
+   *
+   * Everything in this section now switches on one axis at one threshold, which is the coherent
+   * version of the same two frames. Narrow is the default and wide the override, for the
+   * first-paint reason `.mediaFrame` sets out above.
+   *
+   * The drawn values: 12/10 on node 16:404 (350px frame), 16/14 on node 16:258 (1200px frame). The
+   * inline pair are `--spacing-sm` and `--spacing-md` exactly; the block pair have no token — the
+   * scale is fixed and has no 10 or 14 rung — so they are literals, which is honest for a value the
+   * design states once per frame rather than derives.
+   */
+  .caption {
+    /*
+     * Untracked, where every other mono run in this section takes the role's 0.1em — and it is the
+     * design's own distinction rather than a preference. Node 16:259 carries no `tracking` at all
+     * while the three pill runs are all explicitly `tracking-[1.1px]`, and the reason is legible in
+     * the copy: the caption prints a **file name**, and a tracked file name reads as spaced-out
+     * rather than as a token. `components/ModelViewer`'s badge is the same chip with the same copy
+     * and reaches the same conclusion in the same words.
+     *
+     * Measured before and after: at the drawn 46-character caption the role's 1.1px adds 50px of
+     * chip width, which is not a rounding difference.
+     *
+     * Re-pointing the custom property rather than declaring `letter-spacing`, per the note on it in
+     * `_variables.scss`: `Text` reads the property, and a `letter-spacing` here would be a single
+     * class racing another single class in the same layer. It is inherited, so setting it on the
+     * `<figcaption>` reaches the `Tag` inside without giving `Tag` a className.
+     */
+    --mono-letter-spacing: normal;
+
+    /*
+     * The type size is **left on `--body-2xs`** (`fluid(10px, 11px)`), which matches the drawn 11px
+     * on desktop and overshoots the mobile node's 9px by 1px. Named here because it is a knowing
+     * deviation and the file would otherwise look like it had not noticed.
+     *
+     * `Tag` sanctions the override — `--tag-font-size` exists for a call site drawn at a pair that
+     * is not on the scale, and `components/ModelViewer`'s badge uses `fluid(9px, 11px)`, this exact
+     * pair. It is not taken, because that badge is `_variables.scss`'s one *documented* non-consumer
+     * of this rung and the reason it gets an exception does not transfer: it is panel chrome sized
+     * against a container, where this is the micro-label role that `--body-2xs` was promoted for.
+     * The floor is 10px deliberately, and dropping a whole step below it to chase one pixel makes a
+     * chip on a phone harder to read in order to match a comp more exactly. Raised at design review.
+     */
+
+    position: absolute;
+    /*
+     * The image is a *positioned* box too — `components/Image`'s wrapper is `position: relative` —
+     * and the frame is not a stacking context, so the three children paint in tree order and the
+     * photograph covered this chip completely. It was invisible on both breakpoints, and on mobile
+     * it is the only overlay the design draws, so a phone rendered a bare photograph.
+     *
+     * Raising the overlays rather than lowering the image, because the overlays are what must stay
+     * on top by definition; and stated on both of them rather than relying on the `<ul>` being last
+     * in the DOM, which is what was silently keeping the pills correct. `z-index` is explicitly the
+     * consuming section's to set — `Tag` sets none, by design.
+     */
+    z-index: 1;
+    /*
+     * `flex`, purely to delete the line box. As a block the `<figcaption>` wraps its inline-block
+     * chip in a line box whose strut comes from the *inherited body leading*, which pushed the chip
+     * 1px down inside a 23px-tall parent and made the drawn 14px inset render as 15. A flex
+     * container has no line box, so the chip sits exactly on the inset — and the placement stops
+     * depending on a `line-height` declared somewhere else entirely.
+     */
+    display: flex;
+    inset-block-start: 10px;
+    /*
+     * Both inline insets, not just the start — the rule `.tags` below shares.
+     *
+     * An absolutely positioned box with `width: auto` and only a start inset shrink-to-fits against
+     * *containing block minus that one inset*, so a long value runs flush to the opposite edge with
+     * no gutter at all. Measured at a 375px container on a 46-character caption: the chip ended at
+     * 321.42px inside a 321.4px allowance, i.e. exactly on the edge.
+     *
+     * Setting both costs nothing until the content is long enough to wrap, because `Tag` is
+     * `inline-block` at `width: fit-content` and still hugs its text inside the spanned box.
+     */
+    inset-inline: var(--spacing-sm);
+
+    @container mediaTags (width >= #{$media-tags-inline-switch}) {
+      inset-block-start: 14px;
+      inset-inline: var(--spacing-md);
+    }
+  }
+
+  /*
+   * The pill row. 24px in from the left and 23px up from the bottom on node 16:260 — `--spacing-lg`
+   * is 24px and fixed, which is the scale's rule below its 32px cutoff, and 1px on the block axis is
+   * not a second token. 8px between the pills is `--spacing-xs`, read off the 131 → 139 → 263 run.
+   *
+   * `flex-wrap` because the repeater is unbounded: a ninth pill costs a second line rather than
+   * running off the edge. Extra lines grow *upward* on their own — the box is anchored by
+   * `inset-block-end` with no `inset-block-start`, so its bottom edge is fixed and a taller box
+   * extends into the picture rather than out through the frame's `overflow: clip`. That is why
+   * this is plain `wrap` and not `wrap-reverse`: the line order is already right, and reversing it
+   * would put the first pill on the bottom line and invert the reading order.
+   *
+   * Both inline insets, for the reason `.caption` above states in full. The pills still start at the
+   * left: a flex row's default `justify-content` is `flex-start`.
+   *
+   * ## Clipped rather than removed, below the switch
+   *
+   * The design drops the pills on mobile. This clips them to a zero-area region, which takes them
+   * out of the picture while leaving them in the accessibility tree — the reasoning is on the `<ul>`
+   * in `index.tsx`, because it is a content decision rather than a styling one.
+   *
+   * `clip-path` alone is the mechanism. The row is already out of flow, so there is no space to
+   * reclaim, and `clip-path` clips hit-testing as well as paint — verified: `elementFromPoint` at
+   * the row's centre returns the `<img>` below the switch and the `<ul>` above it. The wide branch
+   * is then a single `clip-path: none` rather than six declarations undoing five.
+   *
+   * Two things the shorter version of this note got wrong, kept because they are the reasons not to
+   * "tidy" this later:
+   *
+   * The canonical recipe's `width: 1px; height: 1px; overflow: hidden` are **not** only there to
+   * collapse an in-flow box. They also keep the element out of the *spatial* model, and `clip-path`
+   * does not: the layout box is unchanged, and accessibility-node bounds come from the layout box.
+   * Measured on the mobile story, the clipped row still reports a 249×68 rect over the bottom of a
+   * 297×169 frame — so explore-by-touch speaks the pills, a magnifier following the AX cursor pans
+   * to a region that paints nothing, and find-in-page matches text it cannot highlight. All three
+   * are the standard sr-only trade and none is a failure; the first is arguably wanted here. If they
+   * ever need eliminating, the version for an out-of-flow box is `inline-size`/`block-size: 1px`
+   * alongside the clip, undone in the wide branch — two declarations, not six.
+   *
+   * And the clip is only safe **while the subtree stays inert**. Nothing here is focusable today
+   * because `Tag` renders a bare `<span>`. "Location Pills" is exactly the field that grows an
+   * `href` one day, and the moment a pill becomes a `Link` this leaves an invisible tab stop.
+   *
+   * Clipped is the default and visible is the override, for the same first-paint reason the frame's
+   * ratio is that way round.
+   */
+  .tags {
+    position: absolute;
+    // Above the photograph. See `.caption` — these were only painting on top by accident of being
+    // last in the DOM, which is one JSX reorder away from the bug the caption actually had.
+    z-index: 1;
+    inset-block-end: var(--spacing-lg);
+    inset-inline: var(--spacing-lg);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    clip-path: inset(50%);
+
+    @container mediaTags (width >= #{$media-tags-inline-switch}) {
+      clip-path: none;
+    }
+  }
+}
