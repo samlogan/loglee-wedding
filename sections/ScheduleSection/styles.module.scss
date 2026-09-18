@@ -479,111 +479,41 @@ $schedule-intro-measure: 20rem;
   }
 
   /*
-   * The location chip — a bordered pill, flush to the row's right edge.
+   * The location chip — `components/Tag` in its `outline` treatment, flush to the row's right edge.
    *
-   * **Deliberately not a shared component, and this is the decision rather than the absence of
-   * one.** A bordered uppercase mono pill is generic enough to belong in `components/`, and there
-   * is no `Tag` / `Chip` / `Badge` there today — `Button` is the only chip-shaped thing in the repo
-   * and is the wrong reuse, because this is not interactive and `Button`/`Link` render a `<button>`
-   * or an `<a>`, which would put a fake control in the tab order. Verified rather than assumed:
-   * `border(-color): currentColor` has exactly two callers repo-wide, this rule and
-   * `components/SocialsShare`, and that one is an icon *button*.
+   * **This rule used to hold the chip itself**, and the long note it carried predicted the component
+   * that now exists: a presentational `<span>` taking `label`, `size`, `theme` and a
+   * `variant: 'outline' | 'filled'`, owning the border, radius, padding and type, and leaving this
+   * rule holding only `grid-area`, `justify-self` and the container-query re-placement. That is
+   * exactly what is left below.
    *
-   * Name the near-miss, though, because "one instance" is doing a lot of work above:
-   * `components/ModelViewer`'s `.badge` is the same object in the other treatment — `mono-font()`,
-   * `--radius-sm`, `--fg-accent`, a `fluid()` padding pair, `width: fit-content`, even the same
-   * `overflow-wrap: anywhere` for the same intrinsic-sizing reason — differing only in fill versus
-   * stroke. It is arguably already the second. So the trigger is **the third**, and what it should
-   * produce is `components/Tag`, a presentational `<span>` taking `label`, `size`, `theme` and a
-   * `variant: 'outline' | 'filled'` covering both, owning the border, radius, padding and type, and
-   * leaving this rule holding only `grid-area`, `justify-self` and the container-query re-placement.
-   * Copying the block below into a third module instead is the outcome this note exists to prevent.
+   * The trigger the note set — "the third" instance — fired several times over. `components/Tag`
+   * absorbed this rule and `components/ModelViewer`'s `.badge`, which was the near-miss second in the
+   * filled treatment rather than the outline one, and the Lodge and Stay pages draw five more between
+   * them.
    *
-   * `border-color: currentColor` rather than a second token: the design draws the stroke and the
-   * label in the same ink (`#1e4632`, which is `--fg-accent` on the light theme), so tying them
-   * together means the dark theme's `--signal-300` moves both by construction.
+   * Everything the old block reasoned about lives in `components/Tag/styles.module.scss` and is
+   * unchanged by the move, measured rather than assumed — same 9×5 padding at desktop and 7×4 at
+   * mobile, same 1px `currentColor` stroke, same `--radius-sm`, same `--body-2xs`, same
+   * `--mono-line-height: normal`, same `overflow-wrap: anywhere`. Three of those are worth restating
+   * because they are the reasons the chip measures what it measures, and they are now stated once for
+   * every chip in the system rather than here:
    *
-   * The padding anchors are the design's inset **minus the 1px border**, following the convention
-   * the button tokens set out: Figma hangs a stroke outside the padding box and we put it inside,
-   * so 10×6 drawn is 9×5 here and the rendered box matches the drawn one.
+   * - The padding anchors are the design's inset **minus the 1px border**. `Tag` subtracts the stroke
+   *   from the padding at every size, so an outline chip and a filled one draw the same outer box.
+   * - `--mono-line-height` is re-pointed to `normal`, because on a chip the line box *is* the drawn
+   *   box and the comp's 27px comes from the font's own metrics.
+   * - `overflow-wrap: anywhere`, not `break-word`: only `anywhere` reduces `min-content`, and this is
+   *   the one item in the row sized from its own intrinsic width rather than from its track.
    *
-   * `--radius-sm` is 4px against the drawn 3px — the nearest step on a fixed scale, and a pixel of
-   * corner on a ~27px pill. Left as the token.
-   *
-   * The size and the leading are **not** left to the body scale, because on this element they are
-   * the box rather than the type. The chip's height is `2 × (padding + border) + line box`, so both
-   * feed it directly:
-   *
-   * - `--body-xs` is fluid(11px, 12px) against the drawn 10/11px (1:483, 1:337) — a pixel over at
-   *   both ends, and at the wide anchor that is a genuine miss rather than the 1280-against-1440
-   *   undershoot. The step below the floor of the body scale is now `--body-2xs`, promoted for
-   *   exactly this: `PlayerCard`, `StatMeter` and `FieldCheckbox` had each computed
-   *   `fluid(10px, 11px)` under a local name, and this rule being the fourth is the threshold
-   *   `StatMeter`'s note named. One token, four callers, one place to retune.
-   * - `--body-line-height` is 1.5, the paragraph ratio. Figma sets `leading-[normal]` on every mono
-   *   run in the file, which for JetBrains Mono is 1.32 — so 1.5 inflated the pill by ~2px at each
-   *   end and rendered it **30px tall against the drawn 27** at 1440. `normal` rather than a hard
-   *   1.32 so the number comes from the font's own metrics, exactly as the design's does; the
-   *   fallback stack in `mono-font()` then carries its own.
-   *
-   * Only the chip takes this. `.eyebrow` and `.time` re-point `--mono-line-height` to
-   * `--body-line-height` — their line box is surrounding rhythm rather than a drawn edge, which is
-   * how `HeaderDisplaySection.metaItem`, `PlayerCard` and `StatMeter` set theirs.
-   *
-   * The count this note used to keep — eleven call sites and three answers for one type role, logged
-   * as the missing `--mono-line-height` token — closed with MAM-1927. The token exists, `Text`'s
-   * `variant="mono"` consumes it, and the three answers are now one default (1.3) and two named
-   * exceptions stated at the elements that need them.
+   * `location` is also capped in the schema (`Rule.max`) — the content-model half of the same
+   * argument: this is a short place label, not a sentence.
    */
   .location {
-    /*
-     * `normal`, and the one rule in the repo that re-points the role's leading *down* rather than up.
-     *
-     * `--mono-line-height` is a hard 1.3 so the role renders the same when the fallback face loads
-     * instead of JetBrains Mono. That is right everywhere the line box is surrounding rhythm and
-     * wrong here, where it *is* the drawn box: the chip's height is `2 × (padding + border) + line
-     * box`, and the comp's own 27px comes from the font's `normal` (1.32 for JetBrains Mono). A
-     * rounded 1.3 would draw it 0.22px short at the wide end — invisible, and still the wrong number
-     * to pin a measured box to.
-     */
-    --mono-line-height: normal;
-
     grid-area: 1 / 2;
     // Flush right. The track is `auto`-sized so this is usually a no-op, but it keeps the chip on
     // the row's right edge rather than stretching if anything ever widens the track.
     justify-self: end;
-
-    border: 1px solid currentColor;
-    border-radius: var(--radius-sm);
-    color: var(--fg-accent);
-    margin: 0;
-    /*
-     * `anywhere`, not the `break-word` every sibling here declares, and the difference is the whole
-     * point: **only `anywhere` reduces `min-content`**. `ModelViewer`'s `.badge` had already reached
-     * the same conclusion from the same corner — a `fit-content` chip whose cap resolves against the
-     * longest unbreakable run unless the wrap rule participates in intrinsic sizing — and this rule
-     * missed the precedent. Both break a long word once a line box is
-     * too narrow for it, but `break-word` leaves the element's intrinsic minimum at the width of
-     * the unbroken word, and this is the one item in the row whose box is sized from its own
-     * intrinsic width rather than from its track — `justify-self: end` above makes it `fit-content`
-     * instead of `stretch`.
-     *
-     * So the `minmax(0, …)` on `.event` shrinks the *track* and, with `break-word`, the *item*
-     * ignores it. Measured at 320px with a 57-character unbreakable location: the track resolved to
-     * 216px, the chip's border box to 466.59px, and because it is `justify-self: end` the 226px of
-     * overflow went **left, off the container** — content silently lost rather than scrolled to,
-     * which is why no reflow check caught it (`scrollWidth` never moved). With `anywhere` the chip
-     * takes the 216px it is given and wraps to two lines.
-     *
-     * Costs nothing in the normal case, which was measured too: every box in a populated row is
-     * byte-identical either way, because nothing wraps until it has to.
-     *
-     * `location` is also capped in the schema (`Rule.max`) — belt and braces, and the cap is the
-     * content-model half of the same argument: this is a short place label, not a sentence.
-     */
-    overflow-wrap: anywhere;
-    padding: #{fluid(4px, 5px)} #{fluid(7px, 9px)};
-    text-transform: uppercase;
 
     @container scheduleEvents (width >= #{$schedule-event-inline-switch}) {
       // Out from beside the time, over to the far side of the title's line. This one line is the

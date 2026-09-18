@@ -1,0 +1,270 @@
+/*
+ * The boxed mono chip.
+ *
+ * ## Nothing here names a colour
+ *
+ * Every paint below resolves through `[data-theme]` in `tools/sass/global/_variables.scss`. A chip
+ * that sets `theme` writes the attribute on **itself** (`Text`'s `theme` prop), so the whole theme
+ * block re-points beneath one element and the chip paints from the other theme while the page keeps
+ * its own — the mechanism `sections/TwoColumnListSection` uses on its panel, applied to a box the
+ * size of a word.
+ *
+ * That is what lets one component draw the light chip over the Lodge photographs and the dark chip
+ * over the Stay ones. Measured on both, the label clears WCAG AAA against its own fill by a wide
+ * margin — 16.8:1 for stone/900 on stone/50 and 9.5:1 for stone/50 on pine/600 — and the fill is
+ * fully opaque, so neither number depends on the photograph underneath. The `OverPhotograph` story
+ * asserts both halves: the ratio, and `alpha === 1`.
+ *
+ * ## Positioning is the consuming section's
+ *
+ * This file sets no `position`, no inset and no `z-index`. A chip over media is placed by whatever
+ * owns the media. The idiom to copy:
+ *
+ *   .mediaFrame { position: relative; }
+ *   .caption    { position: absolute; inset-block-start: …; inset-inline-start: …; }
+ *
+ * with `.caption` passed as `Tag`'s `className` and holding *only* those lines. If a consuming rule
+ * grows a `padding`, a `border` or a `font-size`, the thing it wants is a `Tag` prop — or, for a
+ * genuinely local value, a re-point of one of the custom properties below.
+ *
+ * ## The three re-pointable properties, and why they are spelt in two halves
+ *
+ * A consuming class overrides an appearance by setting `--tag-ink`, `--tag-fill` or
+ * `--tag-font-size`. **This file never sets any of those three.** It sets `--tag-ink-default` and
+ * friends, and reads the pair as `var(--tag-ink, var(--tag-ink-default))`.
+ *
+ * That indirection is the whole point, and it is not decoration. Both the consuming class and the
+ * variant rule here are a single class inside `@layer defaults`, so if they set the *same* property
+ * they tie on specificity and the winner comes down to CSS-module import order — which nothing in
+ * the build guarantees. Splitting the consumer's property from the component's default means there
+ * is no race to lose: an unset `--tag-ink` falls through to the default, and a set one wins
+ * unconditionally.
+ *
+ * (The padding pair is reachable the same way through `size`, and the border width through
+ * `variant`. Those are props, not properties, because they have to stay a closed set.)
+ */
+
+@layer defaults {
+  /*
+   * The filled chip's ink, which is the one value in this component that is **not** the same token on
+   * both themes. Every filled chip the design draws is pine on light (nodes 16:137, 16:258, 16:644,
+   * all `#1e4632` = `--fg-accent`) and off-white on dark (16:152 and the three pills, all `#f3f1ea` =
+   * `--fg-default`). No single existing token has that pair, so the component states it.
+   *
+   * ## Why this is an inherited property on the theme element, not a descendant selector
+   *
+   * The obvious spelling is `[data-theme='dark'] .variant_filled { … }`, and it is wrong in two ways
+   * that both bite here.
+   *
+   * A descendant combinator asks "is there a dark ancestor?", which is not the question. The question
+   * is "what is the *nearest* theme?" — and those differ the moment themes nest, which they do in
+   * this codebase: `sections/TwoColumnListSection` puts the *inverse* theme on an inset panel, so a
+   * chip inside a light panel on a dark page has both a light and a dark ancestor and a selector
+   * cannot tell which is closer. Declaring an inherited custom property on the theme element instead
+   * makes the cascade answer it — the nearest `[data-theme]` wins by inheritance, which is exactly how
+   * `--fg-default` itself resolves, and how the chip's own `theme` prop (which writes the attribute on
+   * the chip) resolves too, with no extra rule.
+   *
+   * It also keeps the specificity flat. A descendant selector is two selectors' worth, which would
+   * have quietly outranked `ModelViewer.badge`'s one-class override and changed a shipped colour.
+   *
+   * `:global` because CSS Modules would otherwise hash an attribute selector's companion class; there
+   * is no class here to hash, and the property name is namespaced instead.
+   */
+  :global([data-theme='light']) {
+    --tag-filled-ink: var(--fg-accent);
+  }
+
+  :global([data-theme='dark']) {
+    --tag-filled-ink: var(--fg-default);
+  }
+
+  .tag {
+    /*
+     * `--body-2xs` is fluid(10px, 11px) against the 11px every chip in the file is drawn at. It is
+     * the rung below the body scale's floor, promoted for precisely this role.
+     *
+     * Held in a property of its own because one call site is sized against a *container* rather than
+     * the viewport: `ModelViewer`'s badge is panel chrome at fluid(9px, 11px).
+     */
+    --tag-font-size-default: var(--body-2xs);
+    /*
+     * The `outline` pair is the default, so `filled` below overrides rather than the other way
+     * round. `--fg-accent` is the design's own ink for a stroked chip, and tying the stroke to it
+     * with `currentColor` means a theme change moves both by construction.
+     */
+    --tag-fill-default: transparent;
+    --tag-ink-default: var(--fg-accent);
+    /*
+     * Zero, and consumed by the padding `calc()` below rather than by a `border` shorthand — the
+     * variants that draw a stroke set it to `1px` and declare the border themselves. Doing it this
+     * way keeps one invariant: at a given `size` the **outer box is the same** whether or not the
+     * chip has a stroke, because the stroke is taken out of the padding.
+     *
+     * That is the convention the button tokens already state. Figma hangs a stroke outside the
+     * padding box and CSS puts it inside, so a drawn 10×6 inset is 9×5 of padding plus 1px of border
+     * here, and the rendered box matches the drawn one.
+     */
+    --tag-border-width: 0px;
+    /*
+     * `normal`, and one of only two rules in the repo that re-points the mono role's leading *down*
+     * rather than up. (`ScheduleSection.location` was the other; it is now this.)
+     *
+     * `--mono-line-height` is a hard 1.3 so the role renders the same when the fallback face loads
+     * instead of JetBrains Mono. That is right everywhere the line box is surrounding rhythm and
+     * wrong here, where it **is** the drawn box: a chip's height is `2 × (padding + border) + line
+     * box`, and the comp's own 27px comes from the font's `normal` (1.32 for JetBrains Mono, which
+     * is what Figma's `leading-[normal]` resolves to on every mono run in the file). A rounded 1.3
+     * draws it a fifth of a pixel short — invisible, and still the wrong number to pin a measured
+     * box to.
+     *
+     * Note `inherit` does **not** work here: on a custom property `inherit` resolves to the parent's
+     * `--mono-line-height`, not to the parent's `line-height`.
+     */
+    --mono-line-height: normal;
+    /*
+     * The loud register, retuned for this component only.
+     *
+     * `Text` selects tracking from the weight, so `weight="bold"` would otherwise take
+     * `--mono-letter-spacing-loud` (0.2em). The drawn pills are JetBrains Mono Bold at 1.1px on 11px
+     * — exactly 0.1em, the *quiet* value — so a bold chip is re-pointed onto it. Same standoff
+     * `PlayerCard`'s header runs and `FieldCheckbox`'s indicator resolve the same way; this is the
+     * third, which is why it is settled once here rather than at each pill.
+     */
+    --mono-letter-spacing-loud: var(--mono-letter-spacing);
+
+    /*
+     * `inline-block` so the padding and the width mean something: a bare inline box ignores
+     * `width` and its vertical padding does not grow the line box.
+     *
+     * Both migrated call sites are blockified by their context anyway — one is a grid item, the
+     * other is absolutely positioned — so this changes nothing for them and makes a standalone chip
+     * behave.
+     */
+    display: inline-block;
+    /*
+     * `fit-content`, so the chip is as wide as its word wherever it lands, including in a grid track
+     * or a flex line that would otherwise stretch it.
+     */
+    width: fit-content;
+
+    border-radius: var(--radius-sm);
+    /*
+     * The drawn inset, less the stroke. `calc()` on a `clamp()` is exact rather than approximate:
+     * `fluid()` interpolates linearly between two anchors, so subtracting a constant shifts both
+     * anchors and leaves the slope alone — `calc(fluid(8px, 10px) - 1px)` is the same computed value
+     * at every viewport width as `fluid(7px, 9px)` would be.
+     */
+    padding-block: calc(var(--tag-pad-block) - var(--tag-border-width));
+    padding-inline: calc(var(--tag-pad-inline) - var(--tag-border-width));
+    /*
+     * Consumer property first, component default as the fallback. See the note at the top of the
+     * file: this is what makes a call-site re-point win without depending on module import order.
+     */
+    background-color: var(--tag-fill, var(--tag-fill-default));
+    color: var(--tag-ink, var(--tag-ink-default));
+    font-size: var(--tag-font-size, var(--tag-font-size-default));
+    /*
+     * `anywhere`, not the `break-word` that `body` already hands down, and the difference is the
+     * whole point: **only `anywhere` reduces `min-content`.** This box is sized from its own
+     * intrinsic width (`fit-content` above), so with `break-word` the cap resolves against the
+     * longest unbreakable run — a place name or a file name, i.e. the whole string — and the chip
+     * silently overflows its container instead of wrapping.
+     *
+     * Both migrated call sites had reached this conclusion independently, from opposite corners:
+     * `ScheduleSection.location` measured 226px of content lost off the left of a 320px viewport,
+     * and `ModelViewer.badge` measured a plausible file name clipped at the edge of an
+     * `overflow: hidden` arch. Costs nothing in the normal case — nothing wraps until it has to.
+     */
+    overflow-wrap: anywhere;
+  }
+
+  // ------------------
+  // Variants
+  //
+  // `outline` keeps the defaults above and adds the stroke; `filled` swaps the pair for an opaque
+  // surface. Declared in this order so a later single-class rule does not need `!important` to win.
+
+  .variant_outline {
+    --tag-border-width: 1px;
+
+    border: var(--tag-border-width) solid currentColor;
+  }
+
+  .variant_filled {
+    /*
+     * An opaque surface, which is what makes the chip legible over anything: the label's contrast is
+     * measured against a colour this component chose rather than against whatever pixel of photograph
+     * lands underneath. Measured over a hard-edged black-and-white ramp, 9.5:1 on light and 9.4:1 on
+     * dark — both WCAG AAA for small text, and neither number moves with the image.
+     *
+     * The ink is theme-conditional and the fill is not, which looks asymmetric and is what the design
+     * draws: `--bg-default` is already stone/50 on light and pine/600 on dark, so one token covers
+     * both fills, where no single token covers pine-on-light *and* off-white-on-dark. See
+     * `--tag-filled-ink` above.
+     *
+     * Note that dark never reaches for `--fg-accent`, which is the point of splitting it: that token
+     * is signal/300 on the dark theme — the colour `_variables.scss` reserves for interactive states,
+     * and the last thing a chip that is deliberately not a control should be wearing.
+     */
+    --tag-fill-default: var(--bg-default);
+    --tag-ink-default: var(--tag-filled-ink, var(--fg-accent));
+  }
+
+  /*
+   * A filled chip that also draws a hairline — the treatment the design uses for a dark caption over
+   * a dark photograph (node 16:152), where the fill alone does not separate the box from the image.
+   *
+   * 30% of `--stroke-cards`, which is the design's own `rgba(243, 241, 234, 0.3)` on the dark theme
+   * expressed through the token rather than as a literal. `color-mix` against `transparent` rather
+   * than `opacity`, so the mute composites against the chip's fill and not against the photograph —
+   * the mechanism `TwoColumnListSection` documents at length.
+   *
+   * Two classes, so it beats `.variant_filled` above without `!important`. Applied only to `filled`;
+   * `outline` already is a border.
+   */
+  .variant_filled.bordered {
+    --tag-border-width: 1px;
+
+    border: var(--tag-border-width) solid color-mix(in srgb, var(--stroke-cards) 30%, transparent);
+  }
+
+  // ------------------
+  // Sizes
+  //
+  // The drawn inset at each step, wide anchor from the desktop comp and narrow anchor scaled with
+  // it. These are the *box*, not the type — see the note on `size` in `index.tsx`.
+
+  .size_sm {
+    // 8×4 — the caption chip (16:137, 16:258, 16:644) and `ModelViewer`'s badge.
+    --tag-pad-block: #{fluid(3px, 4px)};
+    --tag-pad-inline: #{fluid(6px, 8px)};
+  }
+
+  .size_md {
+    // 10×6 — the schedule's location chip and the bordered venue caption (16:152).
+    --tag-pad-block: #{fluid(5px, 6px)};
+    --tag-pad-inline: #{fluid(8px, 10px)};
+  }
+
+  .size_lg {
+    // 12×8 — the location pills over the Lodge aerial (16:261, 16:263, 16:265).
+    --tag-pad-block: #{fluid(6px, 8px)};
+    --tag-pad-inline: #{fluid(10px, 12px)};
+  }
+
+  /*
+   * Forced colours flattens every background, so a filled chip loses the one thing that distinguishes
+   * it from what it sits on. An outline is drawn instead, so the shape survives as shape — the same
+   * move `StatMeter`'s track and `ModelViewer`'s arch make, and the rule `ModelViewer.badge` used to
+   * carry for itself before it became a `Tag`.
+   *
+   * Not subtracted from the padding, deliberately: under forced colours there is no fill to keep the
+   * box honest against, and growing by a pixel is preferable to eating one of only three or four.
+   */
+  @media (forced-colors: active) {
+    .variant_filled {
+      border: 1px solid CanvasText;
+    }
+  }
+}

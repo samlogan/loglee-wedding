@@ -2,6 +2,7 @@ import type { FC } from 'react';
 
 import Container from '@/components/Container';
 import Section from '@/components/Section';
+import Tag from '@/components/Tag';
 import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import TextTitle from '@/components/TextTitle';
@@ -121,11 +122,10 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
                 <div className={classNames(styles.dayInner, { [styles.dayInner_split]: hasEvents })}>
                   <div className={styles.summary}>
                     {/*
-                     * Raw elements, not `Text`, for the three mono labels in this section (eyebrow,
-                     * time, location). `Text` has no `mono` variant — logged as MAM-1927 — so the
-                     * family is re-declared in the module, and once the module owns the family,
-                     * size, weight and tracking, routing the element through `Text` would add a
-                     * class that styles nothing. `HeaderDisplaySection.metaItem` does the same.
+                     * The three mono labels in this section (eyebrow, time, location) all go through
+                     * a component now. `Text`'s `variant="mono"` owns the family, leading and
+                     * tracking for the first two; the location chip is `components/Tag`, which owns
+                     * its box as well.
                      *
                      * Sentence case in the CMS, capitals from CSS: short literal all-caps runs are
                      * what screen readers most often spell out letter by letter, and
@@ -253,14 +253,22 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
                             </Text>
                           )}
                           {Boolean(event.location?.trim()) && (
-                            <Text
-                              as="p"
+                            /*
+                             * `Tag`, not a chip re-declared here. The old `.location` rule carried a
+                             * note predicting exactly this component and naming the conditions for
+                             * building it; those conditions are met and the rule now holds nothing
+                             * but placement. `outline` at `md` is the treatment and step it was
+                             * already drawn at, to the pixel.
+                             *
+                             * No `weight`: the mono role's default is Medium, which is what this was
+                             * passing explicitly.
+                             */
+                            <Tag
                               className={styles.location}
-                              size="2xs"
-                              text={event.location}
-                              textTransform="uppercase"
-                              variant="mono"
-                              weight="medium"
+                              label={event.location}
+                              size="md"
+                              uppercase
+                              variant="outline"
                             />
                           )}
                           {/*

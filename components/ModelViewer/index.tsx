@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useState } from 'react';
 
 import Image from '@/components/Image';
+import Tag from '@/components/Tag';
 import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
 import type { ModelClipNames, ModelRestRole } from '@/helpers/modelClips';
@@ -433,7 +434,17 @@ const ModelViewer = (props: ModelViewerProps) => {
           />
         ) : null}
 
-        {badge ? <Text as="span" className={styles.badge} text={badge} variant="mono" weight="regular" /> : null}
+        {/*
+         * `Tag`, not a chip re-declared here. This rule was the near-miss second instance the note on
+         * `ScheduleSection.location` named — the same object in the filled treatment rather than the
+         * outline one — and `components/Tag` now owns the fill, radius, padding and type for both.
+         * `.badge` keeps only its placement inside the arch and two documented re-points.
+         *
+         * Not uppercased and not tracked: the chip prints a file name, which is the one string here
+         * that has to be reproduced exactly. `sm` is the caption step, 8×4 at desktop — what this was
+         * already drawn at.
+         */}
+        {badge ? <Tag className={styles.badge} label={badge} size="sm" variant="filled" weight="regular" /> : null}
       </div>
 
       {readout ? (
