@@ -1,0 +1,171 @@
+/*
+ * The home hero: the couple's names stacked in oversized display type, over a meta row that is two
+ * lines on a phone and one split line on a desktop. Nodes 1:63 (1280px frame) and 1:112 (390px).
+ *
+ * ## The one switch, and why it is a container query
+ *
+ * Everything that scales here scales through `fluid()` — the display type, the meta type, the gap
+ * between them. What `fluid()` cannot interpolate is a change of *shape*: the meta row turning from a
+ * stack into a split line, and the street dropping out of it. That needs a query, and it is a
+ * **container** query on the section's own content box, for the reason `headerDisplaySection` gives:
+ * in the app the two are equivalent, because the section is full width, and keying it to the
+ * container is what lets the `Mobile` story reach the phone layout by rendering in a 375px column
+ * rather than by owning the window.
+ *
+ * 60rem, the same value `$header-display-inline-switch` uses, and not by accident — the two page-
+ * opening sections sit under the same bar and should change shape at the same width. It is also
+ * comfortably clear of what the split line has to hold. Measured at 1025px, the first viewport whose
+ * content box reaches 60rem: the drawn dates-and-venue line is 332px and the street-and-travel line
+ * 398px, so they share the 960px line with over 200px to spare. Below the switch the street is
+ * dropped because the design drops it (1:112), not because it would not fit.
+ *
+ * `rem` rather than `px`, for the WCAG 1.4.4 reason `$header-inline-switch` states: a reader who
+ * raises their root font size gets the stacked layout at a width where the split one would crowd.
+ */
+$hero-inline-switch: 60rem;
+
+@layer defaults {
+  /*
+   * The query container is the `Container` element, via `containerClassName`, so the queried inline
+   * size is the content width the design measures against — frame minus gutters. `inline-size` and
+   * not `size`: the hero's height comes from its content, and containing it would collapse it.
+   * `headerDisplaySection`'s `.container` records the one cost of that containment — it collapses in
+   * a shrink-to-fit ancestor — which does not arise for a section rendered as a block child of
+   * `<main>`.
+   */
+  .container {
+    container: hero / inline-size;
+  }
+
+  // One partner per line, as drawn — "SAM &" over "LAUREN". See the note on the heading in `index.tsx`.
+  .name {
+    display: block;
+  }
+
+  .meta {
+    display: flex;
+    /*
+     * Stacked is the default and the split line the override, mobile-first, so the first style pass
+     * paints the phone layout rather than an unstyled one — the same ordering
+     * `headerDisplaySection`'s `.row` explains.
+     */
+    flex-direction: column;
+    /*
+     * Between the two stacked lines: drawn 6px (1:115 → 1:117), where `--spacing-xs` is 8px. Most of
+     * the extra 2px is not overshoot. The drawn line boxes are taller than these — the dates line is
+     * set at 1.3 (19.5px on 15px) against the heading tier's 1.2 here, and the mono line at `normal`
+     * (15px on 11px) against the role's 1.3 — so between them the glyphs sit ~1px nearer the gap
+     * than the drawn ones do, and 8px of gap lands the ink within a pixel of where the comp's 6px
+     * does. `--spacing-xxs` (4px) would land it 3px short.
+     *
+     * Also the row gap when the split line wraps on a desktop (see `flex-wrap` below).
+     */
+    gap: var(--spacing-xs);
+    /*
+     * Between the names and the meta row: 15px on the phone frame (the 6px `gap` plus the 9px `pt` on
+     * 1:115) and 22px on the desktop one (1:63's `gap`). Two drawn values for one separation, which
+     * is what `fluid()` is for; no step on the spacing scale is 15 at one end and 22 at the other.
+     */
+    padding-top: #{fluid(15px, 22px)};
+
+    @container hero (width >= #{$hero-inline-switch}) {
+      /*
+       * `flex-end`, per Figma's `items-end` on 1:66: the two lines share a bottom edge, the taller
+       * dates line (24px) and the mono line (17px) hanging off the same baseline region.
+       */
+      align-items: flex-end;
+      /*
+       * `wrap`, so a street or travel note long enough to crowd the dates moves beneath them whole
+       * rather than squeezing both halves into ragged columns. `.directions` carries the
+       * `margin-inline-start: auto` that keeps it on the right edge either way.
+       */
+      flex-flow: row wrap;
+      // The least the two halves may close to before the line wraps. The comp leaves ~420px between
+      // them at 1280px, so this only matters for long copy; `--spacing-lg` is the step layout gaps
+      // between inline blocks use.
+      column-gap: var(--spacing-lg);
+    }
+  }
+
+  /*
+   * The dates-and-venue line — Archivo Medium, 15px mobile / 20px desktop, uppercase (1:116, 1:68).
+   *
+   * The same three overrides `ScheduleSection`'s `.date` carries for the same drawn role, and for the
+   * same reasons:
+   *
+   * 1. `heading-font()`. `Text.variant_heading` states no `font-family` — it relies on the global
+   *    `h1`–`h6` rule — so on this `<p>` it would otherwise render in the body family.
+   * 2. `--heading-xs` re-pointed to the drawn pair. The stock step is `fluid(20px, 24px)`: 5px over on
+   *    a phone, where it would push the line past the 335px a 375px viewport leaves.
+   * 3. `--heading-letter-spacing` re-pointed to the drawn tracking — 0.2px on 20px (1:68) — against
+   *    the tier's -0.02em, which would pull the uppercase run visibly tighter than the comp.
+   *
+   * Re-pointed rather than declared: `Text`'s `.variant_heading.size_xs` owns `font-size` at a
+   * specificity a single class here cannot beat, and it reads these two properties — so setting them
+   * on the same element changes what it resolves to without a fight. `--heading-line-height` (1.2) is
+   * left alone: it is exact on desktop (24px on 20px), and the note on `.meta`'s gap accounts for the
+   * 1.5px it gives up on a phone.
+   */
+  .summary {
+    @include heading-font();
+
+    --heading-xs: #{fluid(15px, 20px)};
+    --heading-letter-spacing: 0.01em;
+
+    /*
+     * A flex item's automatic minimum is its `min-content` width, and the inherited
+     * `overflow-wrap: break-word` does not reduce it — so without this an unbroken run (a venue name
+     * pasted without spaces) would push the split line past the viewport. The WCAG 1.4.10 case
+     * `headerDisplaySection`'s `.metaItem` measured.
+     */
+    min-width: 0;
+  }
+
+  /*
+   * The street-and-travel line. Its type is entirely `Text` props — see the note in `index.tsx` — so
+   * this rule is layout only.
+   */
+  .directions {
+    min-width: 0;
+
+    @container hero (width >= #{$hero-inline-switch}) {
+      // Against the right edge whether it shares the line with the dates or has wrapped beneath them.
+      margin-inline-start: auto;
+      /*
+       * Right-aligned as a block, so a line long enough to wrap inside itself keeps its second line
+       * against the right edge too. `Text`'s `alignment` prop cannot say this: it applies at every
+       * width, and on a phone the line is left-aligned under the dates.
+       */
+      text-align: right;
+    }
+  }
+
+  /*
+   * The street is what the phone layout drops (1:112 keeps only "90 MIN SOUTH OF SYDNEY"), so a line
+   * holding nothing else is dropped with it — hidden, rather than left as an empty `<p>` taking the
+   * stack's 8px gap under the dates.
+   */
+  .directions_streetOnly {
+    display: none;
+
+    @container hero (width >= #{$hero-inline-switch}) {
+      display: block;
+    }
+  }
+
+  /*
+   * Hidden by default and shown above the switch, the mobile-first order `.meta` uses. The separator
+   * after the street is inside this span, so it goes with it.
+   *
+   * `display: none` rather than a visually-hidden clip, deliberately: the street is dropped from the
+   * phone layout, not moved out of sight, and a screen reader that announced a street the page does
+   * not show would be describing a different layout from the one on screen.
+   */
+  .street {
+    display: none;
+
+    @container hero (width >= #{$hero-inline-switch}) {
+      display: inline;
+    }
+  }
+}
