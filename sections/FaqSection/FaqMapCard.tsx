@@ -7,7 +7,7 @@ import type { IFaqMapCard } from '@/tools/sanity/schema/sections/faqSection';
 
 import styles from './styles.module.scss';
 
-interface FaqMapCardProps extends IFaqMapCard {
+export interface FaqMapCardProps extends IFaqMapCard {
   className?: string;
   /**
    * The theme the **bottom bar's contents** resolve against, which is the inverse of the page's.
@@ -88,18 +88,29 @@ const FaqMapCard = (props: FaqMapCardProps) => {
         /*
          * `title` is the frame's accessible name and is **required** — an untitled iframe is an
          * unnamed landmark that a screen reader announces as "frame", with no way to know whether
-         * entering it is worth it (WCAG 4.1.2). The address is the most useful name available;
-         * `badge` is the fallback and a bare "Map" the last resort.
+         * entering it is worth it (WCAG 4.1.2).
+         *
+         * "Map of <address>" rather than the bare address, because a name should describe the
+         * embedded *document*. The address alone is also rendered as visible text a few pixels below
+         * in `.mapBar`, so a screen-reader user would otherwise hear the same string twice in a row
+         * with nothing relating the two. `badge` is the fallback and a bare "Map" the last resort.
          *
          * `loading="lazy"` because the card is below the fold on both comps, and the embed is a
          * third-party document — the single heaviest thing this section can pull in.
+         *
+         * `sandbox` states the three capabilities a maps embed actually needs and denies the rest —
+         * notably `allow-top-navigation`, so a compromised or mis-pasted embed cannot navigate the
+         * page out from under the reader. `allow-same-origin` is not the escape hatch it looks like
+         * here: the frame is cross-origin, so it grants the document its *own* origin rather than
+         * ours, which is what its tiles and storage need.
          */
         <iframe
           className={styles.mapEmbed}
           src={embedUrl}
-          title={address?.trim() || badge?.trim() || 'Map'}
+          title={address?.trim() ? `Map of ${address.trim()}` : badge?.trim() || 'Map'}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
+          sandbox="allow-scripts allow-same-origin allow-popups"
         />
       )}
       {/*

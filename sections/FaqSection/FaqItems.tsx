@@ -4,6 +4,7 @@ import Accordion from '@/components/Accordion';
 import Tag from '@/components/Tag';
 import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
+import classNames from '@/helpers/classNames';
 import formatOrdinal from '@/helpers/formatOrdinal';
 import type { IFaqSection } from '@/tools/sanity/schema/sections/faqSection';
 
@@ -25,12 +26,22 @@ import styles from './styles.module.scss';
  * it — hence `ariaHidden` below, which is also why `formatOrdinal` exists as an element rather than a
  * CSS counter. See that helper's docblock.
  */
-const FaqItems = ({ faqItems }: { faqItems: IFaqSection['faqItems'] }) => (
-  <div className={styles.accordionContainer}>
+export interface FaqItemsProps {
+  faqItems: IFaqSection['faqItems'];
+  className?: string;
+}
+
+const FaqItems = ({ faqItems, className }: FaqItemsProps) => (
+  <div className={classNames(styles.accordionContainer, className)}>
     <Accordion>
       {faqItems?.map((item, index) => (
         <Accordion.Item
-          key={index}
+          /*
+           * The Sanity array key, falling back to the position only for mock data that has none.
+           * `components/Accordion` tracks the open item by index, so a position key makes a reorder
+           * in the Studio leave the wrong panel open — see the note in `queries.groq.ts`.
+           */
+          key={item._key ?? index}
           title={
             <>
               {/*
@@ -54,12 +65,14 @@ const FaqItems = ({ faqItems }: { faqItems: IFaqSection['faqItems'] }) => (
                 weight="medium"
               />
               {/*
-               * A `<span>` and not a heading. The question is the accessible name of the `<button>`
-               * that wraps it, and a heading inside a button is stripped of its role by the HTML-AAM
-               * mapping anyway (a button's content is flattened to a text alternative), so marking
-               * one up here would publish an outline entry that no assistive technology reports.
-               * The conventional way to get headings into a disclosure list is `<h3><button>…`,
-               * which is a change to `components/Accordion`'s structure and is not this ticket.
+               * A `<span>` and not a heading — the heading is the `headingLevel={3}` wrapper above.
+               *
+               * The two are not alternatives. A heading *here* would sit inside the `<button>`,
+               * where the HTML-AAM mapping flattens a button's content to a text alternative and the
+               * heading role is discarded: an outline entry no assistive technology reports. The
+               * APG's accordion pattern puts the heading around the trigger instead, which is what
+               * `headingLevel` renders, and which is the only form that gives a screen-reader user
+               * heading navigation through a long FAQ.
                */}
               <Text
                 as="span"
@@ -72,6 +85,11 @@ const FaqItems = ({ faqItems }: { faqItems: IFaqSection['faqItems'] }) => (
             </>
           }
           classNameTrigger={styles.faqItemTrigger}
+          /*
+           * `<h3><button>` — the level below this section's own `<h2>`. See the note on the question
+           * `<span>` below for why the heading goes *around* the trigger and not inside it.
+           */
+          headingLevel={3}
         >
           <div className={styles.faqItemContent}>
             <TextBlock blocks={item.answer} config={{ p: { className: styles.answerText, size: 'lg' } }} />

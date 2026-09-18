@@ -43,7 +43,11 @@ interface IFaqSection {
   content?: SanityTextBlock[];
   addMap?: boolean;
   map?: IFaqMapCard;
-  addButton: boolean;
+  /*
+   * Optional, like its twin `addMap` — a section authored before this toggle existed has no value
+   * for it at all, and `initialValue: false` only applies to documents created after it was added.
+   */
+  addButton?: boolean;
   /**
    * The small uppercase label beside the closing button — "Still stuck?" (node 16:716).
    *
@@ -52,7 +56,13 @@ interface IFaqSection {
    */
   buttonEyebrow?: string;
   button?: IButtonElement;
-  faqItems: {
+  /*
+   * Optional, because an unset array projects as absent rather than as `[]`. Declared required, the
+   * `faqItems?.map` and `faqItems && faqItems.length > 0` guards both consumers already carry were
+   * dead code that the type promised could never fire.
+   */
+  faqItems?: {
+    _key?: string;
     question: string;
     answer: SanityTextBlock[];
     /**
@@ -135,7 +145,14 @@ const faqSection = defineType({
           description: 'An embeddable map URL (the “src” of a Google Maps embed). Only used when no image is uploaded.',
           name: 'embedUrl',
           title: 'Embed URL',
-          type: 'url'
+          type: 'url',
+          /*
+           * `https` only. An `http:` embed is blocked outright as mixed content on the live site,
+           * which presents as "the map is blank" with nothing in the Studio to explain it. The
+           * likelier editor error — pasting the *share* URL rather than the embed `src` — cannot be
+           * validated without guessing at provider URL shapes, so the field description names it.
+           */
+          validation: (Rule) => Rule.uri({ scheme: ['https'] })
         },
         {
           description:

@@ -26,6 +26,15 @@ import imageProjection from '@/tools/sanity/projections/common/image.groq';
  *
  * `title` needs no sub-projection — the `title` element is a plain string holding an HTML tag, which
  * `TextTitle` strips. `note` is a plain string and projects as-is.
+ *
+ * ## `_key` is not optional here
+ *
+ * Eight characters of query weight, and they buy correctness rather than tidiness.
+ * `components/Accordion` holds the open item as a **numeric index** and each `AccordionItem` derives
+ * its `aria-controls` target from `useId()`, so a list keyed by position reconciles wrongly the
+ * moment an editor reorders or deletes an item — the wrong panel stays open and each item's measured
+ * height is re-associated with the wrong content. Presentation renders drafts live, so that is a
+ * thing an editor does while watching the page.
  */
 const faqSectionProjection = groq`
   _type == 'faqSection' => {
@@ -43,6 +52,7 @@ const faqSectionProjection = groq`
       }
     },
     faqItems[]{
+      _key,
       question,
       answer[]${blockContentProjection},
       note

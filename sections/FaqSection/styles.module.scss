@@ -42,15 +42,21 @@ $faq-inline-switch: 960px;
    * content box is what the two columns divide — the page width with the gutters already taken off —
    * so the threshold is a number about the columns rather than about the window.
    *
+   * `container-name` is **not** hashed by CSS Modules — it is a global identifier — so it is spelt
+   * out rather than left as a bare `faq`, which a second section adopting this idiom could collide
+   * with silently.
+   *
    * `inline-size` and not `size`: the width comes from the page and the height from the content, and
-   * containing the height would collapse it. The containment cost is the one the three sibling
+   * containing the height would collapse it. Note it also implies `contain: layout`, which makes the
+   * Container a containing block for any `position: fixed` descendant and a new stacking context —
+   * nothing here is affected, but a sticky element or a modal inside an FAQ would be. The containment cost is the one the three sibling
    * sections document — an inline-size container does not contribute to its own intrinsic width, so
    * inside a shrink-to-fit ancestor it collapses. Safe for the same reason: sections render as block
    * children of `<main>`, and of a plain `<div>` in Storybook.
    */
   .queryContainer {
     container-type: inline-size;
-    container-name: faq;
+    container-name: faq-section;
   }
 
   .contentContainer {
@@ -72,7 +78,7 @@ $faq-inline-switch: 960px;
      * No `justify-content`: the rail is `flex: 0 1 440px` and the column beside it `flex: 1 1 auto`,
      * so the row never has free space to distribute and any value would be inert.
      */
-    @container faq (width >= #{$faq-inline-switch}) {
+    @container faq-section (width >= #{$faq-inline-switch}) {
       flex-direction: row;
       gap: var(--faq-column-gap);
     }
@@ -95,7 +101,7 @@ $faq-inline-switch: 960px;
     min-width: 0;
 
     // 440px of a 1200px content box (node 16:635), allowed to shrink but not to grow.
-    @container faq (width >= #{$faq-inline-switch}) {
+    @container faq-section (width >= #{$faq-inline-switch}) {
       flex: 0 1 440px;
     }
   }
@@ -110,32 +116,25 @@ $faq-inline-switch: 960px;
   }
 
   /*
-   * The mono micro-label above the title. `Text`'s `mono` variant with `weight="bold"` already
-   * selects the loud register (0.2em), which is the comp's 2.6px on 13px exactly, so this rule holds
-   * only the size pair, the ink and the leading.
+   * The two eyebrows share everything but their register and their visibility, so they share a rule.
    *
-   * The ink comes from `Text`'s `color="themeFgAccent"` prop rather than from a declaration here —
-   * the drawn label is `#1e4632`, which *is* `--fg-accent` on the light page it sits on.
-   * (`TwoColumnListSection.eyebrow` deliberately does not use this token; it draws on a dark panel
-   * where `--fg-accent` is signal-300, a lime the design never puts there. This section is drawn on
-   * light; see the note on the dark theme in the report.)
+   * `fluid(11px, 13px)` is the comps' pair exactly (13px on 16:638 and 16:716, ~11px on 16:731) and
+   * is the one length in this file that is *not* a `Text` `size` rung — the nearest is `--body-xs`,
+   * `fluid(11px, 12px)`. Kept rather than rounded because `ScheduleSection.eyebrow` and
+   * `TwoColumnListSection.eyebrow` are the same label on sibling pages at the same pair; the right
+   * fix is one shared eyebrow token across all four call sites, which is `/consolidate` work rather
+   * than a divergence introduced here.
    *
-   * `--mono-line-height` re-pointed to the body ratio rather than the role's own 1.3, matching
-   * `ScheduleSection.eyebrow` and `TwoColumnListSection.eyebrow` — this is surrounding rhythm, not a
-   * drawn box. Note `inherit` would be wrong: on a custom property it resolves to the parent's
-   * `--mono-line-height`, not to the parent's `line-height`.
+   * `--mono-line-height` re-pointed to the body ratio rather than the role's own 1.3, matching those
+   * two — this is surrounding rhythm, not a drawn box. Note `inherit` would be wrong: on a custom
+   * property it resolves to the parent's `--mono-line-height`, not to the parent's `line-height`.
+   *
+   * The ink is `Text`'s `color="themeFgAccent"` on both, not a declaration here.
    */
-  .tagline {
+  .tagline,
+  .footerEyebrow {
     --mono-line-height: var(--body-line-height);
 
-    /*
-     * `fluid(11px, 13px)` is the comps' pair exactly (13px on 16:638, ~11px on 16:731), and is the
-     * one number here that is *not* taken from a `Text` `size` rung — the nearest is
-     * `--body-xs` = `fluid(11px, 12px)`. Kept because `ScheduleSection.eyebrow` and
-     * `TwoColumnListSection.eyebrow` are the same label on sibling pages at the same pair; the right
-     * fix is one shared eyebrow token across all four call sites, which is `/consolidate` work
-     * rather than a divergence introduced here.
-     */
     font-size: #{fluid(11px, 13px)};
     min-width: 0;
   }
@@ -156,6 +155,10 @@ $faq-inline-switch: 960px;
    * only the badge and the bar — is a surface rather than a hole.
    */
   .mapCard {
+    // The card's own inset, shared by the badge and the bar so the two corners cannot drift
+    // (12px desktop on 16:644 / 16:646, 10px mobile on 16:800 / 16:802).
+    --faq-map-inset: #{fluid(10px, 12px)};
+
     position: relative;
     overflow: hidden;
     width: 100%;
@@ -188,8 +191,8 @@ $faq-inline-switch: 960px;
 
       position: absolute;
       z-index: 1;
-      inset-block-start: #{fluid(10px, 12px)};
-      inset-inline-start: #{fluid(10px, 12px)};
+      inset-block-start: var(--faq-map-inset);
+      inset-inline-start: var(--faq-map-inset);
     }
 
     /*
@@ -218,7 +221,7 @@ $faq-inline-switch: 960px;
   .mapBar {
     position: absolute;
     z-index: 1;
-    inset-inline: #{fluid(10px, 12px)};
+    inset-inline: var(--faq-map-inset);
     inset-block-end: #{fluid(12px, 13px)};
 
     display: flex;
@@ -229,6 +232,17 @@ $faq-inline-switch: 960px;
     border-radius: var(--radius-sm);
     background-color: var(--button-secondary-bg);
     color: var(--button-secondary-fg);
+
+    /*
+     * Forced colours flattens the fill to `Canvas`, so the bar becomes a white strip on the map with
+     * no edge — the text stays readable, but the chip stops reading as a chip. An outline keeps the
+     * shape as shape. `components/Tag` makes the identical move for its filled variant, and
+     * `.mapBadge` above therefore already gets it for free; this bar is hand-rolled and had to be
+     * told.
+     */
+    @media (forced-colors: active) {
+      border: 1px solid CanvasText;
+    }
 
     /*
      * Bold at the quiet tracking. `Text` picks the tracking register from the weight, so
@@ -309,7 +323,7 @@ $faq-inline-switch: 960px;
     min-width: 0;
 
     // Takes whatever the rail leaves — 696px of 1200 at the design's own width (node 16:651).
-    @container faq (width >= #{$faq-inline-switch}) {
+    @container faq-section (width >= #{$faq-inline-switch}) {
       flex: 1 1 auto;
     }
   }
@@ -424,8 +438,8 @@ $faq-inline-switch: 960px;
       }
 
       /*
-       * The outline chip beneath an answer. Three re-points, all of them needing this rule's two
-       * classes to beat `Tag`'s own single-class rules without an import-order race:
+       * The outline chip beneath an answer. Five re-points; the three that `Tag` also *sets* need
+       * this rule's three classes to beat its single-class rules without an import-order race:
        *
        *   - the padding pair, because the drawn chip (15 × 12.5 desktop, 13 × 11 mobile) is larger
        *     than any of `Tag`'s three steps — `lg` is 12 × 8, and `size` is a closed set on purpose;
@@ -449,14 +463,12 @@ $faq-inline-switch: 960px;
   .footer {
     display: flex;
     align-items: center;
-    // Stretch when stacked, because the button spans the column there (node 16:797).
-    justify-content: stretch;
     gap: var(--spacing-md);
     // 28px below the last item's rule at desktop; the mobile comp puts 24px between the accordion
     // and its full-width button (16:736 ends at 1017.8, 16:797 starts at 1041.8).
     padding-block-start: #{fluid(24px, 28px)};
 
-    @container faq (width >= #{$faq-inline-switch}) {
+    @container faq-section (width >= #{$faq-inline-switch}) {
       justify-content: space-between;
     }
   }
@@ -473,21 +485,17 @@ $faq-inline-switch: 960px;
    * switch above is stated in `px`.
    */
   .footerEyebrow {
-    --mono-line-height: var(--body-line-height);
-    // Untracked; see below. The ink is `Text`'s `color="themeFgAccent"`, not a declaration here.
     /*
      * Untracked, where the mono role's quiet register is 0.1em. Node 16:716 carries no `tracking-`
      * class at all — unlike the tagline at the top of the rail, which is the loud 0.2em. The two
-     * eyebrows are drawn at the same size and in different registers, which is easy to miss and is
-     * why it is stated here rather than assumed to follow the other one.
+     * eyebrows are drawn at the same size in different registers, which is easy to miss and is why
+     * it is stated rather than assumed to follow the other one.
      */
     --mono-letter-spacing: normal;
 
     display: none;
-    // The same pair as `.tagline`, and the same note applies about the shared eyebrow token.
-    font-size: #{fluid(11px, 13px)};
 
-    @container faq (width >= #{$faq-inline-switch}) {
+    @container faq-section (width >= #{$faq-inline-switch}) {
       display: block;
     }
   }
@@ -505,7 +513,7 @@ $faq-inline-switch: 960px;
   .footerButton {
     width: 100%;
 
-    @container faq (width >= #{$faq-inline-switch}) {
+    @container faq-section (width >= #{$faq-inline-switch}) {
       width: auto;
     }
   }

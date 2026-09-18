@@ -65,11 +65,6 @@
     background-color: transparent;
     color: var(--fg-default);
     font-size: #{fluid(17px, 20px)};
-    /*
-     * The glyph is centred by the flex box above; this keeps the text box from adding its own
-     * optical offset on the fallback face.
-     */
-    text-align: center;
 
     transition:
       background-color 0.2s ease,
@@ -77,12 +72,24 @@
       color 0.2s ease;
   }
 
+  /*
+   * The optional heading wrapper (the APG's `<h3><button>`). It carries no appearance of its own:
+   * `font: inherit` because the global `h1…h6 { @include heading-font() }` would otherwise set a
+   * display size that `.title`'s own `font: inherit` would then inherit *from*, and `margin: 0`
+   * because the reset zeroes `p` but not headings. When no `headingLevel` is passed this class lands
+   * on a plain `<div>` and the two render identically.
+   */
+  .header {
+    margin: 0;
+    font: inherit;
+  }
+
   .title {
     appearance: none;
     background: transparent;
     border: 0;
     width: 100%;
-    padding: 24px 0;
+    padding: var(--spacing-lg) 0;
     cursor: pointer;
     user-select: none;
     text-align: left;
@@ -103,7 +110,7 @@
   }
 
   .wrapper {
-    padding-bottom: 24px;
+    padding-bottom: var(--spacing-lg);
   }
 
   /*

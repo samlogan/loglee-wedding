@@ -11,6 +11,8 @@ import sectionFixture from '@/tools/storybook/sectionFixture';
 
 import FaqSection from '.';
 
+import styles from './styles.module.scss';
+
 const FIGMA = 'https://www.figma.com/design/KxvsJuCNaG4n2QVp3iD4jd/Wedding?node-id=';
 
 const meta = {
@@ -56,6 +58,35 @@ const atWidth =
  * first answer and in the shuttle chip are the content blocker this ticket flags — the travel copy is
  * unwritten and the shuttle is TBC — so leaving them visible is the point rather than a typo.
  */
+/**
+ * An answer containing a link, which is the content shape that makes a collapsed panel dangerous.
+ *
+ * Hand-built rather than taken from `mockBlockContent`, because that helper emits `markDefs: []` and
+ * a link mark needs a `markDef` to resolve against. No answer in the dataset happens to carry one
+ * today, which is exactly why `AccordionItem` shipped with focusable content inside an `aria-hidden`
+ * subtree and nothing caught it — `Default`'s `play` asserts against it now.
+ */
+const ANSWER_WITH_LINK: SanityTextBlock[] = [
+  {
+    _key: 'faq-answer-link',
+    _type: 'block',
+    style: 'normal',
+    markDefs: [
+      {
+        _key: 'travel',
+        _type: 'link',
+        linkType: 'external',
+        externalLink: 'https://example.com/travel'
+      }
+    ],
+    children: [
+      { _key: 'a', _type: 'span', text: 'There is room for everyone on site — see the ', marks: [] },
+      { _key: 'b', _type: 'span', text: 'travel notes', marks: ['travel'] },
+      { _key: 'c', _type: 'span', text: ' for the approach.', marks: [] }
+    ]
+  }
+];
+
 const MOCK: IFaqSection = {
   tagline: 'Help menu',
   title: '<h2>FAQ</h2>',
@@ -86,10 +117,7 @@ const MOCK: IFaqSection = {
       ],
       note: 'Shuttle · [Fri 2pm Central] · TBC'
     },
-    {
-      question: 'Is there parking?',
-      answer: [mockBlock('normal', 'Yes — there is room for everyone on site, and you can leave a car overnight.')]
-    },
+    { question: 'Is there parking?', answer: ANSWER_WITH_LINK },
     {
       question: 'What if it rains?',
       answer: [mockBlock('normal', 'The barn covers the ceremony and the dinner, so the day runs either way.')]
@@ -129,9 +157,20 @@ const data: IFaqSection = {
   tagline: fixture?.tagline ?? MOCK.tagline,
   addMap: fixture?.addMap ?? MOCK.addMap,
   map: fixture?.map ?? MOCK.map,
+  /*
+   * `addButton` is re-guarded like the rest, and it is the one that would have bitten: today's
+   * fixture happens to carry `true`, so the footer renders and three stories below assert it. The
+   * first time an editor unticks "Add Button" and somebody runs `yarn storybook:fixtures`, a plain
+   * spread would turn that into `false` and those stories would fail on a missing link — pointing at
+   * the story rather than at the dataset that actually changed.
+   */
+  addButton: fixture?.addButton ?? MOCK.addButton,
   buttonEyebrow: fixture?.buttonEyebrow ?? MOCK.buttonEyebrow,
   faqItems: fixture?.faqItems?.length ? fixture.faqItems : MOCK.faqItems
 };
+
+/** Non-null, because every path above falls back to `MOCK`, which always has six. */
+const items = data.faqItems ?? [];
 
 /*
  * ## Every text query below uses the **stored** string, not the rendered one
@@ -154,7 +193,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
     const rows = triggers(canvasElement);
 
-    await expect(rows.length).toBe(data.faqItems.length);
+    await expect(rows.length).toBe(items.length);
 
     /*
      * AC: the tagline renders. It is the field this section has always had and never read — the
@@ -170,6 +209,17 @@ export const Default: Story = {
     for (const [index, row] of rows.entries()) {
       await expect(row).toHaveTextContent(formatOrdinal(index));
     }
+
+    /*
+     * Each trigger is wrapped in an `<h3>` — the APG accordion pattern — so a screen-reader user can
+     * navigate a long FAQ by heading. The heading is *around* the button, not inside it: inside, the
+     * HTML-AAM mapping flattens it to a text alternative and the role is discarded.
+     */
+    await expect(canvas.getAllByRole('heading', { level: 3 })).toHaveLength(items.length);
+    await expect(rows[0].parentElement?.tagName).toBe('H3');
+
+    // Never a submit button — an accordion inside a form would otherwise submit it on open.
+    await expect(rows[0]).toHaveAttribute('type', 'button');
 
     /*
      * AC: `aria-expanded` and `aria-controls` survive. Every trigger points at a panel that exists,
@@ -217,7 +267,7 @@ export const Default: Story = {
      * to force that string onto every trigger with `aria-label`, which overrides content outright —
      * six identically named buttons in a screen reader's element list.
      */
-    await expect(rows[0]).toHaveAccessibleName(data.faqItems[0].question);
+    await expect(rows[0]).toHaveAccessibleName(items[0].question);
   }
 };
 
@@ -236,8 +286,12 @@ export const MapOverlays: Story = {
   decorators: [atWidth('1200px')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const badge = canvas.getByText(MOCK.map?.badge as string);
-    const address = canvas.getByText(MOCK.map?.address as string);
+    /*
+     * `data`, not `MOCK` — these stories render `args: data`, so reading the mock's copy only agrees
+     * by accident while the dataset has no map of its own.
+     */
+    const badge = canvas.getByText(data.map?.badge as string);
+    const address = canvas.getByText(data.map?.address as string);
 
     for (const overlay of [badge, address]) {
       const box = overlay.getBoundingClientRect();
@@ -257,7 +311,7 @@ export const Desktop: Story = {
   decorators: [atWidth('1200px')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const row = canvasElement.querySelector('[data-name="FaqSection"] > div > div') as HTMLElement;
+    const row = canvasElement.querySelector(`.${styles.contentContainer}`) as HTMLElement;
 
     await expect(getComputedStyle(row).flexDirection).toBe('row');
 
@@ -282,7 +336,12 @@ export const Mobile: Story = {
   decorators: [atWidth('390px')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const row = canvasElement.querySelector('[data-name="FaqSection"] > div > div') as HTMLElement;
+    /*
+     * Resolved through the CSS module rather than by walking `[data-name] > div > div`. The old
+     * selector encoded Section -> Container -> contentContainer, so one extra wrapper in `Section`
+     * would have failed three stories on a null dereference rather than on the thing they test.
+     */
+    const row = canvasElement.querySelector(`.${styles.contentContainer}`) as HTMLElement;
 
     await expect(getComputedStyle(row).flexDirection).toBe('column');
 
@@ -292,7 +351,7 @@ export const Mobile: Story = {
      * the node it is compared against.
      */
     const title = canvas.getByRole('heading', { level: 2 });
-    const map = canvas.getByText(MOCK.map?.badge as string);
+    const map = canvas.getByText(data.map?.badge as string);
     const firstQuestion = triggers(canvasElement)[0];
     const button = canvas.getByRole('link', { name: data.button?.label });
 
@@ -327,6 +386,25 @@ export const DesignReference: Story = {
     const canvas = within(canvasElement);
     const rows = triggers(canvasElement);
 
+    /*
+     * Nothing inside a collapsed panel is reachable.
+     *
+     * A panel is hidden by `max-height: 0` and `overflow: hidden`, which removes it from the tab
+     * order not at all — so before `inert` landed, an answer containing a link put a focusable
+     * anchor at zero height inside an `aria-hidden` subtree. Asserted by trying to focus it rather
+     * than by reading the attribute: the attribute is the mechanism, this is the outcome.
+     *
+     * This story rather than `Default`, because the guard is only worth anything if there is
+     * actually a link to catch — `ANSWER_WITH_LINK` is in `MOCK`, and the dataset's answers have no
+     * `markDefs` at all. The length assertion is what stops it quietly passing on an empty list.
+     */
+    const collapsedLinks = [...canvasElement.querySelectorAll<HTMLAnchorElement>('[inert] a[href]')];
+    await expect(collapsedLinks.length).toBeGreaterThan(0);
+    for (const link of collapsedLinks) {
+      link.focus();
+      await expect(canvasElement.ownerDocument.activeElement).not.toBe(link);
+    }
+
     // Six questions in the comp's order, numbered 01..06.
     await expect(rows).toHaveLength(6);
     await expect(rows[5]).toHaveTextContent(formatOrdinal(5));
@@ -339,7 +417,7 @@ export const DesignReference: Story = {
      */
     await userEvent.click(rows[0]);
     await waitFor(async () => {
-      await expect(canvas.getByText(MOCK.faqItems[0].note as string)).toBeVisible();
+      await expect(canvas.getByText((MOCK.faqItems ?? [])[0].note as string)).toBeVisible();
     });
   }
 };
@@ -377,6 +455,40 @@ export const OnDarkPage: Story = {
     const bar = canvasElement.querySelector('div[class*="mapBar"]') as HTMLElement;
     await expect(getComputedStyle(bar).backgroundColor).toBe('rgb(243, 241, 234)');
     await expect(getComputedStyle(bar).color).toBe('rgb(30, 70, 50)');
+  }
+};
+
+/**
+ * The embed branch of the map card — the one raw DOM element in this section, and the only thing
+ * here that loads a third-party document.
+ *
+ * `MOCK.map` carries an image and `hasEmbed` is `!hasImage && …`, so without this story the
+ * `<iframe>` is never mounted by the test suite. The URL is a real Google Maps embed `src`; nothing
+ * fetches it in the component test, which only asserts the attributes that make the frame safe and
+ * nameable.
+ */
+export const EmbedMap: Story = {
+  args: {
+    ...data,
+    addMap: true,
+    map: {
+      ...MOCK.map,
+      image: undefined,
+      embedUrl: 'https://www.google.com/maps/embed/v1/place?q=406+Jamberoo+Mountain+Rd'
+    }
+  },
+  decorators: [atWidth('1200px')],
+  play: async ({ canvasElement }) => {
+    const frame = canvasElement.querySelector('iframe') as HTMLIFrameElement;
+
+    await expect(frame).toBeTruthy();
+    // The frame's accessible name. An untitled iframe announces as "frame" with nothing to go on.
+    await expect(frame).toHaveAccessibleName(`Map of ${MOCK.map?.address}`);
+    await expect(frame.getAttribute('loading')).toBe('lazy');
+    // Denied by omission, and the one that matters: the frame cannot navigate the page.
+    await expect(frame.getAttribute('sandbox')).not.toContain('allow-top-navigation');
+    // The badge and the bar still paint over it.
+    await expect(within(canvasElement).getByText(data.map?.badge as string)).toBeVisible();
   }
 };
 
