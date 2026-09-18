@@ -537,3 +537,71 @@ export const RootTextScaled: Story = {
     }
   }
 };
+
+/**
+ * The content an editor is most likely to paste in and least likely to look at afterwards: a room
+ * name with no spaces in it, and a footnote item that is a URL.
+ *
+ * Both are the case `minmax(0, 1fr)` is usually credited with solving, and it only solves half of
+ * it. The track does not widen and the page does not scroll — that part works — but without
+ * `overflow-wrap` the string still overflows its own box and `MediaCard`'s `overflow: hidden` clips
+ * it mid-word, silently. Measured before the fix at 1440px: three 440px tracks, no page scroll, and
+ * a heading whose right edge was 753px past the right edge of its own card, with the spec label
+ * beside it pushed out of the card entirely.
+ *
+ * So the assertions are about **containment**, not about wrapping: every text box stays inside its
+ * card, and the grid is still the width it was.
+ */
+export const LongUnbreakableContent: Story = {
+  args: {
+    cards: [
+      {
+        ...KING_ROOM,
+        footnotes: ['https://thelodge.example.com/rooms/king/availability/2027/february/twelfth'],
+        title: '<h2>Supercalifragilisticexpialidociousaccommodationwingannexe</h2>'
+      },
+      TWIN_DOUBLE,
+      FAMILY_ROOM
+    ]
+  },
+  decorators: [atWidth('1240px')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const [card] = cardsIn(canvasElement);
+    const grid = gridIn(canvasElement);
+
+    await waitFor(async () => {
+      /*
+       * The track count and the grid's own width are untouched — this is the `minmax(0, 1fr)` half.
+       *
+       * Measured against the container rather than against the viewport: the wrapper this story
+       * pins is wider than the component-test runner's page, so `document.scrollWidth` here reports
+       * the *story's* overflow and would fail whatever the section did. `Fluid` is the story that
+       * owns the viewport-level claim, because it is the one with no wrapper.
+       */
+      await expect(trackCountOf(grid)).toBe(3);
+      const container = grid.parentElement as HTMLElement;
+      await expect(grid.getBoundingClientRect().width).toBeCloseTo(
+        container.getBoundingClientRect().width - 2 * Number.parseFloat(getComputedStyle(container).paddingLeft),
+        0
+      );
+
+      /*
+       * … and this is the `overflow-wrap` half. Both runs wrap inside the card instead of running
+       * out of it. A half-pixel of tolerance, because a wrapped glyph's advance can round past the
+       * padding edge by a sub-pixel without anything being clipped.
+       */
+      const cardRight = card.getBoundingClientRect().right;
+      const heading = canvas.getByRole('heading', { level: 2, name: /Supercalifragilistic/ });
+      const footnote = canvas.getByText(/thelodge\.example\.com/);
+
+      await expect(heading.getBoundingClientRect().right).toBeLessThanOrEqual(cardRight + 0.5);
+      await expect(footnote.getBoundingClientRect().right).toBeLessThanOrEqual(cardRight + 0.5);
+
+      // And the label the overflow used to push out of the card is still beside the name.
+      const label = canvas.getByText('2 max');
+      await expect(label.getBoundingClientRect().right).toBeLessThanOrEqual(cardRight + 0.5);
+      await expect(label).toBeVisible();
+    });
+  }
+};

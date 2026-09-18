@@ -150,5 +150,28 @@ $spec-card-grid-three-up: 60rem;
    */
   .item {
     align-self: stretch;
+    /*
+     * The other half of `minmax(0, 1fr)`, and the half that is easy to stop at.
+     *
+     * `minmax(0, 1fr)` stops a long unbreakable string widening the **track**. It does not make the
+     * string wrap: the text still overflows its own box, and `MediaCard`'s `overflow: hidden` — which
+     * is there to clip the media band into the corner radius — then clips it mid-word, with no
+     * ellipsis and no scrollbar to say so. Measured at 1440px with a 56-character room name: the
+     * grid stayed at three 440px tracks and the page never scrolled, while the heading's right edge
+     * sat at x=1233 against a card ending at x=480, and the spec label beside it was pushed out of
+     * the card entirely. Everything the earlier note promised was true, and the card still lost its
+     * content.
+     *
+     * Set here, on the `<li>`, rather than on the card: `overflow-wrap` is **inherited**, so one
+     * declaration on the wrapper reaches the name, the description, the footnote and the caption
+     * chip alike. That also keeps the fix inside the section — `components/MediaCard` is shared with
+     * `/the-lodge` and would arguably want this too, but that is its maintainer's call, and a
+     * section is entitled to decide that content cannot escape the tracks the section chose.
+     *
+     * `anywhere` rather than `break-word`, matching `components/Tag`. The two differ only in whether
+     * the break opportunity also shrinks the element's min-content size; here it cannot matter,
+     * because `minmax(0, …)` has already floored the track at zero.
+     */
+    overflow-wrap: anywhere;
   }
 }
