@@ -14,15 +14,21 @@
  * `MediaCard` prop or one of that component's six custom-property hooks — and this section re-points
  * none of the six, because the six *defaults* were measured off these three cards.
  *
- * ## The four rules that bottom-align the footnotes
+ * ## The three rules that bottom-align the footnotes
  *
  * The acceptance criterion — "cards stretch to a common height so the footnote bottom-aligns across
  * the row" — is not implemented by any one declaration. It needs `align-items: stretch` on the row
- * (below, and the grid's own default), `align-self: stretch` reaching the card's `<li>` wrapper
- * (below), then `height: 100%` on the card and `margin-block-start: auto` on its footer, both of
- * which live in `components/MediaCard`. Remove any one and the row still looks right on its
- * **tallest** card and is wrong on every other one — which is why the story measures it rather than
- * screenshotting it.
+ * (below, and the grid's own default), then `height: 100%` on the card and `margin-block-start:
+ * auto` on its footer, both of which live in `components/MediaCard`. Remove any one and the row
+ * still looks right on its **tallest** card and is wrong on every other one — which is why the story
+ * measures it rather than screenshotting it.
+ *
+ * A fourth rule, `align-self: stretch` on the `<li>`, was here and has been removed. It restated the
+ * value the `<li>` already computes to as a grid item under `align-items: stretch`, so it changed no
+ * pixel — and it actively cost something: it would have kept the `<li>` stretched if someone changed
+ * `align-items` on the row, which is precisely the regression the note on that line claims to be the
+ * tripwire for. `TwoColumnListSection` removed eleven restatements of the same kind for the same
+ * reason.
  */
 
 /*
@@ -48,6 +54,15 @@
  * - `38rem` (608px) for two: tracks of ~294px, a shade under the three-up floor, which is the right
  *   place to give up the second column rather than squeeze both.
  *
+ * `60rem` is now the third section to land on that number — `$header-display-inline-switch` and
+ * `$schedule-inline-switch` are both `60rem` too — and `HeaderDisplaySection` states the promotion
+ * rule: a value three modules have to *agree* on belongs in `tools/sass/base/__media.scss`, the way
+ * `$header-inline-switch` does. **These three do not have to agree.** They were derived
+ * independently and they measure different things: where a two-column band splits, where a day's
+ * summary sits beside its events, and where a third card track stops squeezing a header row.
+ * Promoting them would couple three unrelated layouts to one number and make the next edit to any of
+ * them a change to the other two. Left local, deliberately.
+ *
  * `rem` rather than `px`, and this is the one case where that is the safe direction. A container
  * query's `rem` resolves against the **live root font size**, so a reader who raises their text size
  * crosses these thresholds and gets *fewer, wider* columns — which is what more text wants. The
@@ -55,10 +70,51 @@
  * can delete content on a text-size increase alone (WCAG 1.4.4). Nothing here hides; both branches
  * render every card, every field, in the same order. Verified at a 32px root in the story.
  */
-$spec-card-grid-two-up: 38rem;
-$spec-card-grid-three-up: 60rem;
+$spec-card-grid-inline-switch: 38rem;
+$spec-card-grid-wide-inline-switch: 60rem;
 
 @layer defaults {
+  /*
+   * **A token re-point, not a hand-written padding.**
+   *
+   * The drawn bottom gap is 48px at the 1280 frame (1:630) and 24px at the 390 one (1:700 is 1064
+   * tall and its last card ends at 1040), and that band separates the grid from whatever follows —
+   * on `/stay` the next section is `TwoColumnListSection`, which sets `spacing="none"` and names
+   * *this* padding as the separator. Nothing below supplies it.
+   *
+   * `--section-spacing-sm` ships as `fluid(16px, 48px)`: right at the wide anchor and **31% short**
+   * at the phone, where it resolves to 16.5px against the drawn 24. The narrow anchor is inherited
+   * from the pre-fluid stepped scale rather than measured from these comps —
+   * `HeaderDisplaySection` records the identical miss on the same token.
+   *
+   * Three ways to fix it, and this is the third:
+   *
+   *   1. `spacing={['none', 'md']}` — exact at the phone (24.9) and 16px over at the desktop anchor
+   *      (64 against 48). Trades a 7px miss for a 16px one.
+   *   2. `spacing="none"` plus `padding-block-end` on a class here, which is what `ScheduleSection`
+   *      does for its band. It works, and it takes the editor's `removeBottomSpacing` toggle out of
+   *      the loop — `Section` implements that by swapping `.spacing_bottom_sm` for
+   *      `.spacing_bottom_none`, and a hand-written padding on this class survives both.
+   *   3. Re-point the token on the section element. The `spacing` prop stays the mechanism, the
+   *      toggle still swaps the class, and the value the class reads is this section's measured pair.
+   *
+   * (3). It is also the idiom the repo already uses for type — `HeaderDisplaySection` re-points
+   * `--body-2xl`, `ScheduleSection` re-points `--display-md` and `--body-md`, `MediaCard` re-points
+   * `--mono-line-height` — applied to spacing for the first time.
+   *
+   * The wide anchor stays at the drawn 48 rather than the 52 the two drawn points extrapolate to,
+   * following the convention both siblings state: anchor on the number the design draws and accept
+   * the undershoot between frames. Measured after the change: 24.3px at 390, 44.4px at 1280, 48px at
+   * 1440.
+   *
+   * Declared on the section root, so it also re-points for the subtree. Nothing inside this section
+   * reads a `--section-spacing-*` token, and a nested `Section` is not a thing the page builder can
+   * produce.
+   */
+  .section {
+    --section-spacing-sm: #{fluid(24px, 48px)};
+  }
+
   /*
    * The query container is the `Container` element, reached through `Section`'s `containerClassName`
    * — so the queried inline size is the *content* box, container width minus its own gutters, which
@@ -123,33 +179,33 @@ $spec-card-grid-three-up: 60rem;
      * property of the page's density, not of how much room this particular section was given.
      */
     gap: #{fluid(16px, 20px)};
+    /*
+     * **No `justify-content`, and the drawn container has one.** Node 1:630 is a flex row with
+     * `justify-center`, which is indistinguishable in the drawn state: three 386.66px cards and two
+     * 20px gaps come to exactly the 1200px content box, so there is nothing to centre.
+     *
+     * It becomes visible the moment there is a fourth card, which the schema allows on purpose. A
+     * centred partial last row would sit half a track in from the column above it, breaking the
+     * vertical alignment that is the whole reason this is a grid rather than a flex wrap. Left
+     * start-packed, deliberately — recorded here because every other drawn property in this file is
+     * accounted for and silence on this one would read as an oversight.
+     */
 
-    @container specCardGrid (width >= #{$spec-card-grid-two-up}) {
+    @container specCardGrid (width >= #{$spec-card-grid-inline-switch}) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    @container specCardGrid (width >= #{$spec-card-grid-three-up}) {
+    @container specCardGrid (width >= #{$spec-card-grid-wide-inline-switch}) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 
   /*
-   * The `<li>` between the grid and the card, and the whole reason this rule exists.
-   *
-   * `align-items: stretch` reaches the **direct child** of the grid — which is this wrapper, not the
-   * card inside it. Stretching it is what makes its height definite, and a definite height is what
-   * `MediaCard`'s `height: 100%` needs in order to mean anything. Without it the card is
-   * content-sized inside a full-height `<li>`, the footer's `margin-block-start: auto` has no free
-   * space to absorb, and every footnote sits under its own description at a different `y` — correct
-   * on the tallest card in the row and wrong on the rest.
-   *
-   * Written as `align-self` rather than `height: 100%`: on an auto-sized row a percentage height
-   * resolves against a track whose size depends on this item, which is a cycle browsers resolve
-   * differently. `stretch` states the same intent with no cycle, and is inert in the single-column
-   * branch where the row is exactly one card tall.
+   * The `<li>` between the grid and the card. It carries exactly one declaration, and it is not the
+   * one you would expect — see the note at the top of the file for the `align-self: stretch` that
+   * used to be here and was removed as a no-op.
    */
   .item {
-    align-self: stretch;
     /*
      * The other half of `minmax(0, 1fr)`, and the half that is easy to stop at.
      *

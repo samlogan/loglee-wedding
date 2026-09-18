@@ -44,9 +44,10 @@ type Story = StoryObj<typeof meta>;
  * `px` and not the `rem` `HeaderDisplaySection.stories` uses, and the difference is not a
  * disagreement. That section's switch is a `rem` threshold, so a `rem` wrapper keeps the story's
  * branch stable under a changed root font size. This section's thresholds are also `rem`, but the
- * *point* of two of these stories is to pin an exact pixel width and measure pixels against it —
- * `Widest` asserts a 1240px container resolves three tracks, and the drawn frame is stated in px.
- * `RootTextScaled` below is the story that deliberately varies the root size instead.
+ * *point* of most of these stories is to pin an exact pixel width and measure pixels against it —
+ * `Default` asserts a 1240px wrapper resolves three tracks, and the drawn frames are stated in px.
+ * `RootTextScaled` and `Reflow320` are the two that deliberately vary the root size instead, and
+ * they set it on `document.documentElement` where `rem` is actually resolved.
  *
  * Block, not flex or inline-block: an `inline-size` container inside a shrink-to-fit ancestor
  * collapses to its padding, which is the trap `HeaderDisplaySection` and `ScheduleSection` both
@@ -69,10 +70,15 @@ const atWidth =
  *
  * Figma types "KING ROOM", "2 MAX" and "EXTRA BEDS AT A CHARGE" in capitals; this stores sentence
  * case, so the uppercasing under test is the design system's CSS rather than the mock's shift key.
- * It renders identically to the comp, and it is the shape an editor should store — Chromium names an
- * element from its *rendered* text, so `text-transform` does not keep capitals out of the
- * accessibility tree, and short literal all-caps runs are what screen readers most often spell out
- * letter by letter. The schema's field descriptions say so too.
+ * It renders identically to the comp, and it is the shape an editor should store.
+ *
+ * **The usual justification for that is overstated and is not repeated here.** CSS uppercase over
+ * stored capitals is a *mitigation*, not a guarantee: Gecko exposes the DOM text to the
+ * accessibility tree, so Firefox users hear "2 max", but Chromium and WebKit expose the
+ * **transformed** text — so NVDA on Chrome and VoiceOver on Safari still meet "2 MAX", which is
+ * exactly the shape a screen reader is most likely to spell out letter by letter. Storing sentence
+ * case is still strictly better than authoring capitals (it is right in one engine instead of none,
+ * and it keeps the CMS copy reusable), which is why the code does not change. Only the claim does.
  *
  * The footnotes are **items**, never one punctuated string. The middot is the renderer's.
  */
@@ -152,14 +158,29 @@ const RIVER_ROOM: ISpecCardGridSectionCard = {
 };
 
 /**
- * Real Sanity data when there is any, design-faithful mock otherwise — and today it is always the
- * mock: nothing in the dataset publishes this section yet, so `sectionFixture` returns `undefined`.
- * The photographs therefore render the grey Storybook placeholder, which
- * `.storybook/main.ts` documents as "no image resolved". That is the expected state, not a defect.
+ * The three drawn cards, as an explicit constant.
+ *
+ * **Every story that measures or reads copy uses this, not the fixture** — and that split is the
+ * point. The obvious shape for a section story is `sectionFixture(…) ?? mock`, and this file had it
+ * on four stories whose `play` functions then asserted mock-only literals ("Extra beds at a charge
+ * · Cot free", "2 max") and mock-only geometry (the third description is taller than the first).
+ * The moment somebody publishes a `specCardGridSection` and `yarn storybook:fixtures` runs — which
+ * `/commit` does automatically through `story-fixture-checker` — those args become real CMS content
+ * and all four break, inside the flow that exists to keep them fresh.
+ *
+ * So: pinned data for every assertion that is about *this layout*, and `Fluid` below — the one story
+ * still on `sectionFixture` — for the assertions that are about the data, all of which are derived
+ * from `data` rather than written against the drawn copy.
  */
-const data = sectionFixture<ISpecCardGridSection>('specCardGridSection') ?? {
-  cards: [KING_ROOM, TWIN_DOUBLE, FAMILY_ROOM]
-};
+const MOCK: ISpecCardGridSection = { cards: [KING_ROOM, TWIN_DOUBLE, FAMILY_ROOM] };
+
+/**
+ * Real Sanity data when there is any, the mock otherwise — and today it is always the mock: nothing
+ * in the dataset publishes this section yet, so `sectionFixture` returns `undefined`. The photographs
+ * therefore render the grey Storybook placeholder, which `.storybook/main.ts` documents as "no image
+ * resolved". That is the expected state, not a defect.
+ */
+const data = sectionFixture<ISpecCardGridSection>('specCardGridSection') ?? MOCK;
 
 // ---------------------------------------------------------------------------
 // Measurement helpers
@@ -181,14 +202,37 @@ const footersIn = (canvasElement: HTMLElement) => [
   ...canvasElement.querySelectorAll<HTMLElement>(`.${cardStyles.footer}`)
 ];
 
-const gridIn = (canvasElement: HTMLElement) =>
-  canvasElement.querySelector<HTMLElement>(`.${styles.grid}`) as HTMLElement;
+/**
+ * Throws rather than casting a possible `null` away. The section early-returns `null` when it has no
+ * renderable cards, and a bare `as HTMLElement` turns that into "Cannot read properties of null"
+ * several frames inside `getComputedStyle`, pointing at the helper instead of at the section.
+ */
+const gridIn = (canvasElement: HTMLElement) => {
+  const grid = canvasElement.querySelector<HTMLElement>(`.${styles.grid}`);
+
+  if (!grid) {
+    throw new Error('SpecCardGridSection rendered no grid');
+  }
+
+  return grid;
+};
 
 const topOf = (element: Element) => element.getBoundingClientRect().top;
 const heightOf = (element: Element) => element.getBoundingClientRect().height;
 
-/** How many tracks the grid resolved to, read off the used value rather than inferred from a class. */
-const trackCountOf = (grid: HTMLElement) => getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+/**
+ * How many tracks the grid resolved to, read off the used value rather than inferred from a class.
+ *
+ * The leading-digit guard is load-bearing and is not defensive noise. A grid that has not been laid
+ * out resolves `grid-template-columns` to the string `'none'`, and `'none'.split(' ').length` is
+ * **1** — so every `toBe(1)` assertion in this file would have passed on a grid that never painted,
+ * which is two of the three assertions carrying the most weight here. `NaN` fails them instead.
+ */
+const trackCountOf = (grid: HTMLElement) => {
+  const tracks = getComputedStyle(grid).gridTemplateColumns;
+
+  return /^\d/.test(tracks) ? tracks.split(' ').length : Number.NaN;
+};
 
 // ---------------------------------------------------------------------------
 // Stories
@@ -206,17 +250,25 @@ const trackCountOf = (grid: HTMLElement) => getComputedStyle(grid).gridTemplateC
  * This one has no decorator, so it is the story to resize, to screenshot for a design review at a
  * stated viewport, and to measure reflow against. It asserts the part that must hold at every width:
  * nothing escapes the viewport, and the track count is whatever the container honestly resolved.
+ *
+ * **It is also the one story on the fixture rather than on `MOCK`**, and the two facts fit together.
+ * Every assertion below is derived from `data` rather than written against the drawn copy — a card
+ * per entry, a legal track count, a grid that fills its container — so this keeps working the day
+ * somebody publishes a `specCardGridSection` and `yarn storybook:fixtures` swaps real content in,
+ * which is exactly when the literal-matching stories would have broken.
  */
 export const Fluid: Story = {
   args: data,
   play: async ({ canvasElement }) => {
     await waitFor(async () => {
       const grid = gridIn(canvasElement);
-      const tracks = trackCountOf(grid);
 
       // Whatever the canvas is, the grid resolved a legal track count and nothing overflows it.
-      await expect([1, 2, 3]).toContain(tracks);
+      await expect([1, 2, 3]).toContain(trackCountOf(grid));
       await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1);
+
+      // One card per entry in whatever `data` turned out to be — fixture or mock.
+      await expect(cardsIn(canvasElement)).toHaveLength(data.cards?.length ?? 0);
 
       // The grid fills its container rather than sitting in a fixed-width box of its own.
       const container = grid.parentElement as HTMLElement;
@@ -243,7 +295,7 @@ export const Fluid: Story = {
  * one where every card happens to have the same amount of copy.
  */
 export const Default: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('1240px')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -273,7 +325,15 @@ export const Default: Story = {
     await expect(footnotes[0].textContent).toBe('Extra beds at a charge · Cot free');
 
     await waitFor(async () => {
-      // Three tracks at this width, and the gap is the drawn 20px at the desktop anchor.
+      /*
+       * Three tracks at this width, and the gutter is inside `fluid(16px, 20px)`.
+       *
+       * The range is the token's whole output, which makes this a shape check rather than a value
+       * check — deliberately. `fluid()` interpolates against the **viewport**, and the runner's
+       * viewport is not the 1240px wrapper, so the only value this could assert exactly is the one
+       * the runner happens to have. The drawn 20px at the desktop anchor is verified by measuring
+       * a real 1440px browser, not here.
+       */
       const grid = gridIn(canvasElement);
       await expect(trackCountOf(grid)).toBe(3);
       const gap = Number.parseFloat(getComputedStyle(grid).columnGap);
@@ -312,7 +372,7 @@ export const Default: Story = {
  * just the column count.
  */
 export const Mobile: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('390px')],
   parameters: { design: { type: 'figma', url: `${FIGMA}1-700` } },
   play: async ({ canvasElement }) => {
@@ -369,7 +429,7 @@ export const Mobile: Story = {
  * bottom-align, the third wraps onto a second row and aligns with nothing.
  */
 export const TwoUp: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('720px')],
   play: async ({ canvasElement }) => {
     const cards = cardsIn(canvasElement);
@@ -489,7 +549,7 @@ export const ManyCards: Story = {
  * label and footnote is still in the document.
  */
 export const RootTextScaled: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('1240px')],
   /*
    * The root font size is changed in the `play` function rather than by a decorator, because `rem`
@@ -523,13 +583,32 @@ export const RootTextScaled: Story = {
           await expect(trackCountOf(gridIn(canvasElement))).toBe(1);
         });
 
-        // And this is the half that matters. Crossing the threshold changes the layout and removes
-        // nothing: every card, heading, spec label and footnote is still in the document and painted.
+        // Crossing the threshold changes the layout and removes nothing: every card, heading, spec
+        // label and footnote is still in the document.
         await expect(cardsIn(canvasElement)).toHaveLength(3);
         await expect(canvas.getAllByRole('heading')).toHaveLength(3);
         await expect(footersIn(canvasElement)).toHaveLength(3);
         await expect(canvas.getByText('2 max')).toBeVisible();
         await expect(canvas.getByText('Extra beds at a charge · Cot free')).toBeVisible();
+
+        /*
+         * **And this is the half `toBeVisible()` cannot see.**
+         *
+         * It checks `display`, `visibility`, `opacity`, the `hidden` attribute and `<details>`
+         * ancestry — not whether an ancestor's `overflow: hidden` has clipped the element out of
+         * view. `MediaCard` sets exactly that on `.card`, to clip the media band into the corner
+         * radius, so a title pushed out of its card by a flex minimum passes every assertion above
+         * while being invisible on screen. The one story whose job is to prove resize safety was
+         * blind to the only resize failure this card has.
+         *
+         * `scrollWidth <= clientWidth` is the measurement that sees it: it asks whether the card's
+         * content is wider than the box painting it, which is what clipping means.
+         */
+        await waitFor(async () => {
+          for (const card of cardsIn(canvasElement)) {
+            await expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth + 1);
+          }
+        });
       });
     } finally {
       // The root element is shared across stories in the runner, so this has to be put back.
@@ -603,5 +682,155 @@ export const LongUnbreakableContent: Story = {
       await expect(label.getBoundingClientRect().right).toBeLessThanOrEqual(cardRight + 0.5);
       await expect(label).toBeVisible();
     });
+  }
+};
+
+/**
+ * **320px, at both a default and a 32px root** — the narrowest viewport WCAG 1.4.10 asks about, with
+ * the content most likely to break it: a long room name against a label at the schema's 20-character
+ * cap.
+ *
+ * `RootTextScaled` tests the easy direction. Raising the root there drops a 1240px wrapper from
+ * three tracks to one, which gives each card *more* room, not less. This is the other direction, and
+ * it is where the header row's flex minimum bites: `.title` and `.label` share a row, `.label` is
+ * `flex: 0 0 auto`, and a title whose min-content width will not fit pushes the row past the card —
+ * where `MediaCard`'s `overflow: hidden` clips it silently rather than producing a scrollbar. That
+ * is content loss, not two-dimensional scrolling, and it is the failure
+ * `HeaderDisplaySection/styles.module.scss` measured on the same mechanism.
+ *
+ * `overflow-wrap: anywhere` on `.item` is what holds it: `anywhere` is the only value that reduces
+ * an element's min-content size, so the flex minimum collapses and the name wraps instead.
+ *
+ * ## The label is the part this section cannot fix, and its cap is measured from here
+ *
+ * The **name** wraps. The **label** does not, and cannot: `MediaCard`'s `.label` is `flex: 0 0 auto`
+ * — deliberately, so that a long name wraps rather than squeezing a one- or two-word run — and a
+ * flex item that cannot shrink ignores `overflow-wrap` entirely, because its size is its content's.
+ *
+ * Measured on this story at a 320px wrapper, stepping the label through real values:
+ *
+ *   default root   5, 7, 8, 10, 12, 13 characters   all fit
+ *   32px root      5, 7, 8 fit   ·   10, 12, 13 clip
+ *
+ * So **WCAG 1.4.10 at 320px passes at any plausible label length**, and the combined case — 320px
+ * *and* 200% text, which is stricter than either 1.4.4 or 1.4.10 asks for on its own — holds to 8
+ * characters. That is where `label`'s `Rule.max(8).warning(…)` comes from, and it is not tight in
+ * practice: the drawn labels are "2 MAX", "4 MAX" and "2 ROOMS". The label below sits exactly on the
+ * cap, so this story is what keeps the schema's number honest.
+ *
+ * The durable fix is one line in `MediaCard` — `flex: 0 1 auto` with `min-width: 0` on `.label`, or a
+ * wrapping `.header` — and it belongs to that component, which `/the-lodge` also consumes.
+ *
+ * One honest caveat, worth knowing before trusting the numbers. The wrapper is 320px but the
+ * runner's viewport is not, so every `fluid()` token stays near its wide anchor — the title renders
+ * at roughly 30px inside a 320px box rather than the ~26px a real 320px viewport would give. That
+ * over-tests rather than under-tests, which is the safe direction.
+ */
+export const Reflow320: Story = {
+  args: {
+    cards: [
+      { ...KING_ROOM, label: 'Sleeps 4', title: '<h2>The Old Coach House Garden Suite</h2>' },
+      TWIN_DOUBLE,
+      FAMILY_ROOM
+    ]
+  },
+  decorators: [atWidth('320px')],
+  play: async ({ canvasElement, step }) => {
+    const root = document.documentElement;
+    const previous = root.style.fontSize;
+
+    /** Nothing inside a card is wider than the box that paints it — i.e. nothing is clipped away. */
+    const expectNothingClipped = async () => {
+      await waitFor(async () => {
+        await expect(trackCountOf(gridIn(canvasElement))).toBe(1);
+
+        for (const card of cardsIn(canvasElement)) {
+          await expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth + 1);
+        }
+
+        for (const footer of footersIn(canvasElement)) {
+          await expect(footer.scrollWidth).toBeLessThanOrEqual(footer.clientWidth + 1);
+        }
+      });
+    };
+
+    try {
+      await step('Nothing is clipped at 320px', expectNothingClipped);
+
+      root.style.fontSize = '32px';
+
+      // 1.4.4: a text-size increase on its own must not cost content, and at 320px there is no
+      // column count left to give up — so the wrapping is doing all of the work.
+      await step('Nothing is clipped at 320px with a 32px root', expectNothingClipped);
+
+      const canvas = within(canvasElement);
+      await expect(cardsIn(canvasElement)).toHaveLength(3);
+      await expect(canvas.getByRole('heading', { name: 'The Old Coach House Garden Suite' })).toBeVisible();
+      await expect(canvas.getByText('Sleeps 4')).toBeVisible();
+    } finally {
+      root.style.fontSize = previous;
+    }
+  }
+};
+
+/**
+ * **Blank and half-blank cards, which are the two an editor reaches by accident.** "Add item", tab
+ * through, move on.
+ *
+ * `hasCardContent` drops a card with nothing in it, so the grid does not draw a bordered box of
+ * padding. Two things about it are easy to get wrong and are asserted here rather than trusted:
+ *
+ * - It deliberately does **not** count `caption`. The card only renders a caption inset into a media
+ *   band, so a card holding nothing but a file name has nothing to show — the chip would be dropped
+ *   with the band and the card would be the empty box again.
+ * - It **does** count a card with only a label, which renders as a legitimate if sparse card. The
+ *   guard's job is "is there anything to draw", not "is this card finished".
+ */
+export const WithBlankCard: Story = {
+  args: {
+    cards: [
+      KING_ROOM,
+      { _key: 'blank' },
+      { _key: 'caption-only', caption: 'orphan.jpg' },
+      { _key: 'label-only', label: '1 max' },
+      TWIN_DOUBLE
+    ]
+  },
+  decorators: [atWidth('1240px')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Five entries, three cards: the empty one and the caption-only one are both dropped.
+    await expect(cardsIn(canvasElement)).toHaveLength(3);
+    await expect(within(canvas.getByRole('list')).getAllByRole('listitem')).toHaveLength(3);
+    await expect(canvas.queryByText('orphan.jpg')).toBeNull();
+
+    /*
+     * The label-only card is the one that survives on a single field, and it is a real card.
+     *
+     * `'1 max'` rather than repeating `KING_ROOM`'s `'2 max'`, so this resolves to one element.
+     * `getByText` throws on a second match, which is the right default and a trap for a story whose
+     * whole point is several cards sharing a shape.
+     */
+    await expect(canvas.getByText('1 max')).toBeVisible();
+  }
+};
+
+/**
+ * **No renderable cards at all — the section returns `null` rather than an empty shell.**
+ *
+ * `cards` is not `required()`, so the way here is a half-built section in the Studio's Presentation
+ * preview. The alternative is a `Section` with its bottom padding and nothing in it: a strip of page
+ * that looks like a styling bug rather than like unfinished content. `TwoColumnListSection` and
+ * `ScheduleSection` both bail the same way.
+ *
+ * Asserted on the `<section>` rather than on the card count, because the card count is already zero
+ * in the failure case this guards against.
+ */
+export const NoCards: Story = {
+  args: { cards: [{ _key: 'blank' }] },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector('section')).toBeNull();
+    await expect(cardsIn(canvasElement)).toHaveLength(0);
   }
 };

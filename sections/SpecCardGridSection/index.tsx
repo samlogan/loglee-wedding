@@ -37,10 +37,18 @@ const FOOTNOTE_SEPARATOR = ' · ';
  *
  * **`sizes` can only be a viewport query, while the track count is a container query**, so these are
  * the viewport widths at which the section's container crosses its own thresholds on a full-width
- * page: 608px of content sits inside a ~660px viewport and 960px inside a ~1025px one, once
+ * page: 608px of content sits inside a ~658.7px viewport and 960px inside a ~1024.4px one, once
  * `--container-gutter` (`fluid(20px, 40px)`) is added back on both sides. A section dropped into a
- * narrower column would over-fetch, which is the safe direction to be wrong in — `sizes` is a hint,
- * and the failure mode of the other direction is a visibly soft photograph.
+ * narrower column over-fetches, which is the safe direction to be wrong in — `sizes` is a hint, and
+ * over-fetching costs bytes where under-fetching costs a visibly soft photograph.
+ *
+ * There is one case that goes the *unsafe* way, and it is worth naming rather than leaving for
+ * someone to find. The thresholds in `styles.module.scss` are `rem`, so a reader at a 32px root gets
+ * one wide track at a 1440px viewport while this string still says `33vw` — a ~475px source
+ * stretched across ~1360px. Accepted knowingly: the alternative is to make every entry conservative
+ * and hand every reader at a default root roughly four times the bytes, to spare a soft image to the
+ * few who have doubled their text size. A soft photograph is also the mildest failure on the page at
+ * that setting.
  *
  * The last entry is a fixed `440px` rather than a percentage because `Container` caps at
  * `--container-xl` (1440px): past that the column stops growing, and `33vw` would keep asking for a
@@ -121,6 +129,12 @@ const SpecCardGridSection: FC<ISpecCardGridSection> = (props) => {
       name="SpecCardGridSection"
       theme={getSectionTheme(props, 'light')}
       /*
+       * Carries one declaration: a re-point of `--section-spacing-sm` to this band's measured pair.
+       * It has to be on the section root, because that is the element `Section`'s own
+       * `.spacing_bottom_sm` sits on and reads the token from. See the note in `styles.module.scss`.
+       */
+      className={styles.section}
+      /*
        * The query container for the grid's two switches is the `Container` element, not the grid —
        * so the queried inline size is the content box the tracks actually divide. See the note at
        * the top of `styles.module.scss`.
@@ -139,21 +153,14 @@ const SpecCardGridSection: FC<ISpecCardGridSection> = (props) => {
        * one `scheduleSection` and `twoColumnListSection` both state.
        *
        * Bottom is drawn 48px desktop (1:630) and 24px mobile (1:700 is 1064 tall and its last card
-       * ends at 1040). The drawn pair extrapolates to about `fluid(24px, 52px)` on the scale's own
-       * 375→1440 anchors, and **no token is that pair**. Measured in the browser rather than
-       * calculated:
+       * ends at 1040). `sm` is the step — and `--section-spacing-sm`'s stock `fluid(16px, 48px)` is
+       * 31% short of the drawn value at the phone, so `styles.module.scss` re-points the token on
+       * this section to the measured `fluid(24px, 48px)`. The prop stays the mechanism and both
+       * remove-spacing toggles stay live; the long argument for doing it that way rather than with a
+       * hand-written padding is at the `.section` rule.
        *
-       *                     375px    1280px   1440px
-       *   drawn               24        48        —
-       *   `sm` (this)         16        43.2      48
-       *   `md`                24.9      57.6      64
-       *
-       * `sm` is the choice because its worst case is 7px under at the phone while `md`'s is 16px
-       * over at the desktop anchor, and because `sm` is exactly what the band immediately above this
-       * on `/stay` (`headerDisplaySection`) already uses — so the page keeps one rhythm rather than
-       * two. The phone shortfall is the known cost, and it is a cost rather than a bug: there is no
-       * per-breakpoint section spacing, and hand-writing the padding here would take the editor's
-       * remove-spacing toggles out of the loop.
+       * `sm` rather than `md` also keeps this band on the same step as `headerDisplaySection`
+       * immediately above it on `/stay`, so the page reads as one rhythm.
        *
        * The editor's two remove-spacing toggles stay wired through the spread. `removeTopSpacing`
        * has nothing to remove today, and dropping the spread to say so would take the control away
