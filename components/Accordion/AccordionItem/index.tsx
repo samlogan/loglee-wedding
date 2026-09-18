@@ -19,11 +19,6 @@ interface AccordionItemProps {
   className?: string;
   classNameTrigger?: string;
   /**
-   * Positioning and sizing for the `+` / `−` chip only — the fill, the stroke and the inversion stay
-   * this component's. `sections/FaqSection` uses it to re-point the chip's size pair.
-   */
-  classNameIndicator?: string;
-  /**
    * An explicit accessible name for the trigger, for the case where `title` is a node carrying no
    * text of its own (an icon, an image). Omit it and the button is named by its own content, which
    * is what a disclosure should be — see the note on the `<button>` below.
@@ -32,8 +27,7 @@ interface AccordionItemProps {
 }
 
 const AccordionItem = (props: AccordionItemProps) => {
-  const { title, content, children, active, setActive, className, classNameTrigger, classNameIndicator, ariaLabel } =
-    props;
+  const { title, content, children, active, setActive, className, classNameTrigger, ariaLabel } = props;
 
   const classes = classNames(styles.item, { [styles.active]: active }, className);
   const id = useId();
@@ -94,7 +88,7 @@ const AccordionItem = (props: AccordionItemProps) => {
           <Text
             ariaHidden
             as="span"
-            className={classNames(styles.indicator, classNameIndicator)}
+            className={styles.indicator}
             text={active ? '−' : '+'}
             variant="mono"
             weight="medium"

@@ -82,7 +82,7 @@ const FaqMapCard = (props: FaqMapCardProps) => {
          * the stack point and 440px above it (node 16:643). Getting it wrong costs bandwidth on
          * every page load rather than anything visible, which is why it is easy to leave wrong.
          */
-        <Image {...image} className={styles.mapImage} sizes="(max-width: 1024px) 100vw, 440px" />
+        <Image {...image} sizes="(max-width: 1024px) 100vw, 440px" />
       )}
       {hasEmbed && (
         /*
@@ -138,8 +138,14 @@ const FaqMapCard = (props: FaqMapCardProps) => {
             /*
              * `variant="bare"` is the design's boxless mono control: it zeroes the padding the size
              * axis would otherwise add and holds the 24px pointer target WCAG 2.5.8 asks of a
-             * standalone control. `arrow="right"` draws the comp's "→" as the component's own
+             * standalone control, through an absolutely-positioned `::after` that grows the hit area
+             * without moving the box. `arrow="right"` draws the comp's "→" as the component's own
              * decorative glyph rather than as copy an editor has to remember to type.
+             *
+             * **No `size`.** `bare` discards every property the size axis sets — it zeroes the
+             * padding at a higher specificity and the icon size is unused — so a `size` here would
+             * imply the 11px type came from the button ladder when it comes from `--body-2xs`, the
+             * type-scale rung the address beside it is also on. See the stylesheet.
              *
              * `data-theme` rides through `Link`'s `...rest` spread onto the `<a>` — see the note on
              * `accentTheme` above for why the flip belongs on this element and not on the bar.
@@ -149,7 +155,6 @@ const FaqMapCard = (props: FaqMapCardProps) => {
               className={styles.mapLink}
               data-theme={accentTheme}
               variant="bare"
-              size="sm"
               mono
               arrow="right"
               text={linkLabel}

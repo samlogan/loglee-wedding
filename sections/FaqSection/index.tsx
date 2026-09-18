@@ -94,12 +94,15 @@ const FaqSection: FC<IFaqSection> = (props) => {
                  *
                  * `variant="mono"` with `weight="bold"` selects the loud register (0.2em), which is
                  * the comp's 2.6px on 13px exactly. Same call as `TwoColumnListSection.eyebrow` and
-                 * `ScheduleSection.eyebrow`; the size pair and the ink live in the stylesheet.
+                 * `ScheduleSection.eyebrow`, except that the ink is the `color` prop rather than a
+                 * declaration in the module — `themeFgAccent` maps to the `--fg-accent` those two
+                 * write by hand. The stylesheet is left holding the size pair and the leading.
                  */}
                 {Boolean(tagline?.trim()) && (
                   <Text
                     as="p"
                     className={styles.tagline}
+                    color="themeFgAccent"
                     text={tagline}
                     textTransform="uppercase"
                     variant="mono"
@@ -115,8 +118,12 @@ const FaqSection: FC<IFaqSection> = (props) => {
                * rich-text field and clears it leaves one `normal` block holding an empty child,
                * which Sanity does not unset. `.length` is 1, and the rail gains a dead line plus a
                * 24px gap above the map.
+               *
+               * `size="lg"` and no class. `--body-lg` is `fluid(16px, 18px)` against the comp's 18px
+               * desktop (16:642) and ~15px mobile (16:735) — inside the round-to-the-token rule at
+               * both ends, so re-pointing it would have been a decision that changed nothing.
                */
-              <TextBlock blocks={content} config={{ p: { className: styles.introText, size: 'lg' } }} />
+              <TextBlock blocks={content} config={{ p: { size: 'lg' } }} />
             )}
             {hasMap && map && <FaqMapCard {...map} accentTheme={accentTheme} />}
           </div>
@@ -135,6 +142,7 @@ const FaqSection: FC<IFaqSection> = (props) => {
                 <Text
                   as="p"
                   className={styles.footerEyebrow}
+                  color="themeFgAccent"
                   text={buttonEyebrow}
                   textTransform="uppercase"
                   variant="mono"

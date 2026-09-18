@@ -47,6 +47,7 @@ const FaqItems = ({ faqItems }: { faqItems: IFaqSection['faqItems'] }) => (
                 ariaHidden
                 as="span"
                 className={styles.ordinal}
+                color="themeFgAccent"
                 size="xs"
                 text={formatOrdinal(index)}
                 variant="mono"
@@ -70,9 +71,7 @@ const FaqItems = ({ faqItems }: { faqItems: IFaqSection['faqItems'] }) => (
               />
             </>
           }
-          className={styles.faqItem}
           classNameTrigger={styles.faqItemTrigger}
-          classNameIndicator={styles.faqItemIndicator}
         >
           <div className={styles.faqItemContent}>
             <TextBlock blocks={item.answer} config={{ p: { className: styles.answerText, size: 'lg' } }} />

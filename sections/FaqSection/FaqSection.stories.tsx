@@ -344,6 +344,42 @@ export const DesignReference: Story = {
   }
 };
 
+/**
+ * The dark theme, which the design does not draw and an editor can nevertheless choose.
+ *
+ * Worth a story of its own because of one token. Four runs in this section paint `--fg-accent` — the
+ * two eyebrows, every ordinal and the outline note chip — and `--fg-accent` is `--pine-600` on light
+ * but `--signal-300` on dark, the lime `_variables.scss` reserves for interactive states. So a dark
+ * FAQ puts the interactive colour on four things that are not interactive.
+ *
+ * Left as it is rather than papered over, because the fix is a design decision (the `components/Tag`
+ * precedent is a split token declared per `[data-theme]`, not a descendant selector) and the section
+ * is drawn on light on the only page that uses it. The story exists so the question is visible and
+ * so the theme at least renders and is asserted to be legible.
+ */
+export const OnDarkPage: Story = {
+  args: data,
+  globals: { theme: 'dark' },
+  decorators: [atWidth('1200px')],
+  play: async ({ canvasElement }) => {
+    const section = canvasElement.querySelector('[data-name="FaqSection"]') as HTMLElement;
+
+    await expect(section.dataset.theme).toBe('dark');
+    // The surface really did flip — pine-600 under off-white, not the light pair.
+    await expect(getComputedStyle(section).backgroundColor).toBe('rgb(30, 70, 50)');
+
+    /*
+     * The map bar is the ink chip and inverts with the page, so on dark it is the *off-white* one.
+     * Asserted because it is the one surface in this section that is painted from the button tokens
+     * rather than from `--bg-default`, and an inversion that only half happens is invisible until
+     * somebody reads the label.
+     */
+    const bar = canvasElement.querySelector('div[class*="mapBar"]') as HTMLElement;
+    await expect(getComputedStyle(bar).backgroundColor).toBe('rgb(243, 241, 234)');
+    await expect(getComputedStyle(bar).color).toBe('rgb(30, 70, 50)');
+  }
+};
+
 /** No map card — the rail is the header and the intro copy alone. */
 export const WithoutMap: Story = {
   args: { ...data, addMap: false },

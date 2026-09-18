@@ -54,6 +54,13 @@ $faq-inline-switch: 960px;
   }
 
   .contentContainer {
+    /*
+     * The drawn column gap (node 16:651 starts at x=544 beside a 440px rail at x=40). Held in a
+     * named property rather than as a bare `64px` in the query below: it is a measurement off one
+     * frame, and the nearest scale step (`--spacing-3xl`, ~62px at that width) is not it.
+     */
+    --faq-column-gap: 64px;
+
     display: flex;
     flex-direction: column;
     // Stacked: 24px between the map and the accordion (16:799 ends at 428.4, 16:736 starts at
@@ -61,10 +68,13 @@ $faq-inline-switch: 960px;
     // inside a 1200px content box (440 + 64 + 696).
     gap: var(--spacing-lg);
 
+    /*
+     * No `justify-content`: the rail is `flex: 0 1 440px` and the column beside it `flex: 1 1 auto`,
+     * so the row never has free space to distribute and any value would be inert.
+     */
     @container faq (width >= #{$faq-inline-switch}) {
       flex-direction: row;
-      justify-content: space-between;
-      gap: 64px;
+      gap: var(--faq-column-gap);
     }
   }
 
@@ -104,9 +114,11 @@ $faq-inline-switch: 960px;
    * selects the loud register (0.2em), which is the comp's 2.6px on 13px exactly, so this rule holds
    * only the size pair, the ink and the leading.
    *
-   * `--fg-accent` at full strength — the drawn label is `#1e4632`, which *is* `--fg-accent` on the
-   * light page it sits on. (`TwoColumnListSection.eyebrow` deliberately does not use this token; it
-   * draws on a dark panel where `--fg-accent` is signal-300, a lime the design never puts there.)
+   * The ink comes from `Text`'s `color="themeFgAccent"` prop rather than from a declaration here —
+   * the drawn label is `#1e4632`, which *is* `--fg-accent` on the light page it sits on.
+   * (`TwoColumnListSection.eyebrow` deliberately does not use this token; it draws on a dark panel
+   * where `--fg-accent` is signal-300, a lime the design never puts there. This section is drawn on
+   * light; see the note on the dark theme in the report.)
    *
    * `--mono-line-height` re-pointed to the body ratio rather than the role's own 1.3, matching
    * `ScheduleSection.eyebrow` and `TwoColumnListSection.eyebrow` — this is surrounding rhythm, not a
@@ -116,19 +128,16 @@ $faq-inline-switch: 960px;
   .tagline {
     --mono-line-height: var(--body-line-height);
 
-    color: var(--fg-accent);
+    /*
+     * `fluid(11px, 13px)` is the comps' pair exactly (13px on 16:638, ~11px on 16:731), and is the
+     * one number here that is *not* taken from a `Text` `size` rung — the nearest is
+     * `--body-xs` = `fluid(11px, 12px)`. Kept because `ScheduleSection.eyebrow` and
+     * `TwoColumnListSection.eyebrow` are the same label on sibling pages at the same pair; the right
+     * fix is one shared eyebrow token across all four call sites, which is `/consolidate` work
+     * rather than a divergence introduced here.
+     */
     font-size: #{fluid(11px, 13px)};
-    margin: 0;
     min-width: 0;
-  }
-
-  /*
-   * The intro paragraph. 18px on 27 at desktop (node 16:642), ~15px on 22.5 at mobile (16:735), so
-   * `--body-lg` is re-pointed to that pair rather than a `font-size` being declared — the token the
-   * `lg` step already reads is the one thing that has to change, and `Text` keeps owning the rest.
-   */
-  .introText {
-    --body-lg: #{fluid(15px, 18px)};
   }
 
   // --------------------
@@ -183,14 +192,15 @@ $faq-inline-switch: 960px;
       inset-inline-start: #{fluid(10px, 12px)};
     }
 
-    .mapImage,
-    .mapEmbed {
-      width: 100%;
-      height: 100%;
-    }
-
+    /*
+     * Only the embed needs sizing. `components/Image`'s own `.container` is already
+     * `width: 100%; height: 100%`, so a rule here repeating it would be a no-op that reads as a
+     * decision.
+     */
     .mapEmbed {
       display: block;
+      width: 100%;
+      height: 100%;
       border: 0;
     }
   }
@@ -241,22 +251,51 @@ $faq-inline-switch: 960px;
      * no import-order race to lose.
      *
      * `--fg-accent` resolves against the `data-theme` the element carries, not the page's: signal on
-     * the ink bar, pine on the off-white one. Hover goes to `--fg-default` under that same flipped
-     * theme, which is the bar's own label colour — so the link resolves *into* the surrounding text
-     * rather than out of it, and the change is visible without depending on colour alone (it is a
-     * hover affordance on a control that is already underlined by its arrow).
+     * the ink bar, pine on the off-white one.
+     *
+     * ## `a.mapLink`, not `.mapLink`, and the extra element selector is load-bearing
+     *
+     * `.mapBar .mapLink` computes to (0,2,0) — exactly what `.button.variant_bare` in
+     * `components/Button/styles.module.scss` computes to, and that rule sets both `color` and
+     * `--button-mono-tracking`. A tie is resolved by CSS-module emission order, which nothing in
+     * this build guarantees: whichever module happens to come last wins, so the link would silently
+     * paint `--fg-default` (identical to the address beside it, losing the card's only accent) and
+     * lose its tracking on a bundler reshuffle. The element selector adds (0,0,1), which no
+     * reordering can take away.
+     *
+     * `text-transform` is **not** declared here: `.mono` already sets `uppercase`.
+     *
+     * ## The hover is an underline and not a colour, and that is forced rather than chosen
+     *
+     * `.variant_bare:hover:not(:disabled)` in `components/Button/styles.module.scss` computes to
+     * (0,4,0) — three classes plus the `:disabled` inside `:not()` — and sets `color: var(--fg-accent)`,
+     * which is the colour this link already is. A colour override from here would have to beat that,
+     * and `.mapBar .mapLink:hover` is only (0,3,0): measured in the browser, the hover changed
+     * nothing at all. Matching (0,4,0) would tie and hand the decision to CSS-module import order,
+     * which nothing in the build guarantees.
+     *
+     * `text-decoration` has no such contest — `.button` sets `none` at (0,1,0) — so the underline
+     * wins deterministically. It is also the better affordance: not conveyed by colour alone
+     * (WCAG 1.4.1), and the conventional signal for a text link.
      */
-    .mapLink {
+    a.mapLink {
       --button-mono-quiet-font-weight: var(--font-weight-bold);
       --button-mono-tracking: var(--mono-letter-spacing);
 
       flex: 0 0 auto;
       color: var(--fg-accent);
+      /*
+       * `--body-2xs` (fluid 10→11px) rather than the `sm` step's `--button-sm-font-size`
+       * (fluid 11→12px), and the control takes no `size` prop at all as a result. The bar holds two
+       * mono runs drawn at the same 11px (16:648, 16:650), and only one of them is a button — so the
+       * size has to come from the type scale both can reach, not from the button ladder one of them
+       * is on.
+       */
       font-size: var(--body-2xs);
-      text-transform: uppercase;
 
       &:hover {
-        color: var(--fg-default);
+        text-decoration: underline;
+        text-underline-offset: 0.25em;
       }
     }
   }
@@ -296,12 +335,14 @@ $faq-inline-switch: 960px;
      */
     --faq-ordinal-column: #{fluid(32px, 56px)};
     --faq-row-gap: #{fluid(10px, 16px)};
+    /*
+     * The answer's measure (node 16:663). A named local rather than a bare `620px` further down, and
+     * deliberately not `--container-xs` (640px): this is the comp's own line length, not a container
+     * cap, and the two would drift for different reasons.
+     */
+    --faq-answer-measure: 620px;
 
     border-top: 1px solid var(--fg-default);
-
-    .faqItem {
-      min-width: 0;
-    }
 
     .faqItemTrigger {
       gap: var(--faq-row-gap);
@@ -324,7 +365,6 @@ $faq-inline-switch: 960px;
       --mono-line-height: var(--body-line-height);
 
       flex: 0 0 var(--faq-ordinal-column);
-      color: var(--fg-accent);
     }
 
     /*
@@ -355,12 +395,20 @@ $faq-inline-switch: 960px;
       display: flex;
       flex-direction: column;
       gap: var(--spacing-sm);
-      max-width: 620px;
+      max-width: var(--faq-answer-measure);
       padding-inline-start: calc(var(--faq-ordinal-column) + var(--faq-row-gap));
 
       /*
-       * 15px on 24 at mobile (16:748), 17px on 27.2 at desktop (16:665) — `--body-lg` re-pointed to
+       * 17px on 27.2 at desktop (16:665), ~15px on ~24 at mobile (16:748) — `--body-lg` re-pointed to
        * that pair, exactly as `TwoColumnListSection.copyText` does.
+       *
+       * A code review argued for dropping this on the round-to-the-token rule, since stock
+       * `--body-lg` is `fluid(16px, 18px)` and therefore within 1px at both anchors. Measured, it is
+       * not only the 1px: the leading is a *ratio*, so a 1px larger font draws a 1.6px taller line
+       * box — 28.8 against the comp's 27.2 — and this is the running body copy of the section, where
+       * that compounds down the paragraph. The rounding rule is for choosing a size *step*; a
+       * documented re-point onto the drawn pair is what the step is for, and the sibling section
+       * already makes it.
        *
        * The drawn ink is `rgba(19, 20, 18, 0.8)` — the page's own ink, muted, rather than
        * `--fg-muted` (stone-600), which is a different colour and not the one the comp picks.
@@ -426,6 +474,7 @@ $faq-inline-switch: 960px;
    */
   .footerEyebrow {
     --mono-line-height: var(--body-line-height);
+    // Untracked; see below. The ink is `Text`'s `color="themeFgAccent"`, not a declaration here.
     /*
      * Untracked, where the mono role's quiet register is 0.1em. Node 16:716 carries no `tracking-`
      * class at all — unlike the tagline at the top of the rail, which is the loud 0.2em. The two
@@ -435,9 +484,8 @@ $faq-inline-switch: 960px;
     --mono-letter-spacing: normal;
 
     display: none;
-    color: var(--fg-accent);
+    // The same pair as `.tagline`, and the same note applies about the shared eyebrow token.
     font-size: #{fluid(11px, 13px)};
-    margin: 0;
 
     @container faq (width >= #{$faq-inline-switch}) {
       display: block;
