@@ -323,6 +323,38 @@
   --mono-line-height: 1.3;
   --mono-letter-spacing: 0.1em;
   --mono-letter-spacing-loud: 0.2em;
+  /*
+   * ## The one size token the role does carry, and why it is an exception rather than a rung
+   *
+   * The section eyebrow — "HELP MENU", "STILL STUCK?", "THE DETAILS", the label above a statement —
+   * is drawn at 11px on the phone frames and 13px on the desktop ones, everywhere it appears. That
+   * pair is **not on the body scale** and cannot be: `--body-xs` is `fluid(11px, 12px)`, whose narrow
+   * anchor is already this label's drawn 11 and whose wide anchor is a pixel short of the drawn 13.
+   * Measured at 1440px, where the token is at its wide anchor by definition, `--body-xs` renders
+   * 12.00 against the drawn 13 — so the shortfall is not the usual 1280-against-1440 undershoot.
+   *
+   * `--body-xs` cannot move at source for one label's sake: it is the floor of the shared body scale
+   * with five other consumers. So four rules had written `fluid(11px, 13px)` by hand —
+   * `ScheduleSection.eyebrow`, `TwoColumnListSection.eyebrow`, and both of `FaqSection`'s two — each
+   * noting that the right answer was one shared token and that this was not the moment. This is the
+   * same threshold `--body-2xs` crossed at four copies, for the same kind of value, and the same
+   * argument applies: a retune of the pair now has one place to happen rather than four places to be
+   * forgotten.
+   *
+   * It is deliberately **not** a `Text` `size` rung. The three the mono variant exposes are steps on
+   * the shared scale; this is one role's drawn measurement, closer in kind to `--body-lede` than to
+   * `--body-sm`. Adding a fourth rung would also have to answer what `body`/`heading` at that size
+   * mean, which is the unvalidated cross product the note on `TextProps` fences. Consuming rules set
+   * `font-size: var(--mono-eyebrow)` on their own class, which is what they were already doing with
+   * the literal.
+   *
+   * The four call sites agree on exactly two things and this token carries one of them. The other —
+   * `--mono-line-height: var(--body-line-height)`, because an eyebrow is surrounding rhythm rather
+   * than a drawn box — stays re-pointed at each site, per the paragraph above: the token carries the
+   * role and the exception stays visible. Ink, tracking register and visibility genuinely differ per
+   * site and are none of this token's business.
+   */
+  --mono-eyebrow: #{fluid(11px, 13px)};
   // Medium, matching `--button-mono-quiet-font-weight`. The quiet register is the role's default;
   // the loud one is asked for explicitly with `weight="bold"`.
   --mono-default-font-weight: var(--font-weight-medium);

@@ -30,6 +30,9 @@
  * 960px is the content box at the design's own stack point: the `large-tablet` breakpoint (1025px)
  * less two `--container-gutter`s, which resolve to ~32px each at that width.
  *
+ * One of three `px` switches in the repo; the rule and the register are at the head of
+ * `tools/sass/base/__media.scss`.
+ *
  * **Stacked is the unconditional default.** A container query cannot be evaluated before its
  * container exists, so the single-column layout has to be the base and the row the addition.
  */
@@ -44,7 +47,10 @@ $faq-inline-switch: 960px;
    *
    * `container-name` is **not** hashed by CSS Modules — it is a global identifier — so it is spelt
    * out rather than left as a bare `faq`, which a second section adopting this idiom could collide
-   * with silently.
+   * with silently. `faqSection` and not the `faq-section` this shipped with: nine other containers
+   * in the repo are camelCase in the `container: <name> / inline-size` shorthand, and one kebab-case
+   * outlier declaring its type and name on separate lines is a shape a reader has to stop at. The
+   * conventions are collected at the head of `tools/sass/base/__media.scss`.
    *
    * `inline-size` and not `size`: the width comes from the page and the height from the content, and
    * containing the height would collapse it. Note it also implies `contain: layout`, which makes the
@@ -55,8 +61,7 @@ $faq-inline-switch: 960px;
    * children of `<main>`, and of a plain `<div>` in Storybook.
    */
   .queryContainer {
-    container-type: inline-size;
-    container-name: faq-section;
+    container: faqSection / inline-size;
   }
 
   .contentContainer {
@@ -78,7 +83,7 @@ $faq-inline-switch: 960px;
      * No `justify-content`: the rail is `flex: 0 1 440px` and the column beside it `flex: 1 1 auto`,
      * so the row never has free space to distribute and any value would be inert.
      */
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       flex-direction: row;
       gap: var(--faq-column-gap);
     }
@@ -101,7 +106,7 @@ $faq-inline-switch: 960px;
     min-width: 0;
 
     // 440px of a 1200px content box (node 16:635), allowed to shrink but not to grow.
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       flex: 0 1 440px;
     }
   }
@@ -118,12 +123,12 @@ $faq-inline-switch: 960px;
   /*
    * The two eyebrows share everything but their register and their visibility, so they share a rule.
    *
-   * `fluid(11px, 13px)` is the comps' pair exactly (13px on 16:638 and 16:716, ~11px on 16:731) and
-   * is the one length in this file that is *not* a `Text` `size` rung — the nearest is `--body-xs`,
-   * `fluid(11px, 12px)`. Kept rather than rounded because `ScheduleSection.eyebrow` and
-   * `TwoColumnListSection.eyebrow` are the same label on sibling pages at the same pair; the right
-   * fix is one shared eyebrow token across all four call sites, which is `/consolidate` work rather
-   * than a divergence introduced here.
+   * `--mono-eyebrow` is `fluid(11px, 13px)`, the comps' pair exactly (13px on 16:638 and 16:716,
+   * ~11px on 16:731). It is not a `Text` `size` rung — the nearest is `--body-xs`,
+   * `fluid(11px, 12px)`, a pixel short at the wide anchor — and this file used to write the literal,
+   * noting that `ScheduleSection.eyebrow` and `TwoColumnListSection.eyebrow` were the same label on
+   * sibling pages at the same pair and that one shared token across all four call sites was
+   * `/consolidate` work. It is now that token; see the note on it in `_variables.scss`.
    *
    * `--mono-line-height` re-pointed to the body ratio rather than the role's own 1.3, matching those
    * two — this is surrounding rhythm, not a drawn box. Note `inherit` would be wrong: on a custom
@@ -135,7 +140,7 @@ $faq-inline-switch: 960px;
   .footerEyebrow {
     --mono-line-height: var(--body-line-height);
 
-    font-size: #{fluid(11px, 13px)};
+    font-size: var(--mono-eyebrow);
     min-width: 0;
   }
 
@@ -260,22 +265,32 @@ $faq-inline-switch: 960px;
 
     /*
      * `variant="bare"` selects the *quiet* mono register (Medium, untracked) and this label is drawn
-     * Bold at 0.1em, so both are re-pointed. Both are properties that `.variant_bare` **reads**
-     * rather than sets, or are set from a rule with more classes than it has — either way there is
-     * no import-order race to lose.
+     * Bold at 0.1em, so both are re-pointed — and both are now the consumer half of a split pair
+     * that `components/Button` never declares, so there is no race to lose on either.
+     *
+     * That was not true when this shipped. `Button` set `--button-mono-tracking` on `.variant_bare`
+     * itself, which is a single-class rule in the same layer as this one, so the two tied and the
+     * winner came down to CSS-module emission order. The workaround was to reach around it — Bold
+     * arrived by re-pointing `--button-mono-quiet-font-weight`, a token `.variant_bare` happens to
+     * *read*, and the tracking by out-specifying it. `Button`'s mono axis now follows the same
+     * split-property idiom `components/Tag` and `components/MediaCard` use, so the two hooks below
+     * say what they mean and win unconditionally.
      *
      * `--fg-accent` resolves against the `data-theme` the element carries, not the page's: signal on
      * the ink bar, pine on the off-white one.
      *
-     * ## `a.mapLink`, not `.mapLink`, and the extra element selector is load-bearing
+     * ## `a.mapLink`, not `.mapLink`, and the extra element selector is still load-bearing
      *
-     * `.mapBar .mapLink` computes to (0,2,0) — exactly what `.button.variant_bare` in
-     * `components/Button/styles.module.scss` computes to, and that rule sets both `color` and
-     * `--button-mono-tracking`. A tie is resolved by CSS-module emission order, which nothing in
-     * this build guarantees: whichever module happens to come last wins, so the link would silently
-     * paint `--fg-default` (identical to the address beside it, losing the card's only accent) and
-     * lose its tracking on a bundler reshuffle. The element selector adds (0,0,1), which no
-     * reordering can take away.
+     * For `color`, which is a real CSS property and not a hook. `.mapBar .mapLink` computes to
+     * (0,2,0) — exactly what `.button.variant_bare` computes to, and that rule sets `color`. A tie is
+     * resolved by CSS-module emission order, which nothing in this build guarantees: whichever
+     * module happens to come last wins, so the link would silently paint `--fg-default` (identical
+     * to the address beside it, losing the card's only accent) on a bundler reshuffle. The element
+     * selector adds (0,0,1), which no reordering can take away.
+     *
+     * Splitting `color` the same way would mean a `--button-ink` hook on every theme and state rule
+     * in that component — a much larger change than the mono axis, and one no second call site has
+     * asked for. Left as the one genuine specificity fight here, named rather than hidden.
      *
      * `text-transform` is **not** declared here: `.mono` already sets `uppercase`.
      *
@@ -293,7 +308,7 @@ $faq-inline-switch: 960px;
      * (WCAG 1.4.1), and the conventional signal for a text link.
      */
     a.mapLink {
-      --button-mono-quiet-font-weight: var(--font-weight-bold);
+      --button-mono-weight: var(--font-weight-bold);
       --button-mono-tracking: var(--mono-letter-spacing);
 
       flex: 0 0 auto;
@@ -323,7 +338,7 @@ $faq-inline-switch: 960px;
     min-width: 0;
 
     // Takes whatever the rail leaves — 696px of 1200 at the design's own width (node 16:651).
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       flex: 1 1 auto;
     }
   }
@@ -468,7 +483,7 @@ $faq-inline-switch: 960px;
     // and its full-width button (16:736 ends at 1017.8, 16:797 starts at 1041.8).
     padding-block-start: #{fluid(24px, 28px)};
 
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       justify-content: space-between;
     }
   }
@@ -495,7 +510,7 @@ $faq-inline-switch: 960px;
 
     display: none;
 
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       display: block;
     }
   }
@@ -513,7 +528,7 @@ $faq-inline-switch: 960px;
   .footerButton {
     width: 100%;
 
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       width: auto;
     }
   }

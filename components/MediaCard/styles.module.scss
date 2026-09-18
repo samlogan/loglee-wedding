@@ -129,6 +129,26 @@
      * contrast failure waiting for someone to flip the theme.
      */
     color: var(--fg-default);
+    /*
+     * **The other half of `overflow: hidden` above, and it belongs here rather than in a consumer.**
+     *
+     * The clip is this component's — it is what rounds the media band into the corner radius — so
+     * the hazard it creates is this component's too: a single unbreakable string (a name typed
+     * without spaces, a URL pasted into a footnote) overflows its box and is then clipped mid-word
+     * with no ellipsis, no scrollbar and no page scroll. Nothing to notice it by.
+     *
+     * `overflow-wrap` is **inherited**, so one declaration here reaches the title, the description,
+     * every footer item and the caption chip alike — which is exactly why both consuming sections
+     * independently reached for it on their own grid item, each with the same fifteen-line note, and
+     * each observing that it arguably belonged in the shared component. It does. A card that clips
+     * its own content should be the thing that stops the content needing to be clipped.
+     *
+     * `anywhere` rather than the `break-word` `body` already hands down, and the difference is the
+     * whole point: **only `anywhere` reduces `min-content`.** `break-word` breaks the line but still
+     * lets the intrinsic size win the sizing round, so a long word keeps widening the grid track it
+     * sits in. `components/Tag` states the same distinction for the same reason.
+     */
+    overflow-wrap: anywhere;
   }
 
   .media {
@@ -222,6 +242,17 @@
    * size and overlaps its own line boxes at that leading.
    */
   .title {
+    /*
+     * The automatic-minimum guard on the header row's first item.
+     *
+     * `.header` is a **row** flex container — the one axis where a flex item's automatic minimum
+     * size really is content-based — so without this the title refuses to shrink below its longest
+     * word, pushes the label out of the card and is then clipped by `.card`'s `overflow: hidden`.
+     * `.card`'s inherited `overflow-wrap: anywhere` gives the word a break opportunity; this is what
+     * lets the *box* take it. The two are halves of one fix and neither works alone.
+     */
+    min-width: 0;
+
     font-size: var(--media-card-title-size, var(--media-card-title-size-default));
     line-height: 0.95;
     letter-spacing: -0.03em;
@@ -232,11 +263,35 @@
    * are a `Tag`. The ink is `--fg-accent`, pine on the light theme and signal on the dark one,
    * exactly as drawn (`#1e4632` on 1:638, `#d6ff3b` on 16:157).
    *
-   * `0 0 auto` so a long title wraps rather than squeezing the label, which is a one- or two-word run
-   * that must not break.
+   * `0 1 auto` so a long title wraps rather than squeezing the label — which is a one- or two-word
+   * run that should not break, but must be *able* to.
+   *
+   * ## `0 1 auto` and `min-width: 0`, not the `0 0 auto` this shipped with
+   *
+   * `flex-shrink: 0` sizes an item from its content and nothing else, so the label declined to give
+   * up a single pixel — and `overflow-wrap` cannot help a box that refuses to shrink. Past a certain
+   * length the label was pushed out of the header row and clipped outright by `.card`'s
+   * `overflow: hidden`: no ellipsis, no scrollbar, nothing to notice. Measured at a 320px viewport
+   * with a 32px root, it overflowed the content edge at 11 characters and was cut at 12 —
+   * "Coffee house" rendered as "COFFEE HOUS".
+   *
+   * Both consuming sections hit this independently and both capped the field in their own schema
+   * instead — at eight characters and at ten, two different numbers for one component's defect. Each
+   * of those notes ends by naming this pair as the durable fix. This is it; the caps are reconciled
+   * to one advisory number about wrapping rather than two about clipping.
+   *
+   * `flex-basis: auto` keeps the drawn behaviour intact in the normal case: the label is still sized
+   * from its content and the title still wraps first, because the title is the item with the larger
+   * shrink contribution. Shrink only engages once there is genuinely no room, which is the case that
+   * used to clip.
    */
   .label {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    /*
+     * Without this the shrink factor above is inert — a row flex item's automatic minimum size is
+     * its min-content width, which is the floor the label was hitting in the first place.
+     */
+    min-width: 0;
     color: var(--fg-accent);
   }
 

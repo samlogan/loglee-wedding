@@ -45,9 +45,29 @@
      * controls, Medium and untracked for "← BACK". `.variant_bare` picks the quiet one by
      * overriding these, which it could not do by out-specifying `.mono` — both are single class
      * selectors.
+     *
+     * ## Split in two halves, which is the idiom `components/Tag` and `components/MediaCard` set out
+     *
+     * `.mono` reads `var(--button-mono-weight, var(--button-mono-weight-default))`, and **nothing in
+     * this file ever sets the un-suffixed name**. The suffixed one is the component's default; the
+     * bare one is the consumer's, and it is unclaimed.
+     *
+     * The indirection is not decoration. A consuming class lands on the *same element* through
+     * `className`, and both it and the rules here are single classes inside `@layer defaults` — so if
+     * the two set the same property they tie on specificity and the winner is decided by CSS-module
+     * emission order, which nothing in the build guarantees and which differs between Next and
+     * Storybook. `sections/FaqSection`'s map link lost exactly that race and had to buy it back with
+     * an `a.mapLink` element selector, documenting the standoff at length. Splitting the names
+     * removes the race rather than letting each consumer out-specify it: an unset hook falls through
+     * to the default, and a set one wins unconditionally. It also lets an *ancestor* set the hook,
+     * which a story or a themed wrapper may want.
+     *
+     * Only the mono axis is split. The padding pair below is a purely internal local — it is read by
+     * `.button` and set by the size and no-box variants, and no consumer has ever needed it — so
+     * splitting it would be ceremony for a hook nobody holds.
      */
-    --button-mono-weight: var(--button-mono-font-weight);
-    --button-mono-tracking: var(--button-mono-letter-spacing);
+    --button-mono-weight-default: var(--button-mono-font-weight);
+    --button-mono-tracking-default: var(--button-mono-letter-spacing);
 
     /*
      * The icon box, defaulted here rather than only inside the size classes.
@@ -312,10 +332,17 @@
     &.variant_bare {
       --button-padding-y: 0px;
       --button-padding-x: 0px;
-      // The quiet mono register: the design sets "← BACK" in Medium with no tracking, not in the
-      // Bold 0.08em the boxed UI controls use.
-      --button-mono-weight: var(--button-mono-quiet-font-weight);
-      --button-mono-tracking: normal;
+      /*
+       * The quiet mono register: the design sets "← BACK" in Medium with no tracking, not in the
+       * Bold 0.08em the boxed UI controls use.
+       *
+       * The `-default` half, like every other rule in this file — a variant is the component
+       * choosing for itself, not a consumer overriding it, so it must not claim the consumer's name.
+       * A call site that wants a third register sets `--button-mono-weight` / `-tracking` and wins
+       * over both of these unconditionally.
+       */
+      --button-mono-weight-default: var(--button-mono-quiet-font-weight);
+      --button-mono-tracking-default: normal;
 
       background-color: transparent;
       border-color: transparent;
@@ -428,8 +455,10 @@
   .mono {
     @include mono-font();
 
-    font-weight: var(--button-mono-weight);
-    letter-spacing: var(--button-mono-tracking);
+    // Consumer property first, component default as the fallback. See the note on the pair in
+    // `.button`: this is what makes a call-site re-point win without depending on emission order.
+    font-weight: var(--button-mono-weight, var(--button-mono-weight-default));
+    letter-spacing: var(--button-mono-tracking, var(--button-mono-tracking-default));
     text-transform: uppercase;
   }
 

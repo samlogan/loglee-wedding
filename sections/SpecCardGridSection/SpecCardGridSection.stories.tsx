@@ -698,28 +698,30 @@ export const LongUnbreakableContent: Story = {
  * is content loss, not two-dimensional scrolling, and it is the failure
  * `HeaderDisplaySection/styles.module.scss` measured on the same mechanism.
  *
- * `overflow-wrap: anywhere` on `.item` is what holds it: `anywhere` is the only value that reduces
- * an element's min-content size, so the flex minimum collapses and the name wraps instead.
+ * `overflow-wrap: anywhere` is what holds it: `anywhere` is the only value that reduces an element's
+ * min-content size, so the flex minimum collapses and the name wraps instead. **That declaration is
+ * no longer in this file** — it is on `components/MediaCard`'s `.card`, because the clip it guards
+ * against is the card's own `overflow: hidden` and `/the-lodge`'s venue grid had independently
+ * written the identical rule on its own grid item. `overflow-wrap` is inherited, so this story
+ * measures exactly what it measured before.
  *
- * ## The label is the part this section cannot fix, and its cap is measured from here
+ * ## The label used to be the part this section could not fix
  *
- * The **name** wraps. The **label** does not, and cannot: `MediaCard`'s `.label` is `flex: 0 0 auto`
- * — deliberately, so that a long name wraps rather than squeezing a one- or two-word run — and a
- * flex item that cannot shrink ignores `overflow-wrap` entirely, because its size is its content's.
- *
- * Measured on this story at a 320px wrapper, stepping the label through real values:
+ * The **name** wrapped and the **label** did not, and could not: `MediaCard`'s `.label` was
+ * `flex: 0 0 auto`, and a flex item that cannot shrink ignores `overflow-wrap` entirely, because its
+ * size is its content's. Measured on this story at a 320px wrapper, stepping the label through real
+ * values:
  *
  *   default root   5, 7, 8, 10, 12, 13 characters   all fit
  *   32px root      5, 7, 8 fit   ·   10, 12, 13 clip
  *
- * So **WCAG 1.4.10 at 320px passes at any plausible label length**, and the combined case — 320px
- * *and* 200% text, which is stricter than either 1.4.4 or 1.4.10 asks for on its own — holds to 8
- * characters. That is where `label`'s `Rule.max(8).warning(…)` comes from, and it is not tight in
- * practice: the drawn labels are "2 MAX", "4 MAX" and "2 ROOMS". The label below sits exactly on the
- * cap, so this story is what keeps the schema's number honest.
+ * That is where `label`'s old `Rule.max(8)` came from — and `/the-lodge` had capped its identical
+ * field at 10 from the same measurement on the other page. The card now carries `flex: 0 1 auto`
+ * plus `min-width: 0` on `.label`, which is the fix both notes named, so the label wraps rather than
+ * disappearing and the two caps are reconciled to one advisory 10.
  *
- * The durable fix is one line in `MediaCard` — `flex: 0 1 auto` with `min-width: 0` on `.label`, or a
- * wrapping `.header` — and it belongs to that component, which `/the-lodge` also consumes.
+ * `MediaCard.LongLabelAndTitle` measures the label half at the same 320px / 32px-root combination,
+ * on the component that now owns it. This story keeps the grid half.
  *
  * One honest caveat, worth knowing before trusting the numbers. The wrapper is 320px but the
  * runner's viewport is not, so every `fluid()` token stays near its wide anchor — the title renders

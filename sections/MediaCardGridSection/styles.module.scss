@@ -126,26 +126,20 @@ $media-card-grid-inline-switch: 45rem;
      */
     display: grid;
     /*
-     * **The clipping guard, and it belongs here rather than on any one of the card's parts.**
+     * **The clipping guard used to be here and is now in the component.**
      *
-     * `overflow-wrap` is inherited, so one declaration on the grid item covers the venue name, the
-     * description, every hours item and the caption chip. Without it a single unbreakable string —
-     * a name typed without spaces, a URL pasted into an hours item — overflows its box and is then
-     * clipped mid-word by the card's own `overflow: hidden`: no ellipsis, no scrollbar, no page
-     * scroll, nothing to notice. Measured on a sibling consumer of this card at 1440px, a 56-
-     * character name put the heading's right edge 753px past its own card and pushed the category
-     * label out of the row entirely.
+     * This rule carried `overflow-wrap: anywhere` so that a single unbreakable string — a venue name
+     * typed without spaces, a URL pasted into an hours item — could not overflow its box and be
+     * clipped mid-word by the card's own `overflow: hidden`. The note ended by saying that the label
+     * was the one thing the property could not reach, that the schema cap was a stop-gap, and that
+     * the durable fix was `min-width: 0` plus `flex: 0 1 auto` on the card's own parts.
      *
-     * `anywhere` rather than `break-word` because only `anywhere` also shrinks the box's
-     * min-content contribution, which is what stops the long word widening the track in the first
-     * place — `break-word` breaks the line but still lets the intrinsic size win the sizing round.
-     *
-     * The one thing it cannot reach is the card's category label, which is `flex: 0 0 auto` and so
-     * declines to shrink at all. That is capped in the schema instead. Both are stop-gaps: the
-     * durable fix is `min-width: 0` on the card's title and `flex: 0 1 auto` on its label, which
-     * belongs in the shared component rather than in each consumer.
+     * `/stay`'s room grid had independently written the same declaration on its own grid item, with
+     * the same reasoning and its own schema cap at a different number. Both are now in
+     * `components/MediaCard`: the clip is the card's, so the guard against it is too. Nothing is lost
+     * — `overflow-wrap` is inherited either way — and the label genuinely shrinks now rather than
+     * being capped out of the failure.
      */
-    overflow-wrap: anywhere;
   }
 
   .venueCard {

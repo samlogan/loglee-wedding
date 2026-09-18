@@ -6,6 +6,7 @@ import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import TextTitle from '@/components/TextTitle';
 import hasBlockContent from '@/helpers/hasBlockContent';
+import keyedTextItems from '@/helpers/keyedTextItems';
 import stripTitleTags from '@/helpers/stripTitleTags';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type { IMediaCardGridSection } from '@/tools/sanity/schema/sections/mediaCardGridSection';
@@ -193,39 +194,16 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
       <ul className={styles.grid} role="list">
         {cards.map((card) => {
           /*
-           * Keyed by the item's own text, because these are short lines an editor reorders in place
-           * and an index key would leave the old text in the old node.
+           * Trimmed, blanks dropped, duplicates disambiguated — `keyedTextItems`, which was
+           * collected out of this call site, `MediaTagsSection`'s location pills and
+           * `TwoColumnListSection`'s list items. The unconditional-suffix argument this block used
+           * to carry is the one the helper now states, because it is the one the other two had
+           * wrong.
            *
-           * That needs the text to be unique. `hours` carries `Rule.unique()` — but a Sanity
-           * validation rule is **publish-time** and Presentation renders drafts, so a draft mid-edit
-           * really can hold two identical lines and `key={hour}` would hand React duplicate keys for
-           * them: a console error and undefined reconciliation, in the one environment an editor is
-           * watching. Disambiguating by occurrence leaves the common case byte-identical to the bare
-           * text and makes the degenerate one merely ugly. `TwoColumnListSection` makes exactly this
-           * argument for exactly this field shape — with one correction. Suffixing only the
-           * *repeats* re-creates the collision it exists to prevent: `['a', 'a', 'a#1']` yields
-           * `a`, `a#1`, `a#1`. The suffix is always a bare integer, so suffixing unconditionally
-           * cannot collide, and nothing compares keys across renders of different shapes — the
-           * "byte-identical in the common case" property being traded away buys nothing.
-           *
-           * Blanks are dropped first: an array of plain strings keeps every row an editor tabbed
-           * through and moved on from, and an empty run would still take a slot in the footer's gap
-           * — or, worse, be the *only* item, drawing a hairline over nothing.
+           * Blanks matter here specifically: the hairline belongs to the footer, so an empty run
+           * would take a slot in its gap — or, worse, be the only item, drawing a rule over nothing.
            */
-          const seen = new Map<string, number>();
-          const hours = (card.hours ?? []).reduce<{ key: string; text: string }[]>((accumulator, hour) => {
-            const text = hour?.trim();
-
-            if (!text) {
-              return accumulator;
-            }
-
-            const occurrence = seen.get(text) ?? 0;
-            seen.set(text, occurrence + 1);
-            accumulator.push({ key: `${text}#${occurrence}`, text });
-
-            return accumulator;
-          }, []);
+          const hours = keyedTextItems(card.hours);
 
           return (
             /*

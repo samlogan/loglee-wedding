@@ -148,32 +148,31 @@ const cardFields: FieldDefinition[] = [
   },
   {
     /*
-     * Capped, and the cap is a real constraint rather than tidiness.
+     * Capped at 10, and the cap no longer guards against clipping.
      *
-     * `MediaCard` draws this with `flex: 0 0 auto`, so it cannot shrink, and `overflow-wrap` does not
-     * reach a box that refuses to give up width. A long category therefore pushes the name out of
-     * the header row and is then clipped mid-word by the card's own `overflow: hidden` — silently,
-     * with no ellipsis and no scrollbar. The section sets `overflow-wrap: anywhere` on each grid
-     * item, which covers the name, the description, the hours and the caption; this field is the one
-     * the property cannot help.
+     * It used to. `MediaCard` drew this with `flex: 0 0 auto`, so it could not shrink at all, and
+     * `overflow-wrap` does not reach a box that refuses to give up width — a long category pushed
+     * the name out of the header row and was then clipped mid-word by the card's own
+     * `overflow: hidden`, silently and with no ellipsis. Measured at a 320px viewport with a 32px
+     * root (200% text), the label overflowed the card's content edge at 11 characters (+8.2px) and
+     * was cut outright at 12 (+22.2px): "Coffee house" rendered as "COFFEE HOUS".
      *
-     * **10, measured rather than chosen.** At a 320px viewport with a 32px root (200% text), the
-     * label overflows the card's content edge at 11 characters (+8.2px) and is clipped outright at
-     * 12 (+22.2px) — "Coffee house" renders as "COFFEE HOUS". 12 was the first guess and is a
-     * measured failure, so the cap is the drawn maximum: "Restaurant" (10) and "Cocktails" (9) both
-     * pass, and the first string that breaks does not.
+     * The card now carries `flex: 0 1 auto` plus `min-width: 0` on `.label` — the fix this note used
+     * to name as the durable one — so the label wraps instead of disappearing. `specCardGridSection`
+     * had capped its identical field at **8** against the same defect measured on the other page,
+     * which is two numbers for one component's bug; both are now advisory and both are 10, the
+     * longest label the design draws anywhere ("Restaurant" here, "2 ROOMS" on `/stay`).
      *
-     * `.warning()` and not `.error()`: the failure needs 200% text on the narrowest supported
-     * viewport, and it is a squeeze rather than a broken document. An editor with a genuinely longer
-     * category should be told, not blocked.
+     * `.warning()` and not `.error()`, as before and more so: a longer category is now a second line
+     * in the header row rather than lost content.
      */
     description:
-      'The category, shown small and right-aligned beside the name — “Restaurant”, “Cocktails”. Optional. Keep it short: it sits on one line beside the name and cannot wrap. Type it in normal sentence case; it is displayed in uppercase automatically.',
+      'The category, shown small and right-aligned beside the name — “Restaurant”, “Cocktails”. Optional. Keep it short: it shares one line with the name. Type it in normal sentence case; it is displayed in uppercase automatically.',
     name: 'label',
     title: 'Category',
     type: 'string',
     validation: (Rule) =>
-      Rule.max(10).warning('Over 10 characters is clipped beside the name once a reader enlarges text.')
+      Rule.max(10).warning('Longer than this wraps onto a second line beside the name on a narrow screen.')
   },
   {
     description: 'A short paragraph under the name. Optional — the card closes up around it.',

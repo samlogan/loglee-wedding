@@ -248,10 +248,11 @@ $two-column-list-body-measure: 27.5rem;
    * known gap (MAM-1927) and re-declaring `font-family` in the module is the accepted workaround,
    * which `Button`, `PlayerCard`, `StatMeter`, `ScheduleSection` and `ModelViewer` all take too.
    *
-   * `fluid(11px, 13px)` is the comps' pair exactly, and 0.2em is their tracking exactly — 2.6px on
-   * 13px and 2.2px on 11px both land on 0.2em, so holding it in `em` keeps it proportional as the
-   * fluid size moves. Identical to `ScheduleSection.eyebrow`, which is the same label on the same
-   * page; the two departures are the colour and its strength, both below.
+   * `--mono-eyebrow` is `fluid(11px, 13px)`, the comps' pair exactly, and 0.2em is their tracking
+   * exactly — 2.6px on 13px and 2.2px on 11px both land on 0.2em, so holding it in `em` keeps it
+   * proportional as the fluid size moves. Identical to `ScheduleSection.eyebrow`, which is the same
+   * label on the same page; the two departures are the colour and its strength, both below. This
+   * rule wrote the pair as a literal until it was the fourth to do so — see `_variables.scss`.
    *
    * `--fg-default` and **not** `--fg-accent`, which is what `ScheduleSection.eyebrow` and
    * `HeaderDisplaySection.metaItem` use — and the two are not interchangeable here. On this panel
@@ -291,7 +292,7 @@ $two-column-list-body-measure: 27.5rem;
     --mono-line-height: var(--body-line-height);
 
     color: color-mix(in srgb, var(--fg-default) 80%, transparent);
-    font-size: #{fluid(11px, 13px)};
+    font-size: var(--mono-eyebrow);
     margin: 0;
     /*
      * The same automatic-minimum guard the two columns carry, and for a sharper reason: the

@@ -48,7 +48,9 @@
  * frame at narrow widths instead of removing them, which makes the whole question go away. That is a
  * structural change and a design decision, so it is raised rather than assumed.
  *
- * Local to this module; the family is `$<owner>-inline-switch`.
+ * Local to this module; the family is `$<owner>-inline-switch`. The rule this switch is one of the
+ * three exceptions to — `rem` where crossing reflows, `px` where crossing hides — is stated once at
+ * the head of `tools/sass/base/__media.scss`, with all three named.
  */
 $media-tags-inline-switch: 640px;
 

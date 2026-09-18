@@ -23,8 +23,11 @@ export interface ImagePropsSanity {
   sizes?: string | Breakpoints;
   fill?: boolean;
   aspectRatio?: SanityAspectRatio;
-  crop?: { top?: number; bottom?: number; left?: number; right?: number };
-  hotspot?: { x?: number; y?: number; height?: number; width?: number };
+  // The two keys `imageProjection` returns on every image field and this component reads below. They
+  // are named types rather than inline literals because three files had written the same two object
+  // shapes out by hand — see the note on `SanityImageSimple`.
+  crop?: SanityImageCrop;
+  hotspot?: SanityImageHotspot;
 }
 
 export interface ImagePropsStandard {

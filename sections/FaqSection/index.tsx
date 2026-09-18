@@ -6,7 +6,7 @@ import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import TextTitle from '@/components/TextTitle';
 import hasBlockContent from '@/helpers/hasBlockContent';
-import stripTitleTags from '@/helpers/stripTitleTags';
+import hasTitleText from '@/helpers/hasTitleText';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type { IFaqSection } from '@/tools/sanity/schema/sections/faqSection';
 
@@ -53,13 +53,9 @@ const FaqSection: FC<IFaqSection> = (props) => {
    */
   const accentTheme: ProjectTheme = theme === 'dark' ? 'light' : 'dark';
 
-  /*
-   * `stripTitleTags(title).text.trim()` and **not** `title?.trim()`. `title` arrives from
-   * `TitleInput` as markup — `'<h2>FAQ</h2>'` — so a field an editor emptied is the string
-   * `'<h2></h2>'`, which is truthy and trims to itself. Testing the raw value means every title
-   * field anyone has ever touched counts as filled in. `TwoColumnListSection` records the same trap.
-   */
-  const hasTitle = Boolean(stripTitleTags(title).text.trim());
+  // `hasTitleText` and not `title?.trim()` — `TitleInput` stores markup, so an emptied field is the
+  // truthy string `'<h2></h2>'`. The helper's docblock carries the trap; five sections had it inline.
+  const hasTitle = hasTitleText(title);
   const hasHeader = Boolean(tagline?.trim()) || hasTitle;
   /*
    * `addMap` gates the whole card, and the projection is gated on the same boolean — so on a section

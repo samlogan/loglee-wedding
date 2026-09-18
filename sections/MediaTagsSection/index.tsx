@@ -3,6 +3,7 @@ import type { FC } from 'react';
 import Image from '@/components/Image';
 import Section from '@/components/Section';
 import Tag from '@/components/Tag';
+import keyedTextItems from '@/helpers/keyedTextItems';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type { IMediaTagsSection } from '@/tools/sanity/schema/sections/mediaTagsSection';
 
@@ -12,35 +13,17 @@ const MediaTagsSection: FC<IMediaTagsSection> = (props) => {
   const { image, caption, tags } = props;
 
   /*
-   * Trimmed, blanks dropped, duplicates disambiguated — the same three passes
-   * `TwoColumnListSection` makes over its `items`, and for the same reasons, stated once here.
+   * Trimmed, blanks dropped, duplicates disambiguated. All three passes are `keyedTextItems`, which
+   * was collected out of this section, `MediaCardGridSection`'s opening hours and
+   * `TwoColumnListSection`'s list items — the same reduce over the same field shape, written three
+   * times. The helper carries the reasoning.
    *
-   * A blank pill is not nothing: `Tag` paints an opaque surface with 12×8 of padding, so an entry
-   * an editor tabbed through and left empty draws a small filled rectangle over the photograph with
-   * no label in it. `Tag` self-guards, but it guards by returning `null` from *inside* the `<li>`,
-   * which would leave an empty list item taking a flex gap.
-   *
-   * The key is carried rather than derived at render. These are short lines an editor reorders in
-   * place, so an index key makes React keep the old text in the old node on a reorder. `tags`
-   * carries `Rule.unique()`, but that is publish-time and Presentation renders drafts — so a draft
-   * mid-edit really can hold two identical pills, and a bare `key={tag}` hands React duplicate keys
-   * in the one environment an editor is watching. Suffixing by occurrence leaves the common case
-   * byte-identical and makes the degenerate one merely ugly.
+   * Worth naming what changed here rather than only where it moved: this file shipped the
+   * `occurrence === 0 ? text : …` form, which suffixes only the repeats and therefore re-creates the
+   * collision it exists to prevent (`['a', 'a', 'a#1']` yields `a`, `a#1`, `a#1`). The helper
+   * suffixes unconditionally, which cannot collide.
    */
-  const seen = new Map<string, number>();
-  const pills = (tags ?? []).reduce<{ key: string; text: string }[]>((accumulator, tag) => {
-    const text = tag?.trim();
-
-    if (!text) {
-      return accumulator;
-    }
-
-    const occurrence = seen.get(text) ?? 0;
-    seen.set(text, occurrence + 1);
-    accumulator.push({ key: occurrence === 0 ? text : `${text}#${occurrence}`, text });
-
-    return accumulator;
-  }, []);
+  const pills = keyedTextItems(tags);
 
   const captionText = caption?.trim();
 
