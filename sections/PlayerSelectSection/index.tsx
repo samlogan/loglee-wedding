@@ -83,21 +83,18 @@ const PlayerSelectSection: FC<PlayerSelectSectionProps> = (props) => {
   const hasPrompt = hasText(prompt);
 
   return (
+    /*
+     * The system's default spacing, and no gap of the section's own. The home comps put 36px (1280) and
+     * 23px (390) between the hero and this panel, but that gap is the Hero section's bottom padding:
+     * the page is composed in the Studio with this section's `removeTopSpacing` on, and it has to sit
+     * flush when it is — so nothing here (no margin on the panel, no spacing step picked to stand in for
+     * that gap) may add a top offset of its own. The page's rhythm is MAM-1900's.
+     */
     <Section
       className={className}
       name="PlayerSelectSection"
       theme={getSectionTheme(props, 'light')}
       {...getSectionSpacingProps(props)}
-      /*
-       * **After** the spread, or the helper's hardcoded `spacing: 'lg'` overwrites it — `yarn
-       * audit:layout` reports exactly that ordering.
-       *
-       * `sm` rather than `lg`: the home comps draw 36px between the hero and this panel at 1280 (1:44)
-       * and 23px at 390 (1:102), and `lg` is 74px at 1280 on its own. `sm` (43px at 1280, 16px at 390)
-       * is the nearest step. The page's three-section rhythm belongs to MAM-1900, which can also
-       * remove either side from the Studio.
-       */
-      spacing="sm"
     >
       <div className={styles.panel}>
         {(hasCaption || hasPrompt) && (

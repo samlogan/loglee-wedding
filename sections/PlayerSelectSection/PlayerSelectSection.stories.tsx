@@ -6,6 +6,7 @@ import type {
   IPlayerSelectSectionPlayer
 } from '@/tools/sanity/schema/sections/playerSelectSection';
 import mockImage from '@/tools/storybook/mockImage';
+import mockSectionFields from '@/tools/storybook/mockSectionFields';
 import sectionFixture from '@/tools/storybook/sectionFixture';
 
 import PlayerSelectSection from '.';
@@ -111,6 +112,18 @@ const MOCK: IPlayerSelectSection = {
  * published, `yarn storybook:fixtures` writes one and `PublishedContent` switches to it with no edit.
  */
 const data = sectionFixture<IPlayerSelectSection>('playerSelectSection') ?? MOCK;
+
+/**
+ * The section's props plus `sectionFields`, which the projection returns and `getSectionSpacingProps`
+ * reads but `IPlayerSelectSection` does not declare — the shape `MediaCardGridSection.stories` uses.
+ */
+type PlayerSelectArgs = IPlayerSelectSection & { sectionFields?: ReturnType<typeof mockSectionFields> };
+
+/** `MOCK` as the home page places it: both remove-spacing toggles on. See `SpacingRemoved`. */
+const FLUSH: PlayerSelectArgs = {
+  ...MOCK,
+  sectionFields: mockSectionFields({ removeBottomSpacing: true, removeTopSpacing: true })
+};
 
 /** The cards, in document order. */
 const cardsOf = (canvasElement: HTMLElement) => within(canvasElement).getAllByRole('link');
@@ -468,6 +481,25 @@ export const WithoutCaption: Story = {
     await expect(prompt.getBoundingClientRect().top).toBeGreaterThan(
       header.getBoundingClientRect().top + parseFloat(captionRow)
     );
+  }
+};
+
+/**
+ * The home page's composition: both remove-spacing toggles on, and the panel flush with the section.
+ *
+ * The gap the comps draw above the panel (36px at 1280, 23px at 390) is the Hero section's bottom
+ * padding, and the CTA below carries its own — so on `/` this section is placed with its spacing
+ * removed and must add no offset of its own. Asserted as edges meeting rather than as a padding
+ * value, because a margin on the panel would pass a padding check and still leave the gap.
+ */
+export const SpacingRemoved: Story = {
+  args: FLUSH,
+  play: async ({ canvasElement }) => {
+    const section = (canvasElement.querySelector('section') as HTMLElement).getBoundingClientRect();
+    const panel = panelOf(canvasElement).getBoundingClientRect();
+
+    await expect(panel.top).toBeCloseTo(section.top, 0);
+    await expect(panel.bottom).toBeCloseTo(section.bottom, 0);
   }
 };
 

@@ -69,7 +69,9 @@ const PlayerSelectCard = (props: PlayerSelectCardProps) => {
       className={classNames(styles.card, className)}
       /*
        * Trailing slash because `next.config.js` sets `trailingSlash: true`: without it every click is a
-       * 308 to the same path with one. The route itself is MAM-1901's, and 404s until it lands.
+       * 308 to the same path with one. The routes are MAM-1901's player pages, built in code for the
+       * `sam` and `lauren` slugs — a player with any other slug links to a 404, which the player's
+       * slug field tells an editor.
        */
       href={`/${playerPath(slug.current)}/`}
       // The comp's own 8px rounding on the card (1:84) — and the shape the focus ring follows.
