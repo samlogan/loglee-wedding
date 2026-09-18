@@ -4,7 +4,7 @@ import MediaCard from '@/components/MediaCard';
 import Section from '@/components/Section';
 import Text from '@/components/Text';
 import hasBlockContent from '@/helpers/hasBlockContent';
-import stripTitleTags from '@/helpers/stripTitleTags';
+import hasTitleText from '@/helpers/hasTitleText';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type {
   ISpecCardGridSection,
@@ -85,8 +85,8 @@ const footnotesOf = (card: ISpecCardGridSectionCard): string[] =>
  * than nothing. Filtered here rather than in the projection so a story passing raw mock data behaves
  * exactly like the CMS.
  *
- * `stripTitleTags(...).text` and not `title?.trim()`: `TitleInput` stores markup, so an emptied field
- * is the string `'<h2></h2>'` — truthy, and non-empty after `trim()`. `hasBlockContent` rather than
+ * `hasTitleText` and not `title?.trim()`: `TitleInput` stores markup, so an emptied field is the
+ * string `'<h2></h2>'` — truthy, and non-empty after `trim()`. `hasBlockContent` rather than
  * `description?.length` for the mirror-image reason: an editor who types into a rich-text field and
  * deletes it leaves one block holding an empty child, which Sanity does not unset.
  *
@@ -95,7 +95,7 @@ const footnotesOf = (card: ISpecCardGridSectionCard): string[] =>
  */
 const hasCardContent = (card: ISpecCardGridSectionCard): boolean =>
   Boolean(card.image?.asset?.url) ||
-  Boolean(stripTitleTags(card.title ?? '').text.trim()) ||
+  hasTitleText(card.title) ||
   Boolean(card.label?.trim()) ||
   hasBlockContent(card.description) ||
   footnotesOf(card).length > 0;

@@ -8,8 +8,8 @@ import resolveAmountCopy from '@/helpers/amountToken';
 import classNames from '@/helpers/classNames';
 import formatOrdinal from '@/helpers/formatOrdinal';
 import hasBlockContent from '@/helpers/hasBlockContent';
+import hasTitleText from '@/helpers/hasTitleText';
 import keyedTextItems from '@/helpers/keyedTextItems';
-import stripTitleTags from '@/helpers/stripTitleTags';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type { ITwoColumnListSection } from '@/tools/sanity/schema/sections/twoColumnListSection';
 
@@ -78,15 +78,13 @@ const TwoColumnListSection: FC<ITwoColumnListSection> = (props) => {
    * content, which says nothing on its own. Both columns now ask whether they have something to
    * label.
    *
-   * `stripTitleTags(title).text` and **not** `title.trim()`, which is what this tested and which
-   * made the whole guard very nearly unreachable. `title` arrives from `TitleInput` as markup —
-   * `'<h2>Cocktail…</h2>'` — so an emptied field is the string `'<h2></h2>'`, and `.trim()` on that
-   * is truthy. Every title field an editor has ever touched therefore passed. The schema gets this
-   * right (`stripTitleTags(value ?? '').trim()` in its `custom()` rule, with a comment naming the
-   * single-space case exactly); the component simply did not mirror it, so the two halves of the
-   * same question disagreed.
+   * `hasTitleText` and **not** `title.trim()`, which is what this tested and which made the whole
+   * guard very nearly unreachable: `title` arrives from `TitleInput` as markup, so an emptied field
+   * is the truthy string `'<h2></h2>'` and every title anyone had touched passed. The schema always
+   * got this right in its `custom()` rule; the component did not mirror it, so the two halves of the
+   * same question disagreed. The helper is what keeps them in step — see its docblock.
    */
-  const hasStatement = Boolean(stripTitleTags(title).text.trim()) || hasBlockContent(content);
+  const hasStatement = hasTitleText(title) || hasBlockContent(content);
 
   /*
    * Nothing at all rather than an empty shell.

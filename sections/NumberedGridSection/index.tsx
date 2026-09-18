@@ -6,7 +6,7 @@ import TextBlock from '@/components/TextBlock';
 import TextTitle from '@/components/TextTitle';
 import formatOrdinal from '@/helpers/formatOrdinal';
 import hasBlockContent from '@/helpers/hasBlockContent';
-import stripTitleTags from '@/helpers/stripTitleTags';
+import hasTitleText from '@/helpers/hasTitleText';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type { INumberedGridSection } from '@/tools/sanity/schema/sections/numberedGridSection';
 
@@ -49,18 +49,17 @@ const NumberedGridSection: FC<INumberedGridSection> = (props) => {
    * length. Done here rather than in the projection so a story passing raw mock data behaves exactly
    * like the CMS.
    *
-   * The test is `stripTitleTags(...).text.trim()` and **not** `title?.trim()`. `title` arrives from
-   * `TitleInput` as markup — `'<h3>Pool</h3>'` — so an emptied field is the string `'<h3></h3>'`,
-   * which is truthy. Every cell an editor has ever touched would pass a bare `.trim()`. The schema's
-   * own `custom()` rule strips the tags before testing; this mirrors it, so the two halves of the
-   * same question agree.
+   * The test is `hasTitleText` and **not** `title?.trim()`: `title` arrives from `TitleInput` as
+   * markup, so an emptied field is the truthy string `'<h3></h3>'` and every cell an editor has ever
+   * touched would pass a bare `.trim()`. The schema's own `custom()` rule strips the tags before
+   * testing; the helper is what makes the two halves of the same question agree.
    *
    * A cell with a tag and a description but no name is dropped rather than rendered nameless: the
    * name is the facility, and the other two only qualify it.
    */
-  const cells = (items ?? []).filter((item) => Boolean(stripTitleTags(item?.title).text.trim()));
+  const cells = (items ?? []).filter((item) => hasTitleText(item?.title));
 
-  const hasTitle = Boolean(stripTitleTags(title).text.trim());
+  const hasTitle = hasTitleText(title);
   const hasMeta = Boolean(meta?.trim());
 
   /*
