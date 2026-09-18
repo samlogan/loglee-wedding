@@ -193,7 +193,7 @@ const SpecCardGridSection: FC<ISpecCardGridSection> = (props) => {
            * hands React duplicate keys. `twoColumnListSection` has to work around exactly that
            * because its items are bare strings with no key of their own; these are objects, and do.
            */
-          <li className={styles.item} key={card._key}>
+          <li key={card._key}>
             <MediaCard
               caption={card.caption}
               description={card.description}

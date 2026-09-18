@@ -194,6 +194,10 @@ const mediaOf = (card: HTMLElement) => card.querySelector<HTMLElement>(`.${style
 
 const footerOf = (card: HTMLElement) => card.querySelector<HTMLElement>(`.${styles.footer}`) as HTMLElement;
 
+const titleOf = (card: HTMLElement) => card.querySelector<HTMLElement>(`.${styles.title}`) as HTMLElement;
+
+const labelOf = (card: HTMLElement) => card.querySelector<HTMLElement>(`.${styles.label}`) as HTMLElement;
+
 const topOf = (element: Element) => element.getBoundingClientRect().top;
 const heightOf = (element: Element) => element.getBoundingClientRect().height;
 
@@ -639,6 +643,83 @@ export const PaddingHook: Story = {
  *
  * Note the footers: two gapped items on the left, one on the right, out of the same slot.
  */
+/**
+ * **The card's own clip cannot eat its own content** — a long name *and* a long label at 320px with a
+ * 32px root, which is the combined 1.4.4 + 1.4.10 case and stricter than either asks for alone.
+ *
+ * ## What this replaces
+ *
+ * Both consuming sections shipped a workaround for this and neither could finish the job. Each put
+ * `overflow-wrap: anywhere` on its own grid item — the same declaration, the same fifteen-line note,
+ * each observing that the shared card arguably wanted it — and each then capped its `label` field in
+ * its own schema, at eight characters on `/stay` and at ten on `/the-lodge`, because
+ * `overflow-wrap` cannot reach a `flex: 0 0 auto` box that refuses to give up width. Two numbers,
+ * one component's defect.
+ *
+ * The card now owns all three lines: `overflow-wrap: anywhere` on `.card`, `min-width: 0` on
+ * `.title`, and `flex: 0 1 auto` with `min-width: 0` on `.label`. `SpecCardGridSection.Reflow320`
+ * still measures the grid at 320px; this measures the part that lives here, so the coverage the
+ * sections gave up has somewhere to be.
+ *
+ * ## The three things asserted, in order of how quietly they used to fail
+ *
+ * 1. **Nothing overflows the card.** `scrollWidth <= clientWidth` is the only honest test — the clip
+ *    is `overflow: hidden`, so a clipped card looks *exactly* like a card whose content fitted.
+ * 2. **The label is still inside the body's content box.** It used to be pushed past the right edge
+ *    and cut: "Coffee house" rendered as "COFFEE HOUS" at 12 characters.
+ * 3. **The title still wraps first.** The point of the old `flex: 0 0 auto` was that a long name
+ *    should not squeeze a one- or two-word run, and `flex-basis: auto` keeps that — the label only
+ *    shrinks once there is genuinely no room. A fix that made the label wrap on every card would
+ *    have traded one drawn behaviour for another.
+ */
+export const LongLabelAndTitle: Story = {
+  args: {
+    ...KING_ROOM,
+    label: 'Coffee house',
+    title: '<h3>The Old Coach House Garden Suite</h3>'
+  },
+  parameters: { storyWidth: '320px' },
+  play: async ({ canvasElement, step }) => {
+    const root = document.documentElement;
+    const previous = root.style.fontSize;
+
+    const expectNothingClipped = async () => {
+      await waitFor(async () => {
+        const [card] = cardsIn(canvasElement);
+        const body = bodyOf(card);
+        const label = labelOf(card);
+
+        // 1 — the card clips with `overflow: hidden`, so this is the only way to see it at all.
+        await expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth + 1);
+        await expect(body.scrollWidth).toBeLessThanOrEqual(body.clientWidth + 1);
+
+        // 2 — the label's right edge inside the body's content edge, which is what used to fail.
+        const bodyRight = body.getBoundingClientRect().right - Number.parseFloat(getComputedStyle(body).paddingRight);
+        await expect(label.getBoundingClientRect().right).toBeLessThanOrEqual(bodyRight + 1);
+      });
+    };
+
+    await step('Nothing is clipped at 320px', expectNothingClipped);
+
+    try {
+      root.style.fontSize = '32px';
+      await step('Nothing is clipped at 320px with a 32px root', expectNothingClipped);
+    } finally {
+      root.style.fontSize = previous;
+    }
+
+    await step('The title still wraps before the label does', async () => {
+      const [card] = cardsIn(canvasElement);
+      // The name is four words and the label two; if the shrink order had inverted, the title would
+      // be the single-line item and the label the wrapped one.
+      await expect(heightOf(titleOf(card))).toBeGreaterThan(heightOf(labelOf(card)));
+    });
+
+    // Sentence case in the DOM whatever the CSS draws — the accessible name is the stored string.
+    await expect(within(canvasElement).getByText('Coffee house')).toBeVisible();
+  }
+};
+
 export const PerCardTheme: Story = {
   parameters: { storyWidth: '1240px' },
   render: () => (

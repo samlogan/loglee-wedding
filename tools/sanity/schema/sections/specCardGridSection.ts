@@ -198,29 +198,23 @@ const specCardFields: FieldDefinition[] = [
    * "2 max", "4 max" and "2 rooms", so the field has to hold a unit as well as a figure, and the
    * cheapest honest way to do that is to let the editor type the whole run.
    *
-   * ## Capped at 8, and the number is measured rather than picked
+   * ## Capped at 10, and the cap no longer guards against clipping
    *
-   * The label shares the header row with the room name, and `components/MediaCard` gives it
-   * `flex: 0 0 auto` — deliberately, so a long name wraps rather than squeezing what is meant to be a
-   * one- or two-word run. The consequence is that the label **cannot shrink**: a flex item with
-   * `flex-shrink: 0` is sized by its content, so the section's `overflow-wrap: anywhere` (which
-   * rescues the name) does nothing for it, and past a certain length it is clipped by the card's own
-   * `overflow: hidden` — silently, with no ellipsis.
+   * It used to. `components/MediaCard` gave this label `flex: 0 0 auto`, so it could not shrink at
+   * all: `overflow-wrap` cannot help a box that refuses to give up width, and past a certain length
+   * the label was clipped outright by the card's `overflow: hidden` — silently, with no ellipsis.
+   * Measured at a 320px viewport with a 32px root, it overflowed the content edge at 11 characters
+   * and was cut at 12. This field was capped at 8 to stay inside that, and `mediaCardGridSection`'s
+   * identical field was capped at 10 for the same defect measured on the other page.
    *
-   * Measured in a browser on the `Reflow320` story, stepping this field through real values at a
-   * 320px wrapper:
+   * The card now carries `flex: 0 1 auto` plus `min-width: 0` on `.label` — the fix both of those
+   * notes named — so the label wraps rather than disappearing, and neither cap is load-bearing any
+   * more. What is left is an editorial guideline, and the two pages should not disagree about it:
+   * **10 is the longest label the design draws anywhere** ("Restaurant" on `/the-lodge`, against
+   * "2 ROOMS" here), so it is the number both fields now use.
    *
-   *   default root   5, 7, 8, 10, 12, 13 characters   all fit
-   *   32px root      5, 7, 8 fit   ·   10, 12, 13 clip
-   *
-   * So the length only matters for a reader at double text size on a small phone, and 8 is where
-   * that stops working. It is not tight in practice: the three drawn labels are "2 MAX", "4 MAX" and
-   * "2 ROOMS".
-   *
-   * `warning()` rather than an error, because it is a threshold for one combination of viewport and
-   * text size rather than a data-integrity rule, and blocking a publish over it is the wrong trade
-   * for a site an editor updates the week of. The durable fix is `flex: 0 1 auto` plus
-   * `min-width: 0` on `MediaCard`'s `.label`, at which point this cap can be relaxed.
+   * `warning()` rather than an error, as before and more so: a longer label is now a second line in
+   * the header row rather than lost content.
    */
   {
     description:
@@ -229,7 +223,7 @@ const specCardFields: FieldDefinition[] = [
     title: 'Spec Label',
     type: 'string',
     validation: (Rule) =>
-      Rule.max(8).warning('Longer than this is cut off for a reader on a small phone at double text size.')
+      Rule.max(10).warning('Longer than this wraps onto a second line beside the name on a narrow screen.')
   },
   /*
    * `description` rather than `content`, following `faqSection.answer` and `scheduleSection`: a

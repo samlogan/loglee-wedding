@@ -29,6 +29,17 @@
  * `align-items` on the row, which is precisely the regression the note on that line claims to be the
  * tripwire for. `TwoColumnListSection` removed eleven restatements of the same kind for the same
  * reason.
+ *
+ * ## The `<li>` now carries no class at all
+ *
+ * It used to hold `overflow-wrap: anywhere`, guarding against a long unbreakable room name being
+ * clipped by `MediaCard`'s own `overflow: hidden`. That note said the card "would arguably want this
+ * too, but that is its maintainer's call" — and `/the-lodge`'s venue grid had written the identical
+ * rule on its own grid item by the time this one shipped. Two consumers patching one component's
+ * clip is the component's answer, so the declaration moved to `MediaCard`'s `.card`, alongside the
+ * `min-width: 0` / `flex: 0 1 auto` pair that both sections' schemas were capping a field to work
+ * around. Nothing is lost here: `overflow-wrap` is inherited either way, and it now also reaches the
+ * card on the page that never had a grid item to hang it on.
  */
 
 /*
@@ -198,36 +209,5 @@ $spec-card-grid-wide-inline-switch: 60rem;
     @container specCardGrid (width >= #{$spec-card-grid-wide-inline-switch}) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
-  }
-
-  /*
-   * The `<li>` between the grid and the card. It carries exactly one declaration, and it is not the
-   * one you would expect — see the note at the top of the file for the `align-self: stretch` that
-   * used to be here and was removed as a no-op.
-   */
-  .item {
-    /*
-     * The other half of `minmax(0, 1fr)`, and the half that is easy to stop at.
-     *
-     * `minmax(0, 1fr)` stops a long unbreakable string widening the **track**. It does not make the
-     * string wrap: the text still overflows its own box, and `MediaCard`'s `overflow: hidden` — which
-     * is there to clip the media band into the corner radius — then clips it mid-word, with no
-     * ellipsis and no scrollbar to say so. Measured at 1440px with a 56-character room name: the
-     * grid stayed at three 440px tracks and the page never scrolled, while the heading's right edge
-     * sat at x=1233 against a card ending at x=480, and the spec label beside it was pushed out of
-     * the card entirely. Everything the earlier note promised was true, and the card still lost its
-     * content.
-     *
-     * Set here, on the `<li>`, rather than on the card: `overflow-wrap` is **inherited**, so one
-     * declaration on the wrapper reaches the name, the description, the footnote and the caption
-     * chip alike. That also keeps the fix inside the section — `components/MediaCard` is shared with
-     * `/the-lodge` and would arguably want this too, but that is its maintainer's call, and a
-     * section is entitled to decide that content cannot escape the tracks the section chose.
-     *
-     * `anywhere` rather than `break-word`, matching `components/Tag`. The two differ only in whether
-     * the break opportunity also shrinks the element's min-content size; here it cannot matter,
-     * because `minmax(0, …)` has already floored the track at zero.
-     */
-    overflow-wrap: anywhere;
   }
 }
