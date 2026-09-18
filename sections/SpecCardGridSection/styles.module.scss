@@ -1,0 +1,233 @@
+/*
+ * The room-type grid on `/stay` — Figma `1:630` (desktop) and `1:700` (mobile).
+ *
+ * ## This file is a grid and nothing else
+ *
+ * Every pixel of the card itself — the border, the radius, the media band, the caption chip's inset,
+ * the baseline-tied header row, the body type, the hairline, the footnote's ink, step, leading and
+ * weight — belongs to `components/MediaCard`, which was factored out of these three instances and
+ * `/the-lodge`'s two. The section owns the track count, the gutter between tracks and the switches,
+ * because that is the one thing the card deliberately does not know: two sections use it at
+ * different column counts, and a card that owned a grid could not be used by both.
+ *
+ * Nothing here names a colour, a font or a size. If a rule below grows one, the thing it wants is a
+ * `MediaCard` prop or one of that component's six custom-property hooks — and this section re-points
+ * none of the six, because the six *defaults* were measured off these three cards.
+ *
+ * ## The three rules that bottom-align the footnotes
+ *
+ * The acceptance criterion — "cards stretch to a common height so the footnote bottom-aligns across
+ * the row" — is not implemented by any one declaration. It needs `align-items: stretch` on the row
+ * (below, and the grid's own default), then `height: 100%` on the card and `margin-block-start:
+ * auto` on its footer, both of which live in `components/MediaCard`. Remove any one and the row
+ * still looks right on its **tallest** card and is wrong on every other one — which is why the story
+ * measures it rather than screenshotting it.
+ *
+ * A fourth rule, `align-self: stretch` on the `<li>`, was here and has been removed. It restated the
+ * value the `<li>` already computes to as a grid item under `align-items: stretch`, so it changed no
+ * pixel — and it actively cost something: it would have kept the `<li>` stretched if someone changed
+ * `align-items` on the row, which is precisely the regression the note on that line claims to be the
+ * tripwire for. `TwoColumnListSection` removed eleven restatements of the same kind for the same
+ * reason.
+ */
+
+/*
+ * ## Two switches, and why neither is a media query
+ *
+ * Same reasoning as `HeaderDisplaySection` and `ScheduleSection`: the query is on the section's own
+ * content box rather than on the viewport. In the app the two are equivalent — the section is full
+ * width, so its container's inline size is the viewport minus the gutters — but keying it to the
+ * container is what makes the switch **testable**. A story can render the grid at 380px and at
+ * 1240px in one browser page and measure both, where a viewport media query needs a browser resize
+ * that the component-test runner does not do.
+ *
+ * ## The numbers are measured, not taken from the breakpoint map
+ *
+ * The comp draws exactly two states: 3-up at a 1200px content box (1:630, three 386.66px tracks) and
+ * 1-up at 350px (1:700). The two-up band between them is inferred, and going straight from three to
+ * one would be worse than inferring it — three tracks in a 700px container are 220px each, 57% of
+ * the drawn card, at which point "Family Room" wraps against its "2 rooms" label on every card.
+ *
+ * - `60rem` (960px) for three: tracks of ~307px, leaving ~269px of card content. The widest drawn
+ *   header row — "FAMILY ROOM" at ~28px Archivo Black plus a 12px gap plus "2 ROOMS" — measures
+ *   ~262px, so this is the width at which the drawn row still fits on one line. Below it, wrap.
+ * - `38rem` (608px) for two: tracks of ~294px, a shade under the three-up floor, which is the right
+ *   place to give up the second column rather than squeeze both.
+ *
+ * `60rem` is now the third section to land on that number — `$header-display-inline-switch` and
+ * `$schedule-inline-switch` are both `60rem` too — and `HeaderDisplaySection` states the promotion
+ * rule: a value three modules have to *agree* on belongs in `tools/sass/base/__media.scss`, the way
+ * `$header-inline-switch` does. **These three do not have to agree.** They were derived
+ * independently and they measure different things: where a two-column band splits, where a day's
+ * summary sits beside its events, and where a third card track stops squeezing a header row.
+ * Promoting them would couple three unrelated layouts to one number and make the next edit to any of
+ * them a change to the other two. Left local, deliberately.
+ *
+ * `rem` rather than `px`, and this is the one case where that is the safe direction. A container
+ * query's `rem` resolves against the **live root font size**, so a reader who raises their text size
+ * crosses these thresholds and gets *fewer, wider* columns — which is what more text wants. The
+ * hazard CLAUDE.md's siblings hit is the opposite shape: a `rem` threshold that *hides* something
+ * can delete content on a text-size increase alone (WCAG 1.4.4). Nothing here hides; both branches
+ * render every card, every field, in the same order. Verified at a 32px root in the story.
+ */
+$spec-card-grid-inline-switch: 38rem;
+$spec-card-grid-wide-inline-switch: 60rem;
+
+@layer defaults {
+  /*
+   * **A token re-point, not a hand-written padding.**
+   *
+   * The drawn bottom gap is 48px at the 1280 frame (1:630) and 24px at the 390 one (1:700 is 1064
+   * tall and its last card ends at 1040), and that band separates the grid from whatever follows —
+   * on `/stay` the next section is `TwoColumnListSection`, which sets `spacing="none"` and names
+   * *this* padding as the separator. Nothing below supplies it.
+   *
+   * `--section-spacing-sm` ships as `fluid(16px, 48px)`: right at the wide anchor and **31% short**
+   * at the phone, where it resolves to 16.5px against the drawn 24. The narrow anchor is inherited
+   * from the pre-fluid stepped scale rather than measured from these comps —
+   * `HeaderDisplaySection` records the identical miss on the same token.
+   *
+   * Three ways to fix it, and this is the third:
+   *
+   *   1. `spacing={['none', 'md']}` — exact at the phone (24.9) and 16px over at the desktop anchor
+   *      (64 against 48). Trades a 7px miss for a 16px one.
+   *   2. `spacing="none"` plus `padding-block-end` on a class here, which is what `ScheduleSection`
+   *      does for its band. It works, and it takes the editor's `removeBottomSpacing` toggle out of
+   *      the loop — `Section` implements that by swapping `.spacing_bottom_sm` for
+   *      `.spacing_bottom_none`, and a hand-written padding on this class survives both.
+   *   3. Re-point the token on the section element. The `spacing` prop stays the mechanism, the
+   *      toggle still swaps the class, and the value the class reads is this section's measured pair.
+   *
+   * (3). It is also the idiom the repo already uses for type — `HeaderDisplaySection` re-points
+   * `--body-2xl`, `ScheduleSection` re-points `--display-md` and `--body-md`, `MediaCard` re-points
+   * `--mono-line-height` — applied to spacing for the first time.
+   *
+   * The wide anchor stays at the drawn 48 rather than the 52 the two drawn points extrapolate to,
+   * following the convention both siblings state: anchor on the number the design draws and accept
+   * the undershoot between frames. Measured after the change: 24.3px at 390, 44.4px at 1280, 48px at
+   * 1440.
+   *
+   * Declared on the section root, so it also re-points for the subtree. Nothing inside this section
+   * reads a `--section-spacing-*` token, and a nested `Section` is not a thing the page builder can
+   * produce.
+   */
+  .section {
+    --section-spacing-sm: #{fluid(24px, 48px)};
+  }
+
+  /*
+   * The query container is the `Container` element, reached through `Section`'s `containerClassName`
+   * — so the queried inline size is the *content* box, container width minus its own gutters, which
+   * is precisely what the tracks divide. Putting it on the grid would query the same box (the grid
+   * is the container's only child and fills it), but putting it on the container keeps the switch
+   * independent of any padding a future edit adds to the grid itself.
+   *
+   * `inline-size` and not `size`: the width comes from the page and the height from the content, and
+   * containing the height would collapse the grid. The cost `HeaderDisplaySection` and
+   * `ScheduleSection` both document applies here too — an inline-size container does not contribute
+   * its contents to its own intrinsic width, so inside a shrink-to-fit ancestor it collapses to its
+   * padding. Safe for the same reason: sections render as block children of `<main>`, and of a plain
+   * block `<div>` in Storybook.
+   */
+  .container {
+    container: specCardGrid / inline-size;
+  }
+
+  .grid {
+    display: grid;
+    /*
+     * **One column is the unconditional default**, and the two wider branches are overrides —
+     * mobile-first, not because of a house style but because a container query cannot be evaluated
+     * before its container has been laid out. On the first style pass neither branch matches, so
+     * whatever is written here is what paints; a desktop-first default would flash three columns in
+     * a 350px container.
+     *
+     * `minmax(0, 1fr)` and **not** `1fr`, at every track count. A `1fr` track keeps its automatic
+     * minimum size, so one long unbreakable word — a room name, a URL pasted into a footnote — sets
+     * a floor under the track and pushes the whole row wider than its container. `minmax(0, …)` lets
+     * the track shrink so the content wraps instead. The failure only appears with real content,
+     * which is why it is spelt out rather than rediscovered.
+     */
+    grid-template-columns: minmax(0, 1fr);
+    /*
+     * The grid's own default, restated because it is load-bearing rather than decorative: it is what
+     * gives each `<li>` a definite height, which is in turn what `MediaCard`'s `height: 100%`
+     * resolves against. An edit that sets `align-items: start` here to fix some unrelated thing
+     * would silently un-align every footnote in the row, and this line is where that gets noticed.
+     *
+     * It is also why the AC's "height stretching is desktop-only, not a fixed card height" needs no
+     * code: stretch is a property of a *row*, and the single-column branch puts one card in each
+     * row, so there is nothing to stretch to. No card anywhere has a height in this file.
+     */
+    align-items: stretch;
+    /*
+     * Drawn 20px between desktop columns (1:630) and 16px between mobile cards (1:700 — card one
+     * ends at 329, card two starts at 345). Not a step on the spacing scale: `--spacing-md` is a
+     * flat 16px and `--spacing-lg` a flat 24px, so either is right at one end and wrong at the
+     * other, and `--spacing-xl` (`fluid(24px, 32px)`) is a third bigger than the comp at both ends.
+     *
+     * `fluid()` rather than a hand-written `clamp()` or a `media-up()` override, per CLAUDE.md: the
+     * function interpolates across the same 375→1440 anchors every token in `_variables.scss` uses,
+     * so this gutter ramps in step with the card padding beside it instead of stepping at a width
+     * the design never draws.
+     *
+     * It is the same pair as `--media-card-padding-default`, and that is not a coincidence — the
+     * design uses one inset value for the space between the cards and the space inside them, which
+     * is what makes the row read as a single gridded object rather than three separate ones.
+     *
+     * Viewport-fluid while the track count is container-driven, deliberately: the gutter is a
+     * property of the page's density, not of how much room this particular section was given.
+     */
+    gap: #{fluid(16px, 20px)};
+    /*
+     * **No `justify-content`, and the drawn container has one.** Node 1:630 is a flex row with
+     * `justify-center`, which is indistinguishable in the drawn state: three 386.66px cards and two
+     * 20px gaps come to exactly the 1200px content box, so there is nothing to centre.
+     *
+     * It becomes visible the moment there is a fourth card, which the schema allows on purpose. A
+     * centred partial last row would sit half a track in from the column above it, breaking the
+     * vertical alignment that is the whole reason this is a grid rather than a flex wrap. Left
+     * start-packed, deliberately — recorded here because every other drawn property in this file is
+     * accounted for and silence on this one would read as an oversight.
+     */
+
+    @container specCardGrid (width >= #{$spec-card-grid-inline-switch}) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @container specCardGrid (width >= #{$spec-card-grid-wide-inline-switch}) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /*
+   * The `<li>` between the grid and the card. It carries exactly one declaration, and it is not the
+   * one you would expect — see the note at the top of the file for the `align-self: stretch` that
+   * used to be here and was removed as a no-op.
+   */
+  .item {
+    /*
+     * The other half of `minmax(0, 1fr)`, and the half that is easy to stop at.
+     *
+     * `minmax(0, 1fr)` stops a long unbreakable string widening the **track**. It does not make the
+     * string wrap: the text still overflows its own box, and `MediaCard`'s `overflow: hidden` — which
+     * is there to clip the media band into the corner radius — then clips it mid-word, with no
+     * ellipsis and no scrollbar to say so. Measured at 1440px with a 56-character room name: the
+     * grid stayed at three 440px tracks and the page never scrolled, while the heading's right edge
+     * sat at x=1233 against a card ending at x=480, and the spec label beside it was pushed out of
+     * the card entirely. Everything the earlier note promised was true, and the card still lost its
+     * content.
+     *
+     * Set here, on the `<li>`, rather than on the card: `overflow-wrap` is **inherited**, so one
+     * declaration on the wrapper reaches the name, the description, the footnote and the caption
+     * chip alike. That also keeps the fix inside the section — `components/MediaCard` is shared with
+     * `/the-lodge` and would arguably want this too, but that is its maintainer's call, and a
+     * section is entitled to decide that content cannot escape the tracks the section chose.
+     *
+     * `anywhere` rather than `break-word`, matching `components/Tag`. The two differ only in whether
+     * the break opportunity also shrinks the element's min-content size; here it cannot matter,
+     * because `minmax(0, …)` has already floored the track at zero.
+     */
+    overflow-wrap: anywhere;
+  }
+}
