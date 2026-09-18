@@ -387,3 +387,36 @@ export const FourCards: Story = {
     });
   }
 };
+
+/**
+ * A heading field an editor filled in and then emptied.
+ *
+ * `TitleInput` stores markup, so "blank" is the string `'<h2></h2>'` — truthy, and non-empty after
+ * `trim()`. Guarding on it raw renders an empty `<h2>` into the page outline, draws the heading
+ * block's margin above a grid with nothing above it, and demotes every card name to `h3` under a
+ * heading that is not there. All three land on the case `/the-lodge` actually ships, which is why
+ * this is a story rather than a comment.
+ *
+ * The tagline is the trivial half of the same test: whitespace only.
+ */
+export const EmptyHeadingFields: Story = {
+  args: { ...data, tagline: '   ', title: '<h2></h2>' },
+  decorators: [atWidth('1280px')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(async () => {
+      // No heading block at all, so no empty h2 and no margin above the grid.
+      await expect(canvas.queryByRole('heading', { level: 2 })).toBeNull();
+      // And the card names keep the level their own field chose rather than being demoted.
+      await expect(canvas.getAllByRole('heading', { level: 3 })).toHaveLength(2);
+
+      const section = canvasElement.querySelector('section') as HTMLElement;
+      const grid = section.querySelector('ul') as HTMLElement;
+      const container = section.firstElementChild as HTMLElement;
+      // The grid is the container's only child — nothing was rendered above it.
+      await expect(container.children).toHaveLength(1);
+      await expect(grid.getBoundingClientRect().top).toBeCloseTo(container.getBoundingClientRect().top, 0);
+    });
+  }
+};

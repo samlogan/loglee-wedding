@@ -6,6 +6,7 @@ import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import TextTitle from '@/components/TextTitle';
 import hasBlockContent from '@/helpers/hasBlockContent';
+import stripTitleTags from '@/helpers/stripTitleTags';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type { IMediaCardGridSection } from '@/tools/sanity/schema/sections/mediaCardGridSection';
 
@@ -52,7 +53,18 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
     return null;
   }
 
-  const headingTitle = title?.trim();
+  /*
+   * `stripTitleTags(...).text`, not `title?.trim()`.
+   *
+   * `TitleInput` stores markup, so a field an editor filled in and then emptied is the string
+   * `'<h2></h2>'` — truthy, non-empty after `trim()`. Testing it raw would render an empty `<h2>` in
+   * the page outline, draw the heading block's `margin-block-end` above the grid, and demote every
+   * card name to `h3` under a heading that is not there. All three on a section whose heading is
+   * *expected* to be blank, which is the case `/the-lodge` actually ships.
+   *
+   * `MediaCard` and `TwoColumnListSection` document the same trap; this is the same field type.
+   */
+  const headingTitle = stripTitleTags(title ?? '').text.trim();
   const taglineText = tagline?.trim();
   const hasHeading = Boolean(taglineText) || Boolean(headingTitle) || hasBlockContent(content);
 
@@ -108,13 +120,14 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
             <Text className={styles.tagline} text={taglineText} textTransform="uppercase" variant="mono" />
           )}
           {headingTitle && (
-            <TextTitle
-              className={styles.title}
-              size="md"
-              textTransform="uppercase"
-              title={headingTitle}
-              variant="heading"
-            />
+            /*
+             * The **raw** markup, not the stripped text above. `TextTitle` strips the tags itself and
+             * takes the element from them, so passing the raw string keeps the level the editor chose
+             * in the field; passing the stripped text would throw that away and default every section
+             * heading to `h2`. The stripped copy exists only to answer "is this field actually
+             * filled in", which the raw string cannot.
+             */
+            <TextTitle className={styles.title} size="md" textTransform="uppercase" title={title} variant="heading" />
           )}
           {hasBlockContent(content) && <TextBlock blocks={content} className={styles.content} />}
         </div>
