@@ -1,0 +1,407 @@
+/*
+ * The Lodge's facilities table — nodes 16:163 + 16:166 (desktop, 1282 frame) and 16:310 + 16:312
+ * (mobile, 392 frame).
+ *
+ * Nothing here names a colour, a font family or a font size. Every ink is a theme token, every type
+ * decision is a `Text` / `TextTitle` prop, and the two type steps the shared scale does not carry
+ * are re-pointed rather than overridden — see `.title` for why re-pointing is the deterministic
+ * form.
+ *
+ * ## The two switches, and why both are container queries
+ *
+ * Everything that scales here scales through `fluid()`. The two things `fluid()` cannot interpolate
+ * are a change of *column count* and a part of the design being dropped outright, so each needs a
+ * query — and both are **container** queries on the section's own content box rather than viewport
+ * media queries.
+ *
+ * In the app the two are equivalent: the section is full width, so its container's inline size is
+ * the viewport minus the gutters. Keying them to the container is what makes them testable — the
+ * `Mobile` story renders the section in a 390px column and gets the two-column grid without owning
+ * the window. `HeaderDisplaySection` and `ScheduleSection` both make the same trade and name the
+ * components it bit when they did not (`FieldCheckbox`, `PlayerCard`).
+ *
+ * The two are in **different units**, and that is the one thing to understand before changing
+ * either. The grid's switch is `rem`, for the reason `$header-inline-switch` is: at a fixed pixel
+ * width the query ignores a reader who raised their root font size and hands them a three-column
+ * table at a width where no column fits (WCAG 1.4.4). The meta's switch is `px`, for the *opposite*
+ * reading of the same criterion — see the note on it below. The rule the pair encodes: a switch
+ * whose narrow branch is an **adaptation** scales with text; a switch whose narrow branch is
+ * `display: none` must not.
+ *
+ * Local to this module, and named to the `$<owner>-inline-switch` family `HeaderDisplaySection` and
+ * `components/Footer` set out, so the next section's switch is findable by shape rather than by
+ * grep.
+ */
+
+/*
+ * 45rem (720px of container) is where the third column stops paying for itself. At 720px each cell
+ * is 240px wide, leaving a ~196px measure after the padding: enough for the longest name the design
+ * draws ("TENNIS + YARD GAMES") on two lines at the ~22px `--display-md` resolves to around there,
+ * and far more than the ~88px the ordinal and the longest tag ("FROM 12PM") need side by side.
+ * Below it the names start breaking mid-word, at which point two wider columns read better than
+ * three narrow ones. The design's own three-column frame is a 1200px container, i.e. 400px cells.
+ */
+$numbered-grid-inline-switch: 45rem;
+
+/*
+ * 608px is where the heading and its qualifier stop sharing a line, measured rather than borrowed
+ * from the grid's switch above. At a 608px container the heading resolves to ~34px, so "BETWEEN
+ * EVENTS" measures ~325px and the ~145px qualifier clears it with room to spare; at the design's
+ * 392px phone frame the heading is ~30px / ~287px against a ~351px container and the qualifier has
+ * nowhere to go but a second line — which is why node 16:310 draws the heading alone.
+ *
+ * Deliberately not the same number as the grid's switch. Tying this to 45rem would hide the
+ * qualifier on a tablet where it still fits; tying the grid to 608px would leave three columns at a
+ * width the names cannot hold.
+ *
+ * ## `px`, and this is the one place in the file where `rem` would be a WCAG failure
+ *
+ * Every other threshold in this repo is `rem` so that a reader who raised their root font size gets
+ * the layout that fits their text. Applied here it inverts, because this switch's narrow branch is
+ * `display: none` rather than a different arrangement: at a 32px root, `38rem` is 1216px, while the
+ * container's inline size is still ~1200px on a 1280px window — so "FREE FOR ALL GUESTS" is on the
+ * page before the reader enlarges their text and gone after. That is content removed *by* resizing
+ * text, which is precisely what WCAG 1.4.4 prohibits. In `px` the threshold does not move, the
+ * enlarged text simply reflows, and 1.4.4 is satisfied.
+ *
+ * Note that no story can catch this: the `atWidth` decorator sizes its wrapper in `rem` too, so in
+ * Storybook the container and the threshold scale together and stay in agreement. It only diverges
+ * on a real page, where the container is sized by the viewport in CSS pixels.
+ */
+$numbered-grid-meta-inline-switch: 608px;
+
+@layer defaults {
+  /*
+   * The query container is the `Container` element, via `containerClassName`, so the queried inline
+   * size is the content width the design measures its columns against — frame minus gutters.
+   *
+   * `inline-size` and not `size`: the table's width comes from the page, its height from its
+   * content, and containing the height would collapse it.
+   *
+   * The cost of that containment, copied forward from `HeaderDisplaySection` because it is the one
+   * thing to know before reusing this: an inline-size container does not contribute its contents to
+   * its own intrinsic width, so in a *shrink-to-fit* ancestor — `inline-block`, a float,
+   * `width: max-content`, an absolutely positioned box — it collapses to its padding. Safe here
+   * because sections render as block children of `<main>` (`components/Layout`) and of a plain
+   * `<div>` in Storybook, both of which size from the outside in.
+   */
+  .container {
+    container: numberedGrid / inline-size;
+  }
+
+  /*
+   * The heading row (16:163) — statement left, qualifier right, sharing a baseline.
+   *
+   * `align-items: baseline` and not `flex-end`: the design marks the row `items-baseline`, and the
+   * two runs are 48px Archivo Black against 12px JetBrains Mono, so aligning their boxes would sit
+   * the qualifier a third of a line below the heading's baseline.
+   *
+   * The 16px trailing gap is the drawn `pb-16` on the node. Flat rather than switched: the phone
+   * frame draws 11.5px (16:310 ends at 1242.4, 16:312 starts at 1253.9), and 4.5px on a gap this
+   * size is inside the noise of a scale that deliberately stops interpolating below 24px — see the
+   * spacing note in `_variables.scss`.
+   */
+  .heading {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: baseline;
+    justify-content: space-between;
+    margin-block-end: var(--spacing-md);
+  }
+
+  /*
+   * The display tier, re-pointed to the pair this heading is actually drawn at.
+   *
+   * `--display-md` reaches 132px for a page header; this is 48px at 1282 and 30px at 392, so the
+   * token is re-pointed on the element rather than a `font-size` declared over it. That is
+   * deterministic where an ordinary override is not: the rule that owns `font-size` is `Text`'s
+   * `.size_md`, a single class at the same specificity as this one, so which wins a `font-size`
+   * fight is decided by CSS-module import order. A custom property *declared on* an element always
+   * beats the same property *inherited* into it. `TwoColumnListSection.title` and
+   * `ScheduleSection.description` use the same mechanism and say so.
+   *
+   * The leading and tracking are the design's exactly and are identical at both frames — 45.6/48 and
+   * 28.5/30 are both 0.95; -1.44px on 48 and -0.9px on 30 are both -0.03em. The global
+   * `--display-line-height` is 0.84, argued from the oversized page headers, where a line box
+   * shorter than the cap height is fine because nothing wraps; a 30px heading on a phone can wrap,
+   * so this one takes the drawn 0.95, where consecutive lines do not overlap.
+   */
+  .title {
+    --display-md: #{fluid(30px, 48px)};
+    --display-line-height: 0.95;
+    --display-letter-spacing: -0.03em;
+
+    /*
+     * The same guard `.tag` carries, on the other item in the same row, and it earns its place at
+     * 200% text.
+     *
+     * `.heading` is a `space-between` flex row, so both children's automatic minimum size is their
+     * min-content width — for a heading, its longest word. `fluid()` emits a `rem`-based `clamp()`,
+     * so a reader on a 32px root gets this heading at ~60px, where "BETWEEN" alone measures ~286px
+     * against a ~280px container: the flex item refuses to shrink below it and the *page* scrolls
+     * sideways rather than the word breaking. Measured at a 320px viewport with a 32px root —
+     * `document.scrollWidth` 357 against a 320 client width without this line, 320 with it, and the
+     * heading's right edge lands exactly on the container's inner edge.
+     *
+     * The word then breaks, which `overflow-wrap` (inherited from `body`) was always willing to do
+     * and was never asked, because the overflow was the flex item's and not the text's.
+     */
+    min-width: 0;
+  }
+
+  /*
+   * Dropped on the phone, which is what the design does — node 16:310 is the heading alone, with no
+   * qualifier beside it.
+   *
+   * ## Why `display: none` rather than not rendering it
+   *
+   * The alternative is a width branch in the component, and a server component cannot have one: it
+   * would need `matchMedia` on the client, which means a hydration mismatch on first paint or a
+   * `'use client'` boundary around a section that otherwise needs none. `display: none` is also the
+   * more honest of the two for a reader on a screen reader — it removes the element from the
+   * accessibility tree as well as from the page, so a phone user is not read a line that phone users
+   * cannot see. (`visibility: hidden` and a visually-hidden class fail that test in opposite
+   * directions: one hides it from everybody but still reserves the box, the other announces copy
+   * the design deleted.) The cost is one string of markup that paints nothing.
+   *
+   * Hidden is the **default** and shown is the override, mobile-first. A container query cannot be
+   * evaluated before its container has been laid out, so on the first style pass neither branch
+   * matches; defaulting to hidden means the worst case is the qualifier appearing a frame late
+   * rather than appearing and then being taken away.
+   *
+   * `nowrap` because the heading is the run that should wrap if either has to.
+   */
+  .meta {
+    display: none;
+    white-space: nowrap;
+
+    @container numberedGrid (width >= #{$numbered-grid-meta-inline-switch}) {
+      display: block;
+    }
+  }
+
+  /*
+   * ============================================================================================
+   * The shared-border table
+   * ============================================================================================
+   *
+   * The design (16:166) draws one continuous 1px rule around the whole grid and one between every
+   * pair of neighbours — never two lines side by side, and never a gap. Every cell in Figma carries
+   * `border-b border-r` and the frame supplies the top and left, which is why the rows are pitched
+   * 197px apart inside 198px cells: the borders are meant to be shared, not stacked.
+   *
+   * The naive translation — `border: 1px` on every cell — doubles all ten interior lines. Three
+   * other mechanisms were considered before this one:
+   *
+   *   1. **Container `border-block-start`/`border-inline-start` + cell trailing borders.** Exact for
+   *      a rectangular grid and the closest match to what Figma stores. It breaks on an incomplete
+   *      final row: the empty trailing slot has no cell to draw the outer right edge or its share of
+   *      the bottom edge, so the box is open at the corner. Not hypothetical — it is precisely the
+   *      nine-into-two case the phone layout renders (node 16:393).
+   *
+   *   2. **`gap: 1px` with the container painted in the stroke colour and the cells in the
+   *      surface.** Robust against the column count changing, and wrong for the same orphan: the
+   *      empty slot is not a cell, so it shows the container's paint — a solid ink rectangle where
+   *      the design draws an empty one. Fixable only with filler elements, and the number of those
+   *      depends on the column count, which is a query the server cannot evaluate.
+   *
+   *   3. **`display: table` + `border-collapse: collapse`,** the one mechanism in CSS built to do
+   *      exactly this. It needs row wrappers, and row wrappers fix the column count in the markup —
+   *      so the 3→2 switch would have to re-group the DOM. Rejected for that alone; the semantics
+   *      (this is a list, not tabular data) are a second reason.
+   *
+   * What is used instead: the cells own their **trailing** hairlines only, and the outer box is an
+   * `outline` pulled inside with a negative offset.
+   *
+   * An outline is painted outside the border box and takes **no layout space**, so with
+   * `outline-offset: -1px` it lands in exactly the 1px band a border would occupy — on top of the
+   * last column's `border-inline-end` and the last row's `border-block-end`, which is why the
+   * perimeter stays one pixel wide instead of two. Where there is no cell to coincide with — the
+   * empty slot beside an orphan — the outline is the only thing drawn, so the box closes itself with
+   * no filler element and nothing in the accessibility tree. Outlines also paint after descendants,
+   * so nothing a cell contains can cover it.
+   *
+   * The result holds at any column count and any item count with no `nth-child` arithmetic, which is
+   * what makes the switch below a two-line change. The `Desktop`, `Mobile` and `IncompleteLastRow`
+   * stories measure it: every interior line and the whole perimeter are 1px at three columns, at
+   * two, and with a ragged final row.
+   *
+   * ## `--stroke-cards`, not `--stroke-divider`
+   *
+   * Both the perimeter and the interior lines are drawn `#131412` — full-strength ink, identical
+   * weight and colour throughout, which is what makes the thing read as one table rather than as
+   * cells with a box round them. `--stroke-cards` is `--stone-900` (`#131412`) on the light theme
+   * and `--stone-50` on dark, so the rule inverts with the page; `--stroke-divider` is `--stone-300`
+   * (`#dcd9cf`), the faint hairline role, which would leave the table almost invisible on the page
+   * it is drawn on. `ScheduleSection`, `components/Header`, `components/Footer` and `components/Card`
+   * all make the same call from the same measurement, and `ScheduleSection` uses both tokens in one
+   * file precisely because the two weights are the design's rather than a simplification of one.
+   *
+   * ## Row sizing
+   *
+   * `auto` by default, `minmax(…, 1fr)` above the switch.
+   *
+   * The `1fr` is the uniformity: in a grid whose own height is indefinite every `fr` row resolves to
+   * the tallest row's content, so the cells match each other without any of them being given a
+   * height. A cell with three lines of copy grows the whole table rather than overflowing its box,
+   * which a fixed height would not survive.
+   *
+   * The floor is the *air*, and it is the one measurement `1fr` alone does not reproduce. Figma
+   * reports the desktop cells as `pt-22 pb-73` (16:167) — asymmetric padding is the signature of a
+   * fixed-height frame with its content top-aligned, not of a padding decision — so the drawn cell is
+   * 198px tall against ~125px of content, and three of them make the 592px grid. Rendered without a
+   * floor the same nine cells measure 143px at 1440, which is a correct table and a visibly tighter
+   * one than the comp.
+   *
+   * `fluid(139px, 198px)` rather than a flat 198: the wide anchor is the drawn height at the
+   * design's frame, and the floor should ramp with the page like every other measurement here rather
+   * than stepping to its full value the moment the third column appears. The narrow anchor is the
+   * phone frame's row pitch, which this rule never reaches — below the switch there is no floor at
+   * all — and which content exceeds anyway, so it is a sane end of the ramp rather than a second
+   * drawn value.
+   *
+   * A floor, never a cap: `minmax()`'s maximum is still `1fr`, so a long description grows its row
+   * past 198 and the rest follow it.
+   *
+   * The phone frame draws rows that vary with their content (139.22, 139.61, 153), so there the
+   * initial `auto` is the design.
+   *
+   * `minmax(0, 1fr)` and not `1fr`: the implicit minimum of a grid track is `auto`, so one long
+   * unbreakable word would widen its column and unbalance the table.
+   */
+  .grid {
+    /*
+     * 22px at 1282 (16:167) and 14px at 392 (16:313). Neither is on the spacing scale and the pair
+     * spans 8px, which is past the point where the scale stops interpolating — `--spacing-lg` (24)
+     * and `--spacing-md` (16) would be 2px over at both ends *and* would step at the switch where
+     * the design glides. `fluid()` is the sanctioned way to express a pair the scale does not carry;
+     * `ScheduleSection.description` re-points a token the same way. Declared here rather than on
+     * `.cell` so the cell reads as consuming a table-level measurement.
+     */
+    --numbered-grid-cell-padding: #{fluid(14px, 22px)};
+    /*
+     * The perimeter and every interior line are the *same* rule — that is the whole mechanism — so
+     * they are one declaration consumed in three places rather than three copies that can desync.
+     * The `OnDarkPage` story catches a colour that stops inverting; nothing would catch a width that
+     * stopped matching.
+     */
+    --numbered-grid-rule: 1px solid var(--stroke-cards);
+
+    display: grid;
+    /*
+     * Two columns, never one — the phone frame is a 2×5 grid and the AC says so explicitly. At a
+     * 300px container that is a ~122px measure per cell, which the 20px display tier holds.
+     */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    outline: var(--numbered-grid-rule);
+    outline-offset: -1px;
+
+    @container numberedGrid (width >= #{$numbered-grid-inline-switch}) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-auto-rows: minmax(#{fluid(139px, 198px)}, 1fr);
+    }
+  }
+
+  /*
+   * Trailing hairlines only — the leading two edges of the table are the outline's job. See the note
+   * on `.grid`.
+   *
+   * Logical properties rather than `right`/`bottom`: the rule is a statement about *flow* order
+   * (every cell draws the lines after it), which is what makes it independent of the column count,
+   * and it should stay true if the page is ever set in a right-to-left script.
+   *
+   * The 8px stack gap is `--spacing-xs` flat against a drawn 10px at 1282 and 8px at 392. The
+   * scale's own rule is that gaps at or below 24px stay fixed because interpolating them spends the
+   * range on differences no one can see; 2px across two gaps is that case, and above the switch it
+   * lands in the row's bottom slack rather than moving anything.
+   */
+  .cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--numbered-grid-cell-padding);
+    border-block-end: var(--numbered-grid-rule);
+    border-inline-end: var(--numbered-grid-rule);
+  }
+
+  /*
+   * The ordinal and the tag on one line, pushed to opposite ends (16:168).
+   *
+   * `align-items: flex-start` so a tag long enough to wrap grows downwards from the ordinal's line
+   * rather than centring against it; `gap` so the two never touch when the tag is nearly as wide as
+   * the cell. No `width: 100%` — the cell is a flex column, which stretches its children by default.
+   */
+  .cellHead {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  /*
+   * The ordinal carries no class at all — its colour and its type are both props, and it is two or
+   * three characters wide, so there is nothing left for a rule to say. This one exists only for the
+   * guard.
+   *
+   * `tag` is free CMS text, so it can be longer than the space `space-between` leaves it, and
+   * `.cellHead` is a **row** flex container — the one axis where a flex item's automatic minimum
+   * size really is content-based. `min-width: 0` lets it shrink below its min-content width instead
+   * of pushing the ordinal out of the cell. `HeaderDisplaySection.metaItem` and
+   * `TwoColumnListSection.eyebrow` carry the same guard for the same reason.
+   *
+   * Measured rather than assumed, because the sibling declaration on the description turned out to
+   * be inert and this one had to earn its place: with a 35-character unbroken tag in a 390px
+   * viewport the head row is 146px wide either way, and the tag's right edge lands at 179.9px with
+   * the guard against 301.7px without it — 107px past the cell's own right edge at 195px, over the
+   * next column's text.
+   *
+   * No `overflow-wrap` beside it: `tools/sass/global/_typography.scss` sets `word-wrap: break-word`
+   * on `body`, the property is inherited, and `overflow-wrap` is its modern alias — so a declaration
+   * here cannot change a pixel. That is the inert restatement `TwoColumnListSection` removed from
+   * eleven rules across three sections; measured on the render, every text node in this one already
+   * computes to `break-word`.
+   */
+  .tag {
+    min-width: 0;
+  }
+
+  /*
+   * The same re-point as `.title`, at the cell's pair: 26px at 1282 (16:174) and 20px at 392
+   * (16:320), both at leading 1.0 and -0.03em of tracking.
+   *
+   * The display tier rather than `--heading-xs` (`fluid(20px, 24px)`, the closest step on the
+   * heading scale) because the *face* is the decision, not the size: these names are drawn in
+   * Archivo Black, which is what `variant="display"` selects. Taking `variant="heading"` for the
+   * sake of 2px at the wide end would set them in the body face.
+   *
+   * The design marks every name node `word-break: break-word`, which a two-column cell in a 300px
+   * container needs — a ~122px measure is narrower than a long single word at 20px Archivo Black.
+   * It is **not** declared here: `_typography.scss` sets the inherited `word-wrap: break-word` on
+   * `body`, so it already computes to `break-word` on this element, and restating it is the dead
+   * rule `TwoColumnListSection` stripped from eleven sites. Verified on the render with a
+   * 68-character unbroken name at 390px: it breaks, the cell keeps its track width and the document
+   * does not scroll.
+   */
+  .cellTitle {
+    --display-md: #{fluid(20px, 26px)};
+    --display-line-height: 1;
+    --display-letter-spacing: -0.03em;
+  }
+
+  /*
+   * There is deliberately no `.cellBody` rule, and the description carries no class.
+   *
+   * Its ink is a `TextBlock` prop (`color="themeFgMuted"`) and its size is another, so the only
+   * thing a rule could have added was a `min-width: 0` overflow guard — and that one is inert here.
+   * `.cell` is `flex-direction: column`, so the block axis is the main axis; per CSS Flexbox §4.5 a
+   * flex item's automatic minimum size applies to the **main**-axis min-size only, and `min-width`
+   * in the cross axis already computes to 0. (`.tag` above is the genuine case: `.cellHead` is a row.)
+   * The track's guard is `minmax(0, 1fr)` on `.grid`.
+   *
+   * For the record, since the ink is decided here even though it is set there: the design draws
+   * `rgba(19, 20, 18, 0.75)`, which composites to about `--stone-700` on the light page;
+   * `--fg-muted` is `--stone-600`, a step lighter, and is the muted-body role — 5.32:1 on
+   * `--stone-50` and, as `--pine-100`, 7.30:1 on the dark page, both past the 4.5:1 WCAG 1.4.3 asks
+   * of body copy. `ScheduleSection.description` records the same measurement for the same ink.
+   */
+}

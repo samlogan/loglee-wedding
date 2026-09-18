@@ -39,6 +39,7 @@ import seo from './objects/seo';
 import { faqSection } from './sections/faqSection';
 import { headerDisplaySection } from './sections/headerDisplaySection';
 import { mediaTagsSection } from './sections/mediaTagsSection';
+import { numberedGridSection } from './sections/numberedGridSection';
 import { scheduleSection } from './sections/scheduleSection';
 import { specCardGridSection } from './sections/specCardGridSection';
 import { twoColumnListSection } from './sections/twoColumnListSection';
@@ -95,6 +96,7 @@ const schema: SchemaTypeDefinition[] = [
   faqSection,
   headerDisplaySection,
   mediaTagsSection,
+  numberedGridSection,
   scheduleSection,
   specCardGridSection,
   twoColumnListSection
