@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
 import Section from '@/components/Section';
+import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import TextTitle from '@/components/TextTitle';
 import classNames from '@/helpers/classNames';
@@ -109,9 +110,16 @@ const HeaderDisplaySection: FC<IHeaderDisplaySection> = (props) => {
                    * which a tags input would happily take "TBC" twice and hand React a duplicate
                    * key. The key and that rule have to move together.
                    */
-                  <li className={styles.metaItem} key={item}>
-                    {item}
-                  </li>
+                  <Text
+                    as="li"
+                    className={styles.metaItem}
+                    key={item}
+                    size="xs"
+                    text={item}
+                    textTransform="uppercase"
+                    variant="mono"
+                    weight="medium"
+                  />
                 ))}
               </ul>
             )}

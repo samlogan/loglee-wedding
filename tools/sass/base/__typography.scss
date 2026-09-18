@@ -14,6 +14,12 @@
  * The third type role. Used for stats, times, tags, filenames and the game-style prompts —
  * "SELECT PLAYER", the player chips, the wordmark. Almost always uppercase with wide tracking
  * in the design, but that is per-use rather than baked in here.
+ *
+ * **Two callers, and they are the whole list.** `components/Text`'s `.variant_mono` is the one every
+ * piece of mono *text* goes through — the leading and the two tracking registers live with it on
+ * `--mono-*` in `_variables.scss`. `components/Button`'s `.mono` is the exception, because it styles
+ * the control rather than a run inside it; its own note says why. Anything else reaching for this
+ * mixin is re-creating the eighteen-rule duplication MAM-1927 removed.
  */
 @mixin mono-font() {
   font-family: var(--mono-font), ui-monospace, monospace;

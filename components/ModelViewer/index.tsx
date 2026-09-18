@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useState } from 'react';
 
 import Image from '@/components/Image';
+import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
 import type { ModelClipNames, ModelRestRole } from '@/helpers/modelClips';
 
@@ -362,7 +363,16 @@ const ModelViewer = (props: ModelViewerProps) => {
       data-model-mode={resolved}
       data-model-render={render}
     >
-      {label ? <span className={styles.label}>{label}</span> : null}
+      {label ? (
+        <Text
+          as="span"
+          className={styles.label}
+          text={label}
+          textTransform="uppercase"
+          variant="mono"
+          weight="regular"
+        />
+      ) : null}
 
       <div
         className={classNames(styles.stage, { [styles.resting]: !loading, [styles.settled]: settled })}
@@ -423,10 +433,19 @@ const ModelViewer = (props: ModelViewerProps) => {
           />
         ) : null}
 
-        {badge ? <span className={styles.badge}>{badge}</span> : null}
+        {badge ? <Text as="span" className={styles.badge} text={badge} variant="mono" weight="regular" /> : null}
       </div>
 
-      {readout ? <span className={styles.readout}>{readout}</span> : null}
+      {readout ? (
+        <Text
+          as="span"
+          className={styles.readout}
+          text={readout}
+          textTransform="uppercase"
+          variant="mono"
+          weight="regular"
+        />
+      ) : null}
     </div>
   );
 };

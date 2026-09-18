@@ -16,18 +16,20 @@
   /*
    * The mono micro-label above the heading.
    *
-   * `--body-2xs` consumed directly, and the comment is required by the convention rather than
-   * decorative: it is the step below the body scale's floor and has no `Text` `size` value, because
-   * `Text` has no `mono` variant yet. `PlayerCard` and `ModelViewer` take the same workaround for
-   * the same reason.
+   * `<Text variant="mono" size="2xs">`, which is what the note here used to say did not exist —
+   * `--body-2xs` had no `Text` `size` value because `Text` had no `mono` variant. Both landed in
+   * MAM-1927, and `size="2xs"` is reachable only on this variant.
+   *
+   * Two re-points, both preserving what the page already rendered. The tracking is 0.06em against
+   * the quiet register's 0.1em — quieter than a chip because it sits directly above a display
+   * heading and is read as its label rather than as a tag. The leading is the body ratio for the
+   * same surrounding-rhythm reason `HeaderDisplaySection.metaItem` gives.
    */
   .eyebrow {
-    @include mono-font();
+    --mono-letter-spacing: 0.06em;
+    --mono-line-height: var(--body-line-height);
 
     color: var(--fg-accent);
-    font-size: var(--body-2xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
   }
 
   /*

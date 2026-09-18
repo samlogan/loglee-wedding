@@ -278,20 +278,20 @@ $two-column-list-body-measure: 27.5rem;
    * 4.5:1 WCAG 1.4.3 asks of text this size.
    *
    * The drawn leading is 1.32 (17.16 on 13px, 14.52 on 11px) against `--body-line-height`'s 1.5, so
-   * the label's line box is ~2px taller than the comp's. Left on the token to stay identical to
+   * the label's line box is ~2px taller than the comp's. Left on the body ratio to stay identical to
    * `ScheduleSection.eyebrow` — two sections drawing the same label on the same page should not
-   * disagree about its leading over 2px. This and `.ordinal` below are call sites twelve and
-   * thirteen for the missing `--mono-line-height` token `ScheduleSection.eventTime` counts at its
-   * line 532; the count there is now short by two.
+   * disagree about its leading over 2px. The `--mono-line-height` token this note used to ask for
+   * exists now (MAM-1927) and defaults to 1.3, which is that drawn 1.32; this rule and `.ordinal`
+   * below re-point it back to 1.5 rather than taking the change, so the two sections stay in step.
+   * Moving both to the role's default is a design-review question, not a refactor.
    */
   .eyebrow {
-    @include mono-font();
+    // Surrounding rhythm rather than a drawn edge, so the body ratio rather than the mono role's own
+    // 1.3 — identical to `ScheduleSection.eyebrow`, which is the point of the paragraph above.
+    --mono-line-height: var(--body-line-height);
 
     color: color-mix(in srgb, var(--fg-default) 80%, transparent);
     font-size: #{fluid(11px, 13px)};
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.2em;
-    line-height: var(--body-line-height);
     margin: 0;
     /*
      * The same automatic-minimum guard the two columns carry, and for a sharper reason: the
@@ -396,8 +396,9 @@ $two-column-list-body-measure: 27.5rem;
   }
 
   /*
-   * The ordinal. `--body-xs` is `fluid(11px, 12px)`, which is the drawn pair exactly (12px on 1:440,
-   * 11px on 1:580) — the only token in this file that needs no adjustment at either end.
+   * The ordinal. `size="xs"` reads `--body-xs` = `fluid(11px, 12px)`, which is the drawn pair exactly
+   * (12px on 1:440, 11px on 1:580) — the only token in this file that needs no adjustment at either
+   * end.
    *
    * 70% of the ink, and it is drawn rather than chosen: every ordinal on both frames sits in a
    * container marked `opacity-70` (1:439, 1:443, 1:447, 1:451 desktop; 1:579, 1:583, 1:587 mobile),
@@ -416,13 +417,13 @@ $two-column-list-body-measure: 27.5rem;
    * The list is unbounded (no `max()` in the schema), so that is a case this will actually meet.
    */
   .ordinal {
-    @include mono-font();
+    --mono-line-height: var(--body-line-height);
+    // Untracked. The ordinals are a column of two-digit numbers held to a `2ch` measure, and tracking
+    // would push the third digit past the cell `min-width` reserves for it.
+    --mono-letter-spacing: normal;
 
     color: color-mix(in srgb, var(--fg-default) 70%, transparent);
     flex: 0 0 auto;
-    font-size: var(--body-xs);
-    font-weight: var(--font-weight-medium);
-    line-height: var(--body-line-height);
     min-width: 2ch;
   }
 

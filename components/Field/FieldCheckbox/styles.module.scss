@@ -51,9 +51,13 @@
    * (`--fg-accent` is pine/600 on the light theme, which is the `#1e4632` the comp uses, and
    * signal/300 on the dark one).
    *
-   * `--body-xs` is `fluid(11px, 12px)`, which is the comp's mobile and desktop sizes exactly.
-   * Tracking is held in `em` (1.68px on 12px, 1.54px on 11px — both 0.14em) so it stays proportional
-   * as the fluid size moves.
+   * All of that is `<Text as="legend" variant="mono" size="xs" weight="bold" textTransform="uppercase">`
+   * now — `size="xs"` reads `--body-xs`, `fluid(11px, 12px)`, which is the comp's mobile and desktop
+   * sizes exactly. Only the tracking and the colour are this rule's, and the tracking is held in `em`
+   * (1.68px on 12px, 1.54px on 11px — both 0.14em) so it stays proportional as the fluid size moves.
+   *
+   * `<legend>` reaching `Text` at all is part of the same change: the `as` union did not carry it, and
+   * that — not the missing type role alone — is what kept this element out of the component.
    *
    * The gap below it is `--group-gap`, not `--spacing-sm` (a flat 12px). The comp steps it to 10px on
    * the phone frame, in step with every other value there (18→16 padding, 12→11 here, 11→10 eyebrow,
@@ -71,18 +75,19 @@
    * into line is a change to ten other fields and belongs in its own ticket.
    */
   .legend {
-    @include mono-font();
+    /*
+     * The loud register's tracking, re-pointed. 1.68px on 12px and 1.54px on 11px are both 0.14em —
+     * the comp's own value for this label, and a fifth tighter than the 0.2em the section eyebrows
+     * are drawn at. Re-pointing the token rather than declaring `letter-spacing` is what makes the
+     * override deterministic; see the note in `_variables.scss`.
+     */
+    --mono-letter-spacing-loud: 0.14em;
 
     display: block;
     width: 100%;
     margin-bottom: var(--group-gap);
     padding: 0;
     color: var(--fg-accent);
-    font-size: var(--body-xs);
-    font-weight: var(--font-weight-bold);
-    line-height: 1.3;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
   }
 
   .required {
@@ -192,15 +197,6 @@
      * relationship asserted only in a comment is one that drifts.
      */
     --card-gap: 0.875rem;
-    /*
-     * The two mono micro-labels. Below `--body-xs` (11→12px), the floor of the body scale.
-     *
-     * This stayed a local while it was two labels in one component; it is `--body-2xs` now, because
-     * `PlayerCard`, `StatMeter` and `ScheduleSection` were each computing the same pair under their
-     * own name. The local alias survives only so the two use sites below read as one decision.
-     */
-    --micro-font-size: var(--body-2xs);
-
     display: flex;
     /*
      * The phone form, and the base: the eyebrow and title stack on the left and the indicator sits
@@ -352,21 +348,19 @@
   }
 
   /*
-   * Set in `--micro-font-size` on the card — see the note there. Tracking in `em` again: 1.32px on
-   * 11px and 1.2px on 10px are both 0.12em.
+   * `<Text variant="mono" size="2xs">`, so the family, weight, leading and casing are the role's.
+   * `--body-2xs` is the step below the body scale's floor and the pair this label is drawn at; the
+   * local alias that used to name it here retired with the two declarations that read it.
    *
    * `opacity` is the comp's own treatment. It costs contrast, which was checked rather than assumed:
    * at 0.8 the eyebrow resolves to roughly 9:1 on the unselected card and 11:1 on the selected one,
    * both clear of the 4.5:1 that 1.4.3 asks of text this size.
    */
   .eyebrow {
-    @include mono-font();
+    // 1.32px on 11px and 1.2px on 10px are both 0.12em — the comp's value for this label, a notch
+    // wider than the quiet register's 0.1em.
+    --mono-letter-spacing: 0.12em;
 
-    font-size: var(--micro-font-size);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.3;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
     opacity: 0.8;
   }
 
@@ -388,7 +382,13 @@
   }
 
   .indicator {
-    @include mono-font();
+    /*
+     * Bold at the *quiet* register's tracking, which is the one place the weight-selects-the-register
+     * rule needs saying out loud: the comp draws this at 0.1em, half the 0.2em the loud register
+     * carries. Re-pointing the loud token on this element is the escape hatch — `PlayerCard`'s
+     * header runs take the same one.
+     */
+    --mono-letter-spacing-loud: var(--mono-letter-spacing);
 
     display: flex;
     flex-shrink: 0;
@@ -401,11 +401,6 @@
      */
     gap: 0.8em;
     padding-bottom: 2px;
-    font-size: var(--micro-font-size);
-    font-weight: var(--font-weight-bold);
-    line-height: 1.3;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
   }
 
   /*
@@ -416,7 +411,7 @@
    * bordered box gives the same two shapes with the size and the ring weight under control.
    *
    * `em` and not `rem`, and the distinction is the whole point: the run this sits in is
-   * `--micro-font-size`, a `clamp()` whose bounds are `rem`, so an `em` marker inherits the reader's
+   * `--body-2xs`, a `clamp()` whose bounds are `rem`, so an `em` marker inherits the reader's
    * root size *through* it and scales with the viewport as well. A `rem` marker gets the first and
    * drops the second, which is the one thing this build is not allowed to do.
    *

@@ -115,20 +115,27 @@
 
   /*
    * JetBrains Mono Bold, uppercase, tracked — the comp's UI-chrome register, the same one
-   * `--button-mono-*` describes for the controls. Declared here rather than taken through `Text`
-   * because `Text` has no `mono` variant; that is a known gap and this is the accepted workaround.
+   * `--button-mono-*` describes for the controls. `<Text variant="mono" weight="bold">` now, so the
+   * family, the weight and the casing are the role's; what is left here is the two places this card
+   * departs from it.
    *
-   * Tracking in `em`: 1.3px on 13px is 0.1em, so it stays proportional as the fluid size moves.
+   * **Size**, because `--card-value-size` is `fluid(12px, 13px)` and no rung of the shared scale is
+   * that pair — `--body-xs` tops out at 12 and `--body-sm` starts there. Passing no `size` prop is
+   * what lets this rule own it: `Text` emits a `size_*` class only when asked for one, so there is no
+   * competing declaration to out-specify.
+   *
+   * **Leading and tracking**, both re-pointed rather than declared, which is the deterministic form
+   * — see `_variables.scss`. 1.5 is the surrounding-rhythm value this card sets every mono run at,
+   * not the role's 1.3, which is a drawn-box value (`ScheduleSection.location` is the box case).
+   * And the header runs are Bold at the *quiet* register's 0.1em (1.3px on 13px), so the loud
+   * token is re-pointed to the quiet one — `FieldCheckbox`'s indicator takes the same escape hatch.
    */
   .title,
   .level {
-    @include mono-font();
+    --mono-line-height: var(--body-line-height);
+    --mono-letter-spacing-loud: var(--mono-letter-spacing);
 
     font-size: var(--card-value-size);
-    font-weight: var(--font-weight-bold);
-    line-height: var(--body-line-height);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
   }
 
   /*
@@ -265,27 +272,31 @@
     border-bottom: 0;
   }
 
+  // `<Text as="dt" variant="mono" weight="regular" textTransform="uppercase">`. Regular takes the
+  // quiet register's 0.1em, which is the drawn value, so only the size and the leading are local —
+  // both for the reasons the header runs above set out.
   .statLabel {
-    @include mono-font();
+    --mono-line-height: var(--body-line-height);
 
     color: var(--fg-accent);
     font-size: var(--card-label-size);
-    font-weight: var(--font-weight-regular);
-    line-height: var(--body-line-height);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
   }
 
-  // `margin: 0` for the same reason `.stats` carries it — `dd` is not in the reset's list and the UA
-  // indents it by 40px.
+  /*
+   * `margin: 0` for the same reason `.stats` carries it — `dd` is not in the reset's list and the UA
+   * indents it by 40px.
+   *
+   * `--mono-letter-spacing: normal` because the comp sets the values untracked, where every label
+   * around them is tracked. `normal` is a legal `letter-spacing` value, so re-pointing the token
+   * turns the role's declaration off on this element without a second rule.
+   */
   .statValue {
-    @include mono-font();
+    --mono-line-height: var(--body-line-height);
+    --mono-letter-spacing: normal;
 
     margin: 0;
     color: var(--fg-default);
     font-size: var(--card-value-size);
-    font-weight: var(--font-weight-regular);
-    line-height: var(--body-line-height);
     overflow-wrap: anywhere;
   }
 
@@ -298,8 +309,8 @@
    *
    * The **family** is the only thing this rule exists for, and it cannot move to the prop:
    * `Text`'s `.variant_body` sets a weight and a size and no `font-family` at all, so an inline
-   * `<Text>` inside the `<dd>` inherits the mono face `.statValue` sets above it and renders the
-   * one body-face run in the card in JetBrains Mono.
+   * `<Text>` inside the `<dd>` inherits the mono face `variant="mono"` puts on it and renders the
+   * one body-face run in the card in JetBrains Mono. Two classes, so it beats `.variant_mono`.
    *
    * Size and line-height are deliberately *not* restated here. They were, and the two declarations
    * agreed only because both happened to name `--body-md` — two places to change, no way for either

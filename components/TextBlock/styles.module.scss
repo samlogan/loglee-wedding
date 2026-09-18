@@ -129,13 +129,29 @@ p + .divider {
  * token rather than a hand-written value.
  */
 .amountToken {
-  @include mono-font();
+  /*
+   * `<Text variant="mono" weight="medium">` supplies the family; both of the role's other two
+   * declarations are turned off here, because this run is measured against the *sentence* it sits in
+   * rather than against the type scale.
+   *
+   * The leading is the *paragraph's*, so the chip sits on the line box it is spliced into — a chip
+   * carrying the role's own 1.3 would shorten that line and shift the copy around it. `normal` on
+   * the tracking for the same reason: the figure reads as part of the sentence, not as a tag.
+   *
+   * `var(--body-line-height)` and not the literal `inherit`, which was the first attempt and is a
+   * trap worth recording: on a *custom* property `inherit` is honoured as a CSS-wide keyword, so
+   * `--mono-line-height: inherit` resolves to the parent's `--mono-line-height` — the role's 1.3 —
+   * rather than to the parent's `line-height`. Measured: it rendered the chip at 19.34px against the
+   * 23.06px the paragraph sets. Reading the paragraph's own token instead also tracks a section that
+   * re-points it, which `TwoColumnListSection`'s rich-text body does (1.55).
+   */
+  --mono-line-height: var(--body-line-height);
+  --mono-letter-spacing: normal;
 
   background-color: color-mix(in srgb, currentColor 15%, transparent);
   border-radius: var(--radius-sm);
   box-decoration-break: clone;
   font-size: 0.875em;
-  font-weight: var(--font-weight-medium);
   padding: 0.125em 0.4em;
   white-space: nowrap;
   -webkit-box-decoration-break: clone;

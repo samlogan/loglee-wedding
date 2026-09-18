@@ -218,9 +218,20 @@
    * Typography` reads the CSSOM, so the page needs no maintenance, and a step four components share
    * is exactly what that page is for.
    *
-   * Not a `ProjectFontSize`: none of the four callers goes through `Text`, so this is a CSS token
-   * and not a prop value. When `Text` gains the `mono` variant (MAM-1927), this is the size it
-   * should read.
+   * It **is** a prop value now. This note used to end "not a `ProjectFontSize`: none of the four
+   * callers goes through `Text`"; MAM-1927 gave `Text` its `mono` variant and this is the size that
+   * variant's `size="2xs"` reads. It stays reachable **only** through `variant="mono"` — see the
+   * note on `TextProps` in `components/Text/index.tsx` for why it is fenced there rather than added
+   * to the shared `ProjectFontSize`.
+   *
+   * The narrow anchor is 10px and not 9px, decided rather than averaged. Six call sites are drawn at
+   * 10px on the phone frame — `PlayerCard.statLabel`, `StatMeter.label`, `FieldCheckbox.eyebrow` and
+   * `.indicator`, `ScheduleSection.location` and the thank-you page's eyebrow — against one at 9px:
+   * `ModelViewer`'s corner label and readout (node 1:281). That one is not outvoted so much as out
+   * of scope. `--viewer-chrome-size` is panel chrome sized against a *container query* — the viewer
+   * draws its own gutters and hatch in `cqw` and its chrome is part of that set — where this rung is
+   * a page-level micro-label sized against the viewport. Averaging the two would give a pair neither
+   * is drawn at. `ModelViewer` keeps its local and is the documented non-consumer of this rung.
    */
   --body-2xs: #{fluid(10px, 11px)};
   /*
@@ -259,6 +270,62 @@
    */
   --body-lede: #{fluid(17px, 22px)};
   --body-lede-line-height: #{fluid(23.8px, 29.7px)};
+
+  /*
+   * ------------------------------------
+   * The mono role
+   * ------------------------------------
+   *
+   * The third type role — stats, times, tags, eyebrows, opening hours, the game-style prompts. Read
+   * by `Text`'s `.variant_mono`; every declaration below used to be copied into each consuming
+   * module, eighteen rules across eleven files at the point MAM-1927 collected them.
+   *
+   * There is no size token here on purpose: the role rides the existing scale. `variant="mono"`
+   * exposes exactly three rungs — `2xs` (`--body-2xs`), `xs` (`--body-xs`), `sm` (`--body-sm`).
+   *
+   * ## Leading
+   *
+   * 1.3, and the number is the design's rather than a compromise. Figma sets `leading-[normal]` on
+   * every mono run in the file, which for JetBrains Mono's own metrics is 1.32; five rules had
+   * already written 1.3 by hand having each read that off the comp independently.
+   *
+   * A hard 1.3 rather than the literal `normal`, for two reasons. `normal` resolves from whichever
+   * face actually loaded, so the `ui-monospace, monospace` fallback in `mono-font()` would render a
+   * different leading than the design on any machine where JetBrains Mono fails — silently, and
+   * differently per platform. And `normal` is not a number, so a consumer cannot scale it.
+   *
+   * Six rules were on `--body-line-height` (1.5) before this token existed, and 1.5 is *not* the
+   * mono role's leading — it is the body paragraph's, argued from twelve drawn paragraphs a few
+   * lines above. Each of those six now re-points `--mono-line-height` back to it on itself, with the
+   * reason it does stated at the site. That is the correct shape: the token carries the role and the
+   * exception is visible.
+   *
+   * ## Tracking: two registers, selected by weight
+   *
+   * The design draws the mono role in two registers and only two — a quiet one (Medium, ~0.1em) and
+   * a loud one (Bold, widely tracked). They are not an axis of their own: `Text` selects between
+   * them from the `weight` prop, so `weight="bold"` takes `--mono-letter-spacing-loud` and every
+   * other weight takes `--mono-letter-spacing`. That is why there is no `register` prop.
+   *
+   * A call site whose drawn tracking differs re-points whichever of the two its weight selects, on
+   * itself — `--mono-letter-spacing: 0.12em`, not `letter-spacing: 0.12em`. That is deterministic
+   * where an ordinary property override is not: `Text`'s rule and the module's class are both single
+   * class selectors, so which one wins a `letter-spacing` fight is decided by CSS-module import
+   * order, whereas a custom property *declared on* an element always beats the same property
+   * *inherited* into it. `StatMeter`'s `--meter-label-size` note records the same trap from the
+   * other direction.
+   *
+   * 0.2em for the loud register is the drawn value on both section eyebrows (2.6px on 13px, 2.2px on
+   * 11px). `--button-mono-letter-spacing` stays separate at 0.08em: a button label is tracked
+   * against its own padding box rather than against a line of copy, and 0.96px on 12px is what the
+   * control is drawn at.
+   */
+  --mono-line-height: 1.3;
+  --mono-letter-spacing: 0.1em;
+  --mono-letter-spacing-loud: 0.2em;
+  // Medium, matching `--button-mono-quiet-font-weight`. The quiet register is the role's default;
+  // the loud one is asked for explicitly with `weight="bold"`.
+  --mono-default-font-weight: var(--font-weight-medium);
 
   // ------------------------------------
   // Spacing

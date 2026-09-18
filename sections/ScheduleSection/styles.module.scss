@@ -265,15 +265,14 @@ $schedule-intro-measure: 20rem;
    * the fluid size moves — fixing the size therefore fixes the tracking with it.
    */
   .eyebrow {
-    @include mono-font();
+    // Surrounding rhythm rather than a drawn edge, so the body ratio rather than the mono role's 1.3
+    // — the same call `.time` below and `HeaderDisplaySection.metaItem` make, and the reason
+    // `.location` is the one rule here that does *not* make it.
+    --mono-line-height: var(--body-line-height);
 
     color: var(--fg-accent);
     font-size: #{fluid(11px, 13px)};
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.2em;
-    line-height: var(--body-line-height);
     margin: 0;
-    text-transform: uppercase;
   }
 
   /*
@@ -464,14 +463,16 @@ $schedule-intro-measure: 20rem;
    * lines for one that overflows the gutter and overlaps the title beside it.
    */
   .time {
-    @include mono-font();
+    --mono-line-height: var(--body-line-height);
+    // Untracked: the comp sets the time runs plain where the eyebrow above and the chip below are
+    // both tracked. `normal` is a legal `letter-spacing`, so re-pointing the token turns the role's
+    // declaration off on this element without a competing rule.
+    --mono-letter-spacing: normal;
 
     grid-area: 1 / 1;
 
     color: var(--fg-accent);
     font-size: #{fluid(12px, 13px)};
-    font-weight: var(--font-weight-medium);
-    line-height: var(--body-line-height);
     // What keeps a long time inside the fixed 110px gutter is the inherited `overflow-wrap`, not
     // anything declared here — see `$schedule-time-gutter`.
     margin: 0;
@@ -525,18 +526,27 @@ $schedule-intro-measure: 20rem;
    *   1.32 so the number comes from the font's own metrics, exactly as the design's does; the
    *   fallback stack in `mono-font()` then carries its own.
    *
-   * Only the chip takes this. `.eyebrow` and `.time` keep `--body-line-height` — their line box is
-   * surrounding rhythm rather than a drawn edge, which is how `HeaderDisplaySection.metaItem`,
-   * `PlayerCard` and `StatMeter` set theirs.
+   * Only the chip takes this. `.eyebrow` and `.time` re-point `--mono-line-height` to
+   * `--body-line-height` — their line box is surrounding rhythm rather than a drawn edge, which is
+   * how `HeaderDisplaySection.metaItem`, `PlayerCard` and `StatMeter` set theirs.
    *
-   * Not "how every mono label in the repo is set", which this note used to claim and which is 5-of-11
-   * false: `FieldCheckbox` (×3) and `ModelViewer` (×3) use a hard `1.3`. Eleven call sites and three
-   * answers for one type role is a missing `--mono-line-height` token rather than eleven local
-   * judgements — logged alongside MAM-1927, since the `mono` variant on `Text` is what would consume
-   * it.
+   * The count this note used to keep — eleven call sites and three answers for one type role, logged
+   * as the missing `--mono-line-height` token — closed with MAM-1927. The token exists, `Text`'s
+   * `variant="mono"` consumes it, and the three answers are now one default (1.3) and two named
+   * exceptions stated at the elements that need them.
    */
   .location {
-    @include mono-font();
+    /*
+     * `normal`, and the one rule in the repo that re-points the role's leading *down* rather than up.
+     *
+     * `--mono-line-height` is a hard 1.3 so the role renders the same when the fallback face loads
+     * instead of JetBrains Mono. That is right everywhere the line box is surrounding rhythm and
+     * wrong here, where it *is* the drawn box: the chip's height is `2 × (padding + border) + line
+     * box`, and the comp's own 27px comes from the font's `normal` (1.32 for JetBrains Mono). A
+     * rounded 1.3 would draw it 0.22px short at the wide end — invisible, and still the wrong number
+     * to pin a measured box to.
+     */
+    --mono-line-height: normal;
 
     grid-area: 1 / 2;
     // Flush right. The track is `auto`-sized so this is usually a no-op, but it keeps the chip on
@@ -546,10 +556,6 @@ $schedule-intro-measure: 20rem;
     border: 1px solid currentColor;
     border-radius: var(--radius-sm);
     color: var(--fg-accent);
-    font-size: var(--body-2xs);
-    font-weight: var(--font-weight-medium);
-    letter-spacing: 0.1em;
-    line-height: normal;
     margin: 0;
     /*
      * `anywhere`, not the `break-word` every sibling here declares, and the difference is the whole

@@ -83,7 +83,13 @@
      */
     --viewer-gutter-inline: #{fluid(12px, 15px)};
     --viewer-gutter-block: #{fluid(10px, 13px)};
-    /* 11px desktop (node 1:166), 9px mobile (node 1:281) — below `--body-xs`, so there is no token. */
+    /*
+     * 11px desktop (node 1:166), 9px mobile (node 1:281) — below `--body-xs`, the floor of the body
+     * scale. `--body-2xs` is that step now, but it is `fluid(10px, 11px)`: the wide anchor matches
+     * and the narrow one does not. That stays a local rather than moving the shared rung down,
+     * because this is container-scoped panel chrome rather than a viewport-scoped micro-label — see
+     * the token's own note in `_variables.scss`, which names this component as the one non-consumer.
+     */
     --viewer-chrome-size: #{fluid(9px, 11px)};
     /* 0.66px on 11px and 0.54px on 9px are both exactly 0.06em, so one `em` value covers both. */
     --viewer-chrome-tracking: 0.06em;
@@ -299,24 +305,25 @@
    * The corner label (node 1:166) and the bottom-right readout (node 1:167).
    *
    * JetBrains Mono Regular — the comp's *quiet* mono register, not the tracked bold one the UI
-   * controls use. Declared here rather than through `Text`, which has no `mono` variant; that is a
-   * known gap and this is the accepted workaround, the same one `PlayerCard` takes.
+   * controls use. `<Text variant="mono" weight="regular">` now, which supplies the family and the
+   * role's 1.3 leading; `textTransform="uppercase"` is passed as a prop rather than declared here,
+   * so a lowercase label still renders in the comp's register. Note that does not keep capitals out
+   * of the accessible tree — Chromium names an element from its rendered text — which is the
+   * argument for these being short.
    *
-   * `text-transform` rather than relying on the authored string, so a lowercase label still renders
-   * in the comp's register. Note that it does not keep capitals out of the accessible tree —
-   * Chromium names an element from its rendered text — which is the argument for these being short.
+   * Size and tracking stay local, and both are the same decision: this is panel chrome sized against
+   * a *container*, not a page-level micro-label sized against the viewport. `--body-2xs` is
+   * `fluid(10px, 11px)` where the comp draws these at 11/9 (node 1:281), and the quiet register is
+   * 0.1em where these are 0.06em. `_variables.scss` records this component as the documented
+   * non-consumer of that rung, so the narrow anchor did not have to be averaged to cover both.
    */
   .label,
   .readout {
-    @include mono-font();
+    --mono-letter-spacing: var(--viewer-chrome-tracking);
 
     position: absolute;
     color: var(--fg-accent);
     font-size: var(--viewer-chrome-size);
-    font-weight: var(--font-weight-regular);
-    letter-spacing: var(--viewer-chrome-tracking);
-    line-height: 1.3;
-    text-transform: uppercase;
   }
 
   .label {
@@ -340,7 +347,9 @@
    * value that nothing else in the system shares.
    */
   .badge {
-    @include mono-font();
+    // Untracked, where the two chrome runs above take 0.06em: the chip prints a file name and a
+    // tracked file name reads as spaced-out rather than as a token.
+    --mono-letter-spacing: normal;
 
     position: absolute;
     inset-block-end: 4.1cqw;
@@ -368,8 +377,6 @@
     padding: #{fluid(3px, 4px)} #{fluid(6px, 8px)};
     color: var(--fg-accent);
     font-size: var(--viewer-chrome-size);
-    font-weight: var(--font-weight-regular);
-    line-height: 1.3;
     overflow-wrap: anywhere;
   }
 
