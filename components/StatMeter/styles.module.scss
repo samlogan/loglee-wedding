@@ -86,18 +86,22 @@
   }
 
   /*
-   * `Text` has no `mono` variant — a known gap — so the family is declared here. That is the
-   * accepted workaround in this repo and the same one `FieldCheckbox` uses for its `.legend`,
-   * `.eyebrow` and `.indicator`; going through `Text` would buy nothing, since every one of these
-   * declarations would still have to be overridden.
+   * `<Text variant="mono" weight="regular" textTransform="uppercase">`, so the family, the weight
+   * and the casing are the role's. Regular selects the quiet tracking register, which is the drawn
+   * 0.1em (1.1px on 11px) — so tracking needs nothing here either.
    *
    * `--fg-accent` is pine/600 on the light theme, which is the `#1e4632` the comp sets both runs in,
-   * and signal/300 on the dark one. Tracking is held in `em` — 1.1px on 11px is 0.1em — so it stays
-   * proportional as the fluid size moves.
+   * and signal/300 on the dark one.
+   *
+   * The leading is re-pointed back to `--body-line-height`. 1.5 is not the mono role's value — the
+   * role is 1.3 — but these two runs sit in a head row whose line box is surrounding rhythm rather
+   * than a drawn edge, which is how `PlayerCard` and `HeaderDisplaySection.metaItem` set theirs.
+   * Re-pointing the custom property rather than declaring `line-height` is what makes the override
+   * deterministic against `Text`'s own rule; see the note in `_variables.scss`.
    */
   .label,
   .score {
-    @include mono-font();
+    --mono-line-height: var(--body-line-height);
 
     color: var(--fg-accent);
     /*
@@ -124,10 +128,6 @@
      * property inherits through when a consumer sets one and falls back to this when nobody does.
      */
     font-size: var(--meter-label-size, var(--body-2xs));
-    font-weight: var(--font-weight-regular);
-    line-height: var(--body-line-height);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
   }
 
   .label {

@@ -34,7 +34,7 @@ interface TextBlockComponentConfig {
   spacing?: TextSpacing | [TextSpacing, TextSpacing];
   className?: string;
   alignment?: ProjectTextAlignment;
-  variant?: ProjectFontVariant;
+  variant?: ProjectProseFontVariant;
   weight?: ProjectFontWeight;
 }
 
@@ -352,7 +352,11 @@ const TextBlock = (props: TextBlockProps) => {
        * tokens (see `styles.module.scss`), so it reads correctly on a light section and on a dark
        * one without either end knowing which it is on.
        */
-      [AMOUNT_MARK]: ({ children }: ComponentProps) => <span className={styles.amountToken}>{children}</span>,
+      [AMOUNT_MARK]: ({ children }: ComponentProps) => (
+        <Text as="span" className={styles.amountToken} variant="mono" weight="medium">
+          {children}
+        </Text>
+      ),
       markerFont: ({ children }: ComponentProps) => <span className={styles.markerFont}>{children}</span>,
       strong: ({ children }: ComponentProps) => <strong>{children}</strong>
     },

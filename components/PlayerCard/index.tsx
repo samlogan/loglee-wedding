@@ -74,34 +74,50 @@ const PlayerCard = (props: PlayerCardProps) => {
   return (
     <div className={classNames(styles.card, className)}>
       <div className={styles.header}>
-        <span className={styles.title}>{title}</span>
-        {level && <span className={styles.level}>{level}</span>}
+        <Text as="span" className={styles.title} text={title} textTransform="uppercase" variant="mono" weight="bold" />
+        {level && (
+          <Text
+            as="span"
+            className={styles.level}
+            text={level}
+            textTransform="uppercase"
+            variant="mono"
+            weight="bold"
+          />
+        )}
       </div>
 
       {textStats.length > 0 && (
         <dl className={styles.stats}>
           {textStats.map((stat) => (
             <div className={classNames(styles.stat, { [styles.fullWidth]: stat.fullWidth })} key={stat._key}>
-              <dt className={styles.statLabel}>{stat.label}</dt>
+              <Text
+                as="dt"
+                className={styles.statLabel}
+                text={stat.label}
+                textTransform="uppercase"
+                variant="mono"
+                weight="regular"
+              />
               {/*
                * Always rendered, even when the value is blank. `value` is optional on the schema, and
                * a `<dt>` whose `<dd>` is missing is not a description list — the pairing an assistive
                * technology reports would silently slide onto the next stat's value. An empty `<dd>`
                * is valid and keeps the grid cell and its rule where the comp draws them.
                *
-               * The full-width stat is the only one set in the body face; `Text` owns that step of
-               * the type scale, so it draws that one and the mono cells are plain text — `Text` has
-               * no `mono` variant, so routing them through it would mean overriding every
-               * declaration it makes.
+               * The full-width stat is the only one set in the body face, so it gets a nested
+               * `<Text>` on the proportional scale inside the mono `<dd>`. That nesting is the whole
+               * reason `.fullWidth .statValue` still includes `body-font()`: `variant_body` declares
+               * no `font-family` at all, so an inline `<Text>` here would otherwise inherit the mono
+               * face from the `<dd>` around it and render the card's one body-face run in JetBrains
+               * Mono.
                *
                * `size="md"` is the single statement of that step. The stylesheet used to restate it
-               * as `font-size: var(--body-md)` on the `<dd>` as well; it now sets only the family,
-               * which is the half `Text` cannot supply (`variant_body` declares no `font-family`,
-               * so without it this run would inherit the mono face from `.statValue`).
+               * as `font-size: var(--body-md)` on the `<dd>` as well; it owns only the face.
                */}
-              <dd className={styles.statValue}>
+              <Text as="dd" className={styles.statValue} variant="mono" weight="regular">
                 {stat.fullWidth ? <Text as="span" size="md" text={stat.value} /> : stat.value}
-              </dd>
+              </Text>
             </div>
           ))}
         </dl>

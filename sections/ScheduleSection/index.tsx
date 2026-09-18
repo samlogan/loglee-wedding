@@ -131,7 +131,16 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
                      * what screen readers most often spell out letter by letter, and
                      * `text-transform` already guarantees the display.
                      */}
-                    {Boolean(day.eyebrow?.trim()) && <p className={styles.eyebrow}>{day.eyebrow}</p>}
+                    {Boolean(day.eyebrow?.trim()) && (
+                      <Text
+                        as="p"
+                        className={styles.eyebrow}
+                        text={day.eyebrow}
+                        textTransform="uppercase"
+                        variant="mono"
+                        weight="bold"
+                      />
+                    )}
                     {/*
                      * `as="h2"` is forced rather than taken from the editor's choice in `TitleInput`,
                      * for the same reason `HeaderDisplaySection` forces `h1`: the page's outline is
@@ -237,13 +246,23 @@ const ScheduleSection: FC<IScheduleSection> = (props) => {
                            * no accessible text at all.
                            */}
                           {Boolean(event.time?.trim()) && (
-                            <p className={styles.time}>
+                            <Text as="p" className={styles.time} variant="mono" weight="medium">
                               <span aria-hidden="true">[</span>
                               {event.time}
                               <span aria-hidden="true">]</span>
-                            </p>
+                            </Text>
                           )}
-                          {Boolean(event.location?.trim()) && <p className={styles.location}>{event.location}</p>}
+                          {Boolean(event.location?.trim()) && (
+                            <Text
+                              as="p"
+                              className={styles.location}
+                              size="2xs"
+                              text={event.location}
+                              textTransform="uppercase"
+                              variant="mono"
+                              weight="medium"
+                            />
+                          )}
                           {/*
                            * `Text` rather than `TextTitle`, because the field is a plain string and
                            * the design sets this in the *body* family at a semibold weight —

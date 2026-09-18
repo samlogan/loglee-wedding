@@ -112,10 +112,17 @@ const FieldCheckbox = (props: FieldCheckboxProps) => {
       {({ field, hasError }) => (
         <fieldset className={styles.fieldset}>
           {label && (
-            <legend className={styles.legend}>
+            <Text
+              as="legend"
+              className={styles.legend}
+              size="xs"
+              textTransform="uppercase"
+              variant="mono"
+              weight="bold"
+            >
               {label}
               {required && <span className={styles.required}>*</span>}
-            </legend>
+            </Text>
           )}
           <div className={styles.options}>
             {options?.map((option, index) => (
@@ -135,7 +142,17 @@ const FieldCheckbox = (props: FieldCheckboxProps) => {
                 />
                 <span className={classNames(styles.card, { [styles.error]: hasError })}>
                   <span className={styles.body}>
-                    {option.eyebrow && <span className={styles.eyebrow}>{option.eyebrow}</span>}
+                    {option.eyebrow && (
+                      <Text
+                        as="span"
+                        className={styles.eyebrow}
+                        size="2xs"
+                        text={option.eyebrow}
+                        textTransform="uppercase"
+                        variant="mono"
+                        weight="medium"
+                      />
+                    )}
                     <Text as="span" className={styles.title} text={option.label} weight="medium" />
                   </span>
                   {/*
@@ -147,11 +164,19 @@ const FieldCheckbox = (props: FieldCheckboxProps) => {
                    * It is still doing real work for sighted users: the filled-vs-hollow marker and
                    * the word are the two non-colour differences between the states.
                    */}
-                  <span aria-hidden="true" className={styles.indicator}>
+                  <Text
+                    ariaHidden
+                    as="span"
+                    className={styles.indicator}
+                    size="2xs"
+                    textTransform="uppercase"
+                    variant="mono"
+                    weight="bold"
+                  >
                     <span className={styles.marker} />
                     <span className={styles.stateUnselected}>{unselectedText}</span>
                     <span className={styles.stateSelected}>{selectedText}</span>
-                  </span>
+                  </Text>
                 </span>
               </label>
             ))}

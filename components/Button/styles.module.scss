@@ -411,6 +411,19 @@
   // The third type role, switched on per control rather than baked into a variant so it stays
   // orthogonal to shape. Uppercase and wide tracking come with it because every mono control in the
   // design has both; see the note on `mono-font()` in `tools/sass/base/__typography.scss`.
+  //
+  // **The one place in the repo that still includes `mono-font()` outside `Text`, and deliberately.**
+  // MAM-1927 moved every other call site onto `<Text variant="mono">`; this class is not on a text
+  // element inside the control, it is on the control — `Button` renders the `<button>` or `<a>`
+  // itself, and `Text` renders neither. Wrapping the label in a `<Text>` to reach the family would
+  // add an element whose only job is a `font-family`, and put a second box between the control and
+  // its `gap`-spaced icon and arrow.
+  //
+  // The values stay on `--button-mono-*` rather than on `--mono-*` for the same reason the note in
+  // `_variables.scss` gives: a control's label is tracked against its own padding box (0.08em, the
+  // drawn 0.96px on 12px) rather than against a line of copy (0.1em quiet / 0.2em loud). The two
+  // registers are the same two, though — `--button-mono-quiet-font-weight` is the Medium that
+  // `--mono-default-font-weight` is.
 
   .mono {
     @include mono-font();

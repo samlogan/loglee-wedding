@@ -81,7 +81,16 @@ const ThankYouPage = async () => {
   return (
     <Section containerWidth="sm" name="thank-you" spacing="lg" theme="light">
       <div className={styles.thankYou}>
-        <Text alignment="center" as="p" className={styles.eyebrow} size="sm" text="RSVP received" />
+        <Text
+          alignment="center"
+          as="p"
+          className={styles.eyebrow}
+          size="2xs"
+          text="RSVP received"
+          textTransform="uppercase"
+          variant="mono"
+          weight="regular"
+        />
 
         <Text alignment="center" as="h1" size="xl" spacing={['xs', 'sm']} text="Thank you" variant="display" />
 

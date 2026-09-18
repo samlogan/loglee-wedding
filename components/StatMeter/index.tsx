@@ -1,3 +1,4 @@
+import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
 
 import styles from './styles.module.scss';
@@ -149,8 +150,22 @@ const StatMeter = (props: StatMeterProps) => {
       role="meter"
     >
       <span className={styles.head}>
-        <span className={styles.label}>{label}</span>
-        <span className={styles.score}>{`${safeScore}/${safeMax}`}</span>
+        <Text
+          as="span"
+          className={styles.label}
+          text={label}
+          textTransform="uppercase"
+          variant="mono"
+          weight="regular"
+        />
+        <Text
+          as="span"
+          className={styles.score}
+          text={`${safeScore}/${safeMax}`}
+          textTransform="uppercase"
+          variant="mono"
+          weight="regular"
+        />
       </span>
       <span className={styles.track}>
         {/*

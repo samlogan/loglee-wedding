@@ -197,12 +197,21 @@ const TwoColumnListSection: FC<ITwoColumnListSection> = (props) => {
           {hasStatement && (
             <div className={styles.statement}>
               {/*
-               * A raw `<p>`, not `Text`. `Text` has no `mono` variant — logged as MAM-1927 — so the
-               * family is re-declared in the module, and once the module owns the family, size, weight
-               * and tracking, routing the element through `Text` would add a class that styles
-               * nothing. `ScheduleSection.eyebrow` and `HeaderDisplaySection.metaItem` do the same.
+               * `variant="mono"` — the type role MAM-1927 added to `Text`. `weight="bold"` selects the
+               * loud tracking register (0.2em), which is what both eyebrow nodes are drawn at, so the
+               * module is left holding only the size pair and the ink. `ScheduleSection.eyebrow` and
+               * `HeaderDisplaySection.metaItem` do the same.
                */}
-              {Boolean(eyebrow?.trim()) && <p className={styles.eyebrow}>{eyebrow}</p>}
+              {Boolean(eyebrow?.trim()) && (
+                <Text
+                  as="p"
+                  className={styles.eyebrow}
+                  text={eyebrow}
+                  textTransform="uppercase"
+                  variant="mono"
+                  weight="bold"
+                />
+              )}
               {/*
                * `as="h2"` is forced rather than taken from the editor's choice in `TitleInput`, for the
                * same reason `HeaderDisplaySection` forces `h1`: the page's outline is a property of the
@@ -271,7 +280,16 @@ const TwoColumnListSection: FC<ITwoColumnListSection> = (props) => {
                * half-built draft in Presentation and the same state the early return above exists
                * for.
                */}
-              {Boolean(asideEyebrow?.trim()) && <h3 className={styles.eyebrow}>{asideEyebrow}</h3>}
+              {Boolean(asideEyebrow?.trim()) && (
+                <Text
+                  as="h3"
+                  className={styles.eyebrow}
+                  text={asideEyebrow}
+                  textTransform="uppercase"
+                  variant="mono"
+                  weight="bold"
+                />
+              )}
               {hasList && (
                 /*
                  * `ol` and not `ul`: the ordinals are visible and the order carries meaning —
@@ -314,9 +332,15 @@ const TwoColumnListSection: FC<ITwoColumnListSection> = (props) => {
                        * zero-padded string — so the numbering is a function of array position and an
                        * editor cannot type "03" twice. `MAM-1910` and `MAM-1911` reuse it.
                        */}
-                      <span className={styles.ordinal} aria-hidden="true">
-                        {formatOrdinal(index)}
-                      </span>
+                      <Text
+                        ariaHidden
+                        as="span"
+                        className={styles.ordinal}
+                        size="xs"
+                        text={formatOrdinal(index)}
+                        variant="mono"
+                        weight="medium"
+                      />
                       {/*
                        * `Text` rather than a raw span: the item is body type on the shared scale, so
                        * `size="md"` is `--body-md` = fluid(14px, 16px), which is the design's pair

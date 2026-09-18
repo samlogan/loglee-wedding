@@ -4,7 +4,7 @@ import stripTitleTags from '@/tools/helpers/stripTitleTags';
 export interface TextTitleProps {
   className?: string;
   title?: string;
-  variant?: ProjectFontVariant;
+  variant?: ProjectProseFontVariant;
   size?: ProjectFontSize;
   color?: ProjectColor;
   alignment?: ProjectTextAlignment;

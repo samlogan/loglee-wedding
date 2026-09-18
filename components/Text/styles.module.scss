@@ -153,6 +153,71 @@
     }
   }
 
+  /*
+   * The third type role — JetBrains Mono. Stats, times, tags, eyebrows, opening hours, chips.
+   *
+   * Before this existed, every component that needed the mono register re-declared the same seven
+   * lines in its own module — eighteen rules across eleven files, each with a privately named
+   * sub-`--body-xs` size token and its own answer for the leading (1.5, 1.3 and `normal` were all in
+   * use for one role). The role's values are `--mono-*` in `_variables.scss`; the long note there is
+   * the one worth reading.
+   *
+   * Three things this rule deliberately does **not** do:
+   *
+   * - **No `text-transform`.** The design draws this role uppercase nearly everywhere, but the
+   *   strings are CMS-authored in sentence case and `ModelViewer`'s file-name chip has to reproduce
+   *   its value verbatim. Baking it in would make the exception the thing you have to fight. Callers
+   *   pass `textTransform="uppercase"`, which is the prop that already exists for it.
+   * - **No size default.** Omitting `size` leaves the element on whatever `font-size` its own module
+   *   sets, which is what the call sites drawn at a pair that is not on the scale rely on
+   *   (`PlayerCard`'s 12→13, the section eyebrows' 11→13).
+   * - **No `register` prop.** The design's two registers are Medium-and-quiet and Bold-and-tracked,
+   *   so `weight` already distinguishes them; the tracking follows it below rather than adding a
+   *   fourth axis to a component that has enough.
+   */
+  .variant_mono {
+    @include mono-font();
+
+    font-weight: var(--mono-default-font-weight);
+    line-height: var(--mono-line-height);
+    /*
+     * The quiet register. A call site whose drawn tracking differs re-points this custom property on
+     * itself rather than declaring `letter-spacing` — see the note in `_variables.scss` for why that
+     * is the deterministic form.
+     */
+    letter-spacing: var(--mono-letter-spacing);
+
+    // ------------------
+    // Sizes
+    //
+    // `2xs` is below `--body-xs`, the floor of the body scale, and is reachable only here — see the
+    // note on `TextProps`. Leading is the role's for all three; it is not keyed to the size.
+    &.size {
+      &_sm {
+        font-size: var(--body-sm);
+      }
+
+      &_xs {
+        font-size: var(--body-xs);
+      }
+
+      &_2xs {
+        font-size: var(--body-2xs);
+      }
+    }
+
+    /*
+     * The loud register, selected by the weight rather than by a prop of its own.
+     *
+     * Two classes, so it beats `.variant_mono` above without `!important`. A bold label whose drawn
+     * tracking is the quiet value re-points `--mono-letter-spacing-loud` on itself — that is
+     * `PlayerCard`'s header runs and `FieldCheckbox`'s indicator, both Bold at 0.1em.
+     */
+    &.weight_bold {
+      letter-spacing: var(--mono-letter-spacing-loud);
+    }
+  }
+
   // ------------------
   // Weight
   .weight {
