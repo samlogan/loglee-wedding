@@ -2,18 +2,16 @@ import metadata from '@/config/metadata';
 import website from '@/config/website';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
 import { SOCIAL_MEDIA_QUERY } from '@/tools/sanity/lib/queries.groq';
-import type { IBlogLandingPageDocument } from '@/tools/sanity/schema/documents/blogLandingPage';
 import type { IPageDocument } from '@/tools/sanity/schema/documents/page';
 
 import breadcrumbList from '../schemas/breadcrumbList';
-import collectionPage from '../schemas/collectionPage';
 import listItem from '../schemas/listItem';
 import organization from '../schemas/organization';
 import webPage from '../schemas/webPage';
 import webSiteSchema from '../schemas/webSite';
 
 interface JsonLdPageProps {
-  document: IPageDocument | IBlogLandingPageDocument;
+  document: IPageDocument;
 }
 
 const JsonLdPage = async (props: JsonLdPageProps) => {
@@ -43,9 +41,10 @@ const JsonLdPage = async (props: JsonLdPageProps) => {
   const firstImage = Array.isArray(ogImages) ? ogImages?.[0] : ogImages;
   const documentImage = typeof firstImage === 'string' ? firstImage : (firstImage as { url?: string } | undefined)?.url;
 
-  // Pathname — IPageDocument has pathname, IBlogLandingPageDocument does not
-  const isBlogLanding = !('pathname' in document);
-  const pathname = isBlogLanding ? '/blog/' : (document.pathname as string) || '/';
+  // `document` is optional-chained throughout because a `force-static` page whose CMS query
+  // returns null still prerenders — an empty dataset is the state every fresh environment
+  // starts in, and reading through a null here used to fail the production build.
+  const pathname = (document?.pathname as string) || '/';
   const pageUrl = `${siteUrl}${pathname}`;
 
   // Copyright year from document creation, not current date
@@ -74,7 +73,7 @@ const JsonLdPage = async (props: JsonLdPageProps) => {
     siteName,
     siteUrl
   };
-  const jsonLdSchema = isBlogLanding ? collectionPage(pageArgs) : webPage(pageArgs);
+  const jsonLdSchema = webPage(pageArgs);
 
   const jsonLdOrganization = organization({
     siteDescription,

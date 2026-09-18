@@ -32,7 +32,7 @@ const slugElement = defineType({
       if (currentPathname && currentDocumentId) {
         const allPathnames = await client.fetch<{ _type: string; _id: string; pathname: string }[]>(
           `*[_type in $types && !(_id in path("drafts.**"))]{ _type, _id, pathname }`,
-          { types: ['page', 'blogPost'] }
+          { types: ['page'] }
         );
 
         const isNotUnique = allPathnames.find(

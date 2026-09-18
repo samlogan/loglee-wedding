@@ -1,10 +1,5 @@
 import type { SchemaTypeDefinition } from 'sanity';
 
-// Blog Documents
-import author from './documents/author';
-import blogLandingPage from './documents/blogLandingPage';
-import blogPost from './documents/blogPost';
-import blogPostCategory from './documents/blogPostCategory';
 import headerDocument from './documents/headerDocument';
 // Documents
 import page from './documents/page';
@@ -48,10 +43,6 @@ import { twoColumnListSection } from './sections/twoColumnListSection';
 
 const schema: SchemaTypeDefinition[] = [
   // Documents
-  author,
-  blogLandingPage,
-  blogPost,
-  blogPostCategory,
   headerDocument,
   page,
   player,

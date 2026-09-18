@@ -23,7 +23,7 @@ import { sanityFetch } from './fetch';
 
 export const getDocumentPathnames = async () => {
   const docs: SanityDocument[] = await sanityFetch<SanityDocument[]>({
-    query: `*[_type in ["page", "blogPost"] && defined(pathname)]{ pathname }`
+    query: `*[_type == "page" && defined(pathname)]{ pathname }`
   });
   return docs.map((doc) => doc.pathname);
 };

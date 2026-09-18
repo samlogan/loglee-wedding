@@ -169,7 +169,7 @@ const mediaTagsSection = defineType({
   name: 'mediaTagsSection',
   preview: {
     /*
-     * Unannotated, matching `player` and `blogPost` — the two other previews in this repo that carry
+     * Unannotated, matching `player` — the other preview in this repo that carries
      * a `media` thumbnail. Sanity infers `Record<keyof select, any>` here, and a hand-written
      * annotation has to type `media` as whatever `PreviewValue` accepts (an image object *or* a
      * React element) rather than as `unknown`, which does not assign.
