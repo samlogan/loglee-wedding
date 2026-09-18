@@ -16,6 +16,8 @@ import sectionFixture from '@/tools/storybook/sectionFixture';
 
 import ClosingCtaSection from '.';
 
+import styles from './styles.module.scss';
+
 const FIGMA = 'https://www.figma.com/design/KxvsJuCNaG4n2QVp3iD4jd/Wedding?node-id=';
 
 /**
@@ -27,7 +29,24 @@ const meta = {
   component: ClosingCtaSection,
   tags: ['autodocs'],
   parameters: {
-    design: { type: 'figma', url: `${FIGMA}1-71` }
+    design: { type: 'figma', url: `${FIGMA}1-71` },
+    /*
+     * The widths the stories below pin — see `DESKTOP` and its neighbours. `@storybook/addon-vitest`
+     * resolves a viewport global against this list and the toolbar offers it.
+     *
+     * Written out rather than spread from `storybook/viewport`'s `MINIMAL_VIEWPORTS`: that import is a
+     * dependency nothing else in the repo pulls in, and Vite discovering one mid-run re-optimises and
+     * reloads the test browser, failing every story in the file on the first run against a warm cache.
+     */
+    viewport: {
+      options: {
+        desktop: { name: 'Desktop (1280px, the comp)', styles: { height: '1024px', width: '1280px' }, type: 'desktop' },
+        tablet: { name: 'Tablet (834px)', styles: { height: '1112px', width: '834px' }, type: 'tablet' },
+        tabletEdge: { name: 'Narrowest tablet (769px)', styles: { height: '900px', width: '769px' }, type: 'tablet' },
+        phoneEdge: { name: 'Widest phone (768px)', styles: { height: '900px', width: '768px' }, type: 'mobile' },
+        phone: { name: 'Phone (414px)', styles: { height: '896px', width: '414px' }, type: 'mobile' }
+      }
+    }
   }
 } satisfies Meta<typeof ClosingCtaSection>;
 
@@ -55,15 +74,17 @@ const atWidth =
  * viewport query, not a container one (see the head of the stylesheet), so a narrow wrapper alone does
  * not reach it and a wide wrapper alone does not rule it out. A story that asserts either side of it
  * pins the viewport through the global, which `@storybook/addon-vitest` applies to the test browser
- * before the story renders and the Storybook UI applies to the canvas. The three are Storybook's own
- * minimal set: `desktop` is the comp's 1280px frame, `tablet` 834px, `mobile2` the 414px phone
- * `/review-design` measures at.
+ * before the story renders and the Storybook UI applies to the canvas. The sizes are declared on
+ * `meta`: `desktop` is the comp's 1280px frame, `tablet` 834px, `phone` the 414px phone
+ * `/review-design` measures at, and the two edges sit either side of the breakpoint.
  *
  * The stories without one assert nothing that depends on the window, so they hold at any width.
  */
 const DESKTOP = { viewport: { value: 'desktop', isRotated: false } };
 const TABLET = { viewport: { value: 'tablet', isRotated: false } };
-const PHONE = { viewport: { value: 'mobile2', isRotated: false } };
+const PHONE = { viewport: { value: 'phone', isRotated: false } };
+const PHONE_EDGE = { viewport: { value: 'phoneEdge', isRotated: false } };
+const TABLET_EDGE = { viewport: { value: 'tabletEdge', isRotated: false } };
 
 const internalLink = (title: string, pathname: string) =>
   mockLink({ internalLink: { title, slug: { current: pathname }, pathname } });
@@ -126,27 +147,37 @@ const PUBLISHED = sectionFixture<IClosingCtaSection>('closingCtaSection') ?? MOC
 const lastLineBottom = (element: HTMLElement) =>
   element.getBoundingClientRect().bottom - Number.parseFloat(getComputedStyle(element).paddingBottom);
 
-/** The section's elements, found the way the stories need them. */
-const partsOf = (canvasElement: HTMLElement) => {
-  const section = canvasElement.querySelector('[data-name="ClosingCtaSection"]') as HTMLElement;
-  // `Section` → `Container` → the row.
-  const row = section?.firstElementChild?.firstElementChild as HTMLElement;
-  return { row, section };
-};
+/**
+ * The section's elements, found by the module's own class names — not by position, which would break
+ * silently the day `Section` or `Container` gains a wrapper. `actions` is `null` when none is drawn.
+ */
+const partsOf = (canvasElement: HTMLElement) => ({
+  actions: canvasElement.querySelector<HTMLElement>(`.${styles.actions}`),
+  row: canvasElement.querySelector<HTMLElement>(`.${styles.row}`) as HTMLElement,
+  section: canvasElement.querySelector<HTMLElement>('[data-name="ClosingCtaSection"]') as HTMLElement
+});
 
 /**
  * **The section on whatever is in the dataset today**, at the canvas's own width.
  *
  * Every assertion is read out of `PUBLISHED`: the paragraph, which actions exist, and what each one
  * says. That is the complement to `Default`, which pins the comp — so this is the story that proves
- * the section survives whatever an editor publishes. The actions are read with `hidden: true`, so the
- * check is of what the section rendered and holds at a phone width too, where the secondary action is
- * in the DOM but not displayed.
+ * the section survives whatever an editor publishes.
+ *
+ * Two details keep it honest against real content. The actions are read inside their own wrapper,
+ * because the intro is rich text and may carry a link of its own. And they are read with
+ * `hidden: true`, so the check is of what the section rendered and holds at a phone width too, where
+ * the secondary action can be in the DOM but not displayed.
+ *
+ * The expectation is worked out here from the data rather than by calling a function the component
+ * also calls. Deliberately: a test that computes its answer with the code under test agrees with it by
+ * construction, including when both are wrong.
  */
 export const PublishedContent: Story = {
   args: PUBLISHED,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const { actions } = partsOf(canvasElement);
     const { addButton, button, content, showRsvp, rsvp } = PUBLISHED;
     const rsvpAction = showRsvp === false ? undefined : resolveRsvpAction(rsvp);
 
@@ -169,7 +200,11 @@ export const PublishedContent: Story = {
 
     // Not vacuous: `PUBLISHED` is the fixture or `MOCK`, and either carries at least the RSVP action.
     await expect(expected.length).toBeGreaterThan(0);
-    await expect(canvas.getAllByRole('link', { hidden: true }).map((link) => link.textContent)).toEqual(expected);
+    await expect(
+      within(actions as HTMLElement)
+        .getAllByRole('link', { hidden: true })
+        .map((link) => link.textContent)
+    ).toEqual(expected);
   }
 };
 
@@ -289,6 +324,71 @@ export const Tablet: Story = {
     // Side by side at their own widths — not the phone's full-width action.
     await expect(rsvp.getBoundingClientRect().top).toBeCloseTo(secondary.getBoundingClientRect().top, 0);
     await expect(rsvp.getBoundingClientRect().width).toBeLessThan(row.getBoundingClientRect().width / 2);
+  }
+};
+
+/*
+ * The two halves of the phone treatment — the secondary action leaving, the RSVP action spanning the
+ * column — are separate rules in separate stylesheets that both name the `tablet` breakpoint: this
+ * section's `.phoneHidden`, and `Button`'s `.fullWidthMobile`. `PhoneEdge` and `TabletEdge` sit one
+ * pixel either side of it and assert *both* halves at once, so moving either rule's breakpoint without
+ * the other fails one of them. `Mobile` and `Tablet` alone could not: 414 and 834 are far enough from
+ * the edge that each would still pass.
+ */
+const phoneTreatment = async (canvasElement: HTMLElement) => {
+  const { actions, row } = partsOf(canvasElement);
+  const rsvp = within(actions as HTMLElement).getByRole('link', { name: rsvpLabelOf(MOCK.rsvp) });
+
+  await waitFor(() => expect(getComputedStyle(row).flexDirection).toBe('column'));
+
+  return {
+    rsvpSpansRow: Math.abs(rsvp.getBoundingClientRect().width - row.getBoundingClientRect().width) < 0.5,
+    secondaryShown: within(actions as HTMLElement).queryByRole('link', { name: 'The Weekend' }) !== null
+  };
+};
+
+/** 768px, the widest phone: the RSVP action alone, full width. */
+export const PhoneEdge: Story = {
+  args: MOCK,
+  decorators: [atWidth('48rem')],
+  globals: PHONE_EDGE,
+  play: async ({ canvasElement }) => {
+    await expect(await phoneTreatment(canvasElement)).toEqual({ rsvpSpansRow: true, secondaryShown: false });
+  }
+};
+
+/** 769px, the narrowest tablet: both actions back, each at its own width. */
+export const TabletEdge: Story = {
+  args: MOCK,
+  decorators: [atWidth('48.0625rem')],
+  globals: TABLET_EDGE,
+  play: async ({ canvasElement }) => {
+    await expect(await phoneTreatment(canvasElement)).toEqual({ rsvpSpansRow: false, secondaryShown: true });
+  }
+};
+
+/**
+ * A phone with no RSVP action — switched off here, or off in the header once replies close — and the
+ * secondary action on.
+ *
+ * The phone treatment is about the RSVP action standing alone, so with none there is nothing to make
+ * room for and "The Weekend" stays. Hiding it anyway left an empty actions wrapper holding the row's
+ * gap open under the intro, and would have taken the section's one way onward off the page.
+ */
+export const SecondaryOnlyPhone: Story = {
+  args: { ...MOCK, showRsvp: false },
+  decorators: [atWidth('25.875rem')],
+  globals: PHONE,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { actions, row } = partsOf(canvasElement);
+    const secondary = canvas.getByRole('link', { name: 'The Weekend' });
+
+    await waitFor(() => expect(getComputedStyle(row).flexDirection).toBe('column'));
+
+    await expect(secondary).toBeVisible();
+    // No orphaned gap: the wrapper under the intro holds exactly the action it shows.
+    await expect(actions?.getBoundingClientRect().height).toBeCloseTo(secondary.getBoundingClientRect().height, 0);
   }
 };
 

@@ -13,14 +13,24 @@
  *
  * **The phone treatment** — the RSVP action alone and full width — is `media-down(tablet)`: the mixin
  * and the named breakpoint `Button`'s `fullWidthMobile` stretches the RSVP action at. The ticket asks
- * for that prop, and the two halves of the treatment are one decision, so they read one number — the
- * secondary action leaves at exactly the width the RSVP action starts spanning the column. A container
- * query here would have to be tuned by arithmetic to land on the viewport width `fullWidthMobile`
- * switches at, and would drift the day either moved. It is also the half that *hides* something, which
- * the register says must not move with text size alone; a `px` viewport query does not (WCAG 1.4.4).
+ * for that prop, and the two halves of the treatment are one decision, so they name the same entry in
+ * the breakpoint map — the secondary action leaves at the width the RSVP action starts spanning the
+ * column. They are still two rules in two stylesheets, so the agreement is pinned by a test rather
+ * than assumed: the `PhoneEdge` and `TabletEdge` stories sit either side of the breakpoint and fail if
+ * one half moves without the other. A container query here would have to be tuned by arithmetic to
+ * land on the viewport width `fullWidthMobile` switches at, and would drift the day either moved.
  *
- * The cost is that a viewport query needs a real viewport to test, so the `Mobile` story sets one
- * through the viewport global, which `@storybook/addon-vitest` applies to the test browser.
+ * It is also the half that *hides* something, which the register says must not move with text size
+ * alone, and a `px` viewport query does not: enlarging only the text stacks the row and keeps both
+ * actions (WCAG 1.4.4). Browser zoom is different — it narrows the viewport in CSS pixels, so a
+ * 1280px window at about 175% crosses the breakpoint and loses the secondary action like a phone
+ * does. That is acceptable only because it is never the section's one way onward: it is hidden only
+ * beside an RSVP action, and the Studio asks for it to point at a page the navigation also reaches
+ * (WCAG 1.4.10).
+ *
+ * The cost of a viewport query is that it needs a real viewport to test, so those stories and
+ * `Mobile` set one through the viewport global, which `@storybook/addon-vitest` applies to the test
+ * browser.
  *
  * Between the two, on a tablet, the intro sits above both actions.
  *
@@ -52,6 +62,10 @@ $closing-cta-inline-switch: 60rem;
    * at the 1440 anchor, and ~4px under the drawn value at 1280 (51.4 against 55.2, 60.4 against 64).
    * Nothing inside this section reads a `--section-spacing-*` token, so declaring it on the root
    * re-points nothing else.
+   *
+   * TODO(design review): this is a local fork of the section-spacing scale, the second after
+   * `SpecCardGridSection`'s. The fix at source is re-measuring the scale's narrow anchors from the comps,
+   * the way `--container-gutter` was; when that lands, delete this rule and keep the `spacing` prop.
    */
   .section {
     --section-spacing-md: #{fluid(31px, 55px)};
@@ -92,12 +106,12 @@ $closing-cta-inline-switch: 60rem;
        */
       align-items: flex-end;
       flex-direction: row;
-      justify-content: space-between;
       /*
        * The floor between the columns, not the gap the eye sees. The comp draws 100px between a 520px
        * intro column and a 580px actions column that right-aligns 315px of buttons, so on the frame
-       * the visible space is ~400px and comes from `space-between`. This only binds just above the
-       * switch, where it keeps the intro off the buttons; `--spacing-3xl` is the layout-gap step.
+       * the visible space is ~400px, and here it comes from the actions' `margin-inline-start: auto`,
+       * which takes all the free space. This only binds just above the switch, where it keeps the
+       * intro off the buttons; `--spacing-3xl` is the layout-gap step.
        */
       column-gap: var(--spacing-3xl);
     }
@@ -115,12 +129,12 @@ $closing-cta-inline-switch: 60rem;
    * It applies stacked as well as in the row: on a phone the column is narrower than the measure and it
    * does nothing; on a tablet it stops the paragraph running the full width of the page.
    *
-   * `min-width: 0` so the row can shrink it below its longest word's width rather than pushing the
-   * actions out of the container.
+   * `min-inline-size: 0` so the row can shrink it below its longest word's width rather than pushing
+   * the actions out of the container.
    */
   .intro {
     max-inline-size: 32.5rem;
-    min-width: 0;
+    min-inline-size: 0;
   }
 
   /*
@@ -153,9 +167,8 @@ $closing-cta-inline-switch: 60rem;
     gap: var(--spacing-sm);
 
     @container closingCta (width >= #{$closing-cta-inline-switch}) {
-      // Against the right edge, and right-aligned if they wrap — the comp's `justify-end` on node 1:74.
-      // `margin-inline-start: auto` keeps them there when there is no intro for `space-between` to
-      // push against.
+      // Against the right edge: the auto margin takes all the row's free space, with or without an
+      // intro beside it. Right-aligned if they wrap — the comp's `justify-end` on node 1:74.
       justify-content: flex-end;
       margin-inline-start: auto;
     }
@@ -163,7 +176,8 @@ $closing-cta-inline-switch: 60rem;
 
   /*
    * The phone drops the secondary action (node 1:119 draws the RSVP action alone), hidden from the same
-   * field below the breakpoint rather than authored as a mobile-only variant. See the head of this file
+   * field below the breakpoint rather than authored as a mobile-only variant. `index.tsx` applies it
+   * only beside an RSVP action, so the wrapper is never left holding nothing. See the head of this file
    * for why this one is a viewport query.
    *
    * Qualified with `.actions` on purpose. The class lands on `Link`'s own element, whose `.button` rule
@@ -175,7 +189,7 @@ $closing-cta-inline-switch: 60rem;
    * and a flex container's `gap` does not open around an item that is not rendered, so the RSVP action
    * is left alone with no orphaned space beside it.
    */
-  .actions .secondary {
+  .actions .phoneHidden {
     @include media-down(tablet) {
       display: none;
     }

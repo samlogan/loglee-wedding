@@ -4,6 +4,7 @@ import Link from '@/components/Link';
 import Section from '@/components/Section';
 import TextBlock from '@/components/TextBlock';
 import type { TextBlockProps } from '@/components/TextBlock';
+import classNames from '@/helpers/classNames';
 import hasBlockContent from '@/helpers/hasBlockContent';
 import hasDestination from '@/helpers/hasDestination';
 import hasText from '@/helpers/hasText';
@@ -27,7 +28,7 @@ const LEDE_CONFIG: TextBlockProps['config'] = { p: { className: styles.ledeText,
 /**
  * The home page's closing block: the intro on the left, "The Weekend" and the RSVP action on the
  * right, sitting on one bottom edge (nodes 1:71 desktop, 1:119 mobile). On a phone the RSVP action
- * stands alone at full width — see the head of `styles.module.scss` for how the two widths switch.
+ * stands alone at full width — see the head of `styles.module.scss` for how the widths switch.
  *
  * ## Every part is optional, and each absence takes its space with it
  *
@@ -54,10 +55,8 @@ const ClosingCtaSection: FC<IClosingCtaSection> = (props) => {
    * actions are aligned to, by exactly that much. Dropping blanks is what keeps the paragraph's last
    * line the band's bottom edge.
    */
-  const intro = content?.filter((block) => hasBlockContent([block]));
-  const hasIntro = Boolean(intro?.length);
-  const secondary =
-    addButton && button?.label && hasText(button.label) && hasDestination(button.link) ? button : undefined;
+  const intro = content?.filter((block) => hasBlockContent([block])) ?? [];
+  const secondary = addButton && button && hasText(button.label) && hasDestination(button.link) ? button : undefined;
   /*
    * Label and destination from the header and the wedding singleton, through the helper the header
    * itself uses — so this button and the nav pill read the same reply-by line or fall back the same
@@ -67,7 +66,7 @@ const ClosingCtaSection: FC<IClosingCtaSection> = (props) => {
   const rsvpAction = showRsvp === false ? undefined : resolveRsvpAction(rsvp);
   const primary = rsvpAction && hasDestination(rsvpAction.link) ? rsvpAction : undefined;
 
-  if (!hasIntro && !secondary && !primary) {
+  if (intro.length === 0 && !secondary && !primary) {
     return null;
   }
 
@@ -93,7 +92,7 @@ const ClosingCtaSection: FC<IClosingCtaSection> = (props) => {
       spacing={['md', 'lg']}
     >
       <div className={styles.row}>
-        {hasIntro && intro && <TextBlock blocks={intro} className={styles.intro} config={LEDE_CONFIG} />}
+        {intro.length > 0 && <TextBlock blocks={intro} className={styles.intro} config={LEDE_CONFIG} />}
         {(secondary || primary) && (
           <div className={styles.actions}>
             {/*
@@ -101,11 +100,24 @@ const ClosingCtaSection: FC<IClosingCtaSection> = (props) => {
              * visual order at every width, so the tab order is too.
              *
              * `theme="secondary" outline` draws the comp's ink border and ink label (#131412 on
-             * light, node 1:75) out of `--button-secondary-bg`, and fills with it on hover. Hidden on
-             * a phone by `styles.secondary`, from the same field rather than a mobile-only one.
+             * light, node 1:75) out of `--button-secondary-bg`, and fills with it on hover.
+             *
+             * `styles.phoneHidden` takes it off a phone, and **only when there is an RSVP action to
+             * stand alone** — the phone comp (node 1:119) is the RSVP action alone at full width, and
+             * that is a statement about the RSVP action. With none, hiding this too left an empty
+             * actions wrapper holding the row's gap open under the intro, or with no intro an empty
+             * band of padding; and it would have taken the section's only way onward off the page.
+             * The same field either way, rather than a mobile-only variant.
              */}
             {secondary && (
-              <Link {...secondary.link} className={styles.secondary} outline size="md" theme="secondary" variant="pill">
+              <Link
+                {...secondary.link}
+                className={classNames({ [styles.phoneHidden]: Boolean(primary) })}
+                outline
+                size="md"
+                theme="secondary"
+                variant="pill"
+              >
                 {secondary.label}
               </Link>
             )}

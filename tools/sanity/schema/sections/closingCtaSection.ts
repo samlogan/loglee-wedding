@@ -2,6 +2,7 @@ import { TbClick } from 'react-icons/tb';
 import { defineType } from 'sanity';
 
 import thumbnail from '../../../../sections/ClosingCtaSection/thumbnail.png';
+import { linkEmpty } from '../../../helpers/link';
 import type { RsvpActionFields } from '../../../helpers/rsvpAction';
 import ReadOnlyImageInput from '../../components/ReadOnlyImageInput';
 import defaultSectionGroups from '../common/defaultSectionGroups';
@@ -67,21 +68,47 @@ const closingCtaSection = defineType({
      * Above the RSVP switch because it renders first — the design reads "The Weekend", then the RSVP
      * button — so an editor meets the two controls in the order the page draws them.
      */
+    /*
+     * The description carries a constraint as well as a role. Beside an RSVP action this button is
+     * hidden on phones — and on a desktop browser zoomed to around 175% or more, which narrows the page
+     * to a phone's width — so the page it points at has to be reachable some other way for those
+     * readers (WCAG 1.4.10). The header navigation is that way, which is what the sentence asks for.
+     */
     {
       description:
-        'A quieter outlined button beside the RSVP action — “The Weekend” in the design. Shown on desktop and tablet; phones show the RSVP action alone.',
+        'A quieter outlined button beside the RSVP action — “The Weekend” in the design. Beside the RSVP action it is hidden on phones (and on heavily zoomed desktop browsers), so link it to a page that is also in the header navigation.',
       group: 'data',
       initialValue: false,
       name: 'addButton',
       title: 'Add Secondary Button',
       type: 'boolean'
     },
+    /*
+     * A warning rather than an error, because the switch is what decides: an editor mid-way through
+     * filling the button in should be able to publish the rest of the section. But the section draws
+     * the button only with a label and a destination, and silently drawing nothing is the kind of
+     * disagreement an editor reads as the page being broken. `buttonElement` cannot make its own label
+     * required (its comment explains why), so the check lives here, where `addButton` is known.
+     *
+     * `linkEmpty` is the right test at this level, unlike in the component: the Studio sees the stored
+     * link, whose reference still has its `_ref`. See `tools/helpers/hasDestination` for why the
+     * projected link needs a different one.
+     */
     {
       group: 'data',
       hidden: ({ parent }) => !parent?.addButton,
       name: 'button',
       title: 'Secondary Button',
-      type: 'buttonElement'
+      type: 'buttonElement',
+      validation: (Rule) =>
+        Rule.custom((value: IButtonElement | undefined, context) => {
+          if (!(context.parent as { addButton?: boolean } | undefined)?.addButton) {
+            return true;
+          }
+          return value?.label?.trim() && !linkEmpty(value.link)
+            ? true
+            : 'Add a label and a link, or this button will not show on the page.';
+        }).warning()
     },
     /*
      * The only RSVP control on this section, and deliberately a switch rather than a label or a link:
