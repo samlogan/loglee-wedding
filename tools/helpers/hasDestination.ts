@@ -10,14 +10,22 @@ import stringClean from './stringClean';
  * control and does nothing is not something a section should draw on purpose. So a section asks this
  * first and draws nothing instead.
  *
- * It mirrors `Link`'s own branches, in `Link`'s order, and has to move with them:
+ * It mirrors `Link`'s own branches, in `Link`'s order:
  *
  *   internal, or no type    `internalLink.pathname`, else `href`
  *   external                `externalLink`, else `href` — `Link` would otherwise emit an `<a>` with
  *                           no `href`, which is not a link at all
+ *   any other type          a leftover `phone` with a digit in it, then a leftover `email` — `Link`
+ *                           tests both fields whatever the type says, so an editor who switched a
+ *                           link from "Phone" to "Action" still gets the `tel:` link
  *   phone                   a digit in `phone` or `href`, since `Link` strips everything else
  *   email                   `email`, else `href`
- *   action, or anything     never — there is no action registry, so `Link` renders the `<span>`
+ *   action                  otherwise never — there is no action registry, so `Link` renders the span
+ *
+ * A mirror has to move with what it mirrors, so `hasDestination.test.ts` renders `Link` for every case
+ * in its table and asserts the two agree on whether an `<a href>` comes out. If `Link` gains a branch —
+ * an action registry, say, which its own comment invites — that test fails rather than this helper
+ * quietly hiding a working button.
  *
  * ## Why not `linkEmpty`
  *

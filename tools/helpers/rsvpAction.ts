@@ -6,6 +6,41 @@ import type { IHeaderObject } from '@/tools/sanity/schema/objects/header';
 import hasText from './hasText';
 
 /**
+ * The three fields the action is built from, as the projections deliver them.
+ *
+ * Typed from the schema interfaces rather than restated, so a change to either document's field
+ * reaches this file. `| null` throughout because a GROQ projection returns `null` for anything an
+ * editor left unset, which the document interfaces do not declare.
+ */
+export interface RsvpActionFields {
+  /** `headerDocument.header.addButton` — the Studio's "Add RSVP Action" switch. */
+  addButton?: IHeaderObject['addButton'] | null;
+  /** `headerDocument.header.button` — the destination, and the short label a phone has room for. */
+  button?: IButtonElement | null;
+  /** `weddingSettings.rsvpLabel` — the reply-by line. */
+  rsvpLabel?: IWeddingSettingsDocument['rsvpLabel'] | null;
+}
+
+/** The action, resolved. Absent rather than half-filled when there is none to draw. */
+export interface RsvpAction {
+  /** Where it goes. Spread onto `Link`. */
+  link: ILinkElement;
+  /** The reply-by line, or the action's own label when that is blank. */
+  longLabel: string;
+  /** The action's own label, or the reply-by line when that is blank. */
+  shortLabel: string;
+}
+
+/*
+ * The string itself when `hasText` says it has any, `undefined` when it does not.
+ *
+ * The value is handed back rather than a boolean because `hasText` is not a type predicate, so it
+ * cannot narrow `string | null | undefined` on its own — and the original is what has to be returned
+ * anyway, still stega-encoded, so the overlay can find the field it came from.
+ */
+const textOrUndefined = (value?: string | null): string | undefined => (value && hasText(value) ? value : undefined);
+
+/**
  * The RSVP action, worked out once.
  *
  * It is drawn in three places — the accent pill at the right of the bar, the full-width action at the
@@ -42,33 +77,6 @@ import hasText from './hasText';
  * because its ticket counts a blank link as "no RSVP action". The difference is confined to that one
  * degenerate state — an action with a label and no destination.
  */
-
-/**
- * The three fields the action is built from, as the projections deliver them.
- *
- * Typed from the schema interfaces rather than restated, so a change to either document's field
- * reaches this file. `| null` throughout because a GROQ projection returns `null` for anything an
- * editor left unset, which the document interfaces do not declare.
- */
-export interface RsvpActionFields {
-  /** `headerDocument.header.addButton` — the Studio's "Add RSVP Action" switch. */
-  addButton?: IHeaderObject['addButton'] | null;
-  /** `headerDocument.header.button` — the destination, and the short label a phone has room for. */
-  button?: IButtonElement | null;
-  /** `weddingSettings.rsvpLabel` — the reply-by line. */
-  rsvpLabel?: IWeddingSettingsDocument['rsvpLabel'] | null;
-}
-
-/** The action, resolved. Absent rather than half-filled when there is none to draw. */
-export interface RsvpAction {
-  /** Where it goes. Spread onto `Link`. */
-  link: ILinkElement;
-  /** The reply-by line, or the action's own label when that is blank. */
-  longLabel: string;
-  /** The action's own label, or the reply-by line when that is blank. */
-  shortLabel: string;
-}
-
 const resolveRsvpAction = (fields?: RsvpActionFields | null): RsvpAction | undefined => {
   const { addButton, button, rsvpLabel } = fields ?? {};
 
@@ -76,10 +84,8 @@ const resolveRsvpAction = (fields?: RsvpActionFields | null): RsvpAction | undef
     return undefined;
   }
 
-  // Each value is read again after `hasText` only to narrow its type: the helper returns `boolean`
-  // rather than a type predicate, so on its own it leaves TypeScript seeing `string | null | undefined`.
-  const replyBy = rsvpLabel && hasText(rsvpLabel) ? rsvpLabel : undefined;
-  const actionLabel = button.label && hasText(button.label) ? button.label : undefined;
+  const replyBy = textOrUndefined(rsvpLabel);
+  const actionLabel = textOrUndefined(button.label);
 
   const longLabel = replyBy ?? actionLabel;
   const shortLabel = actionLabel ?? replyBy;
