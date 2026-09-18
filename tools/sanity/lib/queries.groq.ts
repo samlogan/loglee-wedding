@@ -1,6 +1,7 @@
 import { groq } from 'next-sanity';
 
 import buttonProjection from '../projections/common/button.groq';
+import imageProjection from '../projections/common/image.groq';
 import linkProjection from '../projections/common/link.groq';
 import pageProjection from '../projections/documents/page.groq';
 
@@ -87,3 +88,43 @@ export const SITEMAP_QUERY = groq`
     pathname
   }
 `;
+
+/**
+ * One player plus the roster, for `templates/PlayerTemplate`.
+ *
+ * The roster is fetched alongside rather than derived per route because both the pager ("01 / 02")
+ * and the switch control ("→ Lauren") are facts about the *set* of players, and `order` — not
+ * route order or file order — is what the Studio says the sequence is.
+ *
+ * It is limited to `$routes`, the slugs that have a page (`PLAYER_SLUGS` in
+ * `templates/PlayerTemplate`). The Studio lets an editor create any number of players, but each
+ * page is a static route file, so a player with any other slug has nowhere to link to: left in, it
+ * would make the pager read "01 / 03" and point Lauren's switch control at a 404. A third player
+ * needs a route file and an entry in that list, and then appears here with no query change.
+ *
+ * `defined(name)` on both, because `Rule.required()` binds the Studio's publish button and not the
+ * drafts perspective: a draft whose name has been cleared would otherwise reach the page as `null`
+ * and throw on render, where a player with no name should 404 like one that does not exist. `_id`
+ * breaks ties in `order` — the field is optional, and GROQ leaves equal keys in no stated order, so
+ * without it two unnumbered players could swap places between fetches.
+ *
+ * `originalFilename` is projected for `ModelViewer`'s file-name chip, which must name the file this
+ * player actually loads. The comp prints `sam-dance.glb` on both players' layouts; read from the
+ * asset, Lauren's page cannot show Sam's file.
+ */
+export const PLAYER_PAGE_QUERY = groq`{
+  "player": *[_type == "player" && slug.current == $slug && defined(name)][0]{
+    name,
+    "slug": slug.current,
+    eyebrow,
+    level,
+    clips,
+    stats,
+    "model": model.asset->{ url, originalFilename },
+    fallbackImage${imageProjection}
+  },
+  "roster": *[_type == "player" && slug.current in $routes && defined(name)] | order(order asc, _id asc){
+    name,
+    "slug": slug.current
+  }
+}`;

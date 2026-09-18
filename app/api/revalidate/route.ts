@@ -141,6 +141,21 @@ export const POST = async (req: NextRequest) => {
     }
 
     /*
+     * The `/sam` and `/lauren` routes. `templates/PlayerTemplate` tags its fetch `player`, and both
+     * routes read the whole roster — the pager counts it and the switch control links to the next
+     * player — so an edit to either document changes both pages, and the tag is the whole of it.
+     *
+     * Without this branch the type fell through to the default below, which revalidates `page` and
+     * not `player`, so a stat or model edit stayed invisible on the static player pages until the
+     * next deploy. The brief's success criteria say players must be editable without one.
+     */
+    if (type === 'player') {
+      await revalidateTag('player', 'max');
+      console.log(`${logPrefix}Player changed. Tag "player" has been successfully revalidated.`);
+      return NextResponse.json({ revalidated: true });
+    }
+
+    /*
      * No `footerDocument` branch. The document is gone: `components/Footer` renders the header's own
      * `navItems`, the date and venue from `weddingSettings`, and the icons from
      * `socialMediaDocument` — so the three branches above are between them the whole of the footer.

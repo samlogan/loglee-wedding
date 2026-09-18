@@ -424,6 +424,21 @@
    */
   --container-gutter: #{fluid(20px, 40px)};
 
+  /*
+   * The utility bar's block padding — the site header's nav, and the player page's bar beneath it.
+   *
+   * 20/21 at 1280 and 16/17 at 390, and both bars are drawn with exactly those four numbers (site
+   * nav nodes 1:45 and 1:103, player bar nodes 1:154 and 1:233). The asymmetry is the design's: the
+   * rule sits a pixel further from the type than the bar's top edge does. Anchored on the design's
+   * own numbers, like the gutter above.
+   *
+   * A token rather than a literal in each stylesheet because the two bars stack on the player
+   * pages, one directly above the other, and have to agree by construction rather than by two
+   * files happening to.
+   */
+  --bar-padding-block-start: #{fluid(16px, 20px)};
+  --bar-padding-block-end: #{fluid(17px, 21px)};
+
   // ------------------------------------
   // Section Spacing — fluid
   // ------------------------------------

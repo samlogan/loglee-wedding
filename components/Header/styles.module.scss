@@ -62,11 +62,11 @@
     justify-content: space-between;
     gap: var(--spacing-md);
     /*
-     * 20/21 at 1280 and 16/17 at 390 in the design (nodes 1:45, 1:103). The asymmetry is the
-     * design's: the rule sits a pixel further from the type than the bar's top edge does.
-     * Horizontal inset comes from `Container`, which is the site-wide gutter.
+     * 20/21 at 1280 and 16/17 at 390 in the design (nodes 1:45, 1:103) — shared with the player
+     * page's bar through the token, since the two stack. Horizontal inset comes from `Container`,
+     * which is the site-wide gutter.
      */
-    padding-block: fluid(16px, 20px) fluid(17px, 21px);
+    padding-block: var(--bar-padding-block-start) var(--bar-padding-block-end);
   }
 
   /*
