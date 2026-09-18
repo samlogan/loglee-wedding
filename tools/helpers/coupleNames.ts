@@ -24,7 +24,15 @@ export interface CoupleNamesFields {
  * Two names rather than one joined string, so the hero can stack the fallback exactly as it stacks
  * real names and the joined form below cannot disagree with it.
  */
-const FALLBACK_PARTNERS = ['Sam', 'Lauren'] as const;
+const FALLBACK_PARTNERS: readonly [string, string] = ['Sam', 'Lauren'];
+
+/**
+ * One or two names, and never none — the return type says so, because a caller that lays the names
+ * out itself has to branch on whether there is a second one. As a plain `string[]` the second
+ * element would type as a `string` that is sometimes absent, since this project does not enable
+ * `noUncheckedIndexedAccess`.
+ */
+type CouplePartners = [string, string?];
 
 /**
  * The partners to show, in order: whichever of the two an editor has filled in, or both fallback
@@ -44,12 +52,17 @@ const FALLBACK_PARTNERS = ['Sam', 'Lauren'] as const;
  * link on the text on screen. Trimming cannot eat that link: the payload is appended after the text
  * and ends in U+200C, which `String.prototype.trim` does not treat as white space.
  */
-export const couplePartners = (names?: CoupleNamesFields | null): string[] => {
-  const filled = [names?.partnerOne, names?.partnerTwo]
+export const couplePartners = (names?: CoupleNamesFields | null): CouplePartners => {
+  const [first, second] = [names?.partnerOne, names?.partnerTwo]
     .filter((name): name is string => hasText(name))
     .map((name) => name.trim());
 
-  return filled.length > 0 ? filled : [...FALLBACK_PARTNERS];
+  if (!first) {
+    // A fresh array each call, so a caller that mutates its result cannot change the next one.
+    return [...FALLBACK_PARTNERS];
+  }
+
+  return second ? [first, second] : [first];
 };
 
 /**

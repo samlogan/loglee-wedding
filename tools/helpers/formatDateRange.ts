@@ -18,6 +18,10 @@ const DAY_MONTH: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short' }
 /** Two digits, zero-padded — the unit every part of the numeric form is written in. */
 const twoDigits = (value: number): string => String(value).padStart(2, '0');
 
+// The numeric form's shapes, each built on the last: "12", "12.02", "12.02.27".
+const dd = (date: Date): string => twoDigits(date.getUTCDate());
+const ddmm = (date: Date): string => `${dd(date)}.${twoDigits(date.getUTCMonth() + 1)}`;
+
 /**
  * `text` — the month as a word: "12–14 Feb 2027". The default, and what the footer prints.
  * `numeric` — day, month and year as dotted pairs: "12–14.02.27". What the home hero draws.
@@ -61,10 +65,9 @@ const PARTS: Record<DateRangeStyle, RangeParts> = {
    * A two-digit year, as drawn. It cannot tell 2027 from 2127; nothing on a wedding site needs it to.
    */
   numeric: {
-    day: (date) => twoDigits(date.getUTCDate()),
-    dayMonth: (date) => `${twoDigits(date.getUTCDate())}.${twoDigits(date.getUTCMonth() + 1)}`,
-    full: (date) =>
-      `${twoDigits(date.getUTCDate())}.${twoDigits(date.getUTCMonth() + 1)}.${twoDigits(date.getUTCFullYear() % 100)}`
+    day: dd,
+    dayMonth: ddmm,
+    full: (date) => `${ddmm(date)}.${twoDigits(date.getUTCFullYear() % 100)}`
   }
 };
 
