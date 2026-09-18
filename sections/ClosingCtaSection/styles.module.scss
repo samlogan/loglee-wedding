@@ -36,6 +36,29 @@ $closing-cta-inline-switch: 60rem;
 
 @layer defaults {
   /*
+   * **A token re-point, not a hand-written padding** — the idiom `SpecCardGridSection` sets out.
+   *
+   * The band is drawn 30.7px below the section above it and 40px above the foot of the page at 390
+   * (node 1:119), and 55.2px and 64px at 1280 (node 1:71). No step on the section-spacing scale carries
+   * either ramp: the nearest, `md` above and `lg` below, miss by 6px on the phone and 10px on the
+   * desktop respectively, because the scale's narrow anchors were inherited from the pre-fluid stepped
+   * scale rather than measured from the comps.
+   *
+   * So `index.tsx` keeps choosing those two steps through `Section`'s `spacing` prop — the nearest stock
+   * values if this rule ever goes — and this re-points what each step reads, on the element that reads
+   * it. The prop stays the mechanism and the editor's remove-spacing toggles still swap the classes.
+   *
+   * Anchored on the drawn numbers, following the repo's convention for fluid values: exact at 390 and
+   * at the 1440 anchor, and ~4px under the drawn value at 1280 (51.4 against 55.2, 60.4 against 64).
+   * Nothing inside this section reads a `--section-spacing-*` token, so declaring it on the root
+   * re-points nothing else.
+   */
+  .section {
+    --section-spacing-md: #{fluid(31px, 55px)};
+    --section-spacing-lg: #{fluid(40px, 64px)};
+  }
+
+  /*
    * The query container is `Section`'s own `Container`, via `containerClassName`, so the queried size
    * is the content width — frame minus gutters — that the comp measures its columns in.
    *
@@ -107,11 +130,19 @@ $closing-cta-inline-switch: 60rem;
    * `Text` writes `font-size` and `line-height` onto the paragraph through `.variant_body.size_2xl`, at
    * a specificity one class in this module cannot beat. Setting the two custom properties those
    * declarations read, on the same element, re-points them instead: `--body-lede` is fluid(17px, 22px)
-   * on fluid(23.8px, 29.7px), exactly the comp's 17/23.8 on the phone and 22/29.7 on the desktop.
+   * on fluid(23.8px, 29.7px) — the comp's 17/23.8 on the phone and its 22/29.7 at the 1440 anchor,
+   * landing on 21.25/28.8 at the 1280 frame the desktop comp is drawn in.
+   *
+   * `text-wrap: pretty` because a lede this short is where a one-word last line shows most. With the
+   * default greedy breaking the phone comp's "…Everyone stays / on site." renders as "…Everyone stays
+   * on / site." at 390 and 414; `pretty` balances the last lines and reproduces the comp's breaks at
+   * both, and leaves the desktop's three lines as drawn. A browser without it keeps greedy breaking.
    */
   .ledeText {
     --body-2xl: var(--body-lede);
     --body-line-height: var(--body-lede-line-height);
+
+    text-wrap: pretty;
   }
 
   .actions {

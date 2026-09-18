@@ -45,7 +45,17 @@ const LEDE_CONFIG: TextBlockProps['config'] = { p: { className: styles.ledeText,
 const ClosingCtaSection: FC<IClosingCtaSection> = (props) => {
   const { content, addButton, button, showRsvp, rsvp } = props;
 
-  const hasIntro = hasBlockContent(content);
+  /*
+   * Each block kept only if it has text of its own, by the same test the section applies to the whole.
+   *
+   * An editor who presses Enter after the paragraph saves an empty block behind it, and `TextBlock`
+   * renders every block it is handed. The empty one is the last child, so the real paragraph is not,
+   * and keeps its 16px of paragraph spacing — which lifts the text off the shared bottom edge the
+   * actions are aligned to, by exactly that much. Dropping blanks is what keeps the paragraph's last
+   * line the band's bottom edge.
+   */
+  const intro = content?.filter((block) => hasBlockContent([block]));
+  const hasIntro = Boolean(intro?.length);
   const secondary =
     addButton && button?.label && hasText(button.label) && hasDestination(button.link) ? button : undefined;
   /*
@@ -63,6 +73,12 @@ const ClosingCtaSection: FC<IClosingCtaSection> = (props) => {
 
   return (
     <Section
+      /*
+       * Carries one thing: a re-point of the two spacing steps chosen below to this band's drawn pairs.
+       * It has to be on the element `.spacing_top_md` / `.spacing_bottom_lg` sit on and read from. See
+       * the note in `styles.module.scss`.
+       */
+      className={styles.section}
       containerClassName={styles.container}
       name="ClosingCtaSection"
       theme={getSectionTheme(props, 'light')}
@@ -71,15 +87,13 @@ const ClosingCtaSection: FC<IClosingCtaSection> = (props) => {
        * After the spread, because `getSectionSpacingProps` returns a hardcoded `spacing: 'lg'` beside
        * the editor's two remove-spacing toggles and would overwrite anything written before it.
        *
-       * `md` above and `lg` below, each the step nearest the comp at both of its frames: the band is
-       * drawn 55.2px from the section above it and 64px from the foot of the page at 1280, and 30.7px
-       * and 40px at 390. `md` measures 58 and 24.6 there; `lg` measures 74 and 40.6. The default `lg`
-       * above would sit 19px low on desktop.
+       * `md` above and `lg` below: the stock steps nearest the comp (drawn 30.7 → 55.2px above and
+       * 40 → 64px below), which `styles.section` then re-points to exactly those ramps.
        */
       spacing={['md', 'lg']}
     >
       <div className={styles.row}>
-        {hasIntro && content && <TextBlock blocks={content} className={styles.intro} config={LEDE_CONFIG} />}
+        {hasIntro && intro && <TextBlock blocks={intro} className={styles.intro} config={LEDE_CONFIG} />}
         {(secondary || primary) && (
           <div className={styles.actions}>
             {/*

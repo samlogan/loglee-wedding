@@ -119,6 +119,13 @@ const MOCK: IClosingCtaSection = {
  */
 const PUBLISHED = sectionFixture<IClosingCtaSection>('closingCtaSection') ?? MOCK;
 
+/**
+ * Where a paragraph's last line ends: its content box, not the paragraph spacing padded below it. The
+ * border box would move with that padding and so could never catch it.
+ */
+const lastLineBottom = (element: HTMLElement) =>
+  element.getBoundingClientRect().bottom - Number.parseFloat(getComputedStyle(element).paddingBottom);
+
 /** The section's elements, found the way the stories need them. */
 const partsOf = (canvasElement: HTMLElement) => {
   const section = canvasElement.querySelector('[data-name="ClosingCtaSection"]') as HTMLElement;
@@ -201,15 +208,17 @@ export const Desktop: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const { row } = partsOf(canvasElement);
-    const intro = canvas.getByText(INTRO).parentElement as HTMLElement;
+    const paragraph = canvas.getByText(INTRO);
+    const intro = paragraph.parentElement as HTMLElement;
     const rsvp = canvas.getByRole('link', { name: rsvpLabelOf(MOCK.rsvp) });
 
     // Polled: a container query cannot resolve before its container has been laid out, so the first
     // frame is the stacked default.
     await waitFor(() => expect(getComputedStyle(row).flexDirection).toBe('row'));
 
-    // The composition: the actions hang off the intro's last line, not its first.
-    await expect(rsvp.getBoundingClientRect().bottom).toBeCloseTo(intro.getBoundingClientRect().bottom, 0);
+    // The composition: the actions hang off the paragraph's last line, not its first. Measured on the
+    // paragraph's text rather than its wrapper, which `flex-end` aligns whatever padding sits inside it.
+    await expect(rsvp.getBoundingClientRect().bottom).toBeCloseTo(lastLineBottom(paragraph), 0);
     // Held to the measure rather than running across the row.
     await expect(intro.getBoundingClientRect().width).toBeLessThanOrEqual(
       Number.parseFloat(getComputedStyle(intro).maxInlineSize) + 0.5
@@ -400,6 +409,31 @@ export const ActionsOnly: Story = {
 
     await expect(row.children).toHaveLength(1);
     await expect(rsvp.getBoundingClientRect().right).toBeCloseTo(row.getBoundingClientRect().right, 0);
+  }
+};
+
+/**
+ * The intro with an empty paragraph after it — what an editor leaves behind by pressing Enter at the
+ * end of the text. Sanity keeps the block.
+ *
+ * The empty block is dropped before `TextBlock` sees it, so the real paragraph is still the last child
+ * and carries no paragraph spacing below it: its last line is still the edge the actions sit on.
+ * Rendered, the empty block would lift the text 16px off that edge.
+ */
+export const TrailingEmptyParagraph: Story = {
+  args: { ...MOCK, content: [mockBlock('normal', INTRO), mockBlock('normal', '')] },
+  decorators: [atWidth('80rem')],
+  globals: DESKTOP,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { row } = partsOf(canvasElement);
+    const paragraph = canvas.getByText(INTRO);
+    const rsvp = canvas.getByRole('link', { name: rsvpLabelOf(MOCK.rsvp) });
+
+    await waitFor(() => expect(getComputedStyle(row).flexDirection).toBe('row'));
+
+    await expect(row.querySelectorAll('p')).toHaveLength(1);
+    await expect(rsvp.getBoundingClientRect().bottom).toBeCloseTo(lastLineBottom(paragraph), 0);
   }
 };
 
