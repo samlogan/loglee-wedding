@@ -18,6 +18,7 @@ interface IWeddingSettingsDocument {
   venue: {
     name?: string;
     address?: string;
+    travelNote?: string;
     mapUrl?: string;
   };
   rsvpDeadline?: string;
@@ -84,11 +85,34 @@ const weddingSettings = defineType({
           title: `Venue Name`,
           type: `string`
         },
+        /*
+         * The description is there because the home hero reads this field by *line*: it prints the
+         * first line with text as the street, beneath the couple's names, and drops the rest. An
+         * editor who puts the venue name or the town first gets that printed instead — so the order
+         * of the lines is the one thing worth saying.
+         */
         {
+          description: 'Street on the first line. The home page shows that line beneath the names.',
           name: `address`,
           rows: 3,
           title: `Address`,
           type: `text`
+        },
+        /*
+         * On the venue rather than on the hero section, per MAM-1939: it describes where the venue
+         * is, so it belongs with the rest of the venue, and the footer or a later section can read it
+         * without a second copy. The hero joins it in through its projection.
+         *
+         * Sentence case in the Studio and capitals from CSS, for the reason `headerDisplaySection.items`
+         * gives — short literal all-caps runs are what screen readers most often spell out letter by
+         * letter, and `text-transform` already guarantees the display.
+         */
+        {
+          description:
+            'One short line on where the venue is, from somewhere guests know — “90 min south of Sydney”. Shown beside the address on the home page. Type it in normal sentence case; it is displayed in uppercase automatically.',
+          name: `travelNote`,
+          title: `Travel Note`,
+          type: `string`
         },
         {
           description: 'Link used by the "Get directions" action and the map section.',
