@@ -85,7 +85,7 @@ const FaqItems = ({ faqItems }: { faqItems: IFaqSection['faqItems'] }) => (
              * out of the accessible name, so the stored string is what a screen reader spells out.
              */}
             {Boolean(item.note?.trim()) && (
-              <Tag className={styles.note} label={item.note} size="lg" uppercase variant="outline" />
+              <Tag className={styles.note} label={item.note} size="lg" uppercase variant="outline" weight="regular" />
             )}
           </div>
         </Accordion.Item>

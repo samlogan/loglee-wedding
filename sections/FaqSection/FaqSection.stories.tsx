@@ -1,5 +1,5 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import formatOrdinal from '@/helpers/formatOrdinal';
 import type { IFaqSection } from '@/tools/sanity/schema/sections/faqSection';
@@ -133,6 +133,16 @@ const data: IFaqSection = {
   faqItems: fixture?.faqItems?.length ? fixture.faqItems : MOCK.faqItems
 };
 
+/*
+ * ## Every text query below uses the **stored** string, not the rendered one
+ *
+ * The eyebrows, the address and the two chips are stored in sentence case and capitalised by
+ * `text-transform`, which does not change `textContent` — so `getByText('HELP MENU')` finds nothing
+ * while the page plainly shows it. That asymmetry is the point rather than an inconvenience: it is
+ * the same reason the schema tells editors to store sentence case, because Chromium names an element
+ * from its rendered text and a screen reader spells a stored all-caps run out letter by letter.
+ */
+
 /** Every accordion trigger, in document order. The footer's button is an `<a>`, so it is not here. */
 const triggers = (canvasElement: HTMLElement) => [
   ...canvasElement.querySelectorAll<HTMLButtonElement>('button[aria-expanded]')
@@ -150,7 +160,7 @@ export const Default: Story = {
      * AC: the tagline renders. It is the field this section has always had and never read — the
      * component destructured five props and `tagline` was not one of them.
      */
-    await expect(canvas.getByText((data.tagline ?? '').toUpperCase(), { selector: 'p' })).toBeVisible();
+    await expect(canvas.getByText(data.tagline as string, { selector: 'p' })).toBeVisible();
 
     /*
      * AC: items are numbered from array position. Asserted against `formatOrdinal(index)` with the
@@ -227,7 +237,7 @@ export const MapOverlays: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const badge = canvas.getByText(MOCK.map?.badge as string);
-    const address = canvas.getByText((MOCK.map?.address ?? '').toUpperCase());
+    const address = canvas.getByText(MOCK.map?.address as string);
 
     for (const overlay of [badge, address]) {
       const box = overlay.getBoundingClientRect();
@@ -252,7 +262,7 @@ export const Desktop: Story = {
     await expect(getComputedStyle(row).flexDirection).toBe('row');
 
     // AC: the eyebrow is paired with the button here, and dropped when the columns stack.
-    await expect(canvas.getByText((data.buttonEyebrow ?? '').toUpperCase())).toBeVisible();
+    await expect(canvas.getByText(data.buttonEyebrow as string)).toBeVisible();
 
     // A shrink-to-fit pill rather than a full-width bar (node 16:717).
     const link = canvas.getByRole('link', { name: data.button?.label });
@@ -296,8 +306,41 @@ export const Mobile: Story = {
     }
 
     // AC: the eyebrow is dropped, and the button spans the column (node 16:797).
-    await expect(canvas.queryByText((data.buttonEyebrow ?? '').toUpperCase())).not.toBeVisible();
+    await expect(canvas.getByText(data.buttonEyebrow as string)).not.toBeVisible();
     await expect(button.getBoundingClientRect().width).toBeCloseTo(row.getBoundingClientRect().width, 0);
+  }
+};
+
+/**
+ * The comp's own content, verbatim — the story `/review-design` compares against.
+ *
+ * `Default` prefers the dataset, which today holds lorem-ipsum questions and no `note`, so nothing
+ * else in this file renders the chip beneath an answer. This does, and it is also where the **content
+ * blocker this ticket flags is visible**: the first answer's travel copy is bracketed placeholder
+ * text and the shuttle chip reads "TBC". Both are left exactly as the designer typed them rather than
+ * invented around — a reviewer should see the gap, not a plausible sentence covering it.
+ */
+export const DesignReference: Story = {
+  args: MOCK,
+  decorators: [atWidth('1200px')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const rows = triggers(canvasElement);
+
+    // Six questions in the comp's order, numbered 01..06.
+    await expect(rows).toHaveLength(6);
+    await expect(rows[5]).toHaveTextContent(formatOrdinal(5));
+
+    /*
+     * The note chip is inside the answer, so it is only *visible* once that answer is open — and
+     * "open" is a `max-height` transition under `overflow: hidden`, so the element exists and has
+     * zero height for the first few frames after the click. `waitFor` rather than a bare assertion,
+     * which is what this caught: the chip was in the DOM 19ms after the click and measured 0×0.
+     */
+    await userEvent.click(rows[0]);
+    await waitFor(async () => {
+      await expect(canvas.getByText(MOCK.faqItems[0].note as string)).toBeVisible();
+    });
   }
 };
 

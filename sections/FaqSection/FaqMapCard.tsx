@@ -111,10 +111,16 @@ const FaqMapCard = (props: FaqMapCardProps) => {
        * — so it is reproduced exactly as typed. `Tag` returns `null` for a blank label, so the
        * guard here is only to keep the DOM clean.
        *
+       * `weight="regular"` because node 16:645 is JetBrains Mono **Regular**, where `Tag`'s default
+       * is the mono role's Medium. Same for the note chip in `FaqItems`; the address beside it in
+       * the bar really is Bold, so the three are not one decision.
+       *
        * `className` carries placement and nothing else, which is the contract `Tag`'s stylesheet
        * sets out.
        */}
-      {Boolean(badge?.trim()) && <Tag className={styles.mapBadge} label={badge} size="sm" variant="filled" />}
+      {Boolean(badge?.trim()) && (
+        <Tag className={styles.mapBadge} label={badge} size="sm" variant="filled" weight="regular" />
+      )}
       {hasBar && (
         <div className={styles.mapBar}>
           {Boolean(address?.trim()) && (

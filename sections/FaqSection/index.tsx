@@ -138,6 +138,7 @@ const FaqSection: FC<IFaqSection> = (props) => {
                   text={buttonEyebrow}
                   textTransform="uppercase"
                   variant="mono"
+                  weight="regular"
                 />
               )}
               {/*

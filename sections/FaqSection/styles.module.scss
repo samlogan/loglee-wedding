@@ -426,6 +426,13 @@ $faq-inline-switch: 960px;
    */
   .footerEyebrow {
     --mono-line-height: var(--body-line-height);
+    /*
+     * Untracked, where the mono role's quiet register is 0.1em. Node 16:716 carries no `tracking-`
+     * class at all — unlike the tagline at the top of the rail, which is the loud 0.2em. The two
+     * eyebrows are drawn at the same size and in different registers, which is easy to miss and is
+     * why it is stated here rather than assumed to follow the other one.
+     */
+    --mono-letter-spacing: normal;
 
     display: none;
     color: var(--fg-accent);
