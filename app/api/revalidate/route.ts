@@ -141,17 +141,27 @@ export const POST = async (req: NextRequest) => {
     }
 
     /*
-     * The `/sam` and `/lauren` routes. `templates/PlayerTemplate` tags its fetch `player`, and both
-     * routes read the whole roster — the pager counts it and the switch control links to the next
-     * player — so an edit to either document changes both pages, and the tag is the whole of it.
+     * Players are read in two places, under two different tags, and a player edit must reach both.
      *
-     * Without this branch the type fell through to the default below, which revalidates `page` and
-     * not `player`, so a stat or model edit stayed invisible on the static player pages until the
-     * next deploy. The brief's success criteria say players must be editable without one.
+     * - `player` — the `/sam` and `/lauren` routes. `templates/PlayerTemplate` tags its fetch `player`,
+     *   and both routes read the whole roster: the pager counts it and the switch control links to
+     *   the next player, so an edit to either document changes both pages.
+     * - `page` — any CMS page whose sections join player documents into their projection. Those are
+     *   fetched as part of the page's own `DOCUMENT_QUERY`, which is tagged `page`, not `player`. The
+     *   home page's player-select section does exactly this: `*[_type == 'player']`.
+     *
+     * Refreshing only `player` was a regression. Before this branch existed, a player edit fell through
+     * to the default below, which refreshes `page` — so a section reading players was covered by
+     * accident, and adding a `player`-only branch silently took that away. Both tags are refreshed so
+     * the coverage no longer depends on where a player happens to be read from.
+     *
+     * The brief's success criteria say players must be editable without a redeploy, on every page
+     * that shows them.
      */
     if (type === 'player') {
       await revalidateTag('player', 'max');
-      console.log(`${logPrefix}Player changed. Tag "player" has been successfully revalidated.`);
+      await revalidateTag('page', 'max');
+      console.log(`${logPrefix}Player changed. Tags "player" and "page" have been successfully revalidated.`);
       return NextResponse.json({ revalidated: true });
     }
 
