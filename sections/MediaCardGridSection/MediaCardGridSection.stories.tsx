@@ -1,6 +1,9 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, waitFor, within } from 'storybook/test';
 
+import hasBlockContent from '@/helpers/hasBlockContent';
+import hasTitleText from '@/helpers/hasTitleText';
+import stripTitleTags from '@/helpers/stripTitleTags';
 import type {
   IMediaCardGridSection,
   IMediaCardGridSectionCard
@@ -111,15 +114,24 @@ const FINS_BAR: IMediaCardGridSectionCard = {
   title: "<h2>Fin's Bar</h2>"
 };
 
-/*
- * Real Sanity data when present, the comp otherwise.
+/**
+ * The section's props plus `sectionFields`, which the projection returns and `getSectionSpacingProps`
+ * reads but `IMediaCardGridSection` does not declare.
+ */
+type MediaCardGridArgs = IMediaCardGridSection & { sectionFields?: ReturnType<typeof mockSectionFields> };
+
+/**
+ * The comp as an explicit constant: Lulu's then Fin's Bar, light then dark, and no section heading,
+ * because node `16:134` draws none.
  *
- * Nothing is published for this type yet, so `sectionFixture` returns `undefined` and every story
- * below runs against the mock — which is why the mock is the comp rather than lorem ipsum, and why
- * the first `/review-design` is a true comparison. Once a `mediaCardGridSection` exists in the
- * dataset, `yarn storybook:fixtures` writes the fixture and the loader swaps it in with no story
- * edit: the generator reuses the app's own `sectionsProjection`, so there is no per-section query to
- * maintain.
+ * **Every story that counts or measures uses this, not the fixture** — the same split as
+ * `SpecCardGridSection.stories`, and for the same reason. Every story here used to render `data`, and
+ * four leaned on facts only the comp guarantees. `Mobile` needs a second card to stack. `Default`
+ * counted two `h2`s, true only while the section's own title is blank; `TaglineWithoutTitle` counted
+ * the same two on the published cards, so it also needed exactly two venues; and `EmptyHeadingFields`
+ * expected a one-child container and two card names, true only while the body copy is blank and the
+ * venues number two. All four passed because `/the-lodge` happens to publish two venues and no
+ * heading, so one Studio edit to either would have turned them red for no code reason.
  *
  * `removeBottomSpacing` reproduces the page composition rather than pinning a preference. Node
  * `16:134`'s bottom edge is flush with the cards because the "BETWEEN EVENTS" heading below owns
@@ -127,10 +139,22 @@ const FINS_BAR: IMediaCardGridSectionCard = {
  * section keeps a symmetric `xs` so every other placement of it composes normally. See the note at
  * `spacing` in the component.
  */
-const data = sectionFixture<IMediaCardGridSection>('mediaCardGridSection') ?? {
+const MOCK: MediaCardGridArgs = {
   cards: [LULUS, FINS_BAR],
   sectionFields: mockSectionFields({ removeBottomSpacing: true })
 };
+
+/*
+ * Real Sanity data when present, the comp otherwise.
+ *
+ * A `mediaCardGridSection` is published — `/the-lodge`'s two venues — so `yarn storybook:fixtures`
+ * wrote the fixture and the loader swapped it in with no story edit, as designed: the generator
+ * reuses the app's own `sectionsProjection`, so there is no per-section query to maintain. Today that
+ * is Lulu's and Fin's Bar with no photographs yet, no heading fields, and `removeBottomSpacing` set the
+ * way the comp composes it. `PublishedContent` is the one story on it. The mock is the comp rather
+ * than lorem ipsum, which is what made the first `/review-design` a true comparison.
+ */
+const data = sectionFixture<MediaCardGridArgs>('mediaCardGridSection') ?? MOCK;
 
 // ---------------------------------------------------------------------------
 // Measurement helpers
@@ -177,6 +201,58 @@ const paintsOf = (card: HTMLElement) => {
 // ---------------------------------------------------------------------------
 
 /**
+ * **The section rendered against whatever is in the dataset today**, at the canvas's own width.
+ *
+ * Every assertion is read out of `data`: one card per published venue, in order, each named by its own
+ * title and themed by its own field; the heading block present exactly when one of its three fields
+ * has something in it; and each spacing toggle reaching the DOM exactly when the data sets it. That
+ * last pair is the only check that the editor's `removeBottomSpacing` on `/the-lodge` actually closes
+ * the gap — nothing else here renders the published `sectionFields`.
+ *
+ * No decorator, so this is also the story to resize: every other one pins a width to drive the
+ * container query.
+ */
+export const PublishedContent: Story = {
+  args: data,
+  play: async ({ canvasElement }) => {
+    const published = data.cards ?? [];
+    const section = canvasElement.querySelector('section') as HTMLElement;
+
+    /*
+     * Not vacuous. `data` is the fixture when there is one and `MOCK` when there is not, so there is
+     * always a venue to render — zero here means the dataset lost its content, which is worth failing
+     * on rather than passing silently.
+     */
+    await expect(published.length).toBeGreaterThan(0);
+
+    await waitFor(async () => {
+      const cards = cardsIn(canvasElement);
+
+      // One card per venue in the published order, each named and themed by its own fields.
+      await expect(cards).toHaveLength(published.length);
+      await expect(cards.map((card) => titleIn(card).textContent)).toEqual(
+        published.map((card) => stripTitleTags(card.title).text)
+      );
+      /*
+       * `dataset`, not `getAttribute` — `yarn fix` rewrites the one into the other, and they disagree
+       * on an absent attribute: `undefined` against `null`. `MediaCard` writes `data-theme` only for a
+       * set theme, so the expected side maps an unset field (or the projection's `null`) to `undefined`.
+       */
+      await expect(cards.map((card) => card.dataset.theme)).toEqual(published.map((card) => card.theme ?? undefined));
+
+      // The heading block renders exactly when a heading field is filled; otherwise the grid is alone.
+      const hasHeading = Boolean(data.tagline?.trim()) || hasTitleText(data.title) || hasBlockContent(data.content);
+      await expect((section.firstElementChild as HTMLElement).children).toHaveLength(hasHeading ? 2 : 1);
+
+      // Each spacing toggle zeroes its edge exactly when the data sets it — and only then.
+      const spacing = data.sectionFields?.spacingOptions;
+      await expect(getComputedStyle(section).paddingTop === '0px').toBe(Boolean(spacing?.removeTopSpacing));
+      await expect(getComputedStyle(section).paddingBottom === '0px').toBe(Boolean(spacing?.removeBottomSpacing));
+    });
+  }
+};
+
+/**
  * Node `16:134` at its drawn 1280px frame — 1200px of content inside the gutters, two 590px cards,
  * 20px between them.
  *
@@ -184,15 +260,14 @@ const paintsOf = (card: HTMLElement) => {
  * are in the same section, under the same `sectionFields.theme`, and every paint that the theme owns
  * differs between them.
  *
- * `cards` is pinned rather than taken from `data`, and that is not belt-and-braces. Every assertion
- * below names card 0 as the light one and card 1 as the dark one, so the day a
- * `mediaCardGridSection` is published and `yarn storybook:fixtures` swaps a real fixture in, an
- * editor reordering the two venues in the CMS would turn this test red for no code reason. The
- * fixture still drives `args`, so the story keeps rendering real content — only the pair this
- * particular measurement depends on is fixed.
+ * On `MOCK` whole, not just its cards. Every assertion below names card 0 as the light one and card 1
+ * as the dark one, which an editor reordering the venues would break; and the heading count at the
+ * end — two `h2`s, no `h3` — holds only while the section's own title is blank, which an editor giving
+ * the grid a heading would break too. This story used to pin `cards` and take everything else from
+ * `data`, which closed the first of those and left the second open.
  */
 export const Default: Story = {
-  args: { ...data, cards: [LULUS, FINS_BAR] },
+  args: MOCK,
   decorators: [atWidth('1280px')],
   play: async ({ canvasElement }) => {
     const [light, dark] = cardsIn(canvasElement);
@@ -256,7 +331,7 @@ export const Default: Story = {
  * does drive it.
  */
 export const Mobile: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('390px')],
   play: async ({ canvasElement }) => {
     const [first, second] = cardsIn(canvasElement);
@@ -281,7 +356,7 @@ export const Mobile: Story = {
  */
 export const HoursVariants: Story = {
   args: {
-    ...data,
+    ...MOCK,
     cards: [
       { ...FINS_BAR, _key: 'one', theme: 'light' },
       { ...LULUS, _key: 'none', hours: [] }
@@ -309,7 +384,7 @@ export const HoursVariants: Story = {
  */
 export const WithHeading: Story = {
   args: {
-    ...data,
+    ...MOCK,
     /*
      * The two cards store **different** levels — `h2` and `h4` — so this story proves the override
      * is derived from the section heading rather than copied from the field. Both must come out `h3`,
@@ -354,7 +429,7 @@ export const WithHeading: Story = {
  */
 export const UnbreakableContent: Story = {
   args: {
-    ...data,
+    ...MOCK,
     cards: [
       {
         ...LULUS,
@@ -398,7 +473,7 @@ export const UnbreakableContent: Story = {
  */
 export const FourCards: Story = {
   args: {
-    ...data,
+    ...MOCK,
     cards: [
       LULUS,
       FINS_BAR,
@@ -431,7 +506,7 @@ export const FourCards: Story = {
  * The tagline is the trivial half of the same test: whitespace only.
  */
 export const EmptyHeadingFields: Story = {
-  args: { ...data, tagline: '   ', title: '<h2></h2>' },
+  args: { ...MOCK, tagline: '   ', title: '<h2></h2>' },
   decorators: [atWidth('1280px')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -462,7 +537,7 @@ export const EmptyHeadingFields: Story = {
  */
 export const TaglineWithoutTitle: Story = {
   args: {
-    ...data,
+    ...MOCK,
     content: paragraph('Two places to eat and drink that are yours for the whole weekend.'),
     tagline: 'Eat and drink'
   },
@@ -489,7 +564,7 @@ export const TaglineWithoutTitle: Story = {
  */
 export const CardWithoutImage: Story = {
   args: {
-    ...data,
+    ...MOCK,
     cards: [{ _key: 'bare', hours: ['Open 12pm – late'], label: 'Coffee', title: '<h2>The pantry</h2>' }, FINS_BAR]
   },
   decorators: [atWidth('1280px')],

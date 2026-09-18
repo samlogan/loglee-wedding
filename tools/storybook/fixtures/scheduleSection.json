@@ -1,0 +1,173 @@
+{
+  "_key": "k26",
+  "_type": "scheduleSection",
+  "days": [
+    {
+      "_key": "k4",
+      "content": [
+        {
+          "_key": "k5",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k6",
+              "_type": "span",
+              "marks": [],
+              "text": "Arrive, settle in and find us at dinner."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "date": "12 February 2027",
+      "events": [
+        {
+          "_key": "k7",
+          "description": null,
+          "location": "The Lodge",
+          "time": "TBC",
+          "title": "Arrivals and check-in"
+        },
+        {
+          "_key": "k8",
+          "description": [
+            {
+              "_key": "k9",
+              "_type": "block",
+              "children": [
+                {
+                  "_key": "k10",
+                  "_type": "span",
+                  "marks": [],
+                  "text": "The location is still being decided — options include the Champagne Garden, the wedding terrace or Fin's Bar."
+                }
+              ],
+              "markDefs": [],
+              "style": "normal"
+            }
+          ],
+          "location": "TBC",
+          "time": "TBC",
+          "title": "Arrival dinner"
+        }
+      ],
+      "eyebrow": "Day 01",
+      "title": "<h2>Fri</h2>"
+    },
+    {
+      "_key": "k11",
+      "content": [
+        {
+          "_key": "k12",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k13",
+              "_type": "span",
+              "marks": [],
+              "text": "The main event."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "date": "13 February 2027",
+      "events": [
+        {
+          "_key": "k14",
+          "description": [
+            {
+              "_key": "k15",
+              "_type": "block",
+              "children": [
+                {
+                  "_key": "k16",
+                  "_type": "span",
+                  "marks": [],
+                  "text": "The outdoor ceremony space by the river."
+                }
+              ],
+              "markDefs": [],
+              "style": "normal"
+            }
+          ],
+          "location": "Tree Cathedral",
+          "time": "TBC",
+          "title": "Ceremony"
+        },
+        {
+          "_key": "k17",
+          "description": [
+            {
+              "_key": "k18",
+              "_type": "block",
+              "children": [
+                {
+                  "_key": "k19",
+                  "_type": "span",
+                  "marks": [],
+                  "text": "Around the firepits and yard games."
+                }
+              ],
+              "markDefs": [],
+              "style": "normal"
+            }
+          ],
+          "location": "Firepits",
+          "time": "TBC",
+          "title": "Cocktail hour"
+        },
+        {
+          "_key": "k20",
+          "description": null,
+          "location": "Wedding Hall",
+          "time": "TBC",
+          "title": "Reception"
+        }
+      ],
+      "eyebrow": "Day 02",
+      "title": "<h2>Sat</h2>"
+    },
+    {
+      "_key": "k21",
+      "content": [
+        {
+          "_key": "k22",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k23",
+              "_type": "span",
+              "marks": [],
+              "text": "A slow start before everyone heads off."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "date": "14 February 2027",
+      "events": [
+        {
+          "_key": "k24",
+          "description": null,
+          "location": "Lulu's",
+          "time": "TBC",
+          "title": "Recovery breakfast"
+        },
+        {
+          "_key": "k25",
+          "description": null,
+          "location": "The Lodge",
+          "time": "TBC",
+          "title": "Check-out"
+        }
+      ],
+      "eyebrow": "Day 03",
+      "title": "<h2>Sun</h2>"
+    }
+  ],
+  "sectionFields": null
+}

@@ -1,6 +1,7 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 
+import hasTitleText from '@/helpers/hasTitleText';
 import type {
   IScheduleSection,
   IScheduleSectionDay,
@@ -154,10 +155,39 @@ const DAYS: IScheduleSectionDay[] = [
 ];
 
 /**
- * Real Sanity data when there is any, design-faithful mock otherwise — and today it is always the
- * mock: the dataset has no content documents yet, so `sectionFixture` returns `undefined`.
+ * The three drawn bands, as an explicit constant.
+ *
+ * **Every story that reads copy or measures geometry uses this, not the fixture** — and that split is
+ * the point. The obvious shape for a section story is `sectionFixture(…) ?? mock`, and this file had
+ * it on three stories. Two of them reached for a row by its mock-only name,
+ * `rowFor(canvas, 'Arrivals & check in')`; the published schedule calls that event "Arrivals and
+ * check-in" and gives every event the time "TBC", so `Desktop` and `Mobile` both broke the first time
+ * `yarn storybook:fixtures` ran — inside the `/commit` flow whose whole job is to keep fixtures fresh.
+ * The third, `Default`, survived only because the published counts happen to equal the comp's.
+ *
+ * So: pinned data for every assertion that is about *this layout*, and `PublishedContent` below — the
+ * one story still on `sectionFixture` — for the assertions that are about the data, all of which are
+ * derived from `data` rather than written against the drawn copy.
  */
-const data = sectionFixture<IScheduleSection>('scheduleSection') ?? { days: DAYS };
+const MOCK: IScheduleSection = { days: DAYS };
+
+/**
+ * Real Sanity data, falling back to the mock only if the dataset loses it.
+ *
+ * Today it **is** the fixture: the published schedule has the comp's three days and seven events,
+ * but reworded titles, "TBC" in place of every drawn time, and no description on four of the seven.
+ */
+const data = sectionFixture<IScheduleSection>('scheduleSection') ?? MOCK;
+
+/**
+ * The rows the component will actually draw, mirroring its own filter: an event with neither a time
+ * nor a title is a row an editor added and abandoned, and is dropped.
+ *
+ * Restated here rather than exported from `index.tsx`, because the restatement *is* the test — the
+ * component's filter and this one disagreeing is precisely what `PublishedContent` should notice.
+ */
+const renderableEvents = (day: IScheduleSectionDay) =>
+  day.events?.filter((event) => Boolean(event?.time?.trim() || event?.title?.trim())) ?? [];
 
 /**
  * Walk from a heading to the boxes the layout assertions are about, without naming a hashed class.
@@ -221,9 +251,55 @@ const tailOf = (row: HTMLElement) =>
   row.getBoundingClientRect().bottom -
   Math.max(...[...row.children].map((part) => part.getBoundingClientRect().bottom));
 
-/** The section at the canvas's own width — how it behaves on a real page. */
-export const Default: Story = {
+/**
+ * **The section rendered against whatever is in the dataset today**, at the canvas's own width.
+ *
+ * Every assertion is read out of `data` rather than off the comp: one band per day, one row per event
+ * that survives the component's filter, and one `h3` per titled event, carrying the published title
+ * in the published order. That is the complement to `Default`, `Desktop` and `Mobile`, which pin the
+ * drawn copy — the published schedule renames the first event and replaces every time with "TBC",
+ * which is the change `Desktop` and `Mobile` could not survive and this one is built to.
+ */
+export const PublishedContent: Story = {
   args: data,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const days = data.days ?? [];
+    const events = days.flatMap(renderableEvents);
+    const titles = events.map((event) => event.title?.trim()).filter(Boolean);
+
+    /*
+     * Not vacuous. `data` is the fixture when there is one and `MOCK` when there is not, so there are
+     * always days and titled events to render — zero here means the dataset lost its content, which
+     * is worth failing on rather than passing silently.
+     */
+    await expect(days.length).toBeGreaterThan(0);
+    await expect(titles.length).toBeGreaterThan(0);
+
+    // One band per day, in the named list of days.
+    await expect(canvas.getByRole('list', { name: 'Schedule by day' }).children).toHaveLength(days.length);
+
+    // One `h2` per day with a title — `TextTitle` self-guards, so a blank one draws no heading.
+    await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(
+      days.filter((day) => hasTitleText(day.title)).length
+    );
+
+    // One row per surviving event — `ol ol > li`, the selector `HalfFilledEvents` reaches rows by.
+    await expect(canvasElement.querySelectorAll('ol ol > li')).toHaveLength(events.length);
+
+    // And one `h3` per titled event, carrying the published title, in the published order.
+    await expect(textOf(canvas.getAllByRole('heading', { level: 3 }))).toEqual(titles);
+  }
+};
+
+/**
+ * The drawn schedule at the canvas's own width — on `MOCK`, so the three counts below stay literals.
+ *
+ * Three days and seven events are the comp's, and pinned for that reason. `PublishedContent` asserts
+ * the same shape against the dataset, derived from the data rather than copied from the design.
+ */
+export const Default: Story = {
+  args: MOCK,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -257,7 +333,7 @@ export const Default: Story = {
  * still the canvas's rather than a 1280px window's. Layout is exact; the 88px day heading is not.
  */
 export const Desktop: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('80rem')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -340,7 +416,7 @@ export const Desktop: Story = {
  * beneath the pair.
  */
 export const Mobile: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('23.4375rem')],
   parameters: { design: { type: 'figma', url: `${FIGMA}1-469` } },
   play: async ({ canvasElement }) => {

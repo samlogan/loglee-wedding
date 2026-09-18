@@ -175,10 +175,13 @@ const RIVER_ROOM: ISpecCardGridSectionCard = {
 const MOCK: ISpecCardGridSection = { cards: [KING_ROOM, TWIN_DOUBLE, FAMILY_ROOM] };
 
 /**
- * Real Sanity data when there is any, the mock otherwise — and today it is always the mock: nothing
- * in the dataset publishes this section yet, so `sectionFixture` returns `undefined`. The photographs
- * therefore render the grey Storybook placeholder, which `.storybook/main.ts` documents as "no image
- * resolved". That is the expected state, not a defect.
+ * Real Sanity data when there is any, the mock otherwise — and today it is the fixture: `/stay`
+ * publishes this section with the comp's three rooms, but no photographs yet (`image` is unset on all
+ * three), so `Fluid` renders its cards without a media band, which is the `CardWithoutImage` path.
+ *
+ * The `MOCK` stories' photographs render the grey Storybook placeholder, which `.storybook/main.ts`
+ * documents as "no image resolved": `mockImage` borrows real assets from the committed fixtures, and
+ * no published section carries one yet. That is the expected state, not a defect.
  */
 const data = sectionFixture<ISpecCardGridSection>('specCardGridSection') ?? MOCK;
 

@@ -1,6 +1,7 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 
+import stripTitleTags from '@/helpers/stripTitleTags';
 import type { IHeaderDisplaySection } from '@/tools/sanity/schema/sections/headerDisplaySection';
 import { mockBlock } from '@/tools/storybook/mockBlockContent';
 import sectionFixture from '@/tools/storybook/sectionFixture';
@@ -50,17 +51,21 @@ const atWidth =
   );
 
 /**
- * Real Sanity data when there is any, design-faithful mock otherwise — and today it is always the
- * mock: the dataset has no content documents yet, so `sectionFixture` returns `undefined`.
+ * The drawn copy, verbatim from node 1:615 — Stay's header, the fullest of the three.
  *
- * The copy and the item counts are Stay's (node 1:615) verbatim. The one deliberate departure is
- * case: Figma types "STAY" and "39 ROOMS" in capitals, and this passes "Stay" and "39 rooms" so the
- * uppercasing under test is the section's CSS rather than the mock's shift key. It renders
- * identically to the comp, and it is the shape an editor should store — the schema now says so,
- * because short literal all-caps runs are what screen readers most often spell out letter by
- * letter.
+ * **Every story that reads copy or counts items uses this, not the fixture**, and that split is the
+ * point. The obvious shape for a section story is `sectionFixture(…) ?? mock`, and this file had it
+ * on four stories, one of which then asserted a mock-only count: the comp's **four** meta items. Stay
+ * is published now and carries three, so that story broke the first time `yarn storybook:fixtures`
+ * ran — inside the `/commit` flow whose whole job is to keep fixtures fresh.
+ *
+ * The one deliberate departure from the comp is case: Figma types "STAY" and "39 ROOMS" in capitals,
+ * and this passes "Stay" and "39 rooms" so the uppercasing under test is the section's CSS rather
+ * than the mock's shift key. It renders identically to the comp, and it is the shape an editor should
+ * store — the schema now says so, because short literal all-caps runs are what screen readers most
+ * often spell out letter by letter.
  */
-const data = sectionFixture<IHeaderDisplaySection>('headerDisplaySection') ?? {
+const MOCK: IHeaderDisplaySection = {
   title: '<h1>Stay</h1>',
   content: [
     mockBlock(
@@ -71,9 +76,60 @@ const data = sectionFixture<IHeaderDisplaySection>('headerDisplaySection') ?? {
   items: ['39 rooms', '9 acres', '2 nights', '1 river']
 };
 
-/** The section at the canvas's own width — how it behaves on a real page. */
-export const Default: Story = {
+/**
+ * Real Sanity data, falling back to the mock only if the dataset loses it.
+ *
+ * Today it **is** the fixture: `/stay` is published, with the comp's heading, a reworded lede and
+ * three meta items rather than four. `PublishedContent` below is the single story on it, and every
+ * assertion there is derived from `data` rather than written against the drawn copy — which is what
+ * makes it the story that proves this section survives whatever an editor types.
+ */
+const data = sectionFixture<IHeaderDisplaySection>('headerDisplaySection') ?? MOCK;
+
+/**
+ * **The section rendered against whatever is in the dataset today**, at the canvas's own width.
+ *
+ * Every assertion is read out of `data`: the heading's text comes from `data.title`, the row count
+ * from `data.items` filtered the way the component filters them. That is the complement to
+ * `Default`, which pins the comp's four items and is the assertion real content broke.
+ *
+ * No decorator, so this is also the story to resize and to screenshot at a stated viewport — every
+ * other one here pins a width to drive the container query, and a fixed wrapper overflows a narrower
+ * window.
+ */
+export const PublishedContent: Story = {
   args: data,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Filtered the way the component filters: blank entries an editor tabbed through draw no row.
+    const expected = (data.items ?? []).map((item) => item.trim()).filter(Boolean);
+
+    /*
+     * Not vacuous. `data` is the fixture when there is one and `MOCK` when there is not, so there is
+     * always meta to render — an empty list here means the dataset lost its content, which is worth
+     * failing on rather than passing silently.
+     */
+    await expect(expected.length).toBeGreaterThan(0);
+
+    // The `h1` is forced whatever tag the editor picked in the Studio, and it says what the CMS says.
+    await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent(stripTitleTags(data.title).text);
+
+    // One row per surviving entry, in order, carrying that entry's own text.
+    const rendered = within(canvas.getByRole('list')).getAllByRole('listitem');
+    await expect(rendered).toHaveLength(expected.length);
+    await expect(rendered.map((item) => item.textContent?.trim())).toEqual(expected);
+  }
+};
+
+/**
+ * The drawn header at the canvas's own width — on `MOCK`, so the two literals below stay literals.
+ *
+ * The heading's copy and the comp's **four** meta items are facts about the design, which is why they
+ * are asserted against pinned data. Stay publishes three today; that count is checked by
+ * `PublishedContent`, from the data rather than from the comp.
+ */
+export const Default: Story = {
+  args: MOCK,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -99,7 +155,7 @@ export const Default: Story = {
  * still the canvas's rather than a 1280px window's. Layout is exact; the 132px heading is not.
  */
 export const Desktop: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('80rem')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -123,7 +179,7 @@ export const Desktop: Story = {
  * is not, and that rule gets a narrow section in a wide window backwards.
  */
 export const Mobile: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('23.4375rem')],
   parameters: { design: { type: 'figma', url: `${FIGMA}1-688` } },
   play: async ({ canvasElement }) => {
@@ -228,7 +284,7 @@ export const TitleOnly: Story = {
  */
 export const LongMeta: Story = {
   args: {
-    ...data,
+    ...MOCK,
     items: [
       '39 rooms',
       '9 acres',

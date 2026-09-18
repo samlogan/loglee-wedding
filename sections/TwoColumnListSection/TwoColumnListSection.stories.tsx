@@ -49,9 +49,11 @@ const atWidth =
   );
 
 /**
- * Planner's dress-code band as a design-faithful mock — the fallback `listData` below resolves to
- * whenever the dataset has no `list` instance, which today is always (there are no content documents
- * yet).
+ * Planner's dress-code band as a design-faithful mock — what `listData` below resolves to whenever
+ * the fixture is not a `list` instance. Today that is always, though not because the dataset is
+ * empty: both variants are published (`/weekend`'s dress code is the `list`, `/stay`'s rooms band the
+ * `richText`), and the generator kept the richer `richText` one — the exact case the variant gate
+ * below exists for.
  *
  * The copy, the four items and their lengths are Planner's (node 1:426). Two deliberate departures.
  * **Case**: Figma types "DRESS CODE" and "WHAT TO BRING" in capitals, and this passes sentence case

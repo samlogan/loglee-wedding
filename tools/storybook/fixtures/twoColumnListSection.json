@@ -1,0 +1,46 @@
+{
+  "_key": "k43",
+  "_type": "twoColumnListSection",
+  "asideEyebrow": null,
+  "content": null,
+  "contribution": {
+    "amountPerNight": null,
+    "copyWithAmount": [
+      {
+        "_key": "cwa1",
+        "_type": "block",
+        "children": [
+          {
+            "_key": "cwa1s",
+            "_type": "span",
+            "marks": [],
+            "text": "We've booked and paid for the rooms upfront so no one has to worry about logistics. If you're able to, we'd be grateful for a contribution of $[amount] per room, per night. We'll share the details with your RSVP, and if that's tricky for any reason, just let us know."
+          }
+        ],
+        "markDefs": [],
+        "style": "normal"
+      }
+    ],
+    "copyWithoutAmount": [
+      {
+        "_key": "cwo1",
+        "_type": "block",
+        "children": [
+          {
+            "_key": "cwo1s",
+            "_type": "span",
+            "marks": [],
+            "text": "We've taken care of the rooms so everyone can stay together. If you'd like to contribute towards yours, we'll send the details with your RSVP confirmation."
+          }
+        ],
+        "markDefs": [],
+        "style": "normal"
+      }
+    ],
+    "showAmount": false
+  },
+  "eyebrow": "Contribution",
+  "sectionFields": null,
+  "title": "<h2>The rooms</h2>",
+  "variant": "richText"
+}

@@ -1,0 +1,91 @@
+{
+  "_key": "k42",
+  "_type": "specCardGridSection",
+  "cards": [
+    {
+      "_key": "k33",
+      "caption": null,
+      "description": [
+        {
+          "_key": "k34",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k35",
+              "_type": "span",
+              "marks": [],
+              "text": "One king bed with an ensuite, and a furnished balcony looking over the pool. Two extra beds can be added at a charge, and a cot is free."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "footnotes": [
+        "Ensuite",
+        "Pool view",
+        "Cot free"
+      ],
+      "image": null,
+      "label": "2 max",
+      "title": "<h2>King Room</h2>"
+    },
+    {
+      "_key": "k36",
+      "caption": null,
+      "description": [
+        {
+          "_key": "k37",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k38",
+              "_type": "span",
+              "marks": [],
+              "text": "Two double beds with an ensuite and a balcony with a pool view. Suits a family with two children, or four friends sharing."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "footnotes": [
+        "Ensuite",
+        "Pool view",
+        "Sleeps four"
+      ],
+      "image": null,
+      "label": "4 max",
+      "title": "<h2>Twin Double</h2>"
+    },
+    {
+      "_key": "k39",
+      "caption": null,
+      "description": [
+        {
+          "_key": "k40",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k41",
+              "_type": "span",
+              "marks": [],
+              "text": "A king in one room, two singles and a lounge in the other, with a spa bath. No direct pool access or view. Two extra beds can be added at a charge."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "footnotes": [
+        "Spa bath",
+        "Two rooms",
+        "No pool view"
+      ],
+      "image": null,
+      "label": "2 rooms",
+      "title": "<h2>Family Room</h2>"
+    }
+  ],
+  "sectionFields": null
+}

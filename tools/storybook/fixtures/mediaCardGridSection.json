@@ -1,0 +1,72 @@
+{
+  "_key": "k53",
+  "_type": "mediaCardGridSection",
+  "cards": [
+    {
+      "_key": "k47",
+      "caption": null,
+      "content": [
+        {
+          "_key": "k48",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k49",
+              "_type": "span",
+              "marks": [],
+              "text": "The restaurant, with original art, ceiling murals and antique furniture. Sunday's recovery breakfast is here."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "hours": [
+        "Lunch 12pm–3pm",
+        "Dinner 5pm–10pm",
+        "Last orders 8:30pm"
+      ],
+      "image": null,
+      "label": "Restaurant",
+      "theme": "light",
+      "title": "<h2>Lulu's</h2>"
+    },
+    {
+      "_key": "k50",
+      "caption": null,
+      "content": [
+        {
+          "_key": "k51",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k52",
+              "_type": "span",
+              "marks": [],
+              "text": "A dark, moody cocktail bar just off Lulu's."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "hours": [
+        "Open 12pm until late"
+      ],
+      "image": null,
+      "label": "Bar",
+      "theme": "dark",
+      "title": "<h2>Fin's Bar</h2>"
+    }
+  ],
+  "content": null,
+  "sectionFields": {
+    "spacingOptions": {
+      "removeBottomSpacing": true,
+      "removeTopSpacing": null
+    },
+    "themeOptions": null
+  },
+  "tagline": null,
+  "title": null
+}

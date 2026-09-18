@@ -1,6 +1,9 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 
+import formatOrdinal from '@/helpers/formatOrdinal';
+import hasTitleText from '@/helpers/hasTitleText';
+import stripTitleTags from '@/helpers/stripTitleTags';
 import type {
   INumberedGridSection,
   INumberedGridSectionItem
@@ -136,17 +139,29 @@ const ITEMS: INumberedGridSectionItem[] = [
 ];
 
 /**
- * Real Sanity data when the dataset has a published instance, the design-faithful mock until then.
+ * The comp's section as an explicit constant — node 16:163's heading and qualifier over the nine
+ * facilities of `ITEMS`.
  *
- * There is no `numberedGridSection` content yet, so `sectionFixture` returns `undefined` and every
- * story below runs against the mock. That is the expected state for a new section and is what makes
- * the first `/review-design` a true comparison — see the `Known limitations` note in CLAUDE.md.
+ * **Every story that counts, numbers or measures uses this, not the fixture** — the same split as
+ * `SpecCardGridSection.stories`, and for the same reason. `Desktop` and `Mobile` assert the drawn nine
+ * literally: nine cells, ordinals `01`–`09`, cell 09 as the phone orphan. They used to render `data`
+ * and passed only because `/the-lodge` happens to publish nine facilities too, so one added or removed
+ * in the Studio would have turned both red for no code reason.
  */
-const data = sectionFixture<INumberedGridSection>('numberedGridSection') ?? {
+const MOCK: INumberedGridSection = {
   title: '<h2>Between events</h2>',
   meta: 'Free for all guests',
   items: ITEMS
 };
+
+/**
+ * Real Sanity data when the dataset has a published instance, the design-faithful mock otherwise.
+ *
+ * There is one — `/the-lodge`'s facilities table — so today this is the fixture: the comp's heading
+ * and qualifier, and nine facilities that are not the comp's nine. `PublishedContent` is the one story
+ * on it, and every assertion there is derived from the data rather than from the comp.
+ */
+const data = sectionFixture<INumberedGridSection>('numberedGridSection') ?? MOCK;
 
 /* ------------------------------------------------------------------------------------------------
  * Shared queries. The section's own class names are hashed, so everything is reached structurally —
@@ -226,8 +241,17 @@ const expectSharedBorders = async (canvasElement: HTMLElement, itemCount: number
     );
   }
 
-  // The perimeter is the outline, and the last column sits flush inside it.
-  await expect(cells[columns - 1].getBoundingClientRect().right).toBeCloseTo(grid.getBoundingClientRect().right, 0);
+  /*
+   * The perimeter is the outline, and the last column sits flush inside it — when row one is full.
+   * With fewer items than columns there is no last column to sit there, and the outline closes the
+   * hole exactly as it does beside the phone orphan. Every `MOCK` story has a full first row, so for
+   * them the condition always holds and the assertion always runs; `PublishedContent` is the one that
+   * could meet a short row, and without the guard it would fail on `undefined` rather than on anything
+   * about the grid.
+   */
+  if (cells.length >= columns) {
+    await expect(cells[columns - 1].getBoundingClientRect().right).toBeCloseTo(grid.getBoundingClientRect().right, 0);
+  }
   await expect(cells[0].getBoundingClientRect().left).toBeCloseTo(grid.getBoundingClientRect().left, 0);
 };
 
@@ -235,8 +259,54 @@ const expectSharedBorders = async (canvasElement: HTMLElement, itemCount: number
 const ordinalsOf = (canvasElement: HTMLElement) =>
   cellsOf(canvasElement).map((cell) => cell.querySelector('[aria-hidden="true"]')?.textContent);
 
+/**
+ * **The section rendered against whatever is in the dataset today**, at the canvas's own width.
+ *
+ * Every assertion is read out of `data`: one cell per named item, numbered from its array position and
+ * carrying its own published name; a column count the stylesheet can actually produce; the qualifier
+ * present exactly when the data has one; and the section's whole claim — shared borders, a closed
+ * perimeter, nothing invented to fill a ragged last row — at the published count rather than the
+ * comp's nine. That is the complement to `Desktop` and `Mobile`, which pin nine.
+ *
+ * No decorator, so the column count is whatever the canvas resolves: two or three, never one.
+ */
+export const PublishedContent: Story = {
+  args: data,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The component's own filter: an item with no name draws no cell.
+    const published = (data.items ?? []).filter((item) => hasTitleText(item?.title));
+
+    /*
+     * Not vacuous. `data` is the fixture when there is one and `MOCK` when there is not, so there are
+     * always facilities to render — zero here means the dataset lost its content, which is worth
+     * failing on rather than passing silently.
+     */
+    await expect(published.length).toBeGreaterThan(0);
+
+    await expect([2, 3]).toContain(columnCountOf(gridOf(canvasElement)));
+
+    // One cell per item, every interior line 1px, the perimeter closed, and no filler — at this count.
+    await expectSharedBorders(canvasElement, published.length);
+
+    // Numbered from array position, however many there are.
+    await expect(ordinalsOf(canvasElement)).toEqual(published.map((_, index) => formatOrdinal(index)));
+
+    // Each cell named by its own published title, in order — `h3` under the section's `h2` when there
+    // is one, `h2` when there is not.
+    const cellLevel = hasTitleText(data.title) ? 3 : 2;
+    await expect(canvas.getAllByRole('heading', { level: cellLevel }).map((heading) => heading.textContent)).toEqual(
+      published.map((item) => stripTitleTags(item.title).text)
+    );
+
+    // The qualifier is in the markup exactly when the data has one.
+    await expect(metaOf(canvasElement) === null).toBe(!data.meta?.trim());
+  }
+};
+
+/** The comp's section at the canvas's own width — on `MOCK`, like every story but the one above. */
 export const Default: Story = {
-  args: data
+  args: MOCK
 };
 
 /**
@@ -245,7 +315,7 @@ export const Default: Story = {
  * 75rem is the design's 1200px content width at a 16px root.
  */
 export const Desktop: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('75rem')],
   play: async ({ canvasElement }) => {
     const grid = gridOf(canvasElement);
@@ -285,7 +355,7 @@ export const Desktop: Story = {
  * same browser window as `Desktop`.
  */
 export const Mobile: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('24.375rem')],
   parameters: {
     design: { type: 'figma', url: `${FIGMA}16-312` }
@@ -343,7 +413,7 @@ export const Mobile: Story = {
  * the naive fix for the phone case (a single filler element) would pass `Mobile` and fail here.
  */
 export const IncompleteLastRow: Story = {
-  args: { ...data, items: ITEMS.slice(0, 5) },
+  args: { ...MOCK, items: ITEMS.slice(0, 5) },
   decorators: [atWidth('75rem')],
   play: async ({ canvasElement }) => {
     const grid = gridOf(canvasElement);
@@ -364,7 +434,7 @@ export const IncompleteLastRow: Story = {
  * optional field empty. The row must not reserve the space.
  */
 export const WithoutMeta: Story = {
-  args: { ...data, meta: undefined },
+  args: { ...MOCK, meta: undefined },
   decorators: [atWidth('75rem')],
   play: async ({ canvasElement }) => {
     // Not rendered at all, rather than rendered empty — the row is `space-between`, so an empty
@@ -383,7 +453,7 @@ export const WithoutMeta: Story = {
  */
 export const NameOnly: Story = {
   args: {
-    ...data,
+    ...MOCK,
     items: ITEMS.map((item) => ({ _key: item._key, title: item.title }))
   },
   decorators: [atWidth('75rem')],
@@ -410,7 +480,7 @@ export const NameOnly: Story = {
  * perfect in every other story.
  */
 export const OnDarkPage: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('75rem')],
   globals: { theme: 'dark' },
   play: async ({ canvasElement }) => {
@@ -442,7 +512,7 @@ export const OnDarkPage: Story = {
  */
 export const RichDescription: Story = {
   args: {
-    ...data,
+    ...MOCK,
     items: [
       {
         _key: 'spa',

@@ -1,35 +1,18 @@
 {
-  "_key": "cf7e8e86f0f33671c74fefd1d2a5ba8e",
+  "_key": "k79",
   "_type": "faqSection",
-  "addButton": true,
-  "button": {
-    "label": "Click me",
-    "link": {
-      "action": null,
-      "email": null,
-      "externalLink": null,
-      "internalLink": {
-        "pathname": "/hello-world/",
-        "slug": {
-          "_type": "slugElement",
-          "current": "/hello-world/"
-        },
-        "title": "Hello World"
-      },
-      "linkType": "internal",
-      "phone": null
-    }
-  },
+  "addButton": null,
+  "addMap": null,
   "content": [
     {
-      "_key": "2d7d197b6158",
+      "_key": "k72",
       "_type": "block",
       "children": [
         {
-          "_key": "7a721f1780f90",
+          "_key": "k73",
           "_type": "span",
           "marks": [],
-          "text": "Phasellus mattis magna faucibus rhoncus ut in nec. Tempus odio sem volutpat varius mauris."
+          "text": "Practical answers for the weekend. We'll keep adding to this as things are confirmed."
         }
       ],
       "markDefs": [],
@@ -38,88 +21,42 @@
   ],
   "faqItems": [
     {
+      "_key": "k74",
       "answer": [
         {
-          "_key": "110928e3bc96",
+          "_key": "k75",
           "_type": "block",
           "children": [
             {
-              "_key": "f9dc4ee39fbd",
+              "_key": "k76",
               "_type": "span",
               "marks": [],
-              "text": "Phasellus mattis magna faucibus rhoncus ut in nec. Tempus odio sem volutpat varius mauris."
+              "text": "Yes — we're providing nannies for young children across the weekend."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "k77",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k78",
+              "_type": "span",
+              "marks": [],
+              "text": "Times, the age range they cover and where they'll be based are still to be confirmed. We'll update this page and let families know directly once we have the details."
             }
           ],
           "markDefs": [],
           "style": "normal"
         }
       ],
-      "question": "Phasellus mattis magna faucibus rhoncus ut in nec?"
-    },
-    {
-      "answer": [
-        {
-          "_key": "110928e3bc96",
-          "_type": "block",
-          "children": [
-            {
-              "_key": "f9dc4ee39fbd",
-              "_type": "span",
-              "marks": [],
-              "text": "Phasellus mattis magna faucibus rhoncus ut in nec. Tempus odio sem volutpat varius mauris."
-            }
-          ],
-          "markDefs": [],
-          "style": "normal"
-        }
-      ],
-      "question": "Phasellus mattis magna faucibus rhoncus ut in nec?"
-    },
-    {
-      "answer": [
-        {
-          "_key": "110928e3bc96",
-          "_type": "block",
-          "children": [
-            {
-              "_key": "f9dc4ee39fbd",
-              "_type": "span",
-              "marks": [],
-              "text": "Phasellus mattis magna faucibus rhoncus ut in nec. Tempus odio sem volutpat varius mauris."
-            }
-          ],
-          "markDefs": [],
-          "style": "normal"
-        }
-      ],
-      "question": "Phasellus mattis magna faucibus rhoncus ut in nec?"
-    },
-    {
-      "answer": [
-        {
-          "_key": "110928e3bc96",
-          "_type": "block",
-          "children": [
-            {
-              "_key": "f9dc4ee39fbd",
-              "_type": "span",
-              "marks": [],
-              "text": "Phasellus mattis magna faucibus rhoncus ut in nec. Tempus odio sem volutpat varius mauris."
-            }
-          ],
-          "markDefs": [],
-          "style": "normal"
-        }
-      ],
-      "question": "Phasellus mattis magna faucibus rhoncus ut in nec?"
+      "note": "Times and ages TBC",
+      "question": "Is there childcare?"
     }
   ],
-  "sectionFields": {
-    "spacingOptions": {
-      "removeBottomSpacing": false,
-      "removeTopSpacing": false
-    }
-  },
+  "sectionFields": null,
   "tagline": null,
-  "title": "<h2>8 Column Accordion Block</h2>"
+  "title": "<h1>FAQ</h1>"
 }

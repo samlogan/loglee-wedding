@@ -1,0 +1,123 @@
+{
+  "_key": "k71",
+  "_type": "numberedGridSection",
+  "items": [
+    {
+      "_key": "k54",
+      "content": [
+        {
+          "_key": "k55",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k56",
+              "_type": "span",
+              "marks": [],
+              "text": "Palm Springs style pool with pool service from midday."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "tag": "From 12pm",
+      "title": "<h3>Pool</h3>"
+    },
+    {
+      "_key": "k57",
+      "content": null,
+      "tag": "Wellness",
+      "title": "<h3>Swedish sauna</h3>"
+    },
+    {
+      "_key": "k58",
+      "content": null,
+      "tag": "Wellness",
+      "title": "<h3>Outdoor hot tub</h3>"
+    },
+    {
+      "_key": "k59",
+      "content": [
+        {
+          "_key": "k60",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k61",
+              "_type": "span",
+              "marks": [],
+              "text": "Treatments are bookable directly with the venue."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "tag": "Bookable",
+      "title": "<h3>Day spa</h3>"
+    },
+    {
+      "_key": "k62",
+      "content": null,
+      "tag": "Open",
+      "title": "<h3>Gym</h3>"
+    },
+    {
+      "_key": "k63",
+      "content": null,
+      "tag": "Open",
+      "title": "<h3>Games room</h3>"
+    },
+    {
+      "_key": "k64",
+      "content": null,
+      "tag": "Open",
+      "title": "<h3>Tennis court</h3>"
+    },
+    {
+      "_key": "k65",
+      "content": [
+        {
+          "_key": "k66",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k67",
+              "_type": "span",
+              "marks": [],
+              "text": "Set up near the firepits, where Saturday's cocktail hour happens."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "tag": "Open",
+      "title": "<h3>Yard games</h3>"
+    },
+    {
+      "_key": "k68",
+      "content": [
+        {
+          "_key": "k69",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k70",
+              "_type": "span",
+              "marks": [],
+              "text": "Outdoor and covered drinks spaces, alongside The Terrace."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "tag": "12pm–8pm",
+      "title": "<h3>Champagne Garden</h3>"
+    }
+  ],
+  "meta": "Free for all guests",
+  "sectionFields": null,
+  "title": "<h2>Between events</h2>"
+}

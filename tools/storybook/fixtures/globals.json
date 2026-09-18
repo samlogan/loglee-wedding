@@ -1,5 +1,20 @@
 {
   "header": null,
   "socialMedia": null,
-  "weddingSettings": null
+  "weddingSettings": {
+    "coupleNames": {
+      "partnerOne": "Sam",
+      "partnerTwo": "Lauren"
+    },
+    "endDate": "2027-02-14",
+    "rsvpDeadline": "2026-12-11",
+    "rsvpLabel": "RSVP by 11 December",
+    "startDate": "2027-02-12",
+    "title": "Sam & Lauren",
+    "venue": {
+      "address": "406 Jamberoo Mountain Rd\nJamberoo NSW 2533",
+      "mapUrl": "https://www.google.com/maps/search/?api=1&query=406+Jamberoo+Mountain+Rd+Jamberoo+NSW+2533",
+      "name": "The Lodge Jamberoo"
+    }
+  }
 }
