@@ -250,16 +250,20 @@ $schedule-intro-measure: 20rem;
    * which `Button`, `PlayerCard`, `StatMeter`, `FieldCheckbox`, `ModelViewer` and
    * `HeaderDisplaySection` all take too.
    *
-   * The size is the design's own pair — 11px on the mobile frame (1:471), 13px on the desktop one
-   * (1:320) — written out rather than taken from `--body-xs`, which is fluid(11px, 12px). That
-   * token's narrow anchor is already this label's drawn 11px, but its wide anchor is a pixel short
-   * of the 13 drawn here, and the shortfall is *not* the 1280-against-1440 undershoot every fluid
-   * token pays: measured at a 1440px viewport, where the token is at its wide anchor by definition,
-   * it renders 12.00 against the drawn 13. `--body-xs` is the floor of the shared body scale and has
-   * four consumers — `Text.size_xs`, `HeaderDisplaySection.metaItem`, `FieldCheckbox` and
-   * `FieldNumber` — so it cannot move at source for one label's sake. (It does **not** size the
-   * location chip below, as this note used to say; that is `--body-2xs`, the step under the scale's
-   * floor, and the note on `.location` sets out why.)
+   * The size is `--mono-eyebrow`, which is the design's own pair for this label — 11px on the mobile
+   * frame (1:471), 13px on the desktop one (1:320) — and **not** `--body-xs`, which is
+   * fluid(11px, 12px). That token's narrow anchor is already this label's drawn 11px, but its wide
+   * anchor is a pixel short of the 13 drawn here, and the shortfall is *not* the 1280-against-1440
+   * undershoot every fluid token pays: measured at a 1440px viewport, where the token is at its wide
+   * anchor by definition, it renders 12.00 against the drawn 13. `--body-xs` is the floor of the
+   * shared body scale and has four consumers — `Text.size_xs`, `HeaderDisplaySection.metaItem`,
+   * `FieldCheckbox` and `FieldNumber` — so it cannot move at source for one label's sake. (It does
+   * **not** size the location chip below, as this note used to say; that is `--body-2xs`, the step
+   * under the scale's floor, and the note on `.location` sets out why.)
+   *
+   * This rule wrote the pair as a literal until four rules across three sections were doing the
+   * same; it is a token now, on the same argument `--body-2xs` was promoted on. See
+   * `_variables.scss`.
    *
    * Tracking in `em` (2.6px on 13px and 2.2px on 11px are both 0.2em) so it stays proportional as
    * the fluid size moves — fixing the size therefore fixes the tracking with it.
@@ -271,7 +275,7 @@ $schedule-intro-measure: 20rem;
     --mono-line-height: var(--body-line-height);
 
     color: var(--fg-accent);
-    font-size: #{fluid(11px, 13px)};
+    font-size: var(--mono-eyebrow);
     margin: 0;
   }
 

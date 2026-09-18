@@ -118,12 +118,12 @@ $faq-inline-switch: 960px;
   /*
    * The two eyebrows share everything but their register and their visibility, so they share a rule.
    *
-   * `fluid(11px, 13px)` is the comps' pair exactly (13px on 16:638 and 16:716, ~11px on 16:731) and
-   * is the one length in this file that is *not* a `Text` `size` rung — the nearest is `--body-xs`,
-   * `fluid(11px, 12px)`. Kept rather than rounded because `ScheduleSection.eyebrow` and
-   * `TwoColumnListSection.eyebrow` are the same label on sibling pages at the same pair; the right
-   * fix is one shared eyebrow token across all four call sites, which is `/consolidate` work rather
-   * than a divergence introduced here.
+   * `--mono-eyebrow` is `fluid(11px, 13px)`, the comps' pair exactly (13px on 16:638 and 16:716,
+   * ~11px on 16:731). It is not a `Text` `size` rung — the nearest is `--body-xs`,
+   * `fluid(11px, 12px)`, a pixel short at the wide anchor — and this file used to write the literal,
+   * noting that `ScheduleSection.eyebrow` and `TwoColumnListSection.eyebrow` were the same label on
+   * sibling pages at the same pair and that one shared token across all four call sites was
+   * `/consolidate` work. It is now that token; see the note on it in `_variables.scss`.
    *
    * `--mono-line-height` re-pointed to the body ratio rather than the role's own 1.3, matching those
    * two — this is surrounding rhythm, not a drawn box. Note `inherit` would be wrong: on a custom
@@ -135,7 +135,7 @@ $faq-inline-switch: 960px;
   .footerEyebrow {
     --mono-line-height: var(--body-line-height);
 
-    font-size: #{fluid(11px, 13px)};
+    font-size: var(--mono-eyebrow);
     min-width: 0;
   }
 
