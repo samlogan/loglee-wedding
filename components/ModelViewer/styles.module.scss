@@ -302,6 +302,20 @@
   }
 
   /*
+   * Vertical swipes scroll the page, including ones that start on the character.
+   *
+   * With `orbit`, drei's `OrbitControls` writes `touch-action: none` inline onto the canvas's event
+   * layer — R3F's outer `div`, this holder's only child — which made the arch a patch of a phone
+   * screen that a vertical swipe could not scroll the page from. The orbit's polar range is under 30°,
+   * so a vertical drag barely moved the camera anyway: `pan-y` hands vertical gestures back to the
+   * browser and leaves horizontal drags, the half that turns the character, to the controls.
+   * `!important` because the declaration it overrides is an inline style the library sets after mount.
+   */
+  .canvasHolder > div {
+    touch-action: pan-y !important;
+  }
+
+  /*
    * The corner label (node 1:166) and the bottom-right readout (node 1:167).
    *
    * JetBrains Mono Regular — the comp's *quiet* mono register, not the tracked bold one the UI

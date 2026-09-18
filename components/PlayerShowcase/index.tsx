@@ -1,9 +1,11 @@
+import { stegaClean } from '@sanity/client/stega';
 import type { CSSProperties } from 'react';
 
 import Container from '@/components/Container';
 import Link from '@/components/Link';
 import ModelViewer from '@/components/ModelViewer';
 import PlayerCard from '@/components/PlayerCard';
+import Section from '@/components/Section';
 import Text from '@/components/Text';
 import formatOrdinal from '@/helpers/formatOrdinal';
 import type { ModelClipNames } from '@/helpers/modelClips';
@@ -49,10 +51,15 @@ const MODEL_LABEL = '3D canvas · dance';
  *
  * The comp runs the bar's rule edge to edge of the frame while everything else sits inside the
  * gutter — the same construction as the site header directly above it, whose rule is also full
- * width. So this is rendered in a `Section` with `full`, the rule sits on the full-width `nav`, and
- * the inset comes from a `Container` inside it and another around the stage, exactly as
+ * width. So the showcase renders its own `Section` with `full`, the rule sits on the full-width
+ * `nav`, and the inset comes from a `Container` inside it and another around the stage, exactly as
  * `components/Header` does it. Both containers are also the layout's query containers: they have
  * the same content width, so the one breakpoint means the same thing in the bar and in the stage.
+ *
+ * The `Section` is the showcase's own rather than the template's because the showcase depends on
+ * it: the name takes its ink from the `--fg-default` the section's theme sets, and the space beneath
+ * the stage is the section's bottom spacing. Owned here, every render — the page and each story —
+ * is the same composition, with no copy of it to drift.
  *
  * ## Reading order is the DOM order, at every width
  *
@@ -78,12 +85,33 @@ const MODEL_LABEL = '3D canvas · dance';
  * Every player field beyond the name and model is optional, and on the live dataset all of them are
  * empty. A missing eyebrow renders nothing rather than a gap, and a card with no stats and no level
  * is omitted entirely — `PlayerCard` would otherwise draw a lone header band with nothing beneath it.
+ *
+ * ## Tests run on clean strings; the page renders the encoded ones
+ *
+ * In draft mode `sanityFetch` sets `stega: true`, which appends an invisible payload to every plain
+ * string — the Presentation tool's click-to-edit map. So every *test* below reads a `stegaClean`
+ * copy while the markup keeps the original, the split `components/Footer` makes for the same reason.
+ * Without it three things go wrong, all of them only where an editor is looking:
+ *
+ * - the payload's alphabet includes U+FEFF, which `\s` matches, so the name's longest "word" is the
+ *   longest run of payload — 17 rather than 6 for "Lauren", measured through the client's own
+ *   encoder — and the name is fitted as though it were that long, at about a third of its size;
+ * - the clip names reach `ModelViewer`'s matcher encoded, match nothing in the GLB, and the
+ *   character renders in its bind pose instead of dancing;
+ * - blank is not blank once encoded: an empty or whitespace-only eyebrow or level still carries a
+ *   payload, so the emptiness tests pass and draw an empty eyebrow line, or the lone header band an
+ *   absent level and stat list are meant to leave out. The values render as authored, untrimmed;
+ *   HTML collapses the whitespace around them.
  */
 const PlayerShowcase = (props: PlayerShowcaseProps) => {
   const { className, player, roster } = props;
   const { clips, eyebrow, fallbackImage, level, model, name, slug, stats } = player;
 
-  // A roster that somehow omits this player still counts it, so the pager never reads "00 / 01".
+  /*
+   * `PLAYER_PAGE_QUERY` filters the player and the roster alike, so this player is always in it. The
+   * clamps are for a roster handed in by anything else: an empty one reads "01 / 01" rather than
+   * "01 / 00", and one without this player counts from the first entry rather than from -1.
+   */
   const total = Math.max(roster.length, 1);
   const index = Math.max(
     roster.findIndex((entry) => entry.slug === slug),
@@ -92,32 +120,37 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
   const position = `${formatOrdinal(index)} / ${formatOrdinal(total - 1)}`;
 
   const next = roster.length > 1 ? roster[(index + 1) % roster.length] : undefined;
-  const nextHref = next ? `/${next.slug}/` : undefined;
 
   /*
    * The longest run the display face has to hold on one line — a word cannot wrap, so it is the
    * longest word rather than the whole name that the column must fit. See `.name` in the styles.
    */
   const longestWord = Math.max(
-    ...name
+    ...stegaClean(name)
       .trim()
       .split(/\s+/)
       .map((word) => word.length),
     1
   );
 
-  const trimmedEyebrow = eyebrow?.trim();
-  const trimmedLevel = level?.trim();
+  const hasEyebrow = Boolean(eyebrow && stegaClean(eyebrow).trim());
+  const cardLevel = level && stegaClean(level).trim() ? level : undefined;
   const statList = stats ?? [];
-  const hasCard = statList.length > 0 || Boolean(trimmedLevel);
+  const hasCard = statList.length > 0 || Boolean(cardLevel);
 
+  /*
+   * Named "Switch player, Lauren" — the visible words in their visible order (WCAG 2.5.3), so a
+   * speech-input user saying what they see gets a match. The arrow is a symbol rather than a word,
+   * so it is left out rather than spoken as "right arrow" or translated into a "to" that splits the
+   * visible label in two.
+   */
   const switchControl = (placement: 'bar' | 'bottom') =>
-    next && nextHref ? (
+    next ? (
       <Link
-        ariaLabel={`Switch player to ${next.name}`}
+        ariaLabel={`Switch player, ${next.name}`}
         className={placement === 'bar' ? styles.switchBar : styles.switchBottom}
         fullWidth={placement === 'bottom'}
-        href={nextHref}
+        href={`/${next.slug}/`}
         mono
         outline
         size="sm"
@@ -129,7 +162,7 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
     ) : null;
 
   return (
-    <div className={className}>
+    <Section className={className} full name="player" removeTopSpacing spacing="md" theme="light">
       <nav aria-label="Player" className={styles.bar}>
         <Container className={styles.frame} width="xl">
           <div className={styles.barRow}>
@@ -140,6 +173,7 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
               <Text
                 as="span"
                 className={styles.pagerShort}
+                color="themeFgAccent"
                 size="xs"
                 text={`P ${position}`}
                 textTransform="uppercase"
@@ -148,6 +182,7 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
               <Text
                 as="span"
                 className={styles.pagerLong}
+                color="themeFgAccent"
                 size="xs"
                 text={`Player ${position}`}
                 textTransform="uppercase"
@@ -162,12 +197,12 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
       <Container className={styles.frame} width="xl">
         <div className={styles.stage}>
           <div className={styles.heading} style={{ '--player-name-length': longestWord } as CSSProperties}>
-            {trimmedEyebrow ? (
+            {hasEyebrow ? (
               <Text
                 as="p"
                 className={styles.eyebrow}
                 color="themeFgAccent"
-                text={trimmedEyebrow}
+                text={eyebrow}
                 textTransform="uppercase"
                 variant="mono"
                 weight="bold"
@@ -180,10 +215,12 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
             <ModelViewer
               alt={`${name}, dancing`}
               badge={model?.originalFilename ?? undefined}
-              clips={clips}
+              clips={stegaClean(clips)}
               fallbackImage={fallbackImage}
               label={MODEL_LABEL}
               orbit
+              // The page's hero. Only the fallback image can be an LCP candidate — see the prop.
+              priority
               restClip="feature"
               src={model?.url ?? undefined}
             />
@@ -191,14 +228,14 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
 
           {hasCard ? (
             <div className={styles.card}>
-              <PlayerCard level={trimmedLevel} stats={statList} />
+              <PlayerCard level={cardLevel} stats={statList} />
             </div>
           ) : null}
         </div>
 
         {switchControl('bottom')}
       </Container>
-    </div>
+    </Section>
   );
 };
 

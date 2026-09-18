@@ -139,7 +139,8 @@ const player = defineType({
       validation: (Rule) => Rule.required()
     },
     {
-      description: 'Used in the player page URL, e.g. "sam" becomes /sam.',
+      description:
+        'The player page this player appears on: "sam" for /sam, "lauren" for /lauren. Those pages are built in code, so a player with any other slug has no page and is left out of the player pages.',
       group: 'data',
       name: `slug`,
       options: {

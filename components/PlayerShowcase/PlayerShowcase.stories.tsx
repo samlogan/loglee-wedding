@@ -1,7 +1,8 @@
+import { stegaEncodeSourceMap } from '@sanity/client/stega';
+import type { ContentSourceMap } from '@sanity/client/stega';
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 
-import Section from '@/components/Section';
 import type { IPlayerStat } from '@/tools/sanity/schema/documents/player';
 
 import PlayerShowcase from '.';
@@ -23,18 +24,6 @@ const atWidth =
       <Story />
     </div>
   );
-
-/**
- * The page's own composition: `templates/PlayerTemplate` renders the showcase in exactly this
- * `Section`. Without it a story is not what the page shows — the name takes its ink from `Section`,
- * which sets `--fg-default` and which nothing in the showcase restates, so it drew black; and the
- * section's bottom spacing is the space beneath the stage, so there was none.
- */
-const inPlayerSection: Decorator = (Story) => (
-  <Section full name="player" removeTopSpacing spacing="md" theme="light">
-    <Story />
-  </Section>
-);
 
 /**
  * The comp's own card, verbatim — bracketed placeholders included, since that is what the design
@@ -94,6 +83,24 @@ const SAM_AS_PUBLISHED: PlayerShowcasePlayer = {
   stats: []
 };
 
+/**
+ * A player as the page receives it in draft mode, through the client's own stega encoder rather than
+ * a hand-rolled payload. The source map is the minimum `stegaEncodeSourceMap` needs: one document,
+ * and each string field mapped back to itself, which is the shape `sanityFetch` gets from the API.
+ */
+const inDraftMode = (player: PlayerShowcasePlayer): PlayerShowcasePlayer => {
+  const paths = ["$['name']", "$['eyebrow']", "$['level']", "$['clips']['feature']", "$['clips']['idle']"];
+  const sourceMap: ContentSourceMap = {
+    documents: [{ _id: `player-${player.slug}`, _type: 'player' }],
+    mappings: Object.fromEntries(
+      paths.map((path, index) => [path, { source: { document: 0, path: index, type: 'documentValue' }, type: 'value' }])
+    ),
+    paths
+  };
+
+  return stegaEncodeSourceMap(player, sourceMap, { enabled: true, studioUrl: '/studio' });
+};
+
 const stageIn = (el: HTMLElement) => el.querySelector<HTMLElement>(`.${styles.stage}`);
 
 /**
@@ -103,6 +110,24 @@ const stageIn = (el: HTMLElement) => el.querySelector<HTMLElement>(`.${styles.st
 const follows = (earlier: Node, later: Node) =>
   // eslint-disable-next-line no-bitwise -- DOCUMENT_POSITION_* is a bit mask by specification
   Boolean(earlier.compareDocumentPosition(later) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+/**
+ * A label reduced to its words, lowercased — punctuation and symbols such as the switch control's
+ * arrow dropped — which is what a speech-input user says and what WCAG 2.5.3 compares.
+ */
+const words = (label: string | null) =>
+  (label ?? '')
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .join(' ');
+
+/** The accessible name holds the visible words, in their visible order (WCAG 2.5.3). */
+const expectLabelInName = async (control: HTMLElement) => {
+  await expect(words(control.getAttribute('aria-label'))).toContain(words(control.textContent));
+};
+
 const trackCount = (el: HTMLElement) =>
   getComputedStyle(el)
     .gridTemplateColumns.split(' ')
@@ -111,7 +136,6 @@ const trackCount = (el: HTMLElement) =>
 const meta = {
   args: { player: SAM, roster: ROSTER },
   component: PlayerShowcase,
-  decorators: [inPlayerSection],
   parameters: {
     design: { type: 'figma', url: `${FIGMA}1-153` },
     layout: 'fullscreen'
@@ -151,9 +175,18 @@ export const Desktop: Story = {
 
     await expect(trackCount(stage)).toBe(2);
 
-    const switches = canvas.getAllByRole('link', { name: 'Switch player to Lauren' });
+    // Painted, not just counted: the model's column is the left one, and the name sits above the
+    // card to its right. Two tracks alone would pass with the areas swapped.
+    const heading = canvas.getByRole('heading', { level: 1 }).getBoundingClientRect();
+    const model = (canvasElement.querySelector(`.${styles.model}`) as HTMLElement).getBoundingClientRect();
+    const card = (canvasElement.querySelector(`.${styles.card}`) as HTMLElement).getBoundingClientRect();
+    await expect(model.right).toBeLessThanOrEqual(heading.left);
+    await expect(heading.bottom).toBeLessThanOrEqual(card.top);
+
+    const switches = canvas.getAllByRole('link', { name: 'Switch player, Lauren' });
     await expect(switches).toHaveLength(1);
     await expect(canvas.getByRole('navigation', { name: 'Player' })).toContainElement(switches[0]);
+    await expectLabelInName(switches[0]);
 
     await expect(canvas.getByText('Player 01 / 02')).toBeVisible();
     await expect(canvas.getByText('P 01 / 02')).not.toBeVisible();
@@ -169,9 +202,9 @@ export const Desktop: Story = {
 /**
  * Mobile, at the comp's 375px frame: one column, the switch at the foot, and the interleave.
  *
- * The order is asserted with `compareDocumentPosition`, which is tree order — the order a screen
- * reader and the Tab key follow — rather than with geometry, which a CSS reorder could satisfy
- * while leaving the reading order wrong.
+ * The order is asserted twice, because each check alone can pass while the other is wrong: with
+ * `compareDocumentPosition`, which is tree order — the order a screen reader and the Tab key follow
+ * — and with geometry, which is the order a sighted reader gets. A CSS reorder moves only the second.
  */
 export const Mobile: Story = {
   decorators: [atWidth('23.4375rem')],
@@ -189,10 +222,15 @@ export const Mobile: Story = {
     await expect(follows(heading, model)).toBe(true);
     await expect(follows(model, card)).toBe(true);
 
+    // And painted in that order too — tree order alone would not catch a stray CSS `order:`.
+    await expect(heading.getBoundingClientRect().bottom).toBeLessThanOrEqual(model.getBoundingClientRect().top);
+    await expect(model.getBoundingClientRect().bottom).toBeLessThanOrEqual(card.getBoundingClientRect().top);
+
     // One switch control in the tree, and it is the bottom copy rather than the bar's.
-    const switches = canvas.getAllByRole('link', { name: 'Switch player to Lauren' });
+    const switches = canvas.getAllByRole('link', { name: 'Switch player, Lauren' });
     await expect(switches).toHaveLength(1);
     await expect(canvas.getByRole('navigation', { name: 'Player' })).not.toContainElement(switches[0]);
+    await expectLabelInName(switches[0]);
 
     await expect(canvas.getByText('P 01 / 02')).toBeVisible();
     await expect(canvas.getByText('Player 01 / 02')).not.toBeVisible();
@@ -216,9 +254,62 @@ export const SecondPlayer: Story = {
 
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent(/^Lauren$/);
     await expect(canvas.getByText('Player 02 / 02')).toBeVisible();
-    await expect(canvas.getByRole('link', { name: 'Switch player to Sam' })).toHaveAttribute('href', '/sam/');
+    await expect(canvas.getByRole('link', { name: 'Switch player, Sam' })).toHaveAttribute('href', '/sam/');
     await expect(canvasElement).toHaveTextContent(/lauren\.glb/i);
     await expect(canvasElement).not.toHaveTextContent(/sam\.glb/i);
+  }
+};
+
+/**
+ * The longest name at the narrowest width: fitted to its column rather than broken mid-word.
+ *
+ * At display `lg` unfitted, "LAUREN" broke "LAURE / N". 320px is WCAG 1.4.10's reflow width and
+ * the narrowest phone, and it is also the width that makes this a regression test in the
+ * component-test runner: the tier is fluid on the *viewport*, and the runner's is 414px, where the
+ * name fits a 1280px showcase with or without the fit. A 320px showcase leaves the name a column of
+ * under 280px, which six unfitted capitals overrun at any viewport from about 383px up — 12px over
+ * at the runner's 414.
+ */
+export const LongName: Story = {
+  args: { player: LAUREN },
+  decorators: [atWidth('20rem')],
+  play: async ({ canvasElement }) => {
+    const heading = within(canvasElement).getByRole('heading', { level: 1 });
+    const box = heading.getBoundingClientRect();
+
+    // One line — `overflow-wrap: anywhere` would break an overlong word onto a second one.
+    await expect(box.height).toBeLessThan(Number.parseFloat(getComputedStyle(heading).lineHeight) * 1.5);
+
+    // And the ink stays inside the column rather than spilling past the gutter.
+    const ink = document.createRange();
+    ink.selectNodeContents(heading);
+    await expect(ink.getBoundingClientRect().width).toBeLessThanOrEqual(box.width + 0.5);
+  }
+};
+
+/**
+ * Draft mode — the Presentation tool, which is where an editor looks at this page.
+ *
+ * `sanityFetch` stega-encodes every plain string there, blank ones included, and the showcase tests
+ * clean copies while rendering the encoded ones. Measured on the encoded name, the fit read
+ * "Lauren" as a 17-letter word; tested on the encoded blanks, the eyebrow drew an empty line and
+ * the card its lone header band.
+ */
+export const DraftMode: Story = {
+  args: { player: inDraftMode({ ...LAUREN, eyebrow: ' ', level: ' ', stats: [] }) },
+  play: async ({ canvasElement }) => {
+    const heading = within(canvasElement).getByRole('heading', { level: 1 });
+
+    // Rendered encoded — the payload is what lets the overlay map the name back to its field…
+    await expect((heading.textContent ?? '').length).toBeGreaterThan('Lauren'.length);
+
+    // …and fitted clean, as the six letters a reader sees.
+    const column = heading.parentElement as HTMLElement;
+    await expect(column.style.getPropertyValue('--player-name-length')).toBe('6');
+
+    // A blank eyebrow and a blank level stay blank, payload or not.
+    await expect(canvasElement.querySelector(`.${styles.eyebrow}`)).toBeNull();
+    await expect(canvasElement.querySelector(`.${styles.card}`)).toBeNull();
   }
 };
 
@@ -244,7 +335,7 @@ export const AsPublished: Story = {
     // The page still works without its content: the model and the way back and onward are intact.
     await expect(canvasElement.querySelector(`.${styles.model}`)).not.toBeNull();
     await expect(canvas.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
-    await expect(canvas.getByRole('link', { name: 'Switch player to Lauren' })).toHaveAttribute('href', '/lauren/');
+    await expect(canvas.getByRole('link', { name: 'Switch player, Lauren' })).toHaveAttribute('href', '/lauren/');
   }
 };
 

@@ -61,11 +61,11 @@
    * `flex` so the paragraph sets no line box of its own. Its spans are `xs`, but a block holding
    * inline content still gets a strut at its *own* font size — the inherited 16px body — which
    * would stand the pager ~24px tall and make it, not the controls, the tallest thing in the bar.
+   * Its ink is each span's `color` prop, as the eyebrow's is.
    */
   .pager {
     display: flex;
     margin: 0;
-    color: var(--fg-accent);
     white-space: nowrap;
   }
 
@@ -161,10 +161,13 @@
 
   /*
    * The section eyebrow's drawn pair — 13 at 1280, 11 at 390 — which is exactly `--mono-eyebrow`,
-   * deliberately not a `Text` size rung (see the token). 4px to the name, where the comp draws 6 and
-   * 4; the display face's line box adds the rest above the caps.
+   * deliberately not a `Text` size rung (see the token), with the body leading every eyebrow call
+   * site re-points alongside it: an eyebrow is surrounding rhythm, not a drawn box. 4px to the name,
+   * where the comp draws 6 and 4; the two line boxes add the rest above the caps.
    */
   .eyebrow {
+    --mono-line-height: var(--body-line-height);
+
     margin: 0 0 var(--spacing-xxs);
     font-size: var(--mono-eyebrow);
   }
@@ -184,13 +187,12 @@
    * cannot out-specify. Leading and tracking are `em` and unitless, so they follow the size.
    *
    * `overflow-wrap: anywhere` stays as the last resort for a word wider than the estimate — a run of
-   * Ws — so it breaks inside the column rather than spilling out of it, and `min-width: 0` lets it
-   * wrap there instead of widening the track.
+   * Ws — so it breaks inside the column rather than spilling out of it. The column holds because
+   * `.heading` has `min-width: 0` and inline-size containment, and the tracks are `minmax(0, …)`.
    */
   .name {
     --display-lg: min(var(--player-name-tier), 100cqi / (var(--player-name-length, 1) * 0.8));
 
-    min-width: 0;
     margin: 0;
     overflow-wrap: anywhere;
   }
@@ -206,11 +208,13 @@
   }
 
   /*
-   * The foot copy is the comp's full-width action: the `sm` control's label in a box as tall as the
-   * `lg` control's — 52px drawn at 390 (node 1:275), against the 33px `sm` makes on its own. A
-   * minimum height rather than padding, because padding is `Button`'s own local and a rule here
-   * setting it would tie with `.size_sm` on specificity, which `components/Button` documents; nothing
-   * in `Button` sets a minimum height, and its inline-flex box centres the label in whatever it gets.
+   * The foot copy is the comp's full-width action: the `sm` control's label inside the `lg`
+   * control's block padding and border — 52px drawn at 390 (node 1:275), ~50 here because the line
+   * between the paddings is `sm`'s, against the 33px `sm` makes on its own and the 44px a thumb
+   * wants at the foot of a page. A minimum height rather than padding, because padding is `Button`'s
+   * own local and a rule here setting it would tie with `.size_sm` on specificity, which
+   * `components/Button` documents; nothing in `Button` sets a minimum height, and its inline-flex
+   * box centres the label in whatever it gets.
    *
    * The stage's row gap above it, which is what the comp draws (20 below the model, 20 below the
    * card), and nothing below: the section's bottom spacing is the space beneath it.
