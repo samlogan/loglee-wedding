@@ -1,0 +1,147 @@
+@layer defaults {
+  /*
+   * The one layout switch, and it is `px` rather than `rem` deliberately.
+   *
+   * Crossing it *hides* things — the inactive copy of the switch control and the inactive pager
+   * label — and a `rem` threshold inside a container query resolves against the live root font
+   * size, so a text-size increase alone would cross it and delete content (WCAG 1.4.4). The rule is
+   * stated once in `tools/sass/base/__media.scss`: `px` where crossing hides, `rem` where it only
+   * reflows. Both of this batch's section tickets hit exactly that failure before settling on `px`.
+   *
+   * 900px because the card column must clear `PlayerCard`'s own two-column switch (460px) at the
+   * comp's 520:624 column split with its gap, which it first does at about 899px. Below that the
+   * right column would hold a single-column card beside the model, which is neither comp.
+   */
+  $player-showcase-inline-switch: 900px;
+
+  .showcase {
+    container: playerShowcase / inline-size;
+  }
+
+  /*
+   * Back, pager, switch. Mobile has two items and spreads them to the edges; desktop has three and
+   * centres the pager with a symmetric grid — `space-between` would only centre it if the back link
+   * and the switch control were the same width, and they are not.
+   */
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    padding-block: var(--spacing-md);
+    border-block-end: 1px solid var(--stroke-cards);
+
+    @container playerShowcase (min-width: #{$player-showcase-inline-switch}) {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+    }
+  }
+
+  .back {
+    justify-self: start;
+  }
+
+  .pager {
+    margin: 0;
+    color: var(--fg-accent);
+    white-space: nowrap;
+  }
+
+  /*
+   * One control, two labels — and the same for the switch below. Written mobile-first, with one
+   * unconditional default and the other swapped in above the switch, rather than as two symmetric
+   * `display: none` rules. A container query cannot be evaluated before its container is laid out,
+   * so on the first style pass *neither* query matches; two symmetric rules would paint both copies
+   * for that frame. `components/Header` hit exactly this ("RSVP BY 01.12.26RSVP") and documents it.
+   *
+   * `display: none` rather than a visually-hidden technique because it is the one that also takes
+   * the inactive copy out of the accessibility tree and the tab order. The project has no sr-only
+   * utility, deliberately.
+   */
+  .pagerLong {
+    display: none;
+  }
+
+  .switchBar {
+    display: none;
+    justify-self: end;
+  }
+
+  @container playerShowcase (min-width: #{$player-showcase-inline-switch}) {
+    .pagerShort {
+      display: none;
+    }
+
+    .pagerLong {
+      display: inline;
+    }
+
+    .switchBar {
+      display: inline-flex;
+    }
+
+    .switchBottom {
+      display: none;
+    }
+  }
+
+  /*
+   * The interleave. DOM order is heading → model → card, which is the mobile reading order, and
+   * desktop places the same three children into two columns by area rather than wrapping them in
+   * column containers. The model spans both rows on the left; the heading and card stack on the
+   * right. `align-items: start` keeps the columns at independent heights, as the comp draws them —
+   * nothing stretches to match its neighbour.
+   */
+  .stage {
+    display: grid;
+    grid-template-areas:
+      'heading'
+      'model'
+      'card';
+    gap: var(--spacing-xl);
+    align-items: start;
+    padding-block: var(--spacing-xl);
+
+    @container playerShowcase (min-width: #{$player-showcase-inline-switch}) {
+      grid-template-areas:
+        'model heading'
+        'model card';
+      grid-template-columns: minmax(0, 520fr) minmax(0, 624fr);
+      grid-template-rows: auto 1fr;
+      column-gap: var(--spacing-2xl);
+    }
+  }
+
+  .heading {
+    grid-area: heading;
+    min-width: 0;
+  }
+
+  .eyebrow {
+    margin: 0 0 var(--spacing-xs);
+  }
+
+  /*
+   * `min-width: 0` lets a long name wrap inside its column instead of widening the grid track. The
+   * display face is set very large, so a single unbroken word is the realistic overflow case.
+   */
+  .name {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .model {
+    grid-area: model;
+    min-width: 0;
+  }
+
+  .card {
+    grid-area: card;
+    min-width: 0;
+  }
+
+  .switchBottom {
+    margin-block-end: var(--spacing-xl);
+  }
+}

@@ -1,6 +1,7 @@
 import { groq } from 'next-sanity';
 
 import buttonProjection from '../projections/common/button.groq';
+import imageProjection from '../projections/common/image.groq';
 import linkProjection from '../projections/common/link.groq';
 import pageProjection from '../projections/documents/page.groq';
 
@@ -87,3 +88,32 @@ export const SITEMAP_QUERY = groq`
     pathname
   }
 `;
+
+/**
+ * One player plus the roster, for `templates/PlayerTemplate`.
+ *
+ * The roster is fetched alongside rather than derived per route because both the pager ("01 / 02")
+ * and the switch control ("→ Lauren") are facts about the *set* of players, and `order` — not
+ * route order or file order — is what the Studio says the sequence is. Two players today; the
+ * pager and switch are written against the roster's length, so a third needs no code change.
+ *
+ * `originalFilename` is projected for `ModelViewer`'s file-name chip, which must name the file this
+ * player actually loads. The comp prints `sam-dance.glb` on both players' layouts; read from the
+ * asset, Lauren's page cannot show Sam's file.
+ */
+export const PLAYER_PAGE_QUERY = groq`{
+  "player": *[_type == "player" && slug.current == $slug][0]{
+    name,
+    "slug": slug.current,
+    eyebrow,
+    level,
+    clips,
+    stats,
+    "model": model.asset->{ url, originalFilename },
+    fallbackImage${imageProjection}
+  },
+  "roster": *[_type == "player" && defined(slug.current)] | order(order asc){
+    name,
+    "slug": slug.current
+  }
+}`;
