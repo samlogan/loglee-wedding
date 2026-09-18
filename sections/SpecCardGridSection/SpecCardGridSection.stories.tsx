@@ -195,6 +195,40 @@ const trackCountOf = (grid: HTMLElement) => getComputedStyle(grid).gridTemplateC
 // ---------------------------------------------------------------------------
 
 /**
+ * **The section at the canvas's own width — how it behaves on a real page, with no wrapper at all.**
+ *
+ * Every other story here pins a width, because the two switches are container queries and a wrapper
+ * is the only way to drive them in one browser page. That is also their limitation: a fixed 1240px
+ * or 390px wrapper *overflows* a viewport narrower than itself, so none of them can answer "does
+ * this reflow at 320px?" — the first attempt at that check reported a horizontal scrollbar that the
+ * story had created and the section had not.
+ *
+ * This one has no decorator, so it is the story to resize, to screenshot for a design review at a
+ * stated viewport, and to measure reflow against. It asserts the part that must hold at every width:
+ * nothing escapes the viewport, and the track count is whatever the container honestly resolved.
+ */
+export const Fluid: Story = {
+  args: data,
+  play: async ({ canvasElement }) => {
+    await waitFor(async () => {
+      const grid = gridIn(canvasElement);
+      const tracks = trackCountOf(grid);
+
+      // Whatever the canvas is, the grid resolved a legal track count and nothing overflows it.
+      await expect([1, 2, 3]).toContain(tracks);
+      await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth + 1);
+
+      // The grid fills its container rather than sitting in a fixed-width box of its own.
+      const container = grid.parentElement as HTMLElement;
+      await expect(grid.getBoundingClientRect().width).toBeCloseTo(
+        container.getBoundingClientRect().width - 2 * Number.parseFloat(getComputedStyle(container).paddingLeft),
+        0
+      );
+    });
+  }
+};
+
+/**
  * The drawn desktop grid: three cards in a row at 1240px of wrapper.
  *
  * The drawn frame is 1280px wide with 40px gutters, i.e. a 1200px content box. 1240px is used here
@@ -289,14 +323,26 @@ export const Mobile: Story = {
       await expect(trackCountOf(gridIn(canvasElement))).toBe(1);
 
       /*
-       * **The AC, stated as an inequality.** Every card hugs its own content, so the three heights
-       * are three different numbers — which is exactly what a fixed card height or an accidental
-       * `stretch` across the column would flatten.
+       * **The AC, stated as an inequality.** Each card hugs its own content, so the tallest is
+       * taller than the shortest — which is exactly what a fixed card height, or `stretch` reaching
+       * across a single column, would flatten.
        *
-       * Asserted pairwise rather than as "not all equal", so a regression says which pair merged.
+       * Only the first-versus-third pair is asserted, and that restraint is the point. The first
+       * draft also claimed `cards[1] > cards[0]`, which holds at the runner's own width and fails at
+       * 320px, where the smaller end of every fluid type token lets both of those descriptions fit
+       * in two lines. That assertion was encoding an accident of line wrapping rather than the
+       * behaviour under test. The third card's copy is two sentences longer than the first's and is
+       * taller at every width a single column can produce.
        */
-      await expect(heightOf(cards[1])).toBeGreaterThan(heightOf(cards[0]));
-      await expect(heightOf(cards[2])).toBeGreaterThan(heightOf(cards[1]));
+      await expect(heightOf(cards[2])).toBeGreaterThan(heightOf(cards[0]));
+
+      /*
+       * The same fact from the other side, and the exact inverse of `Default`: the footers do **not**
+       * share a `y`. `Default` proves the mechanism fires in a row; this proves it does not fire
+       * where the design says it should not.
+       */
+      const footers = footersIn(canvasElement);
+      await expect(topOf(footers[2])).toBeGreaterThan(topOf(footers[0]));
 
       /*
        * The stacked cards are a column, not a squeezed row: each starts below the one before it by

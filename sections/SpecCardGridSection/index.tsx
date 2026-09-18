@@ -139,11 +139,21 @@ const SpecCardGridSection: FC<ISpecCardGridSection> = (props) => {
        * one `scheduleSection` and `twoColumnListSection` both state.
        *
        * Bottom is drawn 48px desktop (1:630) and 24px mobile (1:700 is 1064 tall and its last card
-       * ends at 1040). `--section-spacing-sm` is `fluid(16px, 48px)`, which lands 43px at the 1280
-       * frame and 17px at the 392 one; `md` would land 58px and 25px. Neither token is the drawn
-       * pair, and `sm` is the one the band immediately above this on `/stay`
-       * (`headerDisplaySection`) already uses — so the page keeps one rhythm rather than two, which
-       * matters more here than five pixels at the desktop anchor.
+       * ends at 1040). The drawn pair extrapolates to about `fluid(24px, 52px)` on the scale's own
+       * 375→1440 anchors, and **no token is that pair**. Measured in the browser rather than
+       * calculated:
+       *
+       *                     375px    1280px   1440px
+       *   drawn               24        48        —
+       *   `sm` (this)         16        43.2      48
+       *   `md`                24.9      57.6      64
+       *
+       * `sm` is the choice because its worst case is 7px under at the phone while `md`'s is 16px
+       * over at the desktop anchor, and because `sm` is exactly what the band immediately above this
+       * on `/stay` (`headerDisplaySection`) already uses — so the page keeps one rhythm rather than
+       * two. The phone shortfall is the known cost, and it is a cost rather than a bug: there is no
+       * per-breakpoint section spacing, and hand-writing the padding here would take the editor's
+       * remove-spacing toggles out of the loop.
        *
        * The editor's two remove-spacing toggles stay wired through the spread. `removeTopSpacing`
        * has nothing to remove today, and dropping the spread to say so would take the control away
