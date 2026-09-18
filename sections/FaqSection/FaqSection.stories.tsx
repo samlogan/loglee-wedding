@@ -303,6 +303,61 @@ export const MapOverlays: Story = {
 };
 
 /**
+ * **The map bar's two mono runs, measured** — the pair of overrides that had to fight
+ * `components/Button` for their own values, and had no test.
+ *
+ * The bar holds an address and an "open in maps" link, drawn at the same 11px in the same Bold
+ * register at the same 0.1em (nodes 16:648, 16:650). Only one of them is a control, and that is
+ * where all the difficulty is: `Button`'s `.mono` sets a label's tracking from the button ladder's
+ * 0.08em, and `.variant_bare` sets the *quiet* Medium register — both correct for a "← BACK" and
+ * both wrong here.
+ *
+ * `.variant_bare` used to declare the consumer's own property names, so the section's re-point tied
+ * with it on specificity and the winner came down to CSS-module emission order — a value that is
+ * right in Next and could flip in Storybook, or on the next bundler reshuffle, with nothing to
+ * notice it by. `Button`'s mono axis now splits each hook into a consumer name it never declares and
+ * a `-default` it does, which is the idiom `Tag` and `MediaCard` already use, so the two lines in
+ * `.mapLink` win unconditionally.
+ *
+ * Asserted rather than argued, because "the right value by accident of import order" and "the right
+ * value" look identical in a screenshot — and because the whole point of the change is that the
+ * result no longer depends on something a test can only observe indirectly.
+ */
+export const MapBarTypography: Story = {
+  args: data,
+  decorators: [atWidth('1200px')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const address = canvas.getByText(data.map?.address as string);
+    const link = canvas.getByRole('link', { name: data.map?.link?.label as string });
+
+    await waitFor(async () => {
+      for (const run of [address, link]) {
+        const style = getComputedStyle(run);
+
+        await expect(style.fontFamily).toContain('JetBrains Mono');
+        // Bold on both — the address via `Text`'s `weight`, the link via `--button-mono-weight`.
+        await expect(style.fontWeight).toBe('700');
+
+        /*
+         * 0.1em — the *quiet* register's tracking at the loud weight, which is what the comp draws
+         * (1.1px on 11px) and neither component's default. `--body-2xs` is fluid(10px, 11px), so the
+         * expected tracking is a tenth of whatever the size resolved to at this width.
+         */
+        const size = Number.parseFloat(style.fontSize);
+        await expect(size).toBeGreaterThanOrEqual(10);
+        await expect(size).toBeLessThanOrEqual(11);
+        await expect(Number.parseFloat(style.letterSpacing)).toBeCloseTo(size * 0.1, 1);
+      }
+    });
+
+    // The card's only accent, and the other half of the `a.mapLink` element selector: the link must
+    // not resolve to the same ink as the address beside it.
+    await expect(getComputedStyle(link).color).not.toBe(getComputedStyle(address).color);
+  }
+};
+
+/**
  * Desktop: the rail beside the accordion, at the design's own 1200px content box (node 16:610 is a
  * 1280px frame with 40px gutters).
  */
