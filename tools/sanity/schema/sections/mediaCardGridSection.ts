@@ -1,0 +1,300 @@
+import { TbLayoutGrid } from 'react-icons/tb';
+import { defineType } from 'sanity';
+import type { FieldDefinition } from 'sanity';
+
+import thumbnail from '../../../../sections/MediaCardGridSection/thumbnail.png';
+import ReadOnlyImageInput from '../../components/ReadOnlyImageInput';
+import stripTitleTags from '../../helpers/stripTitleTags';
+import defaultSectionGroups from '../common/defaultSectionGroups';
+import internalLabelField from '../common/internalLabelField';
+
+/**
+ * A grid of `components/MediaCard`s — a photograph with a caption chip, a name, a category, a
+ * paragraph, and a rule with short mono items under it.
+ *
+ * Drawn as the feature-venue pair on `/the-lodge` (nodes `16:134` desktop, `16:282` mobile): Lulu's
+ * light and bordered, Fin's Bar dark and filled, side by side.
+ *
+ * ## The theme is on the card, not on the section
+ *
+ * Unusual here — `sectionFields.themeOptions.theme` is section-level and every other section takes
+ * its theme from it. This one keeps that field (it still paints the surface the cards sit on) and
+ * adds a per-card override, because the design's whole point is a light card beside a dark one.
+ *
+ * It costs nothing to model: `MediaCard` writes `data-theme` on its own root and the entire
+ * `[data-theme]` block in `_variables.scss` re-points beneath it — fill, border, hairline, body ink,
+ * label accent and caption chip all move together, because nothing in that stylesheet names a
+ * colour. So the field is a plain two-value string wired straight to the prop. Left unset, the card
+ * inherits the section's theme, which is what a single-theme grid wants and is therefore the
+ * default.
+ *
+ * ## Hours are a repeatable list of strings
+ *
+ * Not one field and not a structured open/close pair. The design draws "LUNCH 12PM–3PM" beside
+ * "DINNER 5PM–10PM" on one card and "OPEN 12PM – LATE" alone on the other — two ranges on one day,
+ * and a range with no closing time. A `{ opens, closes }` object cannot express "late", cannot
+ * express two sittings without becoming an array anyway, and forces a format on copy that is
+ * deliberately written as prose. An array of short strings is the smallest thing that holds all
+ * three.
+ *
+ * ## The heading row is optional and unset on `/the-lodge`
+ *
+ * `tagline` / `title` / `content` sit above the grid and render only when filled. The drawn region
+ * has no heading — the "BETWEEN EVENTS" row below the cards belongs to the facilities grid, not to
+ * this section. They are here because an editor expects a heading to travel with the grid it heads
+ * rather than to be a second section they must remember to place, and because every other grid-style
+ * section in this repo carries one. Leave them blank to reproduce `/the-lodge`.
+ */
+interface IMediaCardGridSectionCard {
+  _key: string;
+  /**
+   * The chip inset at the bottom-left of the photograph (`16:137`, `16:152`).
+   *
+   * Reproduced verbatim — the design fills it with file names as often as with prose, and a file
+   * name has to render as stored. `components/Tag` applies no `text-transform` here for that reason.
+   */
+  caption?: string;
+  /** The paragraph between the name and the rule. */
+  content?: SanityTextBlock[];
+  /**
+   * The row under the hairline — one short item per entry, laid inline side by side.
+   *
+   * Unbounded and allowed to be empty: the AC requires a card with one item and a card with none,
+   * and `MediaCard` renders no footer *and no hairline* for an empty array.
+   */
+  hours?: string[];
+  image?: SanityImage;
+  /**
+   * The category, right-aligned against the name on the same baseline — "Restaurant", "Cocktails".
+   *
+   * Stored sentence case and uppercased in CSS. Short literal all-caps runs are what screen readers
+   * most often spell out letter by letter, and `text-transform` already guarantees the display.
+   */
+  label?: string;
+  /**
+   * Per-card light/dark. Unset inherits the section's theme.
+   *
+   * Typed as the literal pair rather than as `ProjectTheme` so the schema's `list` and this
+   * interface cannot drift; they are the same two values for the same reason CLAUDE.md gives — this
+   * design system has two themes.
+   */
+  theme?: 'light' | 'dark';
+  /** The venue name, as the markup string `TitleInput` stores. */
+  title?: string;
+}
+
+interface IMediaCardGridSection {
+  cards?: IMediaCardGridSectionCard[];
+  content?: SanityTextBlock[];
+  tagline?: string;
+  title?: string;
+}
+
+/*
+ * Inline in the array's `of`, following `scheduleSection`'s day and event objects rather than
+ * `gridCard`'s exported sub-type. A sub-type exported alongside the section is **not derivable from
+ * the folder name**, so `yarn sections:register` cannot write its entry in
+ * `tools/sanity/schema/index.ts` — it only warns, and the hand-widened import is narrowed again by
+ * the next run. Inline, there is nothing to register and nothing to lose.
+ */
+const cardFields: FieldDefinition[] = [
+  {
+    description:
+      'The photograph across the top of the card. Landscape — the card crops to a fixed band height so every card in a row lines up, whatever the asset’s own ratio.',
+    name: 'image',
+    title: 'Image',
+    type: 'imageElementAdvanced'
+  },
+  {
+    description:
+      'The small chip sitting on the bottom-left of the photograph — “IMAGE · lulus-interior.jpg · ceiling murals”. Optional, and shown only when there is an image. Reproduced exactly as typed.',
+    name: 'caption',
+    title: 'Image Caption',
+    type: 'string'
+  },
+  {
+    description:
+      'The venue name — “Lulu’s”. Rendered in the display face at the card’s own size; the level selector beside this field chooses the heading level for the page outline.',
+    name: 'title',
+    options: { defaultTag: 'h3' as const },
+    title: 'Name',
+    type: 'title',
+    validation: (Rule) =>
+      Rule.required().custom((value?: string) => (stripTitleTags(value ?? '').trim() ? true : 'Name cannot be blank'))
+  },
+  {
+    /*
+     * Capped, and the cap is a real constraint rather than tidiness.
+     *
+     * `MediaCard` draws this with `flex: 0 0 auto`, so it cannot shrink, and `overflow-wrap` does not
+     * reach a box that refuses to give up width. A long category therefore pushes the name out of
+     * the header row and is then clipped mid-word by the card's own `overflow: hidden` — silently,
+     * with no ellipsis and no scrollbar. The section sets `overflow-wrap: anywhere` on each grid
+     * item, which covers the name, the description, the hours and the caption; this field is the one
+     * the property cannot help.
+     *
+     * 12, against drawn values of "Restaurant" (10) and "Cocktails" (9), so the comp passes with
+     * headroom. `.warning()` and not `.error()`: the failure is a squeeze on a narrow card at a
+     * raised root font size, not a broken document, and an editor with a genuinely long category
+     * should be told rather than blocked.
+     */
+    description:
+      'The category, shown small and right-aligned beside the name — “Restaurant”, “Cocktails”. Optional. Keep it short: it sits on one line beside the name and cannot wrap. Type it in normal sentence case; it is displayed in uppercase automatically.',
+    name: 'label',
+    title: 'Category',
+    type: 'string',
+    validation: (Rule) => Rule.max(12).warning('Longer than about 12 characters crowds the name it sits beside.')
+  },
+  {
+    description: 'A short paragraph under the name. Optional — the card closes up around it.',
+    name: 'content',
+    title: 'Description',
+    type: 'blockContentSimple'
+  },
+  {
+    /*
+     * Plain strings, following `headerDisplaySection.items` and `twoColumnListSection.items` — every
+     * item the design draws is one short line with nothing to hang a second field on.
+     *
+     * No `layout: 'tags'`: these read as a sentence fragment ("Lunch 12pm–3pm"), and a tags input
+     * gives each one a chip-width box. The default array layout gives a proper repeater.
+     */
+    description:
+      'The row under the rule — one entry per item, laid side by side. “Lunch 12pm–3pm”, “Open 12pm – late”. Optional; a card with none simply has no rule. Type them in sentence case; they are displayed in uppercase automatically.',
+    name: 'hours',
+    of: [{ type: 'string' }],
+    title: 'Hours',
+    type: 'array',
+    /*
+     * The component keys these by their own text, because an editor reorders them in place and an
+     * index key would leave the old text in the old node. The rule and the key move together — and
+     * the component still disambiguates duplicates itself, because a `Rule.unique()` is publish-time
+     * and Presentation renders drafts.
+     */
+    validation: (Rule) => Rule.unique()
+  },
+  {
+    /*
+     * In the Data group rather than Styles, deliberately. Every other theme control in this repo is
+     * a section-level style; this one is a property of the individual venue — Fin's Bar is the dark
+     * room — so it belongs beside the copy that describes it, where an editor filling the card in
+     * will meet it.
+     */
+    description:
+      'Light or dark, per card. Leave unset to follow the section’s own theme — set it only where the design puts a dark card beside a light one.',
+    name: 'theme',
+    options: {
+      direction: 'horizontal' as const,
+      layout: 'radio' as const,
+      list: [
+        { value: 'light', title: 'Light' },
+        { value: 'dark', title: 'Dark' }
+      ]
+    },
+    title: 'Card Theme',
+    type: 'string'
+  }
+];
+
+const mediaCardGridSection = defineType({
+  fields: [
+    internalLabelField,
+    {
+      name: 'sectionPreview',
+      title: 'Section Preview',
+      type: 'image',
+      components: { input: ReadOnlyImageInput },
+      // @ts-expect-error -- `imageUrl` is read by ReadOnlyImageInput, not by Sanity's image type
+      imageUrl: thumbnail.src,
+      readOnly: true,
+      group: 'internal'
+    },
+    {
+      description:
+        'A small label above the heading. Optional, and unset on The Lodge. Type it in normal sentence case; it is displayed in uppercase automatically.',
+      group: 'data',
+      name: 'tagline',
+      title: 'Tagline',
+      type: 'string'
+    },
+    {
+      description:
+        'A heading above the grid. Optional — leave it blank and the grid starts at the top of the section, which is how The Lodge is drawn.',
+      group: 'data',
+      name: 'title',
+      options: { defaultTag: 'h2' as const },
+      title: 'Title',
+      type: 'title'
+    },
+    {
+      description: 'A short paragraph under the heading. Optional.',
+      group: 'data',
+      name: 'content',
+      title: 'Body',
+      type: 'blockContentSimple'
+    },
+    {
+      /*
+       * Unbounded, per the AC — no `max()`. The grid is two columns down to the tablet breakpoint and
+       * one below it, so a third and fourth card wrap onto a second row rather than squeezing the
+       * first.
+       *
+       * `min(1)` rather than `required()`: an array field that is present but empty satisfies
+       * `required()`, and this section renders nothing at all without cards.
+       */
+      description: 'The cards, in the order they should read. Two per row on desktop, stacked on mobile.',
+      group: 'data',
+      name: 'cards',
+      of: [
+        {
+          fields: cardFields,
+          name: 'mediaCardGridCard',
+          preview: {
+            prepare(selection: { label?: string; theme?: string; title?: string }) {
+              return {
+                subtitle: [selection?.label, selection?.theme === 'dark' && 'Dark'].filter(Boolean).join(' · '),
+                title: stripTitleTags(selection?.title) || 'Card'
+              };
+            },
+            select: { label: 'label', theme: 'theme', title: 'title' }
+          },
+          title: 'Card',
+          type: 'object'
+        }
+      ],
+      title: 'Cards',
+      type: 'array',
+      validation: (Rule) => Rule.min(1)
+    },
+    {
+      group: 'styles',
+      name: 'sectionFields',
+      title: 'Section Fields',
+      type: 'sectionFields'
+    }
+  ],
+  groups: defaultSectionGroups,
+  icon: TbLayoutGrid,
+  name: 'mediaCardGridSection',
+  preview: {
+    prepare(selection: { cards?: IMediaCardGridSectionCard[]; internalLabel?: string; title?: string }) {
+      const count = selection?.cards?.length ?? 0;
+      const detail = `${count} card${count === 1 ? '' : 's'}`;
+
+      return {
+        subtitle: selection?.internalLabel || detail,
+        title: stripTitleTags(selection?.title) || 'Media Card Grid'
+      };
+    },
+    select: {
+      cards: 'cards',
+      internalLabel: 'internalLabel',
+      title: 'title'
+    }
+  },
+  title: 'Media Card Grid',
+  type: 'object'
+});
+
+export { mediaCardGridSection };
+export type { IMediaCardGridSection, IMediaCardGridSectionCard };
