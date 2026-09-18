@@ -7,6 +7,7 @@ export { default as HeroSection } from './HeroSection';
 export { default as MediaCardGridSection } from './MediaCardGridSection';
 export { default as MediaTagsSection } from './MediaTagsSection';
 export { default as NumberedGridSection } from './NumberedGridSection';
+export { default as PlayerSelectSection } from './PlayerSelectSection';
 export { default as ScheduleSection } from './ScheduleSection';
 export { default as SpecCardGridSection } from './SpecCardGridSection';
 export { default as TwoColumnListSection } from './TwoColumnListSection';

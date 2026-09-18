@@ -8,6 +8,7 @@ export const pageSections = [
   { type: 'mediaCardGridSection' },
   { type: 'mediaTagsSection' },
   { type: 'numberedGridSection' },
+  { type: 'playerSelectSection' },
   { type: 'scheduleSection' },
   { type: 'specCardGridSection' },
   { type: 'twoColumnListSection' }

@@ -37,6 +37,7 @@ import { heroSection } from './sections/heroSection';
 import { mediaCardGridSection } from './sections/mediaCardGridSection';
 import { mediaTagsSection } from './sections/mediaTagsSection';
 import { numberedGridSection } from './sections/numberedGridSection';
+import { playerSelectSection } from './sections/playerSelectSection';
 import { scheduleSection } from './sections/scheduleSection';
 import { specCardGridSection } from './sections/specCardGridSection';
 import { twoColumnListSection } from './sections/twoColumnListSection';
@@ -92,6 +93,7 @@ const schema: SchemaTypeDefinition[] = [
   mediaCardGridSection,
   mediaTagsSection,
   numberedGridSection,
+  playerSelectSection,
   scheduleSection,
   specCardGridSection,
   twoColumnListSection
