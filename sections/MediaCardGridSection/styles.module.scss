@@ -1,0 +1,182 @@
+/*
+ * The venue grid — Figma `16:134` (desktop, 1280) and `16:282` (mobile, 390).
+ *
+ * ## This file is short because the card is not
+ *
+ * `components/MediaCard` owns everything inside the border and names no colour anywhere; every paint
+ * resolves through `[data-theme]`, which is what makes a light card beside a dark one a one-prop
+ * change. Nothing here should ever re-state one of those paints. What is left is the grid, the three
+ * measurements the venue page moves, and an optional heading.
+ *
+ * ## Why the hooks are re-pointed on a class and not overridden as properties
+ *
+ * The card reads each hook as `var(--media-card-padding, var(--media-card-padding-default))` and
+ * never declares the un-suffixed name itself. `.venueCard` lands on the **same element** as `.card`
+ * via `className`, and both are a single class inside `@layer defaults` — so if the two set the same
+ * property they tie on specificity and the winner is decided by CSS-module import order, which
+ * differs between Next and Storybook. Setting the un-suffixed name is therefore not a tie at all: it
+ * wins unconditionally. Never set a `-default`.
+ */
+
+/*
+ * Where the grid stops being two columns.
+ *
+ * Local to this module, following `$header-display-inline-switch` — only this file uses it. The
+ * family is `$<owner>-inline-switch`, so the next section's switch is findable by shape.
+ *
+ * 45rem = 720px, which is two cards at the drawn **mobile** width (350px, node `16:283`) plus the
+ * gap. That is the principled place to stack: one column the moment a card would otherwise be
+ * narrower than the narrowest width it was ever drawn at. It lands within a few pixels of the
+ * content width at the `tablet` viewport breakpoint, so the two readings agree.
+ *
+ * ## `rem` is deliberate here, and it is the safe direction
+ *
+ * Chromium resolves a `rem` inside a container query against the **live** root font size, so a
+ * text-size increase alone can cross this threshold — which is a WCAG 1.4.4 hazard whenever crossing
+ * a switch *hides* something. Crossing this one hides nothing: it goes from two columns to one, and
+ * at a raised root every card gets the full container instead of half of it. The unit is doing work,
+ * not risk. A `px` threshold would keep two cramped columns at a 32px root, which is the failure
+ * this avoids.
+ */
+$media-card-grid-inline-switch: 45rem;
+
+@layer defaults {
+  /*
+   * The query container is `Section`'s own `Container` element, reached through `containerClassName`,
+   * so the queried inline size is the content width the design measures its columns against — frame
+   * minus gutters — rather than the viewport.
+   *
+   * `inline-size` and not `size`: the grid's width comes from the page and its height from its
+   * content, and containing the height would collapse it.
+   *
+   * The cost, worth knowing before copying this: an inline-size container does not contribute its
+   * contents to its own intrinsic width, so inside a *shrink-to-fit* ancestor — `inline-block`, a
+   * float, `width: max-content`, an absolutely positioned box — it collapses to its padding. Safe
+   * here because sections render as block children of `<main>` (`components/Layout`) and of a plain
+   * `<div>` in Storybook, both of which size from the outside in. `HeaderDisplaySection` measured
+   * that collapse at 73.97px and records the numbers.
+   */
+  .container {
+    container: mediaCardGrid / inline-size;
+  }
+
+  .heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    // Against the grid below. Not drawn on `/the-lodge` — see the section component for why the
+    // heading exists at all when the comp has none.
+    margin-block-end: var(--spacing-xl);
+  }
+
+  .title,
+  .content {
+    // A measure guard, not a layout. The heading is optional and the grid below is the full
+    // container width; a paragraph running the whole 1200px is unreadable.
+    max-inline-size: var(--container-md);
+  }
+
+  .grid {
+    display: grid;
+    /*
+     * One column is the default and two is the override, mobile-first. A container query cannot be
+     * evaluated before its container has been laid out, so on the first style pass neither branch
+     * matches — making the stacked layout unconditional means that frame paints the mobile grid
+     * rather than an unstyled one. Same trap `HeaderDisplaySection` records.
+     */
+    grid-template-columns: 1fr;
+    /*
+     * Stated rather than left to the default, because it is the load-bearing half of the
+     * bottom-alignment contract: the card's `height: 100%` resolves against a row height only if the
+     * row stretches. The other half is `.item` below — stretch reaches the direct child, which is the
+     * `<li>`, not the card inside it.
+     */
+    align-items: stretch;
+    /*
+     * Drawn 16px between the stacked cards at 390 and 20px between the columns at 1280. A `fluid()`
+     * pair rather than a token because nothing on the spacing scale sits at that ramp —
+     * `--spacing-md` is a flat 16 and `--spacing-lg` a flat 24 — and a breakpointed override would
+     * reintroduce the step the fluid scale exists to remove. Same reasoning the card gives for its
+     * own six hooks.
+     */
+    gap: #{fluid(16px, 20px)};
+
+    @container mediaCardGrid (width >= #{$media-card-grid-inline-switch}) {
+      /*
+       * `minmax(0, 1fr)` and not `1fr`. A `1fr` track keeps a `min-width: auto` floor, so one long
+       * unbreakable word inside a card widens the whole row past its container — and the card clips
+       * rather than scrolls, so that overflow would be invisible as well as wrong. `.item`'s
+       * `overflow-wrap` is the other half of the same guard.
+       */
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .item {
+    /*
+     * `grid`, so the card's `height: 100%` has a parent whose height the outer grid has already
+     * resolved. Without a formatting context here the stretch stops at this element and a short card
+     * in a tall row floats with its footer mid-air.
+     *
+     * `grid` and not `flex`, and the difference is reachable. A lone flex item is `flex: 0 1 auto`,
+     * so its width is max-content clamped to the track — it only fills the column today because the
+     * photograph's intrinsic width pushes max-content past it. `image` is optional, so a card with
+     * no image and short copy renders narrower than its column with a gap beside it. A single grid
+     * child stretches on **both** axes by default, which is the contract this needs.
+     */
+    display: grid;
+    /*
+     * **The clipping guard, and it belongs here rather than on any one of the card's parts.**
+     *
+     * `overflow-wrap` is inherited, so one declaration on the grid item covers the venue name, the
+     * description, every hours item and the caption chip. Without it a single unbreakable string —
+     * a name typed without spaces, a URL pasted into an hours item — overflows its box and is then
+     * clipped mid-word by the card's own `overflow: hidden`: no ellipsis, no scrollbar, no page
+     * scroll, nothing to notice. Measured on a sibling consumer of this card at 1440px, a 56-
+     * character name put the heading's right edge 753px past its own card and pushed the category
+     * label out of the row entirely.
+     *
+     * `anywhere` rather than `break-word` because only `anywhere` also shrinks the box's
+     * min-content contribution, which is what stops the long word widening the track in the first
+     * place — `break-word` breaks the line but still lets the intrinsic size win the sizing round.
+     *
+     * The one thing it cannot reach is the card's category label, which is `flex: 0 0 auto` and so
+     * declines to shrink at all. That is capped in the schema instead. Both are stop-gaps: the
+     * durable fix is `min-width: 0` on the card's title and `flex: 0 1 auto` on its label, which
+     * belongs in the shared component rather than in each consumer.
+     */
+    overflow-wrap: anywhere;
+  }
+
+  .venueCard {
+    /*
+     * The venue configuration — three of the card's six hooks, measured off both frames rather than
+     * extrapolated. The card's own defaults are the `/stay` room card.
+     *
+     * The component's stylesheet guesses these as `fluid(20px, 24px)`, `fluid(32px, 40px)` and
+     * `fluid(220px, 300px)`, with a note to measure them off `16:267` before shipping. Measured, the
+     * narrow anchors are lower than the guess in all three: the venue card is very nearly the room
+     * card on mobile — identical body padding, 190px of media against 180 — and the two only
+     * separate at desktop width.
+     *
+     * Each is a `fluid()` pair rather than a token because nothing in the scale is drawn at these
+     * values, and the drawn values are used as the anchors directly, which is the convention the
+     * card's own defaults follow.
+     */
+
+    // Body inset. 16 at 390 (`16:302`) → 24 at 1280 (`16:139`). Default is fluid(16px, 20px).
+    --media-card-padding: #{fluid(16px, 24px)};
+    // The title. 30/28.5 at 390 (`16:304`) → 40/38 at 1280 (`16:141`). Default is fluid(26px, 30px).
+    --media-card-title-size: #{fluid(30px, 40px)};
+    // The media band. 190 at 390 (`16:299`) → 300 at 1280 (`16:136`). Default is fluid(180px, 244px).
+    --media-card-media-height: #{fluid(190px, 300px)};
+    /*
+     * The fourth, and the one the brief did not predict. Between the two hours items the design
+     * draws 16px at 390 (`16:294` → `16:296`) and 24px at 1280 (`16:146` → `16:148`); the card's
+     * default is a flat `--spacing-lg`, i.e. the desktop value everywhere. Re-pointed rather than
+     * accepted because the hook exists for exactly this and the mobile card is the tighter of the
+     * two.
+     */
+    --media-card-footer-gap: #{fluid(16px, 24px)};
+  }
+}
