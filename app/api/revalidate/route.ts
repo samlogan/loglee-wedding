@@ -124,6 +124,23 @@ export const POST = async (req: NextRequest) => {
     }
 
     /*
+     * The home page's character select. `sections/PlayerSelectSection` joins every `player` into the
+     * page query rather than referencing them, so a player edit changes page data and the `page` tag
+     * is what brings it back.
+     *
+     * The default below already did that, which is why nothing was visibly broken — but it logged every
+     * player edit as an `Unknown type` error, which is the noise that trains people to ignore the log.
+     *
+     * Only what the select screen reads. The player routes (MAM-1901) render the same document and
+     * will want their own paths here too.
+     */
+    if (type === 'player') {
+      await revalidateTag('page', 'max');
+      console.log(`${logPrefix}Player changed. Page tag has been successfully revalidated.`);
+      return NextResponse.json({ revalidated: true });
+    }
+
+    /*
      * The footer's social icons. `components/Layout` fetches `SOCIAL_MEDIA_QUERY` alongside the
      * header and the wedding singleton and hands the result to `Footer`, so this is a layout
      * element and needs the same treatment they get.
