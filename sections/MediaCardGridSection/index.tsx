@@ -66,7 +66,8 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
    */
   const headingTitle = stripTitleTags(title ?? '').text.trim();
   const taglineText = tagline?.trim();
-  const hasHeading = Boolean(taglineText) || Boolean(headingTitle) || hasBlockContent(content);
+  const hasContent = hasBlockContent(content);
+  const hasHeading = Boolean(taglineText) || Boolean(headingTitle) || hasContent;
 
   return (
     <Section
@@ -112,12 +113,25 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
         <div className={styles.heading}>
           {taglineText && (
             /*
-             * `size` omitted rather than set: `--body-2xs` is the mono role's own default step and
-             * the micro-label size the rest of the page uses for an eyebrow. `textTransform` is
-             * passed rather than baked into the module for the reason `/review-design` rule 4 names
-             * — the prop exists, so the section should not write `text-transform` itself.
+             * Every one of these four is a prop rather than a line in the module, and `size` is the
+             * one that has to be stated.
+             *
+             * **`variant="mono"` has no size default** — the role deliberately leaves `font-size`
+             * to the caller, because its call sites are drawn at pairs that are not on the scale.
+             * Omitting it does not fall back to the micro-label step; it inherits `body`'s flat
+             * 16px, which rendered this eyebrow about 4px oversized and heavier than the heading
+             * beneath it. `--body-xs` (`fluid(11px, 12px)`) is the nearest step to the 11→13 the two
+             * shipped section eyebrows are drawn at, and `weight="bold"` selects the role's tracked
+             * register, which is what both of those use.
              */
-            <Text className={styles.tagline} text={taglineText} textTransform="uppercase" variant="mono" />
+            <Text
+              color="themeFgAccent"
+              size="xs"
+              text={taglineText}
+              textTransform="uppercase"
+              variant="mono"
+              weight="bold"
+            />
           )}
           {headingTitle && (
             /*
@@ -126,10 +140,16 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
              * in the field; passing the stripped text would throw that away and default every section
              * heading to `h2`. The stripped copy exists only to answer "is this field actually
              * filled in", which the raw string cannot.
+             *
+             * `lg` and not `md`. `--heading-md` is `fluid(28px, 40px)` against the card title's
+             * `fluid(30px, 40px)` — the same size as the names it heads at desktop and *smaller*
+             * than them on mobile, so the heading never outranks its own grid. `--heading-lg`
+             * (`fluid(32px, 48px)`) clears it at both ends. There is no drawn reference for this row
+             * — the comp has no heading — so this is the hierarchy argument, not a measurement.
              */
-            <TextTitle className={styles.title} size="md" textTransform="uppercase" title={title} variant="heading" />
+            <TextTitle className={styles.title} size="lg" textTransform="uppercase" title={title} variant="heading" />
           )}
-          {hasBlockContent(content) && <TextBlock blocks={content} className={styles.content} />}
+          {hasContent && <TextBlock blocks={content} className={styles.content} />}
         </div>
       )}
 
@@ -161,7 +181,11 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
            * them: a console error and undefined reconciliation, in the one environment an editor is
            * watching. Disambiguating by occurrence leaves the common case byte-identical to the bare
            * text and makes the degenerate one merely ugly. `TwoColumnListSection` makes exactly this
-           * argument for exactly this field shape, and the two should agree.
+           * argument for exactly this field shape — with one correction. Suffixing only the
+           * *repeats* re-creates the collision it exists to prevent: `['a', 'a', 'a#1']` yields
+           * `a`, `a#1`, `a#1`. The suffix is always a bare integer, so suffixing unconditionally
+           * cannot collide, and nothing compares keys across renders of different shapes — the
+           * "byte-identical in the common case" property being traded away buys nothing.
            *
            * Blanks are dropped first: an array of plain strings keeps every row an editor tabbed
            * through and moved on from, and an empty run would still take a slot in the footer's gap
@@ -177,7 +201,7 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
 
             const occurrence = seen.get(text) ?? 0;
             seen.set(text, occurrence + 1);
-            accumulator.push({ key: occurrence === 0 ? text : `${text}#${occurrence}`, text });
+            accumulator.push({ key: `${text}#${occurrence}`, text });
 
             return accumulator;
           }, []);
@@ -222,14 +246,18 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
                  *
                  * The condition is a viewport width because that is the only thing `sizes` can ask
                  * about — a `sizes` media condition is evaluated against the viewport, never against
-                 * a query container. It is an approximation of the real switch by construction, and
-                 * that is fine: `sizes` picks a candidate from the `srcset`, so being a step out
-                 * costs bytes, not correctness.
+                 * a query container, so this can only ever approximate the real switch.
+                 *
+                 * `48rem` rather than a px value so it tracks the user's browser font size the way
+                 * the `45rem` container switch does; a px threshold drifts away from the real switch
+                 * the moment the root grows. `min(50vw, 720px)` because the container caps at
+                 * `--container-xl`, so above a 1440 viewport the card stops growing while a bare
+                 * `50vw` keeps climbing and requests a candidate twice the size it can use.
                  *
                  * Never `fill` — the type forbids it, because `ImageSanity` falls back to a static
                  * import carrying `width`/`height` and `next/image` throws on `width` with `fill`.
                  */
-                image={card.image && { ...card.image, sizes: '(min-width: 769px) 50vw, 100vw' }}
+                image={card.image && { ...card.image, sizes: '(min-width: 48rem) min(50vw, 720px), 100vw' }}
                 label={card.label}
                 /*
                  * The per-card theme, straight through. `MediaCard` writes it as `data-theme` on its
@@ -248,8 +276,14 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
                  * of the page, not of a per-card dropdown — but overriding unconditionally would put
                  * an `h3` under nothing on `/the-lodge`, where the section has no heading and the
                  * editor's `h2` is the right level.
+                 *
+                 * Gated on `headingTitle` and **not** on `hasHeading`, which is an OR across the
+                 * tagline, the title and the body. A section with only a tagline filled in renders no
+                 * heading element at all, so demoting on `hasHeading` skips the page from `h1`
+                 * straight to `h3` — a heading-order failure (WCAG 1.3.1) in a perfectly legitimate
+                 * authoring state. Only a real heading may demote what sits under it.
                  */
-                titleAs={hasHeading ? 'h3' : undefined}
+                titleAs={headingTitle ? 'h3' : undefined}
               />
             </li>
           );

@@ -69,10 +69,6 @@ $media-card-grid-inline-switch: 45rem;
     margin-block-end: var(--spacing-xl);
   }
 
-  .tagline {
-    color: var(--fg-accent);
-  }
-
   .title,
   .content {
     // A measure guard, not a layout. The heading is optional and the grid below is the full
@@ -118,11 +114,17 @@ $media-card-grid-inline-switch: 45rem;
 
   .item {
     /*
-     * `flex`, so the card's `height: 100%` has a parent whose height the grid has already resolved.
-     * Without it the stretch stops at this element and a short card in a tall row floats with its
-     * footer mid-air.
+     * `grid`, so the card's `height: 100%` has a parent whose height the outer grid has already
+     * resolved. Without a formatting context here the stretch stops at this element and a short card
+     * in a tall row floats with its footer mid-air.
+     *
+     * `grid` and not `flex`, and the difference is reachable. A lone flex item is `flex: 0 1 auto`,
+     * so its width is max-content clamped to the track — it only fills the column today because the
+     * photograph's intrinsic width pushes max-content past it. `image` is optional, so a card with
+     * no image and short copy renders narrower than its column with a gap beside it. A single grid
+     * child stretches on **both** axes by default, which is the contract this needs.
      */
-    display: flex;
+    display: grid;
     /*
      * **The clipping guard, and it belongs here rather than on any one of the card's parts.**
      *

@@ -171,14 +171,22 @@ const paintsOf = (card: HTMLElement) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Node `16:134` at its drawn 1280px frame — 1240px of container, two 590px cards, 20px between them.
+ * Node `16:134` at its drawn 1280px frame — 1200px of content inside the gutters, two 590px cards,
+ * 20px between them.
  *
  * The play function is the AC "theme is per card, not per section" as a measurement: the two cards
  * are in the same section, under the same `sectionFields.theme`, and every paint that the theme owns
  * differs between them.
+ *
+ * `cards` is pinned rather than taken from `data`, and that is not belt-and-braces. Every assertion
+ * below names card 0 as the light one and card 1 as the dark one, so the day a
+ * `mediaCardGridSection` is published and `yarn storybook:fixtures` swaps a real fixture in, an
+ * editor reordering the two venues in the CMS would turn this test red for no code reason. The
+ * fixture still drives `args`, so the story keeps rendering real content — only the pair this
+ * particular measurement depends on is fixed.
  */
 export const Default: Story = {
-  args: data,
+  args: { ...data, cards: [LULUS, FINS_BAR] },
   decorators: [atWidth('1280px')],
   play: async ({ canvasElement }) => {
     const [light, dark] = cardsIn(canvasElement);
@@ -220,8 +228,17 @@ export const Default: Story = {
 /**
  * Node `16:282` at its drawn 390px frame, stacked.
  *
- * 390px of *viewport* is 350px of container once the gutter is taken, which is below the `45rem`
- * switch either way — the wrapper is the frame width so the numbers read against the comp.
+ * **This story tests the container-query stack and nothing else**, which is worth stating because the
+ * obvious extra assertion is a trap. `atWidth` sets a 390px wrapper inside whatever viewport the test
+ * runner has (1280 by default), and `fluid()` emits a *viewport*-based `clamp()` — so every venue
+ * measurement here still resolves to its desktop value. An assertion like
+ * `expect(padding).toBeLessThan(24)` would therefore restate the clamp's own bounds rather than test
+ * the mobile anchor, pass identically under `Default`, and fail spuriously on any runner at a 1440px
+ * viewport where the clamp pins padding at exactly 24. The mobile anchors are verified against a real
+ * 390px viewport outside Vitest.
+ *
+ * The two assertions that remain are genuine: stacking is a container query, so the wrapper really
+ * does drive it.
  */
 export const Mobile: Story = {
   args: data,
@@ -233,18 +250,8 @@ export const Mobile: Story = {
       // Stacked: the second card starts below the first, and they share a left edge.
       await expect(rect(second).top).toBeGreaterThan(rect(first).bottom - 1);
       await expect(rect(second).left).toBeCloseTo(rect(first).left, 0);
-
-      /*
-       * The venue hooks are fluid, so the mobile card is measurably smaller than the desktop one
-       * rather than the same card in a narrower box. Drawn 16px of body inset at 390 against 24 at
-       * 1280 — the assertion is the direction, not the pixel, because the value interpolates with the
-       * viewport and a fixed number here would be a second copy of the `fluid()` formula.
-       */
-      const padding = Number.parseFloat(
-        getComputedStyle(first.querySelector(`.${cardStyles.body}`) as HTMLElement).paddingTop
-      );
-      await expect(padding).toBeLessThan(24);
-      await expect(padding).toBeGreaterThanOrEqual(16);
+      // One column, so both cards are the full container width.
+      await expect(rect(first).width).toBeCloseTo(rect(second).width, 0);
     });
   }
 };
@@ -288,6 +295,14 @@ export const HoursVariants: Story = {
 export const WithHeading: Story = {
   args: {
     ...data,
+    /*
+     * Lulu's is given an `<h2>` title here **specifically so the demotion has something to do**.
+     * Both shared mocks store `<h3>`, so asserting "two h3s" against them would pass with or without
+     * `titleAs` and test nothing. With one card storing `h2`, this story fails if the override is
+     * dropped — and `Default` is the other half, where the same card keeps its own level because the
+     * section has no heading to sit under.
+     */
+    cards: [{ ...LULUS, title: "<h2>Lulu's</h2>" }, FINS_BAR],
     content: paragraph('Two places to eat and drink that are yours for the whole weekend.'),
     tagline: 'Eat and drink',
     title: '<h2>The venues</h2>'
@@ -297,12 +312,13 @@ export const WithHeading: Story = {
     const canvas = within(canvasElement);
 
     await waitFor(async () => {
-      const heading = canvas.getByRole('heading', { level: 2 });
-      await expect(heading).toHaveTextContent('The venues');
-      // The card names sit one level under the section heading rather than at the level the field
-      // chose, because the page outline is a property of the page.
+      // Exactly one h2 — the section heading. Lulu's stored h2 has been demoted out of this set.
+      const headings = canvas.getAllByRole('heading', { level: 2 });
+      await expect(headings).toHaveLength(1);
+      await expect(headings[0]).toHaveTextContent('The venues');
+      // Both card names sit one level under it, including the one whose field says h2.
       await expect(canvas.getAllByRole('heading', { level: 3 })).toHaveLength(2);
-      await expect(rect(heading).bottom).toBeLessThan(rect(cardsIn(canvasElement)[0]).top);
+      await expect(rect(headings[0]).bottom).toBeLessThan(rect(cardsIn(canvasElement)[0]).top);
     });
   }
 };
@@ -417,6 +433,71 @@ export const EmptyHeadingFields: Story = {
       // The grid is the container's only child — nothing was rendered above it.
       await expect(container.children).toHaveLength(1);
       await expect(grid.getBoundingClientRect().top).toBeCloseTo(container.getBoundingClientRect().top, 0);
+    });
+  }
+};
+
+/**
+ * A tagline and body copy but no title — a legitimate authoring state, and the one that made the
+ * heading-level override wrong.
+ *
+ * `hasHeading` is an OR across all three fields, so this renders the heading block. But no heading
+ * *element* exists in it, so demoting the card names on that same OR would skip the page from `h1`
+ * straight to `h3` (WCAG 1.3.1). The demotion is gated on the title alone; this pins it.
+ */
+export const TaglineWithoutTitle: Story = {
+  args: {
+    ...data,
+    cards: [{ ...LULUS, title: "<h2>Lulu's</h2>" }, FINS_BAR],
+    content: paragraph('Two places to eat and drink that are yours for the whole weekend.'),
+    tagline: 'Eat and drink'
+  },
+  decorators: [atWidth('1280px')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await waitFor(async () => {
+      // The card keeps the level its own field chose, because nothing outranks it.
+      await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(1);
+      await expect(canvas.getAllByRole('heading', { level: 2 })[0]).toHaveTextContent("Lulu's");
+      await expect(canvas.getAllByRole('heading', { level: 3 })).toHaveLength(1);
+    });
+  }
+};
+
+/**
+ * A card with no image, beside one with an image.
+ *
+ * `image` is optional, and this is the case that caught a layout bug: with `.item { display: flex }`
+ * the card is a lone flex item at `flex: 0 1 auto`, so its width is max-content clamped to the
+ * track — it filled its column only because a photograph's intrinsic width pushed max-content past
+ * it. Remove the image and short copy rendered narrower than its column with a gap beside it. A
+ * single grid child stretches on both axes, which is why `.item` is a grid.
+ */
+export const CardWithoutImage: Story = {
+  args: {
+    ...data,
+    cards: [{ _key: 'bare', hours: ['Open 12pm – late'], label: 'Coffee', title: '<h3>The pantry</h3>' }, FINS_BAR]
+  },
+  decorators: [atWidth('1280px')],
+  play: async ({ canvasElement }) => {
+    const [bare, withImage] = cardsIn(canvasElement);
+
+    await waitFor(async () => {
+      // No media band at all, and therefore no caption.
+      await expect(bare.querySelector('img')).toBeNull();
+      await expect(captionIn(bare)).toBeNull();
+      /*
+       * And it still fills its grid track rather than shrinking to its content.
+       *
+       * Asserted against its neighbour rather than against the comp's 590px: the track width falls
+       * out of the container's fluid gutter, which resolves against the *viewport*, not against
+       * `atWidth`'s wrapper. A literal here would encode the test runner's viewport and break on a
+       * different one — the same trap the `Mobile` story documents. Equal widths is the claim
+       * anyway; the absolute number is verified against a real 1440px viewport outside Vitest.
+       */
+      await expect(rect(bare).width).toBeCloseTo(rect(withImage).width, 0);
+      await expect(rect(bare).width).toBeGreaterThan(400);
     });
   }
 };
