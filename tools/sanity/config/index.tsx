@@ -16,13 +16,7 @@ import theme from './theme';
 
 // Singletons are pinned in the desk structure against a fixed document ID, so they must not be
 // creatable a second time from the global "Create new" menu.
-const singletonTypes = new Set([
-  'blogLandingPage',
-  'headerDocument',
-  'settings',
-  'socialMediaDocument',
-  'weddingSettings'
-]);
+const singletonTypes = new Set(['headerDocument', 'settings', 'socialMediaDocument', 'weddingSettings']);
 
 // Written only by the RSVP server action and read-only in the Studio, so creating one by hand would
 // produce an empty document nobody can then fill in. Document-level readOnly does not hide the

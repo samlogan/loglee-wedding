@@ -57,7 +57,7 @@ const page = defineType({
       name: `breadcrumbs`,
       of: [
         {
-          to: [{ type: 'page' }, { type: 'blogPost' }],
+          to: [{ type: 'page' }],
           type: 'reference'
         }
       ],

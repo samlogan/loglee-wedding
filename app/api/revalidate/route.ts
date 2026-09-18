@@ -46,7 +46,6 @@
  * - Always tag your fetch requests in your components with appropriate cache tags
  * - Use multiple tags when content appears in multiple contexts
  * - The 'page' tag is a catch-all for general page content
- * - The 'blog' tag is specific to blog-related content
  * - Consider performance: revalidating everything is expensive, be selective
  *
  * @see https://nextjs.org/docs/app/building-your-application/data-fetching/fetching-caching-and-revalidating
@@ -91,14 +90,6 @@ export const POST = async (req: NextRequest) => {
       const path = slug === 'home' ? '/' : `/${slug}`;
       await revalidatePath(path);
       console.log(`${logPrefix}Path "${path}" has been successfully revalidated.`);
-      return NextResponse.json({ revalidated: true });
-    }
-
-    // if it's a blog revalidate the blog and page
-    if (type === 'blogPost') {
-      await revalidateTag('blog', 'max');
-      await revalidateTag('page', 'max');
-      console.log(`${logPrefix}Tags "blog" and "page" have been successfully revalidated.`);
       return NextResponse.json({ revalidated: true });
     }
 

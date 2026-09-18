@@ -29,7 +29,7 @@ import localFont from 'next/font/local';
  * **Known gap, deliberately left alone here: `--heading-default-font-weight` is
  * `var(--font-weight-regular)` (400) and there is no Archivo 400 face below.** Every
  * `variant="heading"` therefore renders Archivo *Medium* — `TextBlock`'s h1–h4, `FaqSection`'s
- * title, the blog templates, the HTML sitemap. Measured at 100px: 300, 400 and 500 all come back
+ * title, the HTML sitemap. Measured at 100px: 300, 400 and 500 all come back
  * 788.97px wide, i.e. one face serving three requests.
  *
  * Unlike the body 600/700 case below this is **not** a synthesised face — 400 is *lighter* than the

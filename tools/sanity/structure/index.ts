@@ -1,6 +1,5 @@
 import type { StructureResolver } from 'sanity/structure';
 
-import BlogMenuItem from './blog';
 import GlobalMenuItem from './global';
 import PageMenuItem from './pages';
 import PlayersMenuItem from './players';
@@ -14,7 +13,6 @@ const structure: StructureResolver = (S) =>
     .title('Content')
     .items([
       PageMenuItem(S),
-      BlogMenuItem(S),
       S.divider(),
       WeddingSettingsMenuItem(S),
       PlayersMenuItem(S),
