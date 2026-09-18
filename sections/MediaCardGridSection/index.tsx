@@ -64,10 +64,31 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
    *
    * `MediaCard` and `TwoColumnListSection` document the same trap; this is the same field type.
    */
-  const headingTitle = stripTitleTags(title ?? '').text.trim();
+  const { as: headingAs, text: headingRaw } = stripTitleTags(title ?? '');
+  const headingTitle = headingRaw.trim();
   const taglineText = tagline?.trim();
   const hasContent = hasBlockContent(content);
   const hasHeading = Boolean(taglineText) || Boolean(headingTitle) || hasContent;
+
+  /*
+   * One level below the section's heading, **derived** rather than the literal `'h3'`.
+   *
+   * `TextTitle` takes the heading's level from the editor's markup, so a section titled `<h3>` would
+   * make the cards its siblings and an `<h4>` would make them outrank it. Only the `h2` default
+   * composed correctly, which made the old literal right by luck rather than by construction.
+   *
+   * `undefined` when there is no heading, which leaves each card on the level its own field chose —
+   * the `/the-lodge` case, where the section heading is deliberately blank and the card's schema
+   * defaults to `h2` so the page does not skip from `h1`.
+   *
+   * Gated on `headingTitle` and **not** on `hasHeading`, which is an OR across the tagline, the title
+   * and the body. A section with only a tagline filled in renders no heading element at all, so
+   * demoting on `hasHeading` skips the page from `h1` straight to `h3` — a heading-order failure
+   * (WCAG 1.3.1) in a perfectly legitimate authoring state. Only a real heading may demote what sits
+   * under it.
+   */
+  const headingLevel = headingTitle && /^h[1-5]$/.test(headingAs ?? '') ? Number(headingAs?.[1]) : undefined;
+  const cardTitleAs = headingLevel ? (`h${headingLevel + 1}` as 'h2' | 'h3' | 'h4' | 'h5' | 'h6') : undefined;
 
   return (
     <Section
@@ -271,19 +292,11 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
                 theme={card.theme}
                 title={card.title}
                 /*
-                 * Forced to `h3` when this section draws a heading of its own, so the card names sit
-                 * one level under it, and left to the field otherwise. The page outline is a property
-                 * of the page, not of a per-card dropdown — but overriding unconditionally would put
-                 * an `h3` under nothing on `/the-lodge`, where the section has no heading and the
-                 * editor's `h2` is the right level.
-                 *
-                 * Gated on `headingTitle` and **not** on `hasHeading`, which is an OR across the
-                 * tagline, the title and the body. A section with only a tagline filled in renders no
-                 * heading element at all, so demoting on `hasHeading` skips the page from `h1`
-                 * straight to `h3` — a heading-order failure (WCAG 1.3.1) in a perfectly legitimate
-                 * authoring state. Only a real heading may demote what sits under it.
+                 * Derived from the section's own heading — see `cardTitleAs` above. The page outline
+                 * is a property of the page, not of a per-card dropdown; but only a heading that
+                 * actually renders may demote what sits under it.
                  */
-                titleAs={headingTitle ? 'h3' : undefined}
+                titleAs={cardTitleAs}
               />
             </li>
           );

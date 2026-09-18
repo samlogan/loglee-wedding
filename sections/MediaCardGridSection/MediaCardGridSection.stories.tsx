@@ -89,7 +89,13 @@ const LULUS: IMediaCardGridSectionCard = {
   image: mockImage({ altText: "Lulu's dining room", height: 600, kind: 'photo', seed: 'venue-lulus', width: 1200 }),
   label: 'Restaurant',
   theme: 'light',
-  title: "<h3>Lulu's</h3>"
+  /*
+   * `h2`, matching the card title field's `defaultTag`. The section heading is optional and blank on
+   * `/the-lodge`, so `h2` is the level the cards actually ship at — an `h3` here would put the page
+   * outline at h1 → h3. When a section heading *is* present the component derives one level below it
+   * and overrides this, which `WithHeading` exercises.
+   */
+  title: "<h2>Lulu's</h2>"
 };
 
 const FINS_BAR: IMediaCardGridSectionCard = {
@@ -102,7 +108,7 @@ const FINS_BAR: IMediaCardGridSectionCard = {
   image: mockImage({ altText: "Fin's Bar", height: 600, kind: 'photo', seed: 'venue-fins', width: 1200 }),
   label: 'Cocktails',
   theme: 'dark',
-  title: "<h3>Fin's Bar</h3>"
+  title: "<h2>Fin's Bar</h2>"
 };
 
 /*
@@ -221,6 +227,15 @@ export const Default: Story = {
       // Two columns, side by side and the same height — the stretch contract.
       await expect(rect(dark).left).toBeGreaterThan(rect(light).right);
       await expect(rect(light).height).toBeCloseTo(rect(dark).height, 0);
+
+      /*
+       * The shipped outline. With no section heading the cards keep their own level, so the page runs
+       * h1 → h2 rather than skipping to h3 — which is why the card title field defaults to `h2` and
+       * why the level override below is derived rather than a literal.
+       */
+      const canvas = within(canvasElement);
+      await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(2);
+      await expect(canvas.queryByRole('heading', { level: 3 })).toBeNull();
     });
   }
 };
@@ -296,13 +311,12 @@ export const WithHeading: Story = {
   args: {
     ...data,
     /*
-     * Lulu's is given an `<h2>` title here **specifically so the demotion has something to do**.
-     * Both shared mocks store `<h3>`, so asserting "two h3s" against them would pass with or without
-     * `titleAs` and test nothing. With one card storing `h2`, this story fails if the override is
-     * dropped — and `Default` is the other half, where the same card keeps its own level because the
-     * section has no heading to sit under.
+     * The two cards store **different** levels — `h2` and `h4` — so this story proves the override
+     * is derived from the section heading rather than copied from the field. Both must come out `h3`,
+     * one below the `h2` above them. Give both cards the same level and the assertion would pass
+     * against a hardcoded `'h3'` too, which is what it used to do and what made it vacuous.
      */
-    cards: [{ ...LULUS, title: "<h2>Lulu's</h2>" }, FINS_BAR],
+    cards: [LULUS, { ...FINS_BAR, title: "<h4>Fin's Bar</h4>" }],
     content: paragraph('Two places to eat and drink that are yours for the whole weekend.'),
     tagline: 'Eat and drink',
     title: '<h2>The venues</h2>'
@@ -316,8 +330,9 @@ export const WithHeading: Story = {
       const headings = canvas.getAllByRole('heading', { level: 2 });
       await expect(headings).toHaveLength(1);
       await expect(headings[0]).toHaveTextContent('The venues');
-      // Both card names sit one level under it, including the one whose field says h2.
+      // Both card names sit one level under it — the h2 demoted and the h4 promoted.
       await expect(canvas.getAllByRole('heading', { level: 3 })).toHaveLength(2);
+      await expect(canvas.queryByRole('heading', { level: 4 })).toBeNull();
       await expect(rect(headings[0]).bottom).toBeLessThan(rect(cardsIn(canvasElement)[0]).top);
     });
   }
@@ -346,7 +361,7 @@ export const UnbreakableContent: Story = {
         _key: 'long',
         content: paragraph(`Booking reference ${'x'.repeat(90)} applies to every sitting.`),
         hours: ['Lunch https://the-lodge.example.com/restaurant/bookings/lunch-service'],
-        title: `<h3>${'Lulus'.repeat(12)}</h3>`
+        title: `<h2>${'Lulus'.repeat(12)}</h2>`
       },
       FINS_BAR
     ]
@@ -387,8 +402,8 @@ export const FourCards: Story = {
     cards: [
       LULUS,
       FINS_BAR,
-      { ...LULUS, _key: 'third', label: 'Poolside', title: '<h3>The pool bar</h3>' },
-      { ...FINS_BAR, _key: 'fourth', hours: [], label: 'Coffee', theme: 'light', title: '<h3>The pantry</h3>' }
+      { ...LULUS, _key: 'third', label: 'Poolside', title: '<h2>The pool bar</h2>' },
+      { ...FINS_BAR, _key: 'fourth', hours: [], label: 'Coffee', theme: 'light', title: '<h2>The pantry</h2>' }
     ]
   },
   decorators: [atWidth('1280px')],
@@ -422,10 +437,10 @@ export const EmptyHeadingFields: Story = {
     const canvas = within(canvasElement);
 
     await waitFor(async () => {
-      // No heading block at all, so no empty h2 and no margin above the grid.
-      await expect(canvas.queryByRole('heading', { level: 2 })).toBeNull();
-      // And the card names keep the level their own field chose rather than being demoted.
-      await expect(canvas.getAllByRole('heading', { level: 3 })).toHaveLength(2);
+      // No heading block at all — so no empty h2 above the grid, and no margin where it would be.
+      // The only h2s in the section are the two card names, which keep their own level.
+      await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(2);
+      await expect(canvas.queryByRole('heading', { level: 3 })).toBeNull();
 
       const section = canvasElement.querySelector('section') as HTMLElement;
       const grid = section.querySelector('ul') as HTMLElement;
@@ -448,7 +463,6 @@ export const EmptyHeadingFields: Story = {
 export const TaglineWithoutTitle: Story = {
   args: {
     ...data,
-    cards: [{ ...LULUS, title: "<h2>Lulu's</h2>" }, FINS_BAR],
     content: paragraph('Two places to eat and drink that are yours for the whole weekend.'),
     tagline: 'Eat and drink'
   },
@@ -457,10 +471,9 @@ export const TaglineWithoutTitle: Story = {
     const canvas = within(canvasElement);
 
     await waitFor(async () => {
-      // The card keeps the level its own field chose, because nothing outranks it.
-      await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(1);
-      await expect(canvas.getAllByRole('heading', { level: 2 })[0]).toHaveTextContent("Lulu's");
-      await expect(canvas.getAllByRole('heading', { level: 3 })).toHaveLength(1);
+      // Both cards keep the level their own field chose, because nothing outranks them.
+      await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(2);
+      await expect(canvas.queryByRole('heading', { level: 3 })).toBeNull();
     });
   }
 };
@@ -477,7 +490,7 @@ export const TaglineWithoutTitle: Story = {
 export const CardWithoutImage: Story = {
   args: {
     ...data,
-    cards: [{ _key: 'bare', hours: ['Open 12pm – late'], label: 'Coffee', title: '<h3>The pantry</h3>' }, FINS_BAR]
+    cards: [{ _key: 'bare', hours: ['Open 12pm – late'], label: 'Coffee', title: '<h2>The pantry</h2>' }, FINS_BAR]
   },
   decorators: [atWidth('1280px')],
   play: async ({ canvasElement }) => {

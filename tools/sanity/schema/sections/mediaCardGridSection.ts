@@ -67,8 +67,12 @@ interface IMediaCardGridSectionCard {
   /**
    * The category, right-aligned against the name on the same baseline — "Restaurant", "Cocktails".
    *
-   * Stored sentence case and uppercased in CSS. Short literal all-caps runs are what screen readers
-   * most often spell out letter by letter, and `text-transform` already guarantees the display.
+   * Stored sentence case and uppercased in CSS, which is the right authoring practice — but not for
+   * the reason this comment used to give. Measured through Chromium's accessibility tree, the node
+   * is named from the *rendered* text, so it reads `StaticText "RESTAURANT"` regardless. Sentence
+   * case still helps every consumer that reads `textContent` rather than the AX name, and it keeps
+   * the stored copy correct; it does not keep capitals out of the accessibility tree. Nothing else
+   * in the repo should claim that it does.
    */
   label?: string;
   /**
@@ -99,8 +103,16 @@ interface IMediaCardGridSection {
  */
 const cardFields: FieldDefinition[] = [
   {
+    /*
+     * Write the alt text. `components/Image` resolves `altText || asset.altText || ''`, so a blank
+     * one is never *missing* — it renders `alt=""`, which tells a screen reader the photograph is
+     * decorative. These are not: each one is the venue. Two project-wide things make the do-nothing
+     * outcome worse and are out of scope here — `elements/image` seeds `altText` with
+     * `NEXT_PUBLIC_SANITY_PROJECT_NAME`, so an untouched field announces the site name, and no
+     * `altText` validation exists anywhere in the schema.
+     */
     description:
-      'The photograph across the top of the card. Landscape — the card crops to a fixed band height so every card in a row lines up, whatever the asset’s own ratio.',
+      'The photograph across the top of the card. Landscape — the card crops to a fixed band height so every card in a row lines up, whatever the asset’s own ratio. Set the Alt Text under Advanced: describe the venue, not the file.',
     name: 'image',
     title: 'Image',
     type: 'imageElementAdvanced'
@@ -113,10 +125,22 @@ const cardFields: FieldDefinition[] = [
     type: 'string'
   },
   {
+    /*
+     * `h2`, not `h3`, and the two cases have to be read together.
+     *
+     * This section's own heading is optional and **blank on `/the-lodge`**, which is the composition
+     * it was built for. With no section heading, a card name defaulting to `h3` puts the page outline
+     * at h1 → h3 — a heading-order skip (WCAG 1.3.1) in the shipped state. `h2` is also what
+     * `scheduleSection` and `twoColumnListSection` default their own headings to.
+     *
+     * When the section *does* draw a heading, the component derives one level below it and overrides
+     * this through `titleAs`, so the editor's choice matters only in the case where nothing outranks
+     * it. That is the right division: the page outline is a property of the page.
+     */
     description:
-      'The venue name — “Lulu’s”. Rendered in the display face at the card’s own size; the level selector beside this field chooses the heading level for the page outline.',
+      'The venue name — “Lulu’s”. Rendered in the display face at the card’s own size. The level selector sets the heading level for the page outline — but if this section has a Title of its own, the card names are automatically placed one level beneath it.',
     name: 'title',
-    options: { defaultTag: 'h3' as const },
+    options: { defaultTag: 'h2' as const },
     title: 'Name',
     type: 'title',
     validation: (Rule) =>
@@ -133,17 +157,23 @@ const cardFields: FieldDefinition[] = [
      * item, which covers the name, the description, the hours and the caption; this field is the one
      * the property cannot help.
      *
-     * 12, against drawn values of "Restaurant" (10) and "Cocktails" (9), so the comp passes with
-     * headroom. `.warning()` and not `.error()`: the failure is a squeeze on a narrow card at a
-     * raised root font size, not a broken document, and an editor with a genuinely long category
-     * should be told rather than blocked.
+     * **10, measured rather than chosen.** At a 320px viewport with a 32px root (200% text), the
+     * label overflows the card's content edge at 11 characters (+8.2px) and is clipped outright at
+     * 12 (+22.2px) — "Coffee house" renders as "COFFEE HOUS". 12 was the first guess and is a
+     * measured failure, so the cap is the drawn maximum: "Restaurant" (10) and "Cocktails" (9) both
+     * pass, and the first string that breaks does not.
+     *
+     * `.warning()` and not `.error()`: the failure needs 200% text on the narrowest supported
+     * viewport, and it is a squeeze rather than a broken document. An editor with a genuinely longer
+     * category should be told, not blocked.
      */
     description:
       'The category, shown small and right-aligned beside the name — “Restaurant”, “Cocktails”. Optional. Keep it short: it sits on one line beside the name and cannot wrap. Type it in normal sentence case; it is displayed in uppercase automatically.',
     name: 'label',
     title: 'Category',
     type: 'string',
-    validation: (Rule) => Rule.max(12).warning('Longer than about 12 characters crowds the name it sits beside.')
+    validation: (Rule) =>
+      Rule.max(10).warning('Over 10 characters is clipped beside the name once a reader enlarges text.')
   },
   {
     description: 'A short paragraph under the name. Optional — the card closes up around it.',
