@@ -7,6 +7,7 @@ import Container from '@/components/Container';
 import Link from '@/components/Link';
 import Logo from '@/components/Logo';
 import classNames from '@/helpers/classNames';
+import resolveRsvpAction from '@/helpers/rsvpAction';
 import type { IHeaderObject } from '@/tools/sanity/schema/objects/header';
 
 import HeaderNavigationDesktop from './HeaderNavigationDesktop';
@@ -68,8 +69,14 @@ const Header = (props: HeaderProps) => {
     returnFocusRef: toggleRef
   });
 
-  const action = addButton ? button : undefined;
   /*
+   * The action and both of its labels, resolved by `tools/helpers/rsvpAction` — the same helper
+   * `sections/ClosingCtaSection` reads, so the bar, the menu and the home page's RSVP button cannot
+   * combine these fields three different ways. The rules (the switch, each label falling back to the
+   * other, no label no pill) are documented there. Undefined when there is nothing to draw: the pill is
+   * the header's *action*, so it needs one, and a reply-by line with nowhere to go would render as
+   * `Link`'s inert `<span>` — correct, and still a lime pill that does nothing.
+   *
    * Two labels, one control, and the split is the design's.
    *
    * Desktop has room for the whole "RSVP by 01.12.26" line and the ticket asks for it there; the
@@ -91,11 +98,7 @@ const Header = (props: HeaderProps) => {
    *   reaching into `Button`'s markup to hide it. The arrow is `aria-hidden` decoration, it costs
    *   ~15px on a bar with ~100px of slack at 375px, and it keeps one affordance at both widths.
    */
-  const longLabel = rsvpLabel || action?.label;
-  const shortLabel = action?.label || rsvpLabel;
-  // The pill is the header's *action*, so it needs one. A reply-by line with nowhere to go would
-  // render as `Link`'s inert `<span>` — correct, and still a lime pill that does nothing.
-  const showAction = Boolean(action && longLabel);
+  const action = resolveRsvpAction({ addButton, button, rsvpLabel });
   /*
    * No links, no disclosure. The action is already in the bar, so an empty nav list leaves the
    * panel with nothing in it — and a toggle that opens an empty sheet is worse than no toggle:
@@ -120,18 +123,10 @@ const Header = (props: HeaderProps) => {
           <HeaderNavigationDesktop navItems={navItems} pathname={pathname} />
 
           <div className={styles.actions}>
-            {showAction && (
-              <Link
-                {...action?.link}
-                arrow="right"
-                className={styles.action}
-                mono
-                size="sm"
-                theme="accent"
-                variant="ui"
-              >
-                <span className={styles.action_long}>{longLabel}</span>
-                <span className={styles.action_short}>{shortLabel}</span>
+            {action && (
+              <Link {...action.link} arrow="right" className={styles.action} mono size="sm" theme="accent" variant="ui">
+                <span className={styles.action_long}>{action.longLabel}</span>
+                <span className={styles.action_short}>{action.shortLabel}</span>
               </Link>
             )}
 
@@ -154,13 +149,12 @@ const Header = (props: HeaderProps) => {
 
         {hasMenu && (
           <HeaderNavigationMobile
-            button={action}
+            action={action}
             id={menuId}
             navItems={navItems}
             open={menuOpen}
             pathname={pathname}
             ref={panelRef}
-            rsvpLabel={rsvpLabel}
           />
         )}
       </header>

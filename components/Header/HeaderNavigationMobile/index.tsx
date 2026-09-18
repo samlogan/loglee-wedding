@@ -2,8 +2,8 @@ import type { Ref } from 'react';
 
 import Link from '@/components/Link';
 import classNames from '@/helpers/classNames';
+import type { RsvpAction } from '@/helpers/rsvpAction';
 import { isCurrent } from '@/tools/helpers/link';
-import type { IButtonElement } from '@/tools/sanity/schema/elements/button';
 import type { IHeaderObject } from '@/tools/sanity/schema/objects/header';
 
 import styles from './styles.module.scss';
@@ -15,9 +15,12 @@ export interface HeaderNavigationMobileProps {
   open?: boolean;
   navItems?: IHeaderObject['navItems'];
   pathname?: string;
-  /** `weddingSettings.rsvpLabel` — the full "reply by" line, which has room to sit here. */
-  rsvpLabel?: string | null;
-  button?: IButtonElement;
+  /**
+   * The RSVP action exactly as the bar resolved it, so the pill and this panel draw one decision
+   * rather than two. It used to arrive as the raw button plus the reply-by line and be combined again
+   * here, with its own copy of the fallback.
+   */
+  action?: RsvpAction;
   /** React 19 ref-as-prop. The header focuses the panel itself when the menu opens. */
   ref?: Ref<HTMLDivElement>;
 }
@@ -40,11 +43,7 @@ export interface HeaderNavigationMobileProps {
  * no sr-only utility in this project and nothing here needs one.
  */
 const HeaderNavigationMobile = (props: HeaderNavigationMobileProps) => {
-  const { button, className, id, navItems, open = false, pathname = '', ref, rsvpLabel } = props;
-
-  // The reply-by line has room here, so the menu shows the long form. Gated on the action itself
-  // for the same reason the bar's pill is: a label with nowhere to go is not a control.
-  const actionLabel = button && (rsvpLabel || button.label);
+  const { action, className, id, navItems, open = false, pathname = '', ref } = props;
 
   return (
     <div
@@ -85,9 +84,10 @@ const HeaderNavigationMobile = (props: HeaderNavigationMobileProps) => {
         </nav>
       )}
 
-      {!!actionLabel && (
+      {/* The reply-by line has room here, so the menu shows the long form. */}
+      {action && (
         <Link
-          {...button?.link}
+          {...action.link}
           arrow="right"
           className={styles.action}
           fullWidth
@@ -96,7 +96,7 @@ const HeaderNavigationMobile = (props: HeaderNavigationMobileProps) => {
           theme="accent"
           variant="ui"
         >
-          {actionLabel}
+          {action.longLabel}
         </Link>
       )}
     </div>
