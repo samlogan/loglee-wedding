@@ -8,6 +8,7 @@ import resolveAmountCopy from '@/helpers/amountToken';
 import classNames from '@/helpers/classNames';
 import formatOrdinal from '@/helpers/formatOrdinal';
 import hasBlockContent from '@/helpers/hasBlockContent';
+import keyedTextItems from '@/helpers/keyedTextItems';
 import stripTitleTags from '@/helpers/stripTitleTags';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type { ITwoColumnListSection } from '@/tools/sanity/schema/sections/twoColumnListSection';
@@ -37,28 +38,19 @@ const TwoColumnListSection: FC<ITwoColumnListSection> = (props) => {
    * exactly that argument in the other direction — `tools/helpers/amountToken.ts` refuses to trust
    * `Rule.min(0)` on `amountPerNight` for the same reason — and the two should agree.
    *
-   * So the duplicate is disambiguated by how many times it has been seen, which leaves the common
-   * case byte-identical to `key={item}` (first occurrence keeps its bare text) and makes the
-   * degenerate one merely ugly instead of undefined. The rule stays: it is still what keeps a
-   * *published* list stable across a reorder.
+   * So the duplicate is disambiguated by how many times it has been seen. The rule stays: it is
+   * still what keeps a *published* list stable across a reorder.
+   *
+   * This file used to suffix only the *repeats*, which keeps the common case byte-identical to
+   * `key={item}` and re-creates the collision it is there to prevent — `['a', 'a', 'a#1']` yields
+   * `a`, `a#1`, `a#1`. `keyedTextItems` suffixes unconditionally, which cannot collide, and the
+   * property being traded away buys nothing: a key is never displayed and nothing compares keys
+   * across renders of different shapes.
    *
    * The trimmed text is what renders as well as what keys, so the two cannot disagree — an item of
    * `'  Swimmers  '` was previously filtered on its trimmed form and rendered raw.
    */
-  const seen = new Map<string, number>();
-  const listItems = (items ?? []).reduce<{ key: string; text: string }[]>((accumulator, item) => {
-    const text = item?.trim();
-
-    if (!text) {
-      return accumulator;
-    }
-
-    const occurrence = seen.get(text) ?? 0;
-    seen.set(text, occurrence + 1);
-    accumulator.push({ key: occurrence === 0 ? text : `${text}#${occurrence}`, text });
-
-    return accumulator;
-  }, []);
+  const listItems = keyedTextItems(items);
 
   /*
    * The whole `{amount}` contract, in one call. `resolveAmountCopy` picks between the two copy
