@@ -2,6 +2,7 @@
 // Add or remove a section folder, then re-run the command.
 
 export const pageSections = [
+  { type: 'closingCtaSection' },
   { type: 'faqSection' },
   { type: 'headerDisplaySection' },
   { type: 'heroSection' },
