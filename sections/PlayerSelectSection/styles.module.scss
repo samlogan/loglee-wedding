@@ -27,7 +27,7 @@
   }
 
   /*
-   * The caption and the prompt, as two grid rows rather than an absolutely positioned corner label.
+   * The caption and the prompt, as grid rows rather than an absolutely positioned corner label.
    *
    * The comp draws the caption *above* the prompt with clear space between (nodes 1:82 and 1:81), so
    * both can be in flow — and in flow is the version that survives content. An absolute caption long
@@ -36,13 +36,16 @@
    *
    * Row 1 keeps **one caption line's height even when there is no caption**, so an editor clearing
    * the caption does not lift the prompt up against the border — it stays where the comp puts it. The
-   * height is the caption's own line box, `--body-2xs` at the mono role's leading, so the reservation
-   * and the line it reserves for cannot disagree. The prompt is pinned to row 2 for the same reason:
-   * with no caption it would otherwise auto-place into row 1.
+   * height is one line at `--body-2xs` and the mono role's leading, which is what the caption renders
+   * at *because* the component passes it `size="2xs"`; the two are coupled, and the call site says so.
+   *
+   * Only that first row is declared. The prompt places itself in row 2 — which also keeps it out of
+   * row 1 when there is no caption — and a row that exists only when there is a prompt means a caption
+   * with no prompt under it leaves no dangling gap.
    */
   .header {
     display: grid;
-    grid-template-rows: minmax(calc(var(--body-2xs) * var(--mono-line-height)), auto) auto;
+    grid-template-rows: minmax(calc(var(--body-2xs) * var(--mono-line-height)), auto);
     // Caption line → prompt: 36px from the border to the prompt at 1280, 30px at 390.
     row-gap: #{fluid(7px, 10px)};
     // The caption's corner inset: 14 × 12 at desktop (1:82), 12 × 10 at mobile (1:127), measured from
@@ -112,9 +115,10 @@
   }
 
   /*
-   * The card is a `Link` with no appearance props — the plain-wrapper appearance — so it arrives
-   * carrying `.button`'s base: `inline-flex`, centred on both axes, a transparent 1px border and an
-   * 8px gap. Every property it needs different is overridden here.
+   * The card is a `Link` whose only appearance prop is `variant="rounded"` (the comp's 8px corner), so
+   * it arrives carrying `.button`'s base: `inline-flex`, centred on both axes, a transparent 1px border
+   * and an 8px gap. Every property the card needs different is overridden here; none of them is a
+   * prop, because the card's layout is its own.
    *
    * **Two classes, and that is load-bearing.** `.button` and a one-class rule here are a tie inside
    * `@layer defaults`, decided by CSS-module emission order, which nothing in the build guarantees and
@@ -122,7 +126,7 @@
    * this race). `.players .card` is (0,2,0) and wins outright.
    *
    * The focus ring is **not** restated. `.button:focus-visible` already draws the design system's
-   * ring — `--fg-default`, 3px, 3px clear of the box — and it follows the radius below.
+   * ring — `--fg-default`, 3px, 3px clear of the box — and it follows the rounded corners.
    */
   .players .card {
     display: flex;
@@ -133,9 +137,38 @@
     gap: #{fluid(12px, 18px)};
     // 16 × 28 at desktop (1:84), 10 × 12 at mobile (1:129).
     padding: #{fluid(10px, 16px)} var(--player-select-card-padding-inline);
+    // `.button`'s transparent border would take a pixel out of each side of the arch; the comp has none.
     border: 0;
-    // The comp's own rounding on the card (1:84), which is what shapes the focus ring.
-    border-radius: var(--radius-md);
+
+    /*
+     * Forced colours paints no surface, so without this an unfocused card is two words floating under
+     * an arch — the box that says "this whole thing is one control" disappears. `.button` gets that
+     * from its transparent border, which the line above removes; this puts it back where it is needed.
+     * The pixel it adds is fine there, the same trade `components/Tag` makes.
+     */
+    @media (forced-colors: active) {
+      border: 1px solid LinkText;
+    }
+  }
+
+  /*
+   * The whole card's hover, in colour: the name chip takes the accent fill.
+   *
+   * `ModelViewer`'s wave only answers a pointer over the arch, only on a device that renders the canvas,
+   * and not at all under reduced motion — so without this, the pointer cursor was the only thing that
+   * said the label row, a fallback image or a still character was part of a link. "Focus is geometry;
+   * hover is colour" is the Button surface's rule, and this follows it: the ring is untouched.
+   *
+   * `--fg-accent` is pine/600 on light and signal/300 on dark — the palette's interactive accent — and
+   * the chip keeps `--bg-default` ink over it: 9.4:1 and 9.2:1. Not drawn in the comp, which shows no
+   * hover state at all; raised at design review.
+   *
+   * There is no story for it, and that is a limit of the tool rather than an oversight: the stories'
+   * `userEvent.hover` dispatches synthetic pointer events, which run React handlers (the wave) but never
+   * set the browser's `:hover`. It was checked with a real pointer instead.
+   */
+  .players .card:hover .name {
+    --tag-fill: var(--fg-accent);
   }
 
   /*
@@ -156,12 +189,17 @@
    * this stylesheet reaches into another component. Everything else in this file is its own.
    *
    * Scoped under `.arch` so each rule is two classes against the viewer's one, and wins on specificity
-   * rather than on module order. The stage is selected structurally (`> div`): it is the root's only
-   * `div` child, which `ModelViewer.stories.tsx` relies on too. **If the viewer's DOM changes, the
-   * geometry stories in `PlayerSelectSection.stories.tsx` fail** — they measure the arch rather than
-   * trusting this. The durable fix belongs to the viewer: an option that drops its frame and lets the
-   * arch fill the root, with the arch's height, foot and hatch as re-pointable hooks. When that exists,
-   * this block becomes a prop and three custom properties.
+   * rather than on module order. The stage is selected structurally: it is the root's only `div`
+   * child, which `ModelViewer.stories.tsx` relies on too — and `:only-of-type` means that if the viewer
+   * ever grows a second `div`, the override switches off rather than resizing both.
+   *
+   * **The stories check this independently.** They find the stage as the parent of whatever the viewer
+   * is showing (its `role="img"` placeholder or canvas holder, or the fallback image's frame) and fail if
+   * that is not the element this selector reaches, before measuring its geometry. A viewer that wraps
+   * its stage, reorders it or renames it therefore fails `yarn test` rather than shipping the player
+   * page's arch. The durable fix belongs to the viewer: an option that drops its frame, a stable hook on
+   * the stage, and the height, foot and hatch as re-pointable properties. When that exists, this block
+   * becomes a prop and three custom properties.
    *
    * ### The arch's geometry, as lines through the two comps
    *
@@ -179,6 +217,10 @@
    * ratio — 0.550 at desktop, 0.537 at mobile — and the player page's is neither: pinned to it, the
    * desktop arch drew 15px taller than the comp. The line is exact at both.
    *
+   * `--viewer-hatch-step` is the viewer's own local, set on its root; re-pointing it from a more
+   * specific rule is the only hook there is. `Desktop` asserts the stripe the placeholder actually
+   * draws, so a rename in the viewer fails there too.
+   *
    * None of this is layout-dependent in the way that matters: it is all CSS, so the arch has its final
    * size in the server HTML and the canvas arrives inside it without moving anything.
    */
@@ -186,11 +228,10 @@
     --viewer-hatch-step: calc(2cqw + 5.4px);
 
     border: 0;
-    border-radius: 0;
     background-color: transparent;
   }
 
-  .arch .viewer > div {
+  .arch .viewer > div:only-of-type {
     width: 100%;
     height: calc(176cqw + 13.2px);
     margin-block: 0;
@@ -222,14 +263,6 @@
   }
 
   /*
-   * 13px at desktop, 11px at mobile (1:90, 1:135) — `--mono-eyebrow` exactly, the pair the section
-   * eyebrows share. `Text` is given no `size` so this is the only `font-size` on the element.
-   */
-  .position {
-    font-size: var(--mono-eyebrow);
-  }
-
-  /*
    * The name chip — `Tag` filled at its default `md` step (10 × 6), against the drawn 12 × 6 and
    * 10 × 5. Rounded to the step rather than re-padded: `Tag` keeps its padding a closed set, and the
    * difference is two pixels a side.
@@ -237,10 +270,13 @@
    * Its fill and ink are the page's own pair inverted, which is what the comp draws: stone/900 under
    * stone/50 on light. On dark the same two tokens give an off-white chip with pine type. Set through
    * the chip's re-pointable properties, which win over its defaults without a specificity contest.
+   *
+   * The type is `--body-xs`, the step `P1` beside it takes through `size="xs"` — fluid(11px, 12px)
+   * against the drawn 11 and 13 — so the two stay one size wherever the scale moves.
    */
   .name {
     --tag-fill: var(--fg-default);
     --tag-ink: var(--bg-default);
-    --tag-font-size: var(--mono-eyebrow);
+    --tag-font-size: var(--body-xs);
   }
 }

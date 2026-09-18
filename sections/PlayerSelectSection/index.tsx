@@ -7,11 +7,13 @@ import hasText from '@/helpers/hasText';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type { IPlayerSelectSection } from '@/tools/sanity/schema/sections/playerSelectSection';
 
-import PlayerSelectCard, { playerPath } from './PlayerSelectCard';
+import { isSelectablePlayer } from './players';
+import PlayerSelectCard from './PlayerSelectCard';
 
 import styles from './styles.module.scss';
 
 export interface PlayerSelectSectionProps extends IPlayerSelectSection {
+  className?: string;
   /**
    * Forwarded to every card's `ModelViewer`. **The CMS never sets it**, and a page should not either:
    * the default, `auto`, is the viewer's own capability decision and is right everywhere.
@@ -55,28 +57,25 @@ export interface PlayerSelectSectionProps extends IPlayerSelectSection {
  * then — still without touching the viewer.
  */
 const PlayerSelectSection: FC<PlayerSelectSectionProps> = (props) => {
-  const { caption, modelMode, players, prompt } = props;
+  const { caption, className, modelMode, players, prompt } = props;
 
   /*
    * A card needs a name and somewhere to go. Both are required in the Studio, so a *published* player
    * always has them — but the drafts perspective (Presentation) returns drafts too, and a player
    * created a minute ago may have neither yet. Dropping it is better than the alternatives: a card
    * with no slug has no destination, and one with no name has no chip and a link announced as
-   * "Play as".
+   * "Play as". See `isSelectablePlayer` for the test itself.
    *
-   * `hasText` rather than `?.trim()`, because in draft mode even a blank string carries a stega payload
-   * that `trim()` does not remove; `playerPath` is the same function the card builds its `href` from,
-   * so "has a destination" means exactly what the link will use. The positions are assigned after
-   * this, so `P1`/`P2` stay contiguous.
+   * The positions are assigned after this, so `P1`/`P2` stay contiguous.
    */
-  const cards = players?.filter((player) => hasText(player?.name) && playerPath(player?.slug?.current) !== '') ?? [];
+  const selectable = players?.filter(isSelectablePlayer) ?? [];
 
   /*
    * Nothing at all rather than a prompt over an empty panel. "Select player" with no players to select
    * is a broken screen, not an empty state — and an editor who adds this section before creating any
    * players sees the reason in the prompt field's description.
    */
-  if (cards.length === 0) {
+  if (selectable.length === 0) {
     return null;
   }
 
@@ -85,6 +84,7 @@ const PlayerSelectSection: FC<PlayerSelectSectionProps> = (props) => {
 
   return (
     <Section
+      className={className}
       name="PlayerSelectSection"
       theme={getSectionTheme(props, 'light')}
       {...getSectionSpacingProps(props)}
@@ -106,9 +106,19 @@ const PlayerSelectSection: FC<PlayerSelectSectionProps> = (props) => {
              * `2xs` is fluid(10px, 11px) against the comp's 11/9 (nodes 1:82, 1:127) — exact at
              * desktop, a pixel over at mobile, and the rung every other mono micro-label is on. The
              * regular weight is the comp's quiet register; the tracking is re-pointed in the stylesheet.
+             *
+             * **`.header`'s first grid row reserves one line at this step** (`--body-2xs` at the mono
+             * leading), so that clearing the caption does not move the prompt. Change the size here and
+             * that reservation has to change with it.
+             *
+             * `ariaHidden`, because the caption is panel chrome describing the canvases — "3D canvas ·
+             * idle loop" — and the canvases are themselves hidden inside the cards' links. Read aloud it
+             * was the first thing a screen reader met, before the heading, and it describes something that
+             * is not in the accessibility tree (and says "idle loop" over a still image or a placeholder).
              */}
             {hasCaption && (
               <Text
+                ariaHidden
                 as="p"
                 className={styles.caption}
                 color="themeFgAccent"
@@ -147,7 +157,7 @@ const PlayerSelectSection: FC<PlayerSelectSectionProps> = (props) => {
          * "list, 2 items". Same reasoning as `HeaderDisplaySection`'s meta list.
          */}
         <ul className={styles.players} role="list">
-          {cards.map((player, index) => (
+          {selectable.map((player, index) => (
             <li className={styles.player} key={player._id}>
               <PlayerSelectCard mode={modelMode} player={player} position={index + 1} />
             </li>

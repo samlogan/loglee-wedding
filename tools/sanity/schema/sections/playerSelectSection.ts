@@ -18,15 +18,15 @@ import internalLabelField from '../common/internalLabelField';
  * back `null` on a player nobody has opened the 3D tab for. The card has an answer for every one of
  * those, so the type has to be able to say them.
  *
- * `clips` carries `idle` and `hover` only. `feature` is the player page's rest clip and the
- * projection does not ask for it.
+ * `clips` carries `idle` and `hover` only — `feature` is the player page's rest clip and the
+ * projection does not ask for it, so the type does not offer it either.
  */
 interface IPlayerSelectSectionPlayer {
   _id: string;
   name?: string | null;
   slug?: { current?: string | null } | null;
   model?: { asset?: { url?: string | null } | null } | null;
-  clips?: ModelClipNames | null;
+  clips?: Pick<ModelClipNames, 'idle' | 'hover'> | null;
   fallbackImage?: SanityImageSimple | null;
 }
 
@@ -34,21 +34,14 @@ interface IPlayerSelectSectionPlayer {
  * The home page's character select — a framed panel, a corner caption, a centred prompt, and one card
  * per player (Figma nodes 1:79 desktop, 1:124 mobile).
  *
- * ## The players are queried, not referenced
- *
- * There is no `players` field on this section. The projection joins **every** `player` document,
- * ordered by its `order` field — which already exists for exactly this ("Position on the Select
- * Player screen, lowest first") and has a matching Studio ordering. A reference array here would be a
- * second ordering to keep in step with the first, and the two would disagree the first time an editor
- * reordered one of them.
- *
- * The same reasoning covers `P1` / `P2`: they are the card's position in that ordering, so there is no
- * field for them either.
+ * There is no `players` field and no field for `P1` / `P2`: every `player` document is joined in by
+ * the projection, in its own `order`, and the labels are the position. See
+ * `sections/PlayerSelectSection/queries.groq.ts` for why that is a join rather than a reference array.
  */
 interface IPlayerSelectSection {
   caption?: string | null;
   prompt?: string | null;
-  /** Joined by the projection — see the note above. Never authored on the section. */
+  /** Joined by the projection. Never authored on the section. */
   players?: IPlayerSelectSectionPlayer[] | null;
 }
 
@@ -70,10 +63,14 @@ const playerSelectSection = defineType({
      * `headerDisplaySection.items` both state. `text-transform` does not keep capitals out of the
      * accessibility tree (Chromium names an element from its rendered text), so a stored "SELECT
      * PLAYER" is what a screen reader spells out, letter by letter.
+     *
+     * The caption itself is decorative, and hidden from screen readers by the component: it describes
+     * the canvases, which are hidden inside the cards' links. Its description says so, so nobody puts
+     * information here that only sighted readers would get.
      */
     {
       description:
-        'The small label in the panel’s top-left corner — “3D canvas (react three fiber) · idle loop”. Optional. Type it in normal sentence case; it is displayed in uppercase mono automatically.',
+        'The small label in the panel’s top-left corner — “3D canvas (react three fiber) · idle loop”. Optional, and decorative: it is not read out by screen readers, so do not put anything here a guest needs to know. Type it in normal sentence case; it is displayed in uppercase mono automatically.',
       group: 'data',
       name: 'caption',
       title: 'Caption',
@@ -81,16 +78,22 @@ const playerSelectSection = defineType({
     },
     /*
      * Pre-filled, where the caption is not, because the prompt is the panel's heading: it is what
-     * tells a screen-reader user what the two links after it are for. An editor can still clear it.
+     * tells a screen-reader user what the two links after it are for, and what heading navigation lands
+     * on. Optional by the ticket, so a warning rather than an error — an editor can still publish
+     * without it, having been told what that costs.
      */
     {
       description:
-        'The centred line above the cards — “Select player”. Optional. The cards themselves are every Player document, in the order set by each player’s Order field: add, remove or reorder players there, not here.',
+        'The centred line above the cards — “Select player”. It is the panel’s heading for screen-reader users. The cards themselves are every Player document, in the order set by each player’s Order field: add, remove or reorder players there, not here.',
       group: 'data',
       initialValue: 'Select player',
       name: 'prompt',
       title: 'Prompt',
-      type: 'string'
+      type: 'string',
+      validation: (Rule) =>
+        Rule.required().warning(
+          'Without a prompt the character select has no heading, so screen-reader users navigating by heading cannot find it.'
+        )
     },
     {
       group: 'styles',

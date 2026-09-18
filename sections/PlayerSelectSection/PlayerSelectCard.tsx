@@ -6,32 +6,21 @@ import type { ModelViewerMode } from '@/components/ModelViewer';
 import Tag from '@/components/Tag';
 import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
-import type { IPlayerSelectSectionPlayer } from '@/tools/sanity/schema/sections/playerSelectSection';
+
+import { playerPath } from './players';
+import type { SelectablePlayer } from './players';
 
 import styles from './styles.module.scss';
 
 export interface PlayerSelectCardProps {
   className?: string;
-  /** Forwarded to `ModelViewer`. See `modelMode` on the section. */
+  /** Forwarded to `ModelViewer` untouched; the viewer owns the default. See `modelMode` on the section. */
   mode?: ModelViewerMode;
-  /** A player the section has already checked has a name and a non-empty `playerPath`. */
-  player: IPlayerSelectSectionPlayer;
+  /** Only a player that has been through `isSelectablePlayer` — one with a name and a path. */
+  player: SelectablePlayer;
   /** 1-based. Printed as `P1`, `P2` — the position is the only source of the label. */
   position: number;
 }
-
-/**
- * The player page's path segment: the slug with any stega payload and any stray slashes removed, or
- * `''` when nothing is left — which is the section's test for "this card has nowhere to go".
- *
- * Exported so the section's filter and the card's `href` are one function and cannot disagree. The
- * slashes matter because the Studio's slugify only runs on "Generate": a slug typed as `/sam` is
- * storable, and `//sam/` is a protocol-relative URL to a host called `sam`, not a path.
- */
-export const playerPath = (slug?: string | null): string =>
-  stegaClean(slug ?? '')
-    .trim()
-    .replaceAll(/^\/+|\/+$/g, '');
 
 /**
  * One character card: the arch, then the position and the name, and the whole thing one link to the
@@ -47,19 +36,21 @@ export const playerPath = (slug?: string | null): string =>
  *   the placeholder) with `alt`. Inside a link that already says "Sam", that is the name read a second
  *   time. `alt` is still written properly — the prop is required and a component that is later lifted
  *   out of this wrapper should not arrive with an invented description.
- * - the label row, because "P1" read aloud is noise and the name in the chip is already in the link's
- *   name. The visible "SAM" is still *contained* in "Play as Sam", which is what WCAG 2.5.3 asks for:
- *   a speech user saying "click Sam" reaches it.
+ * - the label row, because the name in the chip is already in the link's name, and "P1" is an ordinal
+ *   the list already conveys ("1 of 2"). The visible "SAM" is still *contained* in "Play as Sam", which
+ *   is what WCAG 2.5.3 asks of a speech user saying "click Sam". Leaving "P1" out of the name is a
+ *   judgement: it is read as the card's position, not as its label.
  *
- * ## Draft mode, and the three values that must not carry stega
+ * ## Draft mode, and the values that must not carry stega
  *
  * In the Presentation tool every plain string arrives with an invisible stega payload appended (see
  * `tools/helpers/hasText.ts`). The chip renders `name` as it came, payload and all, because that is what
- * the overlay reads to offer click-to-edit. Three other uses are cleaned first:
+ * the overlay reads to offer click-to-edit. Everything else that reads a CMS string is cleaned first:
  *
  * - the link's `aria-label`, which is spoken rather than overlaid;
- * - the `href`. `slug.current` is on the encoder's default deny-list, so it arrives clean today — but a
- *   path carrying the payload would be a 404, so this does not depend on a default;
+ * - the `href` and the GLB's `src`. Both are on the encoder's default deny-list today (`slug.current`
+ *   by name, the asset URL because it is a URL), but a path or a file URL carrying the payload would be
+ *   a 404, so neither depends on a default;
  * - **`clips`**. `idle` and `hover` are not on the deny-list, so in draft mode each name arrives as
  *   `Excited_Walk_M` plus the payload. `resolveModelClip` matches names verbatim, then trimmed, then
  *   case-insensitively; `trim()` removes none of the zero-width characters the payload is made of, so
@@ -67,10 +58,10 @@ export const playerPath = (slug?: string | null): string =>
  *   checks their work in.
  */
 const PlayerSelectCard = (props: PlayerSelectCardProps) => {
-  const { className, mode = 'auto', player, position } = props;
+  const { className, mode, player, position } = props;
   const { clips, fallbackImage, model, name, slug } = player;
 
-  const plainName = stegaClean(name ?? '').trim();
+  const plainName = stegaClean(name).trim();
 
   return (
     <Link
@@ -80,7 +71,9 @@ const PlayerSelectCard = (props: PlayerSelectCardProps) => {
        * Trailing slash because `next.config.js` sets `trailingSlash: true`: without it every click is a
        * 308 to the same path with one. The route itself is MAM-1901's, and 404s until it lands.
        */
-      href={`/${playerPath(slug?.current)}/`}
+      href={`/${playerPath(slug.current)}/`}
+      // The comp's own 8px rounding on the card (1:84) — and the shape the focus ring follows.
+      variant="rounded"
     >
       <div aria-hidden="true" className={styles.arch}>
         {/*
@@ -103,18 +96,16 @@ const PlayerSelectCard = (props: PlayerSelectCardProps) => {
           interactive
           mode={mode}
           priority
-          src={model?.asset?.url ?? undefined}
+          src={stegaClean(model?.asset?.url) ?? undefined}
         />
       </div>
       <div aria-hidden="true" className={styles.label}>
-        <Text
-          as="span"
-          className={styles.position}
-          color="themeFgAccent"
-          text={`P${position}`}
-          variant="mono"
-          weight="bold"
-        />
+        {/*
+         * `xs` is fluid(11px, 12px) against the drawn 11 and 13 (1:135, 1:90): exact on the phone, a
+         * pixel under on the desktop, and a step on the scale rather than a size set in the stylesheet.
+         * The chip is re-pointed to the same step in `.name`, so the two stay one size.
+         */}
+        <Text as="span" color="themeFgAccent" size="xs" text={`P${position}`} variant="mono" weight="bold" />
         <Tag className={styles.name} label={name} uppercase variant="filled" weight="bold" />
       </div>
     </Link>

@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import hasText from '@/helpers/hasText';
 import type {
   IPlayerSelectSection,
   IPlayerSelectSectionPlayer
 } from '@/tools/sanity/schema/sections/playerSelectSection';
+import mockImage from '@/tools/storybook/mockImage';
 import sectionFixture from '@/tools/storybook/sectionFixture';
 
 import PlayerSelectSection from '.';
-import { playerPath } from './PlayerSelectCard';
+import { isSelectablePlayer, playerPath } from './players';
 
 const FIGMA = 'https://www.figma.com/design/KxvsJuCNaG4n2QVp3iD4jd/Wedding?node-id=';
 
@@ -118,8 +118,29 @@ const cardsOf = (canvasElement: HTMLElement) => within(canvasElement).getAllByRo
 /** The viewer root inside a card — found through its state attribute, as the viewer's stories do. */
 const viewerOf = (card: HTMLElement) => card.querySelector('[data-model-render]') as HTMLElement;
 
-/** The arch: the viewer root's only `div` child. The same structural fact the section's CSS uses. */
-const archOf = (card: HTMLElement) => viewerOf(card).querySelector(':scope > div') as HTMLElement;
+/**
+ * The arch — the viewer's stage — found **two ways**, and required to agree.
+ *
+ * The section's CSS reaches the stage as the viewer root's only `div` child. A lookup that made the same
+ * assumption could not catch the change that breaks it: wrap the stage in a new `div` and the CSS and
+ * the lookup would land on the same wrong element, measure it, and pass while the arch a reader sees kept
+ * the player page's inset and shape.
+ *
+ * So the stage is also found independently, as the parent of whatever the viewer is showing: the
+ * `role="img"` placeholder or canvas holder, or the frame around the fallback `<img>`. Each fills the
+ * stage (`inset: 0`) in every state these stories reach. If the two answers differ, the override no
+ * longer reaches the arch, and that is the failure — named, before any geometry is measured.
+ */
+const archOf = (card: HTMLElement) => {
+  const viewer = viewerOf(card);
+  const arch = viewer.querySelector(':scope > div:only-of-type');
+  const shown = viewer.querySelector('[role="img"]') ?? viewer.querySelector('img')?.parentElement;
+
+  if (!arch || shown?.parentElement !== arch) {
+    throw new Error("`.arch .viewer > div:only-of-type` no longer selects ModelViewer's stage");
+  }
+  return arch as HTMLElement;
+};
 
 const panelOf = (canvasElement: HTMLElement) => canvasElement.querySelector('ul')?.parentElement as HTMLElement;
 
@@ -163,19 +184,19 @@ const lastOf = (cards: HTMLElement[]) => cards.at(-1) as HTMLElement;
 export const PublishedContent: Story = {
   args: data,
   play: async ({ canvasElement }) => {
-    const expected = (data.players ?? []).filter(
-      (player) => hasText(player?.name) && playerPath(player?.slug?.current) !== ''
-    );
+    // The component's own test, not a copy of it — so the two cannot drift. `IncompleteDrafts` pins
+    // what that test does against fixed inputs.
+    const expected = (data.players ?? []).filter(isSelectablePlayer);
 
     // Not vacuous: an empty list means the dataset lost its players, which is worth failing on.
     await expect(expected.length).toBeGreaterThan(0);
 
     const cards = cardsOf(canvasElement);
     await expect(cards.map((card) => card.getAttribute('aria-label'))).toEqual(
-      expected.map((player) => `Play as ${player.name?.trim()}`)
+      expected.map((player) => `Play as ${player.name.trim()}`)
     );
     await expect(cards.map((card) => card.getAttribute('href'))).toEqual(
-      expected.map((player) => `/${playerPath(player.slug?.current)}/`)
+      expected.map((player) => `/${playerPath(player.slug.current)}/`)
     );
   }
 };
@@ -194,7 +215,10 @@ export const Default: Story = {
 
     // The prompt is the panel's heading, so the list after it has a label to be found by.
     await expect(canvas.getByRole('heading', { level: 2 })).toHaveTextContent('Select player');
-    await expect(canvas.getByText('3D canvas (react three fiber) · idle loop')).toBeVisible();
+    // The caption is on screen but decorative — it describes the canvases, which are hidden too.
+    const caption = canvas.getByText('3D canvas (react three fiber) · idle loop');
+    await expect(caption).toBeVisible();
+    await expect(caption).toHaveAttribute('aria-hidden', 'true');
 
     // A list of two, in the players' order.
     await expect(within(canvas.getByRole('list')).getAllByRole('listitem')).toHaveLength(2);
@@ -237,6 +261,15 @@ export const Desktop: Story = {
       await expect(arch.height).toBeCloseTo(418, 0);
       // The foot radius, which the player page draws at 28px and this comp at 24.
       await expect(parseFloat(getComputedStyle(archOf(card)).borderBottomLeftRadius)).toBeCloseTo(24, 1);
+
+      /*
+       * The hatch the placeholder actually draws: 10px bars at this arch (1:85), where the viewer's own
+       * default would give ~6.6px. `--viewer-hatch-step` is a local of the viewer's rather than a hook,
+       * so this is what fails if it is renamed. Read from the gradient's resolved stops — `0 10 10 20`.
+       */
+      const hatch = getComputedStyle(viewerOf(card).querySelector('[role="img"]') as HTMLElement).backgroundImage;
+      const stops = [...hatch.matchAll(/([\d.]+)px/g)].map(([, px]) => Math.round(parseFloat(px)));
+      await expect(stops).toEqual([0, 10, 10, 20]);
     }
 
     // Centred as a pair: the space either side of them is the same.
@@ -300,22 +333,25 @@ export const Narrowest: Story = {
  * Tab reaches each card in order, and the focused card draws the design system's ring.
  *
  * `.button:focus-visible` owns the ring — the card is a `Link`, and the section restates none of it —
- * so this is the proof that overriding the link's layout did not take its focus state with it.
+ * so this is the proof that overriding the link's layout did not take its focus state with it. The ring
+ * is compared with the `--button-focus-ring-*` tokens rather than with literals, so retuning the ring
+ * system-wide does not fail a section that did nothing wrong.
  */
 export const KeyboardFocus: Story = {
   args: MOCK,
   play: async ({ canvasElement }) => {
     const cards = cardsOf(canvasElement);
+    const tokens = getComputedStyle(document.documentElement);
 
     await userEvent.tab();
     await expect(cards[0]).toHaveFocus();
 
     const ring = getComputedStyle(cards[0]);
     await expect(ring.outlineStyle).toBe('solid');
-    await expect(ring.outlineWidth).toBe('3px');
+    await expect(ring.outlineWidth).toBe(tokens.getPropertyValue('--button-focus-ring-width').trim());
     // Clear of the box, and following its rounded corners rather than squaring them off.
-    await expect(ring.outlineOffset).toBe('3px');
-    await expect(ring.borderTopLeftRadius).not.toBe('0px');
+    await expect(ring.outlineOffset).toBe(tokens.getPropertyValue('--button-focus-ring-offset').trim());
+    await expect(parseFloat(ring.borderTopLeftRadius)).toBeGreaterThan(0);
 
     await userEvent.tab();
     await expect(cards[1]).toHaveFocus();
@@ -326,8 +362,10 @@ export const KeyboardFocus: Story = {
  * A player with no GLB, one with no clips, one with no fallback image — each still a working card.
  *
  * Three at once, which also shows a third player adding a column rather than a row. Forced to the
- * fallback branch so the story says the same thing on every machine: no GLB is the placeholder
- * everywhere, and the other two are the placeholder here because neither has a fallback image either.
+ * fallback branch, so the story says the same thing on every machine and so the viewer's **image**
+ * branch is reached: the no-clips player has a fallback image and shows it, while the other two — no
+ * GLB, no fallback — show the placeholder. That picture is a real `<img alt>` inside a link that is
+ * already named, which is exactly where the name would be read twice; the story checks it is not.
  */
 export const MissingAssets: Story = {
   args: {
@@ -335,7 +373,15 @@ export const MissingAssets: Story = {
     modelMode: 'fallback',
     players: [
       { ...SAM, _id: 'no-glb', model: null, name: 'No model', slug: { current: 'no-model' } },
-      { ...LAUREN, _id: 'no-clips', clips: null, name: 'No clips', slug: { current: 'no-clips' } },
+      {
+        ...LAUREN,
+        _id: 'no-clips',
+        clips: null,
+        // Portrait, because the arch is — `mockImage` ranks its pool by how close the shape is.
+        fallbackImage: mockImage({ altText: 'Lauren', height: 418, seed: 'player-select-lauren', width: 230 }),
+        name: 'No clips',
+        slug: { current: 'no-clips' }
+      },
       { ...SAM, _id: 'no-fallback', fallbackImage: null, name: 'No fallback', slug: { current: 'no-fallback' } }
     ]
   },
@@ -349,10 +395,18 @@ export const MissingAssets: Story = {
     }
     await expect(cards.map((card) => card.getAttribute('href'))).toEqual(['/no-model/', '/no-clips/', '/no-fallback/']);
 
-    // Every arch is the placeholder, and every one is full size — no card collapses for want of a file.
+    // The branch each arch took: nothing to load, a picture to show, nothing to show.
+    await expect(cards.map((card) => viewerOf(card).dataset.modelRender)).toEqual([
+      'placeholder',
+      'image',
+      'placeholder'
+    ]);
+    // And the picture's `alt` is not a second name inside the link.
+    await expect(canvas.queryAllByRole('img')).toHaveLength(0);
+
+    // Every arch full size and the same size — no card collapses or grows for want of a file.
     const first = archOf(cards[0]).getBoundingClientRect();
     for (const card of cards) {
-      await expect(viewerOf(card).dataset.modelRender).toBe('placeholder');
       await expect(archOf(card).getBoundingClientRect().height).toBeCloseTo(first.height, 0);
       await expectArchGeometry(card);
     }
@@ -488,6 +542,8 @@ export const Loaded: Story = {
     // Nothing shifted when it arrived: both arches, both label rows, to the pixel.
     await expect(boxes()).toEqual(before);
     await expect(viewerOf(lauren).dataset.modelRender).toBe('placeholder');
+    // The live canvas's `role="img"` holder is the likeliest place for a second name to leak; it must not.
+    await expect(within(canvasElement).queryAllByRole('img')).toHaveLength(0);
 
     await userEvent.hover(archOf(sam));
     await waitFor(async () => expect(viewer.dataset.modelClip).toBe('Running'), { timeout: 5000 });
