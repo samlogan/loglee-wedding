@@ -1,0 +1,154 @@
+/*
+ * The room-type grid on `/stay` — Figma `1:630` (desktop) and `1:700` (mobile).
+ *
+ * ## This file is a grid and nothing else
+ *
+ * Every pixel of the card itself — the border, the radius, the media band, the caption chip's inset,
+ * the baseline-tied header row, the body type, the hairline, the footnote's ink, step, leading and
+ * weight — belongs to `components/MediaCard`, which was factored out of these three instances and
+ * `/the-lodge`'s two. The section owns the track count, the gutter between tracks and the switches,
+ * because that is the one thing the card deliberately does not know: two sections use it at
+ * different column counts, and a card that owned a grid could not be used by both.
+ *
+ * Nothing here names a colour, a font or a size. If a rule below grows one, the thing it wants is a
+ * `MediaCard` prop or one of that component's six custom-property hooks — and this section re-points
+ * none of the six, because the six *defaults* were measured off these three cards.
+ *
+ * ## The four rules that bottom-align the footnotes
+ *
+ * The acceptance criterion — "cards stretch to a common height so the footnote bottom-aligns across
+ * the row" — is not implemented by any one declaration. It needs `align-items: stretch` on the row
+ * (below, and the grid's own default), `align-self: stretch` reaching the card's `<li>` wrapper
+ * (below), then `height: 100%` on the card and `margin-block-start: auto` on its footer, both of
+ * which live in `components/MediaCard`. Remove any one and the row still looks right on its
+ * **tallest** card and is wrong on every other one — which is why the story measures it rather than
+ * screenshotting it.
+ */
+
+/*
+ * ## Two switches, and why neither is a media query
+ *
+ * Same reasoning as `HeaderDisplaySection` and `ScheduleSection`: the query is on the section's own
+ * content box rather than on the viewport. In the app the two are equivalent — the section is full
+ * width, so its container's inline size is the viewport minus the gutters — but keying it to the
+ * container is what makes the switch **testable**. A story can render the grid at 380px and at
+ * 1240px in one browser page and measure both, where a viewport media query needs a browser resize
+ * that the component-test runner does not do.
+ *
+ * ## The numbers are measured, not taken from the breakpoint map
+ *
+ * The comp draws exactly two states: 3-up at a 1200px content box (1:630, three 386.66px tracks) and
+ * 1-up at 350px (1:700). The two-up band between them is inferred, and going straight from three to
+ * one would be worse than inferring it — three tracks in a 700px container are 220px each, 57% of
+ * the drawn card, at which point "Family Room" wraps against its "2 rooms" label on every card.
+ *
+ * - `60rem` (960px) for three: tracks of ~307px, leaving ~269px of card content. The widest drawn
+ *   header row — "FAMILY ROOM" at ~28px Archivo Black plus a 12px gap plus "2 ROOMS" — measures
+ *   ~262px, so this is the width at which the drawn row still fits on one line. Below it, wrap.
+ * - `38rem` (608px) for two: tracks of ~294px, a shade under the three-up floor, which is the right
+ *   place to give up the second column rather than squeeze both.
+ *
+ * `rem` rather than `px`, and this is the one case where that is the safe direction. A container
+ * query's `rem` resolves against the **live root font size**, so a reader who raises their text size
+ * crosses these thresholds and gets *fewer, wider* columns — which is what more text wants. The
+ * hazard CLAUDE.md's siblings hit is the opposite shape: a `rem` threshold that *hides* something
+ * can delete content on a text-size increase alone (WCAG 1.4.4). Nothing here hides; both branches
+ * render every card, every field, in the same order. Verified at a 32px root in the story.
+ */
+$spec-card-grid-two-up: 38rem;
+$spec-card-grid-three-up: 60rem;
+
+@layer defaults {
+  /*
+   * The query container is the `Container` element, reached through `Section`'s `containerClassName`
+   * — so the queried inline size is the *content* box, container width minus its own gutters, which
+   * is precisely what the tracks divide. Putting it on the grid would query the same box (the grid
+   * is the container's only child and fills it), but putting it on the container keeps the switch
+   * independent of any padding a future edit adds to the grid itself.
+   *
+   * `inline-size` and not `size`: the width comes from the page and the height from the content, and
+   * containing the height would collapse the grid. The cost `HeaderDisplaySection` and
+   * `ScheduleSection` both document applies here too — an inline-size container does not contribute
+   * its contents to its own intrinsic width, so inside a shrink-to-fit ancestor it collapses to its
+   * padding. Safe for the same reason: sections render as block children of `<main>`, and of a plain
+   * block `<div>` in Storybook.
+   */
+  .container {
+    container: specCardGrid / inline-size;
+  }
+
+  .grid {
+    display: grid;
+    /*
+     * **One column is the unconditional default**, and the two wider branches are overrides —
+     * mobile-first, not because of a house style but because a container query cannot be evaluated
+     * before its container has been laid out. On the first style pass neither branch matches, so
+     * whatever is written here is what paints; a desktop-first default would flash three columns in
+     * a 350px container.
+     *
+     * `minmax(0, 1fr)` and **not** `1fr`, at every track count. A `1fr` track keeps its automatic
+     * minimum size, so one long unbreakable word — a room name, a URL pasted into a footnote — sets
+     * a floor under the track and pushes the whole row wider than its container. `minmax(0, …)` lets
+     * the track shrink so the content wraps instead. The failure only appears with real content,
+     * which is why it is spelt out rather than rediscovered.
+     */
+    grid-template-columns: minmax(0, 1fr);
+    /*
+     * The grid's own default, restated because it is load-bearing rather than decorative: it is what
+     * gives each `<li>` a definite height, which is in turn what `MediaCard`'s `height: 100%`
+     * resolves against. An edit that sets `align-items: start` here to fix some unrelated thing
+     * would silently un-align every footnote in the row, and this line is where that gets noticed.
+     *
+     * It is also why the AC's "height stretching is desktop-only, not a fixed card height" needs no
+     * code: stretch is a property of a *row*, and the single-column branch puts one card in each
+     * row, so there is nothing to stretch to. No card anywhere has a height in this file.
+     */
+    align-items: stretch;
+    /*
+     * Drawn 20px between desktop columns (1:630) and 16px between mobile cards (1:700 — card one
+     * ends at 329, card two starts at 345). Not a step on the spacing scale: `--spacing-md` is a
+     * flat 16px and `--spacing-lg` a flat 24px, so either is right at one end and wrong at the
+     * other, and `--spacing-xl` (`fluid(24px, 32px)`) is a third bigger than the comp at both ends.
+     *
+     * `fluid()` rather than a hand-written `clamp()` or a `media-up()` override, per CLAUDE.md: the
+     * function interpolates across the same 375→1440 anchors every token in `_variables.scss` uses,
+     * so this gutter ramps in step with the card padding beside it instead of stepping at a width
+     * the design never draws.
+     *
+     * It is the same pair as `--media-card-padding-default`, and that is not a coincidence — the
+     * design uses one inset value for the space between the cards and the space inside them, which
+     * is what makes the row read as a single gridded object rather than three separate ones.
+     *
+     * Viewport-fluid while the track count is container-driven, deliberately: the gutter is a
+     * property of the page's density, not of how much room this particular section was given.
+     */
+    gap: #{fluid(16px, 20px)};
+
+    @container specCardGrid (width >= #{$spec-card-grid-two-up}) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @container specCardGrid (width >= #{$spec-card-grid-three-up}) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /*
+   * The `<li>` between the grid and the card, and the whole reason this rule exists.
+   *
+   * `align-items: stretch` reaches the **direct child** of the grid — which is this wrapper, not the
+   * card inside it. Stretching it is what makes its height definite, and a definite height is what
+   * `MediaCard`'s `height: 100%` needs in order to mean anything. Without it the card is
+   * content-sized inside a full-height `<li>`, the footer's `margin-block-start: auto` has no free
+   * space to absorb, and every footnote sits under its own description at a different `y` — correct
+   * on the tallest card in the row and wrong on the rest.
+   *
+   * Written as `align-self` rather than `height: 100%`: on an auto-sized row a percentage height
+   * resolves against a track whose size depends on this item, which is a cycle browsers resolve
+   * differently. `stretch` states the same intent with no cycle, and is inert in the single-column
+   * branch where the row is exactly one card tall.
+   */
+  .item {
+    align-self: stretch;
+  }
+}

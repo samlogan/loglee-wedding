@@ -4,6 +4,7 @@ import { groq } from 'next-sanity';
 import faqSectionProjection from '@/sections/FaqSection/queries.groq';
 import headerDisplaySectionProjection from '@/sections/HeaderDisplaySection/queries.groq';
 import scheduleSectionProjection from '@/sections/ScheduleSection/queries.groq';
+import specCardGridSectionProjection from '@/sections/SpecCardGridSection/queries.groq';
 import twoColumnListSectionProjection from '@/sections/TwoColumnListSection/queries.groq';
 // #endregion section-imports
 
@@ -19,6 +20,7 @@ const sectionProjections = [
   faqSectionProjection,
   headerDisplaySectionProjection,
   scheduleSectionProjection,
+  specCardGridSectionProjection,
   twoColumnListSectionProjection
   // #endregion section-projections
 ].join('\n  ');

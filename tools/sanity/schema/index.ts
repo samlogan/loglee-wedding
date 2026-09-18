@@ -39,6 +39,7 @@ import seo from './objects/seo';
 import { faqSection } from './sections/faqSection';
 import { headerDisplaySection } from './sections/headerDisplaySection';
 import { scheduleSection } from './sections/scheduleSection';
+import { specCardGridSection } from './sections/specCardGridSection';
 import { twoColumnListSection } from './sections/twoColumnListSection';
 // #endregion section-imports
 
@@ -93,6 +94,7 @@ const schema: SchemaTypeDefinition[] = [
   faqSection,
   headerDisplaySection,
   scheduleSection,
+  specCardGridSection,
   twoColumnListSection
   // #endregion section-types
 ];
