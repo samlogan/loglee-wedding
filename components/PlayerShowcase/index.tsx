@@ -1,8 +1,10 @@
+import type { CSSProperties } from 'react';
+
+import Container from '@/components/Container';
 import Link from '@/components/Link';
 import ModelViewer from '@/components/ModelViewer';
 import PlayerCard from '@/components/PlayerCard';
 import Text from '@/components/Text';
-import classNames from '@/helpers/classNames';
 import formatOrdinal from '@/helpers/formatOrdinal';
 import type { ModelClipNames } from '@/helpers/modelClips';
 import type { IPlayerStat } from '@/tools/sanity/schema/documents/player';
@@ -42,6 +44,15 @@ const MODEL_LABEL = '3D canvas · dance';
 
 /**
  * The player page — utility bar, the model beside the name and player card, and the switch control.
+ *
+ * ## The bar is full-bleed, so the component brings its own containers
+ *
+ * The comp runs the bar's rule edge to edge of the frame while everything else sits inside the
+ * gutter — the same construction as the site header directly above it, whose rule is also full
+ * width. So this is rendered in a `Section` with `full`, the rule sits on the full-width `nav`, and
+ * the inset comes from a `Container` inside it and another around the stage, exactly as
+ * `components/Header` does it. Both containers are also the layout's query containers: they have
+ * the same content width, so the one breakpoint means the same thing in the bar and in the stage.
  *
  * ## Reading order is the DOM order, at every width
  *
@@ -83,6 +94,18 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
   const next = roster.length > 1 ? roster[(index + 1) % roster.length] : undefined;
   const nextHref = next ? `/${next.slug}/` : undefined;
 
+  /*
+   * The longest run the display face has to hold on one line — a word cannot wrap, so it is the
+   * longest word rather than the whole name that the column must fit. See `.name` in the styles.
+   */
+  const longestWord = Math.max(
+    ...name
+      .trim()
+      .split(/\s+/)
+      .map((word) => word.length),
+    1
+  );
+
   const trimmedEyebrow = eyebrow?.trim();
   const trimmedLevel = level?.trim();
   const statList = stats ?? [];
@@ -97,75 +120,84 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
         href={nextHref}
         mono
         outline
-        theme="primary"
-        variant="square"
+        size="sm"
+        theme="accent"
+        variant="ui"
       >
         Switch player → {next.name}
       </Link>
     ) : null;
 
   return (
-    <div className={classNames(styles.showcase, className)}>
+    <div className={className}>
       <nav aria-label="Player" className={styles.bar}>
-        <Link ariaLabel="Back to home" className={styles.back} href="/" mono variant="bare">
-          ← Back
-        </Link>
-        <p className={styles.pager}>
-          <Text
-            as="span"
-            className={styles.pagerShort}
-            text={`P ${position}`}
-            textTransform="uppercase"
-            variant="mono"
-          />
-          <Text
-            as="span"
-            className={styles.pagerLong}
-            text={`Player ${position}`}
-            textTransform="uppercase"
-            variant="mono"
-          />
-        </p>
-        {switchControl('bar')}
+        <Container className={styles.frame} width="xl">
+          <div className={styles.barRow}>
+            <Link ariaLabel="Back to home" arrow="left" className={styles.back} href="/" mono size="sm" variant="bare">
+              Back
+            </Link>
+            <p className={styles.pager}>
+              <Text
+                as="span"
+                className={styles.pagerShort}
+                size="xs"
+                text={`P ${position}`}
+                textTransform="uppercase"
+                variant="mono"
+              />
+              <Text
+                as="span"
+                className={styles.pagerLong}
+                size="xs"
+                text={`Player ${position}`}
+                textTransform="uppercase"
+                variant="mono"
+              />
+            </p>
+            {switchControl('bar')}
+          </div>
+        </Container>
       </nav>
 
-      <div className={styles.stage}>
-        <div className={styles.heading}>
-          {trimmedEyebrow ? (
-            <Text
-              as="p"
-              className={styles.eyebrow}
-              color="themeFgAccent"
-              text={trimmedEyebrow}
-              textTransform="uppercase"
-              variant="mono"
-              weight="bold"
-            />
-          ) : null}
-          <Text as="h1" className={styles.name} size="lg" text={name} textTransform="uppercase" variant="display" />
-        </div>
-
-        <div className={styles.model}>
-          <ModelViewer
-            alt={`${name}, dancing`}
-            badge={model?.originalFilename ?? undefined}
-            clips={clips}
-            fallbackImage={fallbackImage}
-            label={MODEL_LABEL}
-            orbit
-            restClip="feature"
-            src={model?.url ?? undefined}
-          />
-        </div>
-
-        {hasCard ? (
-          <div className={styles.card}>
-            <PlayerCard level={trimmedLevel} stats={statList} />
+      <Container className={styles.frame} width="xl">
+        <div className={styles.stage}>
+          <div className={styles.heading} style={{ '--player-name-length': longestWord } as CSSProperties}>
+            {trimmedEyebrow ? (
+              <Text
+                as="p"
+                className={styles.eyebrow}
+                color="themeFgAccent"
+                text={trimmedEyebrow}
+                textTransform="uppercase"
+                variant="mono"
+                weight="bold"
+              />
+            ) : null}
+            <Text as="h1" className={styles.name} size="lg" text={name} textTransform="uppercase" variant="display" />
           </div>
-        ) : null}
-      </div>
 
-      {switchControl('bottom')}
+          <div className={styles.model}>
+            <ModelViewer
+              alt={`${name}, dancing`}
+              badge={model?.originalFilename ?? undefined}
+              clips={clips}
+              fallbackImage={fallbackImage}
+              label={MODEL_LABEL}
+              orbit
+              restClip="feature"
+              src={model?.url ?? undefined}
+            />
+          </div>
+
+          {hasCard ? (
+            <div className={styles.card}>
+              <PlayerCard level={trimmedLevel} stats={statList} />
+            </div>
+          ) : null}
+        </div>
+
+        {switchControl('bottom')}
+      </Container>
     </div>
   );
 };

@@ -46,8 +46,10 @@ const PlayerTemplate = async (props: PlayerTemplateProps) => {
     notFound();
   }
 
+  // `full`: the showcase brings its own containers, so its bar's rule can run edge to edge the way
+  // the comp and the site header above it both draw it.
   return (
-    <Section containerWidth="xl" name="player" removeTopSpacing spacing="md" theme="light">
+    <Section full name="player" removeTopSpacing spacing="md" theme="light">
       <PlayerShowcase player={data.player} roster={data.roster ?? []} />
     </Section>
   );

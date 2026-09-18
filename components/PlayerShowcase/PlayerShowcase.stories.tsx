@@ -1,6 +1,7 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 
+import Section from '@/components/Section';
 import type { IPlayerStat } from '@/tools/sanity/schema/documents/player';
 
 import PlayerShowcase from '.';
@@ -12,8 +13,8 @@ const FIGMA = 'https://www.figma.com/design/KxvsJuCNaG4n2QVp3iD4jd/Wedding?node-
 
 /**
  * Pins the component to a width so its container query resolves the same way in the component-test
- * runner as it does here. The switch is on the showcase's own inline size, so a canvas left to the
- * runner's default could assert the wrong layout while claiming to be desktop.
+ * runner as it does here. The switch is on the width of the showcase's own containers, so a canvas
+ * left to the runner's default could assert the wrong layout while claiming to be desktop.
  */
 const atWidth =
   (width: string): Decorator =>
@@ -22,6 +23,18 @@ const atWidth =
       <Story />
     </div>
   );
+
+/**
+ * The page's own composition: `templates/PlayerTemplate` renders the showcase in exactly this
+ * `Section`. Without it a story is not what the page shows — the name takes its ink from `Section`,
+ * which sets `--fg-default` and which nothing in the showcase restates, so it drew black; and the
+ * section's bottom spacing is the space beneath the stage, so there was none.
+ */
+const inPlayerSection: Decorator = (Story) => (
+  <Section full name="player" removeTopSpacing spacing="md" theme="light">
+    <Story />
+  </Section>
+);
 
 /**
  * The comp's own card, verbatim — bracketed placeholders included, since that is what the design
@@ -98,6 +111,7 @@ const trackCount = (el: HTMLElement) =>
 const meta = {
   args: { player: SAM, roster: ROSTER },
   component: PlayerShowcase,
+  decorators: [inPlayerSection],
   parameters: {
     design: { type: 'figma', url: `${FIGMA}1-153` },
     layout: 'fullscreen'
@@ -143,6 +157,12 @@ export const Desktop: Story = {
 
     await expect(canvas.getByText('Player 01 / 02')).toBeVisible();
     await expect(canvas.getByText('P 01 / 02')).not.toBeVisible();
+
+    // The bar's rule runs edge to edge, as the comp and the site header both draw it, while its
+    // controls sit inside the gutter — so the nav is wider than the row it holds.
+    const bar = canvas.getByRole('navigation', { name: 'Player' });
+    const row = bar.querySelector<HTMLElement>(`.${styles.barRow}`) as HTMLElement;
+    await expect(bar.getBoundingClientRect().width).toBeGreaterThan(row.getBoundingClientRect().width);
   }
 };
 
@@ -176,6 +196,10 @@ export const Mobile: Story = {
 
     await expect(canvas.getByText('P 01 / 02')).toBeVisible();
     await expect(canvas.getByText('Player 01 / 02')).not.toBeVisible();
+
+    // The foot copy is the comp's tall full-width action (52px drawn), not the bar's compact `sm`
+    // box, which alone would stand about 33px — under the 44px a thumb wants at the foot of a page.
+    await expect(switches[0].getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
   }
 };
 

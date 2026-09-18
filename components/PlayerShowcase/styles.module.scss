@@ -8,14 +8,32 @@
    * stated once in `tools/sass/base/__media.scss`: `px` where crossing hides, `rem` where it only
    * reflows. Both of this batch's section tickets hit exactly that failure before settling on `px`.
    *
-   * 900px because the card column must clear `PlayerCard`'s own two-column switch (460px) at the
-   * comp's 520:624 column split with its gap, which it first does at about 899px. Below that the
-   * right column would hold a single-column card beside the model, which is neither comp.
+   * 920px because the card column must clear `PlayerCard`'s own two-column switch — 460px of its
+   * content box, 462 with the card's border — at the comp's 520:624 split, and the gap between the
+   * columns is fluid. At the gap's 64px cap the card column here is (920 − 64) × 624/1144 = 467, so
+   * it clears wherever the showcase is placed; on the page, where the gap is still ~57px at this
+   * width, it clears by 9. Measured, not just derived: at 900 with this gap the card flipped a
+   * few pixels late, and the stage held a single-column card beside the model, which is neither comp.
    */
-  $player-showcase-inline-switch: 900px;
+  $player-showcase-inline-switch: 920px;
 
-  .showcase {
+  /*
+   * The two query containers: the bar's frame and the stage's. Both are `Container width="xl"`, so
+   * they share a content width and the breakpoint means the same thing in each. A container cannot
+   * query itself, which is why the bar's row is a child of its frame rather than the frame.
+   */
+  .frame {
     container: playerShowcase / inline-size;
+  }
+
+  /*
+   * Full-bleed, as the site header directly above it is: the rule spans the frame edge to edge the
+   * way the comp draws it (node 1:154), and the gutter comes from the `Container` inside. The same
+   * block padding as the header's bar, through the token, because the two stack.
+   */
+  .bar {
+    padding-block: var(--bar-padding-block-start) var(--bar-padding-block-end);
+    border-block-end: 1px solid var(--stroke-cards);
   }
 
   /*
@@ -23,13 +41,11 @@
    * centres the pager with a symmetric grid — `space-between` would only centre it if the back link
    * and the switch control were the same width, and they are not.
    */
-  .bar {
+  .barRow {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-md);
-    padding-block: var(--spacing-md);
-    border-block-end: 1px solid var(--stroke-cards);
 
     @container playerShowcase (min-width: #{$player-showcase-inline-switch}) {
       display: grid;
@@ -41,7 +57,13 @@
     justify-self: start;
   }
 
+  /*
+   * `flex` so the paragraph sets no line box of its own. Its spans are `xs`, but a block holding
+   * inline content still gets a strut at its *own* font size — the inherited 16px body — which
+   * would stand the pager ~24px tall and make it, not the controls, the tallest thing in the bar.
+   */
   .pager {
+    display: flex;
     margin: 0;
     color: var(--fg-accent);
     white-space: nowrap;
@@ -91,6 +113,15 @@
    * column containers. The model spans both rows on the left; the heading and card stack on the
    * right. `align-items: start` keeps the columns at independent heights, as the comp draws them —
    * nothing stretches to match its neighbour.
+   *
+   * One gutter below the bar, as the stage sits one gutter in from either edge: the comp insets it
+   * 40 on all three sides at 1280 (node 1:161) and 24 against the gutter's 20 at 390 (node 1:238).
+   * No bottom padding — the section's own bottom spacing is the 64 the comp draws beneath the model,
+   * and a stage pad on top of it made 96.
+   *
+   * `--spacing-3xl` between the columns: the comp's 56 sits exactly between two steps at 1440, and
+   * below that `3xl` is the nearer — at the comp's own 1280 it lands both columns on the drawn 520
+   * and 624 to within a pixel, where `2xl` made each 8px wider and the gap 10px narrower.
    */
   .stage {
     display: grid;
@@ -100,7 +131,7 @@
       'card';
     gap: var(--spacing-xl);
     align-items: start;
-    padding-block: var(--spacing-xl);
+    padding-block-start: var(--container-gutter);
 
     @container playerShowcase (min-width: #{$player-showcase-inline-switch}) {
       grid-template-areas:
@@ -108,24 +139,57 @@
         'model card';
       grid-template-columns: minmax(0, 520fr) minmax(0, 624fr);
       grid-template-rows: auto 1fr;
-      column-gap: var(--spacing-2xl);
+      column-gap: var(--spacing-3xl);
     }
   }
 
+  /*
+   * The heading column is the name's query container, so the fit on `.name` is measured against the
+   * column the name actually sits in rather than against the whole showcase.
+   *
+   * `--player-name-tier` captures the tier's own size before `.name` re-points it. A custom property
+   * that reads itself on the same element is a cycle, and a cycle makes it invalid rather than
+   * leaving it as it was.
+   */
   .heading {
+    --player-name-tier: var(--display-lg);
+
     grid-area: heading;
     min-width: 0;
-  }
-
-  .eyebrow {
-    margin: 0 0 var(--spacing-xs);
+    container-type: inline-size;
   }
 
   /*
-   * `min-width: 0` lets a long name wrap inside its column instead of widening the grid track. The
-   * display face is set very large, so a single unbroken word is the realistic overflow case.
+   * The section eyebrow's drawn pair — 13 at 1280, 11 at 390 — which is exactly `--mono-eyebrow`,
+   * deliberately not a `Text` size rung (see the token). 4px to the name, where the comp draws 6 and
+   * 4; the display face's line box adds the rest above the caps.
+   */
+  .eyebrow {
+    margin: 0 0 var(--spacing-xxs);
+    font-size: var(--mono-eyebrow);
+  }
+
+  /*
+   * Display `lg`, fitted to its column.
+   *
+   * The comp only ever draws SAM, three letters. At the tier's size "LAUREN" is ~760px of ink
+   * against a ~700px column, so her page broke the name "LAURE / N" at every desktop width from
+   * about 1100px. This keeps the tier's size wherever the longest word fits, and only below that
+   * scales it to the column: 0.8em is a generous advance per Archivo Black capital at the tier's
+   * tracking (SAM measures 0.78, LAUREN 0.72), so a word of n letters fits in n × 0.8em. SAM never
+   * reaches the cap at any width; LAUREN lands at about 90% of her column.
+   *
+   * Re-pointed rather than re-declared, as `TwoColumnListSection.title` does and for the same
+   * reason: `font-size` belongs to `Text`'s `.variant_display.size_lg`, which a single class here
+   * cannot out-specify. Leading and tracking are `em` and unitless, so they follow the size.
+   *
+   * `overflow-wrap: anywhere` stays as the last resort for a word wider than the estimate — a run of
+   * Ws — so it breaks inside the column rather than spilling out of it, and `min-width: 0` lets it
+   * wrap there instead of widening the track.
    */
   .name {
+    --display-lg: min(var(--player-name-tier), 100cqi / (var(--player-name-length, 1) * 0.8));
+
     min-width: 0;
     margin: 0;
     overflow-wrap: anywhere;
@@ -141,7 +205,18 @@
     min-width: 0;
   }
 
+  /*
+   * The foot copy is the comp's full-width action: the `sm` control's label in a box as tall as the
+   * `lg` control's — 52px drawn at 390 (node 1:275), against the 33px `sm` makes on its own. A
+   * minimum height rather than padding, because padding is `Button`'s own local and a rule here
+   * setting it would tie with `.size_sm` on specificity, which `components/Button` documents; nothing
+   * in `Button` sets a minimum height, and its inline-flex box centres the label in whatever it gets.
+   *
+   * The stage's row gap above it, which is what the comp draws (20 below the model, 20 below the
+   * card), and nothing below: the section's bottom spacing is the space beneath it.
+   */
   .switchBottom {
-    margin-block-end: var(--spacing-xl);
+    min-block-size: calc(2 * var(--button-lg-padding-y) + 1lh + 2 * var(--button-border-width));
+    margin-block-start: var(--spacing-xl);
   }
 }
