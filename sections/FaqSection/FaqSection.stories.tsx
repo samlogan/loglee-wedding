@@ -2,6 +2,7 @@ import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import formatOrdinal from '@/helpers/formatOrdinal';
+import stripTitleTags from '@/helpers/stripTitleTags';
 import type { IFaqSection } from '@/tools/sanity/schema/sections/faqSection';
 import { mockBlock } from '@/tools/storybook/mockBlockContent';
 import mockButton from '@/tools/storybook/mockButton';
@@ -47,24 +48,12 @@ const atWidth =
   );
 
 /**
- * The `/faq` comp as a design-faithful mock — the copy, the six questions and their order are node
- * 16:610's.
- *
- * Two deliberate departures from what Figma types. **Case**: the eyebrows, the address and the two
- * chips are drawn in capitals and passed here in sentence case, so the uppercasing under test is the
- * section's CSS rather than the mock's shift key — which is also the shape the schema tells an editor
- * to store, because a short literal all-caps run is what screen readers most often spell out letter
- * by letter. **Brackets are kept**, unlike `TwoColumnListSection`'s mock: the square brackets in the
- * first answer and in the shuttle chip are the content blocker this ticket flags — the travel copy is
- * unwritten and the shuttle is TBC — so leaving them visible is the point rather than a typo.
- */
-/**
  * An answer containing a link, which is the content shape that makes a collapsed panel dangerous.
  *
  * Hand-built rather than taken from `mockBlockContent`, because that helper emits `markDefs: []` and
  * a link mark needs a `markDef` to resolve against. No answer in the dataset happens to carry one
  * today, which is exactly why `AccordionItem` shipped with focusable content inside an `aria-hidden`
- * subtree and nothing caught it — `Default`'s `play` asserts against it now.
+ * subtree and nothing caught it — `DesignReference`'s `play` asserts against it now.
  */
 const ANSWER_WITH_LINK: SanityTextBlock[] = [
   {
@@ -87,6 +76,25 @@ const ANSWER_WITH_LINK: SanityTextBlock[] = [
   }
 ];
 
+/**
+ * The `/faq` comp as a design-faithful mock — the copy, the six questions and their order are node
+ * 16:610's.
+ *
+ * **Every story that reads copy, counts questions or measures geometry uses this, not the fixture**
+ * — and that split is the point. `Default` proves the accordion stays single-open by opening the
+ * *second* question, and `Mobile` finds the title by its `h2`; both were written against this mock
+ * and both broke the first time `yarn storybook:fixtures` pulled the real FAQ, which has one question
+ * and an `h1`. `PublishedContent` is the one story on the fixture, and asserts only what it can derive
+ * from it.
+ *
+ * Two deliberate departures from what Figma types. **Case**: the eyebrows, the address and the two
+ * chips are drawn in capitals and passed here in sentence case, so the uppercasing under test is the
+ * section's CSS rather than the mock's shift key — which is also the shape the schema tells an editor
+ * to store, because a short literal all-caps run is what screen readers most often spell out letter
+ * by letter. **Brackets are kept**, unlike `TwoColumnListSection`'s mock: the square brackets in the
+ * first answer and in the shuttle chip are the content blocker this ticket flags — the travel copy is
+ * unwritten and the shuttle is TBC — so leaving them visible is the point rather than a typo.
+ */
 const MOCK: IFaqSection = {
   tagline: 'Help menu',
   title: '<h2>FAQ</h2>',
@@ -138,39 +146,27 @@ const MOCK: IFaqSection = {
 };
 
 /**
- * Real section data from the Sanity dataset, with the mock filling the gaps.
+ * Real Sanity data, falling back to the mock only if the dataset loses it — the fixture exactly as
+ * published, with nothing from `MOCK` merged in.
  *
- * The published FAQ predates this ticket, so its projection carries no `tagline`, no `map`, no
- * `buttonEyebrow` and no per-item `note` — and a GROQ projection returns a *shaped object with null
- * leaves*, so those keys can be present-and-null rather than absent. Either way `??` on each of them
- * is what keeps the story exercising the four things this ticket added; spreading the fixture over
- * the mock alone would let a null overwrite them.
+ * This used to be a field-by-field merge: the fixture spread over the mock, then `??` on `tagline`,
+ * `addMap`, `map`, `addButton` and `buttonEyebrow`, because a GROQ projection returns a *shaped
+ * object with null leaves* and a plain spread lets a `null` overwrite the mock's value. Those guards
+ * did hold — `addButton` arrived as `null` and the footer stayed on screen, though `??` would have
+ * let an unticked `false` straight through — but each story then rendered a hybrid nobody had
+ * published, and the merge could not reach the two fields that actually changed. `faqItems` was
+ * taken whole and `title` came through the spread, so when the dataset went from four lorem-ipsum
+ * questions under an `h2` to one real question under an `h1`, `Default` lost the second row its
+ * single-open check clicks and `Mobile` lost the `h2` it looks for.
  *
- * `faqItems` is taken whole from whichever source wins, because the per-item `note` cannot be merged
- * across two lists of different lengths without inventing a pairing.
+ * The split replaces the merge. Stories about the design render `MOCK`, which sets every field;
+ * `PublishedContent` renders this, nulls and all, and asserts only what it can read out of it. Today
+ * that is one question with a note, an `h1` title, and `tagline`, `addMap` and `addButton` unset.
  */
-const fixture = sectionFixture<IFaqSection>('faqSection');
+const data = sectionFixture<IFaqSection>('faqSection') ?? MOCK;
 
-const data: IFaqSection = {
-  ...MOCK,
-  ...fixture,
-  tagline: fixture?.tagline ?? MOCK.tagline,
-  addMap: fixture?.addMap ?? MOCK.addMap,
-  map: fixture?.map ?? MOCK.map,
-  /*
-   * `addButton` is re-guarded like the rest, and it is the one that would have bitten: today's
-   * fixture happens to carry `true`, so the footer renders and three stories below assert it. The
-   * first time an editor unticks "Add Button" and somebody runs `yarn storybook:fixtures`, a plain
-   * spread would turn that into `false` and those stories would fail on a missing link — pointing at
-   * the story rather than at the dataset that actually changed.
-   */
-  addButton: fixture?.addButton ?? MOCK.addButton,
-  buttonEyebrow: fixture?.buttonEyebrow ?? MOCK.buttonEyebrow,
-  faqItems: fixture?.faqItems?.length ? fixture.faqItems : MOCK.faqItems
-};
-
-/** Non-null, because every path above falls back to `MOCK`, which always has six. */
-const items = data.faqItems ?? [];
+/** The questions the `MOCK` stories assert against. Non-null, because `MOCK` always has six. */
+const items = MOCK.faqItems ?? [];
 
 /*
  * ## Every text query below uses the **stored** string, not the rendered one
@@ -187,8 +183,83 @@ const triggers = (canvasElement: HTMLElement) => [
   ...canvasElement.querySelectorAll<HTMLButtonElement>('button[aria-expanded]')
 ];
 
-export const Default: Story = {
+/**
+ * **The section rendered against whatever is in the dataset today** — the fixture exactly as
+ * published, at the canvas's own width.
+ *
+ * Every assertion is read out of `data`: one numbered trigger per published question, each a working
+ * disclosure named by its own question; the title at whichever level the editor stored; each
+ * published note drawn; and the optional furniture present exactly when the data asks for it. That
+ * last part is what this story adds beyond "it renders". `/faq` leaves `tagline`, `addMap` and
+ * `addButton` unset, so today it walks the *absent* branch of all three guards — the half no `MOCK`
+ * story reaches, because `MOCK` sets every field.
+ *
+ * The complement to `Default`, which pins the comp's six questions to prove the accordion stays
+ * single-open. That is a claim about two items, and one published question cannot make it.
+ */
+export const PublishedContent: Story = {
   args: data,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const rows = triggers(canvasElement);
+    const published = data.faqItems ?? [];
+
+    /*
+     * Not vacuous. `data` is the fixture when there is one and `MOCK` when there is not, so there is
+     * always a question to render — zero here means the dataset lost its content, which is worth
+     * failing on rather than passing silently.
+     */
+    await expect(published.length).toBeGreaterThan(0);
+
+    // One trigger per question: numbered from its array position, named by its own question, closed.
+    await expect(rows).toHaveLength(published.length);
+    for (const [index, row] of rows.entries()) {
+      await expect(row).toHaveTextContent(formatOrdinal(index));
+      await expect(row).toHaveAccessibleName(published[index].question);
+      await expect(row).toHaveAttribute('aria-expanded', 'false');
+    }
+
+    // A working disclosure whatever the count: the first row opens, and closes again.
+    await userEvent.click(rows[0]);
+    await expect(rows[0]).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.click(rows[0]);
+    await expect(rows[0]).toHaveAttribute('aria-expanded', 'false');
+
+    /*
+     * The title at the level the editor stored. Unlike `HeaderDisplaySection` and `ScheduleSection`,
+     * this section passes the tag through rather than forcing one — and on `/faq` it is the only
+     * section on the page, standing in for the header the sibling pages have, so the published `h1`
+     * is the right level there. `Mobile`'s `h2` is the mock's choice, not the section's.
+     */
+    const title = stripTitleTags(data.title);
+    await expect(
+      canvas.getByRole('heading', { level: Number(title.as?.replace('h', '')), name: title.text })
+    ).toBeVisible();
+
+    // Each published note is drawn — inside its collapsed panel, which is `inert` but still mounted.
+    for (const note of published.map((item) => item.note?.trim()).filter(Boolean)) {
+      await expect(canvas.getAllByText(note as string).length).toBeGreaterThan(0);
+    }
+
+    /*
+     * The optional furniture renders exactly when the data asks for it, tested with the component's
+     * own three conditions. Today each is the absent branch; a `MOCK` story would only ever see the
+     * present one.
+     */
+    await expect(Boolean(canvasElement.querySelector(`.${styles.tagline}`))).toBe(Boolean(data.tagline?.trim()));
+    await expect(Boolean(canvasElement.querySelector(`.${styles.mapCard}`))).toBe(Boolean(data.addMap && data.map));
+    await expect(Boolean(canvasElement.querySelector(`.${styles.footer}`))).toBe(
+      Boolean(data.addButton && data.button?.label)
+    );
+  }
+};
+
+/**
+ * The comp's six questions at the canvas's own width — on `MOCK`, because the single-open check below
+ * needs a second question to open, and the published FAQ has one.
+ */
+export const Default: Story = {
+  args: MOCK,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const rows = triggers(canvasElement);
@@ -199,7 +270,7 @@ export const Default: Story = {
      * AC: the tagline renders. It is the field this section has always had and never read — the
      * component destructured five props and `tagline` was not one of them.
      */
-    await expect(canvas.getByText(data.tagline as string, { selector: 'p' })).toBeVisible();
+    await expect(canvas.getByText(MOCK.tagline as string, { selector: 'p' })).toBeVisible();
 
     /*
      * AC: items are numbered from array position. Asserted against `formatOrdinal(index)` with the
@@ -282,16 +353,16 @@ export const Default: Story = {
  * own centre must be the badge.
  */
 export const MapOverlays: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('1200px')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     /*
-     * `data`, not `MOCK` — these stories render `args: data`, so reading the mock's copy only agrees
-     * by accident while the dataset has no map of its own.
+     * Read off `MOCK`, the args this story renders, so the copy it looks for is the copy it drew. It
+     * cannot be `data`: `/faq` has `addMap` unset, so the published FAQ has no map card to measure.
      */
-    const badge = canvas.getByText(data.map?.badge as string);
-    const address = canvas.getByText(data.map?.address as string);
+    const badge = canvas.getByText(MOCK.map?.badge as string);
+    const address = canvas.getByText(MOCK.map?.address as string);
 
     for (const overlay of [badge, address]) {
       const box = overlay.getBoundingClientRect();
@@ -324,12 +395,12 @@ export const MapOverlays: Story = {
  * result no longer depends on something a test can only observe indirectly.
  */
 export const MapBarTypography: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('1200px')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const address = canvas.getByText(data.map?.address as string);
-    const link = canvas.getByRole('link', { name: data.map?.link?.label as string });
+    const address = canvas.getByText(MOCK.map?.address as string);
+    const link = canvas.getByRole('link', { name: MOCK.map?.link?.label as string });
 
     await waitFor(async () => {
       for (const run of [address, link]) {
@@ -362,7 +433,7 @@ export const MapBarTypography: Story = {
  * 1280px frame with 40px gutters).
  */
 export const Desktop: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('1200px')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -371,10 +442,10 @@ export const Desktop: Story = {
     await expect(getComputedStyle(row).flexDirection).toBe('row');
 
     // AC: the eyebrow is paired with the button here, and dropped when the columns stack.
-    await expect(canvas.getByText(data.buttonEyebrow as string)).toBeVisible();
+    await expect(canvas.getByText(MOCK.buttonEyebrow as string)).toBeVisible();
 
     // A shrink-to-fit pill rather than a full-width bar (node 16:717).
-    const link = canvas.getByRole('link', { name: data.button?.label });
+    const link = canvas.getByRole('link', { name: MOCK.button?.label });
     await expect(link.getBoundingClientRect().width).toBeLessThan(row.getBoundingClientRect().width / 2);
   }
 };
@@ -387,7 +458,7 @@ export const Desktop: Story = {
  * check and still leave the tab order and the screen-reader order in the desktop sequence.
  */
 export const Mobile: Story = {
-  args: data,
+  args: MOCK,
   decorators: [atWidth('390px')],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -405,10 +476,12 @@ export const Mobile: Story = {
      * tab sequence both follow. `DOCUMENT_POSITION_FOLLOWING` (4) means the argument comes *after*
      * the node it is compared against.
      */
+    // `h2` because `MOCK` stores one. The section passes the stored tag through, so the published
+    // FAQ's `h1` is checked where the level is read from the data — `PublishedContent`.
     const title = canvas.getByRole('heading', { level: 2 });
-    const map = canvas.getByText(data.map?.badge as string);
+    const map = canvas.getByText(MOCK.map?.badge as string);
     const firstQuestion = triggers(canvasElement)[0];
-    const button = canvas.getByRole('link', { name: data.button?.label });
+    const button = canvas.getByRole('link', { name: MOCK.button?.label });
 
     for (const [before, after] of [
       [title, map],
@@ -420,19 +493,20 @@ export const Mobile: Story = {
     }
 
     // AC: the eyebrow is dropped, and the button spans the column (node 16:797).
-    await expect(canvas.getByText(data.buttonEyebrow as string)).not.toBeVisible();
+    await expect(canvas.getByText(MOCK.buttonEyebrow as string)).not.toBeVisible();
     await expect(button.getBoundingClientRect().width).toBeCloseTo(row.getBoundingClientRect().width, 0);
   }
 };
 
 /**
- * The comp's own content, verbatim — the story `/review-design` compares against.
+ * The comp's own content, verbatim, at the design's 1200px — the story `/review-design` compares
+ * against.
  *
- * `Default` prefers the dataset, which today holds lorem-ipsum questions and no `note`, so nothing
- * else in this file renders the chip beneath an answer. This does, and it is also where the **content
- * blocker this ticket flags is visible**: the first answer's travel copy is bracketed placeholder
- * text and the shuttle chip reads "TBC". Both are left exactly as the designer typed them rather than
- * invented around — a reviewer should see the gap, not a plausible sentence covering it.
+ * Most stories here render `MOCK` now; this is the one that opens an answer and waits for the chip
+ * beneath it to become visible. It is also where the **content blocker this ticket flags is
+ * visible**: the first answer's travel copy is bracketed placeholder text and the shuttle chip reads
+ * "TBC". Both are left exactly as the designer typed them rather than invented around — a reviewer
+ * should see the gap, not a plausible sentence covering it.
  */
 export const DesignReference: Story = {
   args: MOCK,
@@ -449,9 +523,10 @@ export const DesignReference: Story = {
      * anchor at zero height inside an `aria-hidden` subtree. Asserted by trying to focus it rather
      * than by reading the attribute: the attribute is the mechanism, this is the outcome.
      *
-     * This story rather than `Default`, because the guard is only worth anything if there is
-     * actually a link to catch — `ANSWER_WITH_LINK` is in `MOCK`, and the dataset's answers have no
-     * `markDefs` at all. The length assertion is what stops it quietly passing on an empty list.
+     * On `MOCK`, because the guard is only worth anything if there is actually a link to catch —
+     * `ANSWER_WITH_LINK` is in `MOCK`, and the one published answer has no `markDefs` at all, so
+     * `PublishedContent` could not host it. The length assertion is what stops it quietly passing on
+     * an empty list.
      */
     const collapsedLinks = [...canvasElement.querySelectorAll<HTMLAnchorElement>('[inert] a[href]')];
     await expect(collapsedLinks.length).toBeGreaterThan(0);
@@ -491,7 +566,7 @@ export const DesignReference: Story = {
  * so the theme at least renders and is asserted to be legible.
  */
 export const OnDarkPage: Story = {
-  args: data,
+  args: MOCK,
   globals: { theme: 'dark' },
   decorators: [atWidth('1200px')],
   play: async ({ canvasElement }) => {
@@ -524,7 +599,7 @@ export const OnDarkPage: Story = {
  */
 export const EmbedMap: Story = {
   args: {
-    ...data,
+    ...MOCK,
     addMap: true,
     map: {
       ...MOCK.map,
@@ -543,18 +618,18 @@ export const EmbedMap: Story = {
     // Denied by omission, and the one that matters: the frame cannot navigate the page.
     await expect(frame.getAttribute('sandbox')).not.toContain('allow-top-navigation');
     // The badge and the bar still paint over it.
-    await expect(within(canvasElement).getByText(data.map?.badge as string)).toBeVisible();
+    await expect(within(canvasElement).getByText(MOCK.map?.badge as string)).toBeVisible();
   }
 };
 
 /** No map card — the rail is the header and the intro copy alone. */
 export const WithoutMap: Story = {
-  args: { ...data, addMap: false },
+  args: { ...MOCK, addMap: false },
   decorators: [atWidth('1200px')]
 };
 
 /** No header and no closing button: the accordion carries the section on its own. */
 export const WithoutHeader: Story = {
-  args: { ...data, tagline: undefined, title: undefined, addButton: false },
+  args: { ...MOCK, tagline: undefined, title: undefined, addButton: false },
   decorators: [atWidth('1200px')]
 };

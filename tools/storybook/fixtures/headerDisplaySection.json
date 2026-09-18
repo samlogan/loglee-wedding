@@ -1,0 +1,27 @@
+{
+  "_key": "k32",
+  "_type": "headerDisplaySection",
+  "content": [
+    {
+      "_key": "k30",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "k31",
+          "_type": "span",
+          "marks": [],
+          "text": "Everyone stays on site. The Lodge has 39 rooms across nine acres of gardens, pine trees and river frontage."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    }
+  ],
+  "items": [
+    "39 rooms",
+    "9 acres",
+    "On-site accommodation"
+  ],
+  "sectionFields": null,
+  "title": "<h1>Stay</h1>"
+}
