@@ -1,5 +1,3 @@
-import { stegaClean } from '@sanity/client/stega';
-
 import Container from '@/components/Container';
 import Link from '@/components/Link';
 import Logo from '@/components/Logo';
@@ -8,6 +6,7 @@ import Socials from '@/components/Socials';
 import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
 import formatDateRange from '@/helpers/formatDateRange';
+import hasText from '@/helpers/hasText';
 import type { IWeddingSettingsDocument } from '@/tools/sanity/schema/documents/weddingSettings';
 import type { IHeaderObject } from '@/tools/sanity/schema/objects/header';
 
@@ -72,19 +71,13 @@ const Footer = (props: FooterProps) => {
 
   const dates = formatDateRange(startDate, endDate);
   /*
-   * Trimmed, because a venue name that is only whitespace is blank as far as a reader is concerned
-   * and `Boolean(' ')` is `true`. Left blank it would render as a separator with nothing after it.
-   *
-   * The emptiness test runs over a `stegaClean` copy while the *rendered* value keeps its encoding.
-   * In drafts perspective and in development `sanityFetch` sets `stega: true`, which appends
-   * invisible Unicode tag characters to plain string fields like this one — and those are not
-   * whitespace, so `'   '.trim()` comes back as the non-empty payload and the guard above passes
-   * for a name the editor can see is blank. That is the Presentation tool, which is exactly where
-   * they are standing when they notice. Cleaning only the test keeps the overlay working on the
-   * text that actually renders.
+   * Left blank, the venue would render as a separator with nothing after it. Blank includes a name
+   * that is only whitespace, and in the Presentation tool that name arrives stega-encoded, which a
+   * plain `.trim()` test reads as populated — `hasText` explains why and sees through it. What
+   * renders is still the encoded `venueName`, so the overlay keeps working on the text on screen.
    */
   const venueName = venue?.name?.trim();
-  const hasVenue = Boolean(stegaClean(venueName));
+  const hasVenue = hasText(venueName);
   const hasDetails = Boolean(dates || hasVenue);
 
   return (
