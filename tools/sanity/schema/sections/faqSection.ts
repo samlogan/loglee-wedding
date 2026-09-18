@@ -7,15 +7,63 @@ import defaultSectionGroups from '../common/defaultSectionGroups';
 import internalLabelField from '../common/internalLabelField';
 import type { IButtonElement } from '../elements/button';
 
+/**
+ * The compact map card in the left rail — nodes 16:643 (desktop) and 16:799 (mobile).
+ *
+ * ## Why this is an inline object and not a registered type
+ *
+ * `tools/sanity/register-sections.ts` derives all four registrations from the section folder name,
+ * and a *second* exported schema type sitting beside a section is the one thing it cannot derive —
+ * it warns and asks for a hand-written entry in the `// Objects` block. An anonymous
+ * `type: 'object'` field needs none of that, and nothing else in the repo wants a map card, so there
+ * is no reuse to buy by promoting it. If a shared `Map` component lands (see the note in
+ * `sections/FaqSection/FaqMapCard.tsx`), *that* is the moment to lift these five fields into
+ * `tools/sanity/schema/objects/`.
+ *
+ * ## `image` **or** `embedUrl`, not both
+ *
+ * The comp draws a hatched placeholder, which stands in for either a static map render or a live
+ * embed; the ticket asks for both to be possible. The component prefers the image when one is set —
+ * it is cheaper, carries no third-party frame, and is the treatment the card is drawn around — and
+ * falls through to the embed when it is not. Stating the precedence once, in the component, keeps
+ * the failure mode "the card shows the image you uploaded" rather than "the card is blank because a
+ * radio says embed".
+ */
+interface IFaqMapCard {
+  image?: SanityImageSimple;
+  embedUrl?: string;
+  badge?: string;
+  address?: string;
+  link?: IButtonElement;
+}
+
 interface IFaqSection {
   tagline?: string;
   title?: string;
   content?: SanityTextBlock[];
+  addMap?: boolean;
+  map?: IFaqMapCard;
   addButton: boolean;
+  /**
+   * The small uppercase label beside the closing button — "Still stuck?" (node 16:716).
+   *
+   * Desktop only: the mobile comp (16:797) drops it and gives the button the full width. See the
+   * note in `sections/FaqSection/styles.module.scss` for why it is hidden with a `px` media query.
+   */
+  buttonEyebrow?: string;
   button?: IButtonElement;
   faqItems: {
     question: string;
     answer: SanityTextBlock[];
+    /**
+     * The optional outline chip beneath an answer — "SHUTTLE · [FRI 2PM CENTRAL] · TBC" (nodes
+     * 16:667 desktop, 16:750 mobile).
+     *
+     * A field rather than copy inside `answer`, because the chip is a *boxed* mono run and the
+     * rich-text editor has no mark that draws one. It renders through `components/Tag` in its
+     * `outline` variant.
+     */
+    note?: string;
   }[];
 }
 
@@ -27,12 +75,20 @@ const faqSection = defineType({
       title: 'Section Preview',
       type: 'image',
       components: { input: ReadOnlyImageInput },
-      // @ts-expect-error
+      // @ts-expect-error -- `imageUrl` is read by ReadOnlyImageInput, not by Sanity's image type
       imageUrl: thumbnail.src,
       readOnly: true,
       group: 'internal'
     },
+    /*
+     * Sentence case in the CMS, capitals from CSS — the convention `twoColumnListSection.eyebrow`
+     * and `headerDisplaySection.items` both state. `text-transform` does not keep capitals out of
+     * the accessibility tree (Chromium names an element from its rendered text), so a stored
+     * "HELP MENU" is what a screen reader spells out, letter by letter.
+     */
     {
+      description:
+        'The small label above the title — “Help menu”. Optional. Type it in normal sentence case; it is displayed in uppercase mono automatically.',
       group: 'data',
       name: `tagline`,
       title: `Tagline`,
@@ -50,21 +106,72 @@ const faqSection = defineType({
       title: `Content`,
       type: 'blockContentStandard'
     },
+    /*
+     * `addMap` / `map` mirrors the `addButton` / `button` pair this section already has, rather than
+     * inferring the answer from the object: a Sanity object field is never *absent*, so "is the map
+     * filled in?" would otherwise be answered by inspecting five nullable leaves — the same
+     * shaped-object-with-null-leaves problem `tools/storybook/sectionFixture.ts` documents at
+     * length. One boolean says it once, and hides five controls on every instance that does not
+     * want them.
+     */
     {
+      description: 'Show the compact map card in the left column.',
       group: 'data',
       initialValue: false,
-      name: `addButton`,
-      title: `Add Button`,
-      type: `boolean`
+      name: 'addMap',
+      title: 'Add Map Card',
+      type: 'boolean'
     },
     {
+      description: 'The map card beneath the intro copy. Upload a map image, or paste an embed URL.',
+      fields: [
+        {
+          description: 'A static map image. Used in preference to the embed URL below when both are set.',
+          name: 'image',
+          title: 'Image',
+          type: 'imageElementSimple'
+        },
+        {
+          description: 'An embeddable map URL (the “src” of a Google Maps embed). Only used when no image is uploaded.',
+          name: 'embedUrl',
+          title: 'Embed URL',
+          type: 'url'
+        },
+        {
+          description:
+            'The chip in the top-left corner — “Map · Sydney → Jamberoo, 90 min”. Shown exactly as typed, so any arrow or separator goes in the text.',
+          name: 'badge',
+          title: 'Badge Label',
+          type: 'string'
+        },
+        {
+          description:
+            'The address in the bar along the bottom — “406 Jamberoo Mountain Rd”. Type it in normal case; it is displayed in uppercase mono automatically.',
+          name: 'address',
+          title: 'Address',
+          type: 'string'
+        },
+        {
+          description: 'The “Open in maps” link in the bottom bar. Point it at an external maps URL.',
+          name: 'link',
+          title: 'Maps Link',
+          type: 'buttonElement'
+        }
+      ],
       group: 'data',
-      hidden: ({ parent }) => !parent?.addButton,
-      name: `button`,
-      title: `Button`,
-      type: `buttonElement`
+      hidden: ({ parent }) => !parent?.addMap,
+      name: 'map',
+      title: 'Map Card',
+      type: 'object'
     },
+    /*
+     * Above the button pair, deliberately — and moved there by this ticket. The button now renders
+     * at the **foot of the accordion** (node 16:714), so an editor meets these controls in the order
+     * the page reads them. Field order in a Sanity object is display only; nothing stored moves.
+     */
     {
+      description:
+        'Numbering is added automatically from each item’s position — do not type “01”. Reordering renumbers.',
       group: 'data',
       name: 'faqItems',
       of: [
@@ -79,15 +186,51 @@ const faqSection = defineType({
               name: 'answer',
               title: 'Answer',
               type: 'blockContentStandard'
+            },
+            {
+              description:
+                'An optional outline chip beneath the answer — “Shuttle · [Fri 2pm Central] · TBC”. Type it in normal case; it is displayed in uppercase mono automatically.',
+              name: 'note',
+              title: 'Note Chip',
+              type: 'string'
             }
           ],
           name: 'faqItem',
+          preview: {
+            prepare(selection: { title?: string }) {
+              return { title: selection?.title || 'FAQ Item' };
+            },
+            select: { title: 'question' }
+          },
           title: 'FAQ Item',
           type: 'object'
         }
       ],
       title: 'FAQ Items',
       type: 'array'
+    },
+    {
+      group: 'data',
+      initialValue: false,
+      name: `addButton`,
+      title: `Add Button`,
+      type: `boolean`
+    },
+    {
+      description:
+        'The small label beside the button — “Still stuck?”. Optional, and hidden on narrow screens where the button goes full width. Type it in normal sentence case; it is displayed in uppercase mono automatically.',
+      group: 'data',
+      hidden: ({ parent }) => !parent?.addButton,
+      name: 'buttonEyebrow',
+      title: 'Button Eyebrow',
+      type: 'string'
+    },
+    {
+      group: 'data',
+      hidden: ({ parent }) => !parent?.addButton,
+      name: `button`,
+      title: `Button`,
+      type: `buttonElement`
     },
     {
       group: 'styles',
@@ -100,10 +243,17 @@ const faqSection = defineType({
   icon: MdQuestionAnswer,
   name: 'faqSection',
   preview: {
-    prepare() {
+    prepare(selection: { faqItems?: unknown[]; internalLabel?: string }) {
+      const count = selection?.faqItems?.length ?? 0;
+
       return {
+        subtitle: selection?.internalLabel || `${count} question${count === 1 ? '' : 's'}`,
         title: `FAQ Section`
       };
+    },
+    select: {
+      faqItems: 'faqItems',
+      internalLabel: 'internalLabel'
     }
   },
   title: 'FAQ',
@@ -111,4 +261,4 @@ const faqSection = defineType({
 });
 
 export { faqSection };
-export type { IFaqSection };
+export type { IFaqMapCard, IFaqSection };
