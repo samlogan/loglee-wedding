@@ -1,47 +1,520 @@
-.contentContainer {
-  display: flex;
-  justify-content: space-between;
-  gap: 80px;
+/*
+ * The FAQ band — info rail left, numbered accordion right (nodes 16:610 desktop, 16:719 mobile).
+ *
+ * ## One switch, and it flips a direction
+ *
+ * Everything that *scales* here scales through `fluid()`, which interpolates between the mobile and
+ * desktop anchors across the whole viewport range. The single thing `fluid()` cannot express is a
+ * change of direction — the two columns become one stack — so that is the one query, and three
+ * things ride on it: the flex direction, the "still stuck?" eyebrow, and whether the closing button
+ * spans its column.
+ *
+ * The stack is `flex-direction` alone. Nothing here uses `order` or `grid-row`: both move paint
+ * without moving the tab order or the accessibility tree, so a stack built from them reads correctly
+ * to a sighted mouse user and wrongly to everyone else. The comp's mobile order (header → map →
+ * accordion → button) is the order the JSX is written in — see the note in `index.tsx`.
+ *
+ * ## A container query, in `px`
+ *
+ * Keyed to the section's own content box rather than to the window, matching `HeaderDisplaySection`,
+ * `ScheduleSection` and `TwoColumnListSection`. That is what makes the switch *testable*: the
+ * `Mobile` story gets the stacked layout by rendering the section in a 390px column rather than by
+ * owning the window, which a component test cannot do.
+ *
+ * **`px` and not the `rem` those three use**, and the difference is WCAG 1.4.4. Chromium resolves a
+ * `rem` container-query threshold against the live root font size, so a reader who raises only their
+ * text size crosses the switch without the viewport moving. That is harmless where a switch merely
+ * reflows; here it also hides `.footerEyebrow`, and content vanishing on a text-size increase alone
+ * is the failure 1.4.4 names. A `px` threshold moves only with the viewport. Verified at a 32px root.
+ *
+ * 960px is the content box at the design's own stack point: the `large-tablet` breakpoint (1025px)
+ * less two `--container-gutter`s, which resolve to ~32px each at that width.
+ *
+ * **Stacked is the unconditional default.** A container query cannot be evaluated before its
+ * container exists, so the single-column layout has to be the base and the row the addition.
+ */
 
-  @include media-down(large-tablet) {
-    flex-direction: column;
-    gap: 40px;
+$faq-inline-switch: 960px;
+
+@layer defaults {
+  /*
+   * The query container is `Section`'s own `Container`, passed through `containerClassName`. Its
+   * content box is what the two columns divide — the page width with the gutters already taken off —
+   * so the threshold is a number about the columns rather than about the window.
+   *
+   * `container-name` is **not** hashed by CSS Modules — it is a global identifier — so it is spelt
+   * out rather than left as a bare `faq`, which a second section adopting this idiom could collide
+   * with silently.
+   *
+   * `inline-size` and not `size`: the width comes from the page and the height from the content, and
+   * containing the height would collapse it. Note it also implies `contain: layout`, which makes the
+   * Container a containing block for any `position: fixed` descendant and a new stacking context —
+   * nothing here is affected, but a sticky element or a modal inside an FAQ would be. The containment cost is the one the three sibling
+   * sections document — an inline-size container does not contribute to its own intrinsic width, so
+   * inside a shrink-to-fit ancestor it collapses. Safe for the same reason: sections render as block
+   * children of `<main>`, and of a plain `<div>` in Storybook.
+   */
+  .queryContainer {
+    container-type: inline-size;
+    container-name: faq-section;
   }
-}
 
-.infoContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 32px;
-  max-width: 510px;
-}
+  .contentContainer {
+    /*
+     * The drawn column gap (node 16:651 starts at x=544 beside a 440px rail at x=40). Held in a
+     * named property rather than as a bare `64px` in the query below: it is a measurement off one
+     * frame, and the nearest scale step (`--spacing-3xl`, ~62px at that width) is not it.
+     */
+    --faq-column-gap: 64px;
 
-// for FaqItems.tsx
-.accordionContainer {
-  max-width: 660px;
+    display: flex;
+    flex-direction: column;
+    // Stacked: 24px between the map and the accordion (16:799 ends at 428.4, 16:736 starts at
+    // 452.4). In a row: 64px, because the rail is 440px at x=40 and the accordion starts at x=544
+    // inside a 1200px content box (440 + 64 + 696).
+    gap: var(--spacing-lg);
 
-  .faqItem {
-    background: var(--bg-default);
-    padding: 24px 0;
-    border-bottom: 1px solid var(--fg-default);
-    // margin-bottom: 12px;
+    /*
+     * No `justify-content`: the rail is `flex: 0 1 440px` and the column beside it `flex: 1 1 auto`,
+     * so the row never has free space to distribute and any value would be inert.
+     */
+    @container faq-section (width >= #{$faq-inline-switch}) {
+      flex-direction: row;
+      gap: var(--faq-column-gap);
+    }
+  }
 
-    &:last-child {
-      border-bottom: none;
+  // --------------------
+  // Left rail — eyebrow + title, intro copy, map card
+
+  .infoContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    // 24px between the three groups (node 16:635), fixed per the spacing scale's rule below 32px.
+    gap: var(--spacing-lg);
+    /*
+     * `min-width: 0` on a flex child, because the automatic minimum size is `min-content` and the
+     * rail holds a heading-tier title. Without it a long unbroken word pushes the whole row past the
+     * viewport — WCAG 1.4.10 rather than a layout wobble.
+     */
+    min-width: 0;
+
+    // 440px of a 1200px content box (node 16:635), allowed to shrink but not to grow.
+    @container faq-section (width >= #{$faq-inline-switch}) {
+      flex: 0 1 440px;
+    }
+  }
+
+  .infoHeader {
+    display: flex;
+    flex-direction: column;
+    // 8px between the eyebrow and the title (node 16:636).
+    gap: var(--spacing-xs);
+    min-width: 0;
+    width: 100%;
+  }
+
+  /*
+   * The two eyebrows share everything but their register and their visibility, so they share a rule.
+   *
+   * `fluid(11px, 13px)` is the comps' pair exactly (13px on 16:638 and 16:716, ~11px on 16:731) and
+   * is the one length in this file that is *not* a `Text` `size` rung — the nearest is `--body-xs`,
+   * `fluid(11px, 12px)`. Kept rather than rounded because `ScheduleSection.eyebrow` and
+   * `TwoColumnListSection.eyebrow` are the same label on sibling pages at the same pair; the right
+   * fix is one shared eyebrow token across all four call sites, which is `/consolidate` work rather
+   * than a divergence introduced here.
+   *
+   * `--mono-line-height` re-pointed to the body ratio rather than the role's own 1.3, matching those
+   * two — this is surrounding rhythm, not a drawn box. Note `inherit` would be wrong: on a custom
+   * property it resolves to the parent's `--mono-line-height`, not to the parent's `line-height`.
+   *
+   * The ink is `Text`'s `color="themeFgAccent"` on both, not a declaration here.
+   */
+  .tagline,
+  .footerEyebrow {
+    --mono-line-height: var(--body-line-height);
+
+    font-size: #{fluid(11px, 13px)};
+    min-width: 0;
+  }
+
+  // --------------------
+  // Map card (FaqMapCard.tsx)
+
+  /*
+   * A fixed-height frame with two absolutely positioned overlays. 260px at desktop (16:643), 170px
+   * at mobile (16:799).
+   *
+   * `overflow: hidden` is what makes the radius clip the media. It also clips anything that escapes
+   * the box, which is worth knowing about here because `components/Button`'s focus ring is drawn
+   * *outside* the control: the bar's link sits ~12px in from the card edge and the ring reaches 6px
+   * (3px width + 3px offset), so it clears. Move the bar to the edge and that stops being true.
+   *
+   * `--bg-accent` underneath, so a card whose image has not loaded — or whose editor has filled in
+   * only the badge and the bar — is a surface rather than a hole.
+   */
+  .mapCard {
+    // The card's own inset, shared by the badge and the bar so the two corners cannot drift
+    // (12px desktop on 16:644 / 16:646, 10px mobile on 16:800 / 16:802).
+    --faq-map-inset: #{fluid(10px, 12px)};
+
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: #{fluid(170px, 260px)};
+    border-radius: var(--radius-md);
+    background-color: var(--bg-accent);
+
+    /*
+     * ## Why these two carry a `z-index` when tree order already works
+     *
+     * `components/Image` wraps its `<img>` in a `position: relative` container, so the media and the
+     * overlays are all positioned elements and paint in tree order — the badge and the bar are
+     * written after the media, so they win. That is true, and it is a property of the *order three
+     * JSX nodes happen to be in*: swap the badge above the image, or give the media a
+     * `position: absolute` treatment later, and an opaque photograph silently covers the chip. One
+     * declaration makes it a property of the stylesheet instead. The story checks the result with
+     * `elementFromPoint` rather than by eye, which is the only way to catch this.
+     */
+    .mapBadge {
+      /*
+       * `Tag`'s contract: a consuming class holds placement and nothing else. The two exceptions
+       * below are custom-property re-points rather than declarations, and they need this rule's two
+       * classes to win — a single-class `.mapBadge` would tie with `Tag`'s own `.tag` and the winner
+       * would come down to CSS-module import order, which nothing in the build guarantees.
+       *
+       * Untracked, because the drawn badge is (node 16:645 carries no tracking); `Tag` would
+       * otherwise give it the mono role's quiet 0.1em.
+       */
+      --mono-letter-spacing: normal;
+
+      position: absolute;
+      z-index: 1;
+      inset-block-start: var(--faq-map-inset);
+      inset-inline-start: var(--faq-map-inset);
     }
 
-    @include media-down(large-tablet) {
-      padding: 16px 0;
+    /*
+     * Only the embed needs sizing. `components/Image`'s own `.container` is already
+     * `width: 100%; height: 100%`, so a rule here repeating it would be a no-op that reads as a
+     * decision.
+     */
+    .mapEmbed {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
     }
+  }
+
+  /*
+   * The bar along the bottom — the design's **ink chip**, which is exactly what
+   * `--button-secondary-bg` / `-fg` is named in `_variables.scss`: stone-900 under stone-50 on the
+   * light page, and the reverse on a dark one. Reaching for `--bg-default` under a flipped
+   * `data-theme` (the inversion `TwoColumnListSection` uses for its panel) would have painted pine
+   * rather than ink, and reaching for the hex would not have inverted at all.
+   *
+   * The link inside it is the one thing that cannot resolve from the page's theme — see the note on
+   * `FaqMapCard`'s `accentTheme` prop. It carries the flipped theme on itself.
+   */
+  .mapBar {
+    position: absolute;
+    z-index: 1;
+    inset-inline: var(--faq-map-inset);
+    inset-block-end: #{fluid(12px, 13px)};
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    padding: #{fluid(9px, 10px)} #{fluid(10px, 12px)};
+    border-radius: var(--radius-sm);
+    background-color: var(--button-secondary-bg);
+    color: var(--button-secondary-fg);
+
+    /*
+     * Forced colours flattens the fill to `Canvas`, so the bar becomes a white strip on the map with
+     * no edge — the text stays readable, but the chip stops reading as a chip. An outline keeps the
+     * shape as shape. `components/Tag` makes the identical move for its filled variant, and
+     * `.mapBadge` above therefore already gets it for free; this bar is hand-rolled and had to be
+     * told.
+     */
+    @media (forced-colors: active) {
+      border: 1px solid CanvasText;
+    }
+
+    /*
+     * Bold at the quiet tracking. `Text` picks the tracking register from the weight, so
+     * `weight="bold"` would take `--mono-letter-spacing-loud` (0.2em) where the comp draws 1.1px on
+     * 11px — exactly 0.1em, the quiet value. Re-pointing the loud register onto the quiet one is the
+     * same standoff `components/Tag` settles, and for the same reason.
+     */
+    .mapAddress {
+      --mono-letter-spacing-loud: var(--mono-letter-spacing);
+      --mono-line-height: normal;
+
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    /*
+     * `variant="bare"` selects the *quiet* mono register (Medium, untracked) and this label is drawn
+     * Bold at 0.1em, so both are re-pointed. Both are properties that `.variant_bare` **reads**
+     * rather than sets, or are set from a rule with more classes than it has — either way there is
+     * no import-order race to lose.
+     *
+     * `--fg-accent` resolves against the `data-theme` the element carries, not the page's: signal on
+     * the ink bar, pine on the off-white one.
+     *
+     * ## `a.mapLink`, not `.mapLink`, and the extra element selector is load-bearing
+     *
+     * `.mapBar .mapLink` computes to (0,2,0) — exactly what `.button.variant_bare` in
+     * `components/Button/styles.module.scss` computes to, and that rule sets both `color` and
+     * `--button-mono-tracking`. A tie is resolved by CSS-module emission order, which nothing in
+     * this build guarantees: whichever module happens to come last wins, so the link would silently
+     * paint `--fg-default` (identical to the address beside it, losing the card's only accent) and
+     * lose its tracking on a bundler reshuffle. The element selector adds (0,0,1), which no
+     * reordering can take away.
+     *
+     * `text-transform` is **not** declared here: `.mono` already sets `uppercase`.
+     *
+     * ## The hover is an underline and not a colour, and that is forced rather than chosen
+     *
+     * `.variant_bare:hover:not(:disabled)` in `components/Button/styles.module.scss` computes to
+     * (0,4,0) — three classes plus the `:disabled` inside `:not()` — and sets `color: var(--fg-accent)`,
+     * which is the colour this link already is. A colour override from here would have to beat that,
+     * and `.mapBar .mapLink:hover` is only (0,3,0): measured in the browser, the hover changed
+     * nothing at all. Matching (0,4,0) would tie and hand the decision to CSS-module import order,
+     * which nothing in the build guarantees.
+     *
+     * `text-decoration` has no such contest — `.button` sets `none` at (0,1,0) — so the underline
+     * wins deterministically. It is also the better affordance: not conveyed by colour alone
+     * (WCAG 1.4.1), and the conventional signal for a text link.
+     */
+    a.mapLink {
+      --button-mono-quiet-font-weight: var(--font-weight-bold);
+      --button-mono-tracking: var(--mono-letter-spacing);
+
+      flex: 0 0 auto;
+      color: var(--fg-accent);
+      /*
+       * `--body-2xs` (fluid 10→11px) rather than the `sm` step's `--button-sm-font-size`
+       * (fluid 11→12px), and the control takes no `size` prop at all as a result. The bar holds two
+       * mono runs drawn at the same 11px (16:648, 16:650), and only one of them is a button — so the
+       * size has to come from the type scale both can reach, not from the button ladder one of them
+       * is on.
+       */
+      font-size: var(--body-2xs);
+
+      &:hover {
+        text-decoration: underline;
+        text-underline-offset: 0.25em;
+      }
+    }
+  }
+
+  // --------------------
+  // Right column — the accordion, then the closing button row
+
+  .accordionColumn {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    // Takes whatever the rail leaves — 696px of 1200 at the design's own width (node 16:651).
+    @container faq-section (width >= #{$faq-inline-switch}) {
+      flex: 1 1 auto;
+    }
+  }
+
+  /*
+   * The rule above the first item (the comp's outer `HorizontalBorder`, node 16:651). Each item
+   * draws its own rule below itself, which `components/Accordion`'s `.item` already does — so the
+   * list is closed at both ends by one declaration here plus none there.
+   *
+   * ## The last item keeps its rule
+   *
+   * This file used to carry `.faqItem:last-child { border-bottom: none }`. That was right when the
+   * button sat in the left column and the accordion ended the section; it is wrong now that the
+   * button closes the right column, because the rule is what separates the last answer from it
+   * (16:705 draws a border, 16:714 sits under it with no border of its own). Removing the override
+   * *is* the change — `.item` has always drawn the border.
+   */
+  .accordionContainer {
+    /*
+     * The ordinal gutter, shared by the trigger's first column and the answer's indent so the two
+     * cannot drift. 56px + 16px at desktop (16:654 / 16:653's gap), 32px + 10px at mobile (16:739 /
+     * 16:738).
+     */
+    --faq-ordinal-column: #{fluid(32px, 56px)};
+    --faq-row-gap: #{fluid(10px, 16px)};
+    /*
+     * The answer's measure (node 16:663). A named local rather than a bare `620px` further down, and
+     * deliberately not `--container-xs` (640px): this is the comp's own line length, not a container
+     * cap, and the two would drift for different reasons.
+     */
+    --faq-answer-measure: 620px;
+
+    border-top: 1px solid var(--fg-default);
 
     .faqItemTrigger {
-      padding: 0;
-      gap: 24px;
+      gap: var(--faq-row-gap);
+      // 24px at desktop, 16px at mobile — the trigger's own vertical inset, where this file
+      // previously padded the *item* and zeroed the trigger. The comp pads the pressable row (the
+      // Button frame), which also makes the tap target the full 86px rather than the text's height.
+      padding-block: #{fluid(16px, 24px)};
     }
 
+    /*
+     * The ordinal. `size="xs"` reads `--body-xs` = `fluid(11px, 12px)`, which is the drawn pair
+     * (12px on 16:655, ~11px on 16:740) with nothing to adjust. `--fg-accent` at full strength is
+     * the drawn `#1e4632`.
+     *
+     * `flex: 0 0 var(--faq-ordinal-column)` fixes the gutter rather than letting each row size its
+     * own number, so every question starts on the same left edge however many digits the list
+     * reaches.
+     */
+    .ordinal {
+      --mono-line-height: var(--body-line-height);
+
+      flex: 0 0 var(--faq-ordinal-column);
+    }
+
+    /*
+     * The question. `--heading-xs` is `fluid(20px, 24px)`; the comp draws 20px at mobile (16:742)
+     * and 26px at desktop (16:657), so the token the `xs` step already reads is re-pointed rather
+     * than a `font-size` being declared.
+     *
+     * The leading and the tracking are re-pointed for the same reason. 29.9 on 26 is 1.15, against
+     * the heading scale's 1.2; and the comp sets these untracked where the scale applies -0.02em,
+     * which over a 20-character question is about 10px of difference.
+     */
+    .question {
+      --heading-xs: #{fluid(20px, 26px)};
+      --heading-line-height: 1.15;
+      --heading-letter-spacing: normal;
+
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    /*
+     * The answer, indented to the question's left edge — the same pair the trigger's gutter is built
+     * from, so the two cannot disagree. 620px is the comp's own measure (16:663); beyond it a long
+     * answer would run the full 696px column, which is past the ~75-character line the rest of the
+     * page is set to.
+     */
     .faqItemContent {
-      padding-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+      max-width: var(--faq-answer-measure);
+      padding-inline-start: calc(var(--faq-ordinal-column) + var(--faq-row-gap));
+
+      /*
+       * 17px on 27.2 at desktop (16:665), ~15px on ~24 at mobile (16:748) — `--body-lg` re-pointed to
+       * that pair, exactly as `TwoColumnListSection.copyText` does.
+       *
+       * A code review argued for dropping this on the round-to-the-token rule, since stock
+       * `--body-lg` is `fluid(16px, 18px)` and therefore within 1px at both anchors. Measured, it is
+       * not only the 1px: the leading is a *ratio*, so a 1px larger font draws a 1.6px taller line
+       * box — 28.8 against the comp's 27.2 — and this is the running body copy of the section, where
+       * that compounds down the paragraph. The rounding rule is for choosing a size *step*; a
+       * documented re-point onto the drawn pair is what the step is for, and the sibling section
+       * already makes it.
+       *
+       * The drawn ink is `rgba(19, 20, 18, 0.8)` — the page's own ink, muted, rather than
+       * `--fg-muted` (stone-600), which is a different colour and not the one the comp picks.
+       * `color-mix` against `transparent` rather than `opacity` so the mute composites against the
+       * page without opening a stacking context, and so it survives the theme: 9.2:1 on light,
+       * comfortably past the 4.5:1 WCAG 1.4.3 asks.
+       */
+      .answerText {
+        --body-lg: #{fluid(15px, 17px)};
+        --body-line-height: 1.6;
+
+        color: color-mix(in srgb, var(--fg-default) 80%, transparent);
+      }
+
+      /*
+       * The outline chip beneath an answer. Five re-points; the three that `Tag` also *sets* need
+       * this rule's three classes to beat its single-class rules without an import-order race:
+       *
+       *   - the padding pair, because the drawn chip (15 × 12.5 desktop, 13 × 11 mobile) is larger
+       *     than any of `Tag`'s three steps — `lg` is 12 × 8, and `size` is a closed set on purpose;
+       *   - the line height, because the comp sets 19.2 on 12 (1.6) where `Tag` pins `normal` (~1.32)
+       *     to make its own box predictable, and here the extra leading *is* the drawn box;
+       *   - the tracking, because node 16:668 carries none and the mono role's default is 0.1em.
+       */
+      .note {
+        --tag-pad-block: #{fluid(11px, 12.5px)};
+        --tag-pad-inline: #{fluid(13px, 15px)};
+        --tag-font-size: var(--body-xs);
+        --mono-line-height: 1.6;
+        --mono-letter-spacing: normal;
+      }
+    }
+  }
+
+  // --------------------
+  // The closing button row (node 16:714)
+
+  .footer {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    // 28px below the last item's rule at desktop; the mobile comp puts 24px between the accordion
+    // and its full-width button (16:736 ends at 1017.8, 16:797 starts at 1041.8).
+    padding-block-start: #{fluid(24px, 28px)};
+
+    @container faq-section (width >= #{$faq-inline-switch}) {
+      justify-content: space-between;
+    }
+  }
+
+  /*
+   * "STILL STUCK?" — shown only in the two-column layout, which is what the comps draw (16:715
+   * desktop; the mobile frame has no counterpart).
+   *
+   * Hidden by default and revealed by the query, rather than the other way round — the stacked
+   * layout is the base, so `display: none` here is the mobile-first statement rather than a
+   * subtraction. Safe to hide at all because it is a caption on a control that stays: the button's
+   * own label ("Ask us on your RSVP") says what it does, so nothing is lost but a decoration.
+   * Anything load-bearing would have to reflow rather than vanish, which is the whole reason the
+   * switch above is stated in `px`.
+   */
+  .footerEyebrow {
+    /*
+     * Untracked, where the mono role's quiet register is 0.1em. Node 16:716 carries no `tracking-`
+     * class at all — unlike the tagline at the top of the rail, which is the loud 0.2em. The two
+     * eyebrows are drawn at the same size in different registers, which is easy to miss and is why
+     * it is stated rather than assumed to follow the other one.
+     */
+    --mono-letter-spacing: normal;
+
+    display: none;
+
+    @container faq-section (width >= #{$faq-inline-switch}) {
+      display: block;
+    }
+  }
+
+  /*
+   * Full width while the columns are stacked, which is what the mobile comp draws (16:797 spans the
+   * column with a centred label), and a shrink-to-fit pill once they are side by side (16:717).
+   *
+   * Handled here rather than with `Link`'s `fullWidthMobile`, which switches on a **viewport** media
+   * query at `tablet` (769px). The layout here switches on the section's own width, so the two would
+   * disagree over a wide band — a right-aligned pill under a full-width accordion — and would
+   * disagree completely for a narrow section in a wide window, which is exactly the case a container
+   * query exists to get right.
+   */
+  .footerButton {
+    width: 100%;
+
+    @container faq-section (width >= #{$faq-inline-switch}) {
+      width: auto;
     }
   }
 }
