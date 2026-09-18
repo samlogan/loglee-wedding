@@ -18,6 +18,20 @@ interface TextBaseProps {
    * takes no arbitrary DOM props and adding a spread would let any attribute through unchecked.
    */
   ariaHidden?: boolean;
+  /*
+   * Writes `data-theme` on the rendered element, which re-points the whole `[data-theme]` block in
+   * `_variables.scss` beneath it — so the run and anything it paints resolve against the *other*
+   * theme while the page keeps its own. `sections/TwoColumnListSection` does this to its panel; the
+   * difference here is that the themed thing and the text are one element, which is what a chip is.
+   *
+   * Spelt as a typed prop for the same reason `ariaHidden` above is: `Text` takes no arbitrary DOM
+   * props, and a `...rest` spread would let any attribute through unchecked. Two named attributes is
+   * the whole surface.
+   *
+   * Omit it and nothing is written, so the element inherits whatever theme the page or section put
+   * on an ancestor — which is the right default and the one every existing call site relies on.
+   */
+  theme?: ProjectTheme;
   text?: string | number | undefined | null;
   textTrim?: number;
   textTrimEnd?: string;
@@ -83,6 +97,7 @@ const Text = (props: TextProps) => {
     className,
     id,
     text,
+    theme,
     variant = 'body',
     size,
     color,
@@ -123,7 +138,12 @@ const Text = (props: TextProps) => {
 
   const TextComponent = createElement(
     as,
-    { className: classes, ...(id && { id }), ...(ariaHidden && { 'aria-hidden': true }) },
+    {
+      className: classes,
+      ...(id && { id }),
+      ...(ariaHidden && { 'aria-hidden': true }),
+      ...(theme && { 'data-theme': theme })
+    },
     children || textValue
   );
 

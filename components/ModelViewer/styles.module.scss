@@ -337,47 +337,63 @@
   }
 
   /*
-   * The file chip inside the arch (node 1:164 desktop, 1:279 mobile).
+   * The file chip inside the arch (node 1:164 desktop, 1:279 mobile) — `components/Tag` at its `sm`
+   * step, which is the 8×4 inset this rule used to draw itself.
+   *
+   * **This was the near-miss second instance** the note on `sections/ScheduleSection`'s `.location`
+   * named: the same object in the filled treatment rather than the outline one, down to the shared
+   * `--radius-sm`, the `fluid()` padding pair, the `width: fit-content` and the `overflow-wrap:
+   * anywhere`. `Tag` owns all of that now, for every chip in the system, and this rule keeps only
+   * what is genuinely about *this arch*: where the chip sits, and how wide it is allowed to get.
    *
    * Sits 22px above the arch's foot at desktop and 14px at mobile — 4.2% and 4.0% of the panel, so
-   * one `cqw` figure covers both. Not uppercased: the comp prints a file name, and a file name is
-   * the one string here that has to be reproduced exactly.
+   * one `cqw` figure covers both. Not uppercased and rendered at `weight="regular"`: the comp prints
+   * a file name, and a file name is the one string here that has to be reproduced exactly.
    *
-   * 3px in Figma; `--radius-sm` is 4px and there is no 3px token. A pixel is not worth a bespoke
-   * value that nothing else in the system shares.
+   * The cap is the half that could not move to `Tag`, and the measurement behind it is worth keeping.
+   * The chip sits inside `.stage`, which is `overflow: hidden` to clip the canvas to the arch, so an
+   * uncapped chip wider than the arch is silently cut off at the dome's edge: the comp's own
+   * `sam-dance.glb` is 99px inside a 200px arch and safe, but a plausible authored name
+   * (`sam-dance-final-v3-compressed.glb`) measures 227px, and 269px with WCAG 1.4.12's text-spacing
+   * overrides applied. `Tag`'s `overflow-wrap: anywhere` is what makes the cap bite — it participates
+   * in intrinsic sizing, so `fit-content` resolves against the cap instead of against the longest
+   * unbreakable run, which for a hyphen-free file name is the whole string.
+   *
+   * The two re-points below are the documented form of a local exception: a custom property set on
+   * the consuming class cannot lose a specificity race with `Tag`'s own module the way a competing
+   * `color` or `font-size` declaration could, since both would be one class inside `@layer defaults`
+   * and the winner would come down to module import order.
    */
   .badge {
     // Untracked, where the two chrome runs above take 0.06em: the chip prints a file name and a
     // tracked file name reads as spaced-out rather than as a token.
     --mono-letter-spacing: normal;
+    /*
+     * Panel chrome is sized against its *container*, not the viewport: `--viewer-chrome-size` is
+     * fluid(9px, 11px) where `Tag`'s default `--body-2xs` is fluid(10px, 11px). `_variables.scss`
+     * records this component as the documented non-consumer of that rung, and the same argument
+     * applies to the chip as to the two runs above it.
+     */
+    --tag-font-size: var(--viewer-chrome-size);
+    /*
+     * The accent ink on **both** themes, which is the arch's register rather than the page's.
+     *
+     * Redundant on light and load-bearing on dark, so it stays. `Tag`'s filled default is
+     * theme-conditional — `--fg-accent` on light, `--fg-default` on dark — precisely so a chip over a
+     * photograph never renders its label in signal/300. This chip is not over a photograph: it is
+     * panel chrome, and `.label` and `.readout` beside it are `--fg-accent` on both themes, so the
+     * one thing it must not do is diverge from the two runs it shares the arch with. Dropping the
+     * line would leave it matching them on light and off-white against their signal on dark.
+     *
+     * The comp draws it at #1e4632, which is `--fg-accent` on the light theme.
+     */
+    --tag-ink: var(--fg-accent);
 
     position: absolute;
     inset-block-end: 4.1cqw;
     inset-inline: 0;
-    width: fit-content;
-    /*
-     * Capped and wrapping, where this was `white-space: nowrap`.
-     *
-     * The chip sits inside `.stage`, which is `overflow: hidden` to clip the canvas to the arch — so
-     * `nowrap` meant a chip wider than the arch was silently cut off at the dome's edge. Measured at
-     * the mobile panel: the comp's own `sam-dance.glb` is 99px inside a 200px arch and safe, but a
-     * plausible authored name (`sam-dance-final-v3-compressed.glb`) measures 227px and loses its
-     * last four characters — 269px with WCAG 1.4.12's text-spacing overrides applied. The string
-     * comes from the CMS, so its length is not this component's to assume, and a truncated file name
-     * is the worst possible failure for the one string here that has to read verbatim.
-     *
-     * `anywhere` rather than `break-word` because it participates in intrinsic sizing: `fit-content`
-     * then resolves against the cap instead of against the longest unbreakable run, which for a
-     * hyphen-free file name is the whole string.
-     */
     max-width: calc(100% - 2 * var(--viewer-gutter-inline));
     margin-inline: auto;
-    border-radius: var(--radius-sm);
-    background-color: var(--bg-default);
-    padding: #{fluid(3px, 4px)} #{fluid(6px, 8px)};
-    color: var(--fg-accent);
-    font-size: var(--viewer-chrome-size);
-    overflow-wrap: anywhere;
   }
 
   /*
@@ -392,16 +408,6 @@
 
     .placeholder {
       background-image: none;
-    }
-
-    /*
-     * The chip is distinguished from the arch by its fill alone, and forced colours flattens both
-     * to `Canvas`. The file name stays readable either way, but the chip is a deliberate grouping
-     * and the rest of this block goes to some trouble to keep exactly that kind of shape. Matches
-     * what `StatMeter`'s `.track` does.
-     */
-    .badge {
-      border: 1px solid CanvasText;
     }
   }
 }
