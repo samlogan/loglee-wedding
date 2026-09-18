@@ -17,6 +17,52 @@ $breakpoints: (
   small-mobile: 340px
 );
 
+/*=============================================>>>>>
+= Container-query switches: the shared conventions =
+===============================================>>>>>*/
+
+/*
+ * Thirteen switches across eight sections and three components are container queries on a section's
+ * own content box rather than viewport media queries, which is what makes them testable — a story
+ * renders the section in a 390px column and gets the narrow treatment without owning the window.
+ * Each one's *number* is local and measured, and should stay local: a value three modules happen to
+ * land on is a coincidence until they have to **agree**, and promoting a coincidence couples three
+ * unrelated layouts. What is not local is the shape, and it drifted once already.
+ *
+ * ## Naming
+ *
+ *   $<owner>-inline-switch      the threshold, a Sass variable in the owning module
+ *   container: <owner> / inline-size    on the query container, in the one-line shorthand
+ *
+ * The container name is **camelCase** and section-specific (`specCardGrid`, `mediaCardGrid`,
+ * `numberedGrid`). Both halves matter: CSS Modules does not hash `container-name` — it is a global
+ * identifier — so a bare `faq` or `grid` is one section away from a silent collision, and the
+ * shorthand keeps the type and the name from being edited apart.
+ *
+ * ## `px` or `rem`, and the split is deliberate — do not flatten it
+ *
+ * Chromium resolves a `rem` inside a container query against the **live root font size**, so
+ * enlarging text alone can cross a threshold with the viewport unchanged. Whether that is help or a
+ * WCAG 1.4.4 failure depends entirely on what crossing the switch *does*:
+ *
+ *   rem   the narrow branch is an ADAPTATION — fewer columns, a different direction, a reflow.
+ *         Arriving early is the point: more text wants wider tracks. Most switches are this.
+ *
+ *   px    the narrow branch HIDES something — `display: none`, a `clip-path`, anything that removes
+ *         content. A `rem` threshold here deletes content on a text-size increase alone, which is
+ *         exactly what 1.4.4 prohibits. Measured in Chromium: `MediaTagsSection`'s three place names
+ *         vanish at a 32px root on a 1280px viewport, and at a 24px root on a 1024px one.
+ *
+ * The three `px` switches are `$media-tags-inline-switch` (clips the location pills),
+ * `$numbered-grid-meta-inline-switch` (hides the heading's qualifier) and `$faq-inline-switch`
+ * (hides the "still stuck?" eyebrow). Every other switch reflows and is `rem`. A switch that grows a
+ * hiding branch has to change unit with it; a switch that loses one can go back.
+ *
+ * Note no story can catch this either way: the `atWidth` decorator sizes its wrapper in `rem` too,
+ * so in Storybook the container and a `rem` threshold scale together and stay in agreement. It only
+ * diverges on a real page, where the container is sized by the viewport in CSS pixels.
+ */
+
 /*
  * The header's one layout switch — inline links above, hamburger below.
  *

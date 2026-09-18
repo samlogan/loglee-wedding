@@ -30,6 +30,9 @@
  * 960px is the content box at the design's own stack point: the `large-tablet` breakpoint (1025px)
  * less two `--container-gutter`s, which resolve to ~32px each at that width.
  *
+ * One of three `px` switches in the repo; the rule and the register are at the head of
+ * `tools/sass/base/__media.scss`.
+ *
  * **Stacked is the unconditional default.** A container query cannot be evaluated before its
  * container exists, so the single-column layout has to be the base and the row the addition.
  */
@@ -44,7 +47,10 @@ $faq-inline-switch: 960px;
    *
    * `container-name` is **not** hashed by CSS Modules — it is a global identifier — so it is spelt
    * out rather than left as a bare `faq`, which a second section adopting this idiom could collide
-   * with silently.
+   * with silently. `faqSection` and not the `faq-section` this shipped with: nine other containers
+   * in the repo are camelCase in the `container: <name> / inline-size` shorthand, and one kebab-case
+   * outlier declaring its type and name on separate lines is a shape a reader has to stop at. The
+   * conventions are collected at the head of `tools/sass/base/__media.scss`.
    *
    * `inline-size` and not `size`: the width comes from the page and the height from the content, and
    * containing the height would collapse it. Note it also implies `contain: layout`, which makes the
@@ -55,8 +61,7 @@ $faq-inline-switch: 960px;
    * children of `<main>`, and of a plain `<div>` in Storybook.
    */
   .queryContainer {
-    container-type: inline-size;
-    container-name: faq-section;
+    container: faqSection / inline-size;
   }
 
   .contentContainer {
@@ -78,7 +83,7 @@ $faq-inline-switch: 960px;
      * No `justify-content`: the rail is `flex: 0 1 440px` and the column beside it `flex: 1 1 auto`,
      * so the row never has free space to distribute and any value would be inert.
      */
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       flex-direction: row;
       gap: var(--faq-column-gap);
     }
@@ -101,7 +106,7 @@ $faq-inline-switch: 960px;
     min-width: 0;
 
     // 440px of a 1200px content box (node 16:635), allowed to shrink but not to grow.
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       flex: 0 1 440px;
     }
   }
@@ -333,7 +338,7 @@ $faq-inline-switch: 960px;
     min-width: 0;
 
     // Takes whatever the rail leaves — 696px of 1200 at the design's own width (node 16:651).
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       flex: 1 1 auto;
     }
   }
@@ -478,7 +483,7 @@ $faq-inline-switch: 960px;
     // and its full-width button (16:736 ends at 1017.8, 16:797 starts at 1041.8).
     padding-block-start: #{fluid(24px, 28px)};
 
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       justify-content: space-between;
     }
   }
@@ -505,7 +510,7 @@ $faq-inline-switch: 960px;
 
     display: none;
 
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       display: block;
     }
   }
@@ -523,7 +528,7 @@ $faq-inline-switch: 960px;
   .footerButton {
     width: 100%;
 
-    @container faq-section (width >= #{$faq-inline-switch}) {
+    @container faqSection (width >= #{$faq-inline-switch}) {
       width: auto;
     }
   }

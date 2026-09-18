@@ -67,6 +67,9 @@ $numbered-grid-inline-switch: 45rem;
  * Note that no story can catch this: the `atWidth` decorator sizes its wrapper in `rem` too, so in
  * Storybook the container and the threshold scale together and stay in agreement. It only diverges
  * on a real page, where the container is sized by the viewport in CSS pixels.
+ *
+ * This is one of three `px` switches in the repo and the only one in this file. The rule, and the
+ * register of which switches it applies to, is at the head of `tools/sass/base/__media.scss`.
  */
 $numbered-grid-meta-inline-switch: 608px;
 
