@@ -19,7 +19,7 @@ const FIGMA = 'https://www.figma.com/design/KxvsJuCNaG4n2QVp3iD4jd/Wedding?node-
 /**
  * The home page's opening block. `parameters.design` points at the hero frame itself (node 1:63)
  * rather than the whole home page, so `/review-design` compares against what this section renders;
- * `Mobile` overrides it with the phone frame (1:112).
+ * the phone stories override it with the phone frame (1:112).
  */
 const meta = {
   title: 'Sections/Hero',
@@ -38,15 +38,15 @@ type Story = StoryObj<typeof meta>;
 type HeroArgs = IHeroSection & { sectionFields?: ReturnType<typeof mockSectionFields> };
 
 /**
- * A fixed width, so the container query resolves the same way whatever the test canvas is.
+ * A fixed width, so the container queries resolve the same way whatever the test canvas is.
  *
- * `rem` and not `px`, matching `HeaderDisplaySection.stories`: the switch is `60rem`, so a `px`
- * wrapper would make these assertions depend on the reader's root font size. 80rem is the design's
- * 1280px desktop frame; 23.4375rem is 375px, the narrow anchor of every `fluid()` token and close to
- * the 390px phone frame.
+ * `rem` for the layout stories, matching `HeaderDisplaySection.stories`: the reflow switch is `60rem`,
+ * so a `px` wrapper would make those assertions depend on the reader's root font size. The street
+ * switch is `px` on purpose, and `EnlargedText` is the one story that needs a `px` wrapper to see why.
  *
  * What a wrapper does *not* reproduce: `fluid()` interpolates on `vw`, so type and spacing are still
- * the canvas's rather than a 1280px window's. Layout is exact; the 176px names are not.
+ * the window's rather than the wrapper's. Layout is exact; the 176px names are not — and an assertion
+ * about where text wraps has to hold at every window size the story might be opened in.
  */
 const atWidth =
   (width: string): Decorator =>
@@ -55,6 +55,12 @@ const atWidth =
       <Story />
     </div>
   );
+
+// The design's two frames: 80rem is the 1280px desktop frame; 23.4375rem is 375px, the narrow
+// anchor of every `fluid()` token and close to the 390px phone frame.
+const DESKTOP = atWidth('80rem');
+const PHONE = atWidth('23.4375rem');
+const PHONE_FRAME = { design: { type: 'figma', url: `${FIGMA}1-112` } };
 
 /** The copy as drawn, in the case an editor types it — CSS does the uppercasing. */
 const TRAVEL_NOTE = '90 min south of Sydney';
@@ -122,7 +128,7 @@ const data: IHeroSection = sectionFixture<IHeroSection>('heroSection') ?? PUBLIS
 // ---------------------------------------------------------------------------
 
 /*
- * The two meta lines, by the component's own hashed module class — the story and the component
+ * The parts of the section, by the component's own hashed module class — the story and the component
  * import the same stylesheet, so `styles.summary` is the same generated name in dev, in a static
  * build and under Vitest.
  */
@@ -130,18 +136,38 @@ const summaryIn = (root: HTMLElement) => root.querySelector<HTMLElement>(`.${sty
 const directionsIn = (root: HTMLElement) => root.querySelector<HTMLElement>(`.${styles.directions}`);
 const streetIn = (root: HTMLElement) => root.querySelector<HTMLElement>(`.${styles.street}`);
 const metaIn = (root: HTMLElement) => root.querySelector<HTMLElement>(`.${styles.meta}`);
+const sectionIn = (root: HTMLElement) => root.querySelector('section') as HTMLElement;
 
 /**
- * A line's text as a reader would copy it: whitespace runs — including the no-break space before
- * each separator — collapsed to one space, and any stega payload removed.
+ * An element's text with some of its parts left out: whitespace runs — including the no-break space
+ * before each separator — collapsed to one space, and any stega payload removed.
  */
-const lineText = (element: Element | null) =>
-  stegaClean(element?.textContent ?? '')
+const textWithout = (element: Element | null, leaveOut: string): string => {
+  const copy = element?.cloneNode(true) as Element | undefined;
+
+  for (const part of copy?.querySelectorAll(leaveOut) ?? []) {
+    part.remove();
+  }
+
+  return stegaClean(copy?.textContent ?? '')
     .replaceAll(/\s+/g, ' ')
     .trim();
+};
 
-/** What a line is expected to read: the halves that exist, and a separator only between two of them. */
-const joined = (...halves: (string | null | undefined)[]) => halves.filter(Boolean).join(' · ');
+/**
+ * Two readings of one line, because the section now writes some things twice: the dotted date and
+ * the middle dot for the eye, and a worded date and a comma for the ear (see `.spoken`).
+ *
+ * `shown` is what is on screen — the `.spoken` twins left out. `spoken` is what assistive technology
+ * is given — the `aria-hidden` twins left out.
+ */
+const shown = (element: Element | null) => textWithout(element, `.${styles.spoken}`);
+const spoken = (element: Element | null) => textWithout(element, '[aria-hidden="true"]');
+
+/** A line as it reads on screen: the halves that exist, with a dot only between two of them. */
+const shownLine = (...halves: (string | null | undefined)[]) => halves.filter(Boolean).join(' · ');
+/** The same line as it is read aloud: a comma where the dot is. */
+const spokenLine = (...halves: (string | null | undefined)[]) => halves.filter(Boolean).join(', ');
 
 const rect = (element: Element) => element.getBoundingClientRect();
 
@@ -165,6 +191,12 @@ const withSettings = (overrides: IHeroWeddingSettings): IHeroSection => ({
   weddingSettings: { ...MOCK.weddingSettings, ...overrides }
 });
 
+/** `MOCK` with some of its venue's fields replaced. */
+const withVenue = (overrides: NonNullable<IHeroWeddingSettings['venue']>): IHeroSection =>
+  withSettings({ venue: { ...MOCK.weddingSettings?.venue, ...overrides } });
+
+const NO_TRAVEL_NOTE = withVenue({ travelNote: null });
+
 // ---------------------------------------------------------------------------
 // Stories
 // ---------------------------------------------------------------------------
@@ -184,25 +216,30 @@ export const PublishedContent: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const settings = data.weddingSettings;
-    const street = settings?.venue?.address?.split(/\r?\n/).find((line) => line.trim());
-    const expectedSummary = joined(
-      formatDateRange(settings?.startDate, settings?.endDate, { style: 'numeric' }),
-      settings?.venue?.name?.trim()
-    );
-    const expectedDirections = joined(street?.trim(), settings?.venue?.travelNote?.trim());
+    const venueName = settings?.venue?.name?.trim();
+    const street = settings?.venue?.address
+      ?.split(/\r?\n/)
+      .find((line) => line.trim())
+      ?.trim();
+    const travelNote = settings?.venue?.travelNote?.trim();
+    const numericDates = formatDateRange(settings?.startDate, settings?.endDate, { style: 'numeric' });
+    const wordedDates = formatDateRange(settings?.startDate, settings?.endDate);
 
     /*
      * Not vacuous. `data` is published content or the comp, and both have a date and a venue — an
      * empty line here means the dataset lost its content, which is worth failing on rather than
      * passing silently.
      */
-    await expect(expectedSummary.length).toBeGreaterThan(0);
+    await expect(shownLine(numericDates, venueName).length).toBeGreaterThan(0);
 
     // The names are the page `h1`, joined exactly as the shared helper joins them.
-    await expect(lineText(canvas.getByRole('heading', { level: 1 }))).toBe(coupleNames(settings?.coupleNames));
-    await expect(lineText(summaryIn(canvasElement))).toBe(expectedSummary);
-    // `textContent`, so the street counts even at a width where the phone layout hides it.
-    await expect(lineText(directionsIn(canvasElement))).toBe(expectedDirections);
+    await expect(shown(canvas.getByRole('heading', { level: 1 }))).toBe(coupleNames(settings?.coupleNames));
+
+    await expect(shown(summaryIn(canvasElement))).toBe(shownLine(numericDates, venueName));
+    await expect(spoken(summaryIn(canvasElement))).toBe(spokenLine(wordedDates, venueName));
+    // The street counts at every width here: these read the DOM, and the phone layout only hides it.
+    await expect(shown(directionsIn(canvasElement))).toBe(shownLine(street, travelNote));
+    await expect(spoken(directionsIn(canvasElement))).toBe(spokenLine(street, travelNote));
   }
 };
 
@@ -218,26 +255,37 @@ export const Default: Story = {
     const [first, second] = [...heading.children];
 
     // AC: the names are the page's `h1`, and its accessible text reads as one phrase.
-    await expect(lineText(heading)).toBe('Sam & Lauren');
+    await expect(shown(heading)).toBe('Sam & Lauren');
     // Stacked as drawn: "SAM &" on one line, "LAUREN" on the next.
-    await expect(lineText(first)).toBe('Sam &');
-    await expect(lineText(second)).toBe('Lauren');
+    await expect(shown(first)).toBe('Sam &');
+    await expect(shown(second)).toBe('Lauren');
     await expect(rect(second).top).toBeGreaterThan(rect(first).top);
 
-    await expect(lineText(summaryIn(canvasElement))).toBe('12–14.02.27 · The Lodge Jamberoo');
-    await expect(lineText(directionsIn(canvasElement))).toBe('406 Jamberoo Mountain Rd · 90 min south of Sydney');
+    // On screen, the comp's lines.
+    await expect(shown(summaryIn(canvasElement))).toBe('12–14.02.27 · The Lodge Jamberoo');
+    await expect(shown(directionsIn(canvasElement))).toBe('406 Jamberoo Mountain Rd · 90 min south of Sydney');
 
     /*
-     * Two edges, two drawn separations: the bar-to-names gap is wider than the gap under the meta
-     * row at every width (28 → 43 against 23 → 36). Equal paddings would mean the section had fallen
-     * back to one step for both — which is what it did before the re-points, 7px wrong on each edge.
+     * Read aloud, a date and two pauses: the dotted digits and the middle dots are hidden from
+     * assistive technology, and a worded date and a comma stand in for them.
      */
-    const section = canvasElement.querySelector('section') as HTMLElement;
-    const top = Number.parseFloat(getComputedStyle(section).paddingTop);
-    const bottom = Number.parseFloat(getComputedStyle(section).paddingBottom);
+    await expect(spoken(summaryIn(canvasElement))).toBe('12–14 Feb 2027, The Lodge Jamberoo');
+    await expect(spoken(directionsIn(canvasElement))).toBe('406 Jamberoo Mountain Rd, 90 min south of Sydney');
 
-    await expect(bottom).toBeGreaterThan(0);
-    await expect(top).toBeGreaterThan(bottom);
+    /*
+     * Two edges, two drawn separations, and each is the section's own measured pair rather than the
+     * stock step it names. Read from the tokens themselves — a comparison of the two paddings could
+     * not tell, since the stock `sm` is larger than the stock `xs` at every width too.
+     */
+    const section = sectionIn(canvasElement);
+    const root = getComputedStyle(document.documentElement);
+
+    for (const token of ['--section-spacing-sm', '--section-spacing-xs']) {
+      await expect(getComputedStyle(section).getPropertyValue(token)).not.toBe(root.getPropertyValue(token));
+    }
+    await expect(Number.parseFloat(getComputedStyle(section).paddingTop)).toBeGreaterThan(
+      Number.parseFloat(getComputedStyle(section).paddingBottom)
+    );
   }
 };
 
@@ -257,7 +305,7 @@ const NO_SPACING: HeroArgs = {
 export const WithoutSpacing: Story = {
   args: NO_SPACING,
   play: async ({ canvasElement }) => {
-    const section = canvasElement.querySelector('section') as HTMLElement;
+    const section = sectionIn(canvasElement);
 
     await expect(getComputedStyle(section).paddingTop).toBe('0px');
     await expect(getComputedStyle(section).paddingBottom).toBe('0px');
@@ -267,13 +315,10 @@ export const WithoutSpacing: Story = {
 /**
  * Desktop: the meta row splits — dates and venue on the left, street and travel note on the right,
  * sharing one bottom edge (node 1:66 is `items-end` / `justify-between`).
- *
- * 80rem is the 1280px frame, pinned as a wrapper so the container query resolves the same way in the
- * component-test runner as it does here.
  */
 export const Desktop: Story = {
   args: MOCK,
-  decorators: [atWidth('80rem')],
+  decorators: [DESKTOP],
   play: async ({ canvasElement }) => {
     const heading = within(canvasElement).getByRole('heading', { level: 1 });
     const meta = metaIn(canvasElement) as HTMLElement;
@@ -308,8 +353,8 @@ export const Desktop: Story = {
  */
 export const Mobile: Story = {
   args: MOCK,
-  decorators: [atWidth('23.4375rem')],
-  parameters: { design: { type: 'figma', url: `${FIGMA}1-112` } },
+  decorators: [PHONE],
+  parameters: PHONE_FRAME,
   play: async ({ canvasElement }) => {
     const meta = metaIn(canvasElement) as HTMLElement;
     const summary = summaryIn(canvasElement) as HTMLElement;
@@ -337,6 +382,52 @@ export const Mobile: Story = {
 };
 
 /**
+ * Between the frames: a tablet, or a desktop window zoomed in. The meta stacks, as on a phone — but
+ * the street is back, because the content box is wider than the 400px street switch and the whole
+ * street-and-travel line fits on one line again. Nothing drawn covers this width; it is the one the
+ * two switches being separate buys.
+ */
+export const Tablet: Story = {
+  args: MOCK,
+  decorators: [atWidth('40rem')],
+  play: async ({ canvasElement }) => {
+    await expect(getComputedStyle(metaIn(canvasElement) as HTMLElement).flexDirection).toBe('column');
+    // Visible, not merely present — the phone layout keeps it in the DOM too.
+    await expect(streetIn(canvasElement)).toBeVisible();
+    await expect(shown(directionsIn(canvasElement))).toBe(`406 Jamberoo Mountain Rd · ${TRAVEL_NOTE}`);
+  }
+};
+
+/**
+ * Text enlarged without the window changing — a reader who set their browser's font size to 150%.
+ *
+ * The case the two switches' units exist for (WCAG 1.4.4). The reflow is `rem`, so larger text
+ * reaches the stacked layout sooner, which is what it wants. The street's switch is `px`, so larger
+ * text cannot hide it: when this was one `rem` switch, the street vanished here — at a 24px root,
+ * 60rem is wider than the content box of any desktop window.
+ *
+ * The only story on a `px` wrapper: a `rem` one scales with the root, and would keep the container
+ * and the switch in step and prove nothing.
+ */
+export const EnlargedText: Story = {
+  args: MOCK,
+  decorators: [atWidth('1280px')],
+  play: async ({ canvasElement }) => {
+    const html = document.documentElement;
+    const before = html.style.fontSize;
+
+    html.style.fontSize = '150%';
+
+    try {
+      await expect(getComputedStyle(metaIn(canvasElement) as HTMLElement).flexDirection).toBe('column');
+      await expect(streetIn(canvasElement)).toBeVisible();
+    } finally {
+      html.style.fontSize = before;
+    }
+  }
+};
+
+/**
  * One partner only — the second left blank. The AC: no dangling ampersand.
  */
 export const OnePartner: Story = {
@@ -344,7 +435,7 @@ export const OnePartner: Story = {
   play: async ({ canvasElement }) => {
     const heading = within(canvasElement).getByRole('heading', { level: 1 });
 
-    await expect(lineText(heading)).toBe('Sam');
+    await expect(shown(heading)).toBe('Sam');
     await expect(heading.children).toHaveLength(1);
   }
 };
@@ -355,7 +446,8 @@ export const OnePartner: Story = {
 export const WithoutDates: Story = {
   args: withSettings({ startDate: null, endDate: null }),
   play: async ({ canvasElement }) => {
-    await expect(lineText(summaryIn(canvasElement))).toBe('The Lodge Jamberoo');
+    await expect(shown(summaryIn(canvasElement))).toBe('The Lodge Jamberoo');
+    await expect(spoken(summaryIn(canvasElement))).toBe('The Lodge Jamberoo');
   }
 };
 
@@ -366,7 +458,8 @@ export const WithoutDates: Story = {
 export const WithoutVenue: Story = {
   args: withSettings({ venue: null }),
   play: async ({ canvasElement }) => {
-    await expect(lineText(summaryIn(canvasElement))).toBe('12–14.02.27');
+    await expect(shown(summaryIn(canvasElement))).toBe('12–14.02.27');
+    await expect(spoken(summaryIn(canvasElement))).toBe('12–14 Feb 2027');
     await expect(directionsIn(canvasElement)).toBeNull();
   }
 };
@@ -375,13 +468,13 @@ export const WithoutVenue: Story = {
  * No travel note, desktop: the right line is the street alone, with no separator after it.
  */
 export const WithoutTravelNote: Story = {
-  args: withSettings({ venue: { ...MOCK.weddingSettings?.venue, travelNote: null } }),
-  decorators: [atWidth('80rem')],
+  args: NO_TRAVEL_NOTE,
+  decorators: [DESKTOP],
   play: async ({ canvasElement }) => {
     const directions = directionsIn(canvasElement) as HTMLElement;
 
     await expect(directions).toBeVisible();
-    await expect(lineText(directions)).toBe('406 Jamberoo Mountain Rd');
+    await expect(shown(directions)).toBe('406 Jamberoo Mountain Rd');
   }
 };
 
@@ -391,9 +484,9 @@ export const WithoutTravelNote: Story = {
  * still claim the 8px gap beneath the dates.
  */
 export const WithoutTravelNoteMobile: Story = {
-  args: withSettings({ venue: { ...MOCK.weddingSettings?.venue, travelNote: null } }),
-  decorators: [atWidth('23.4375rem')],
-  parameters: { design: { type: 'figma', url: `${FIGMA}1-112` } },
+  args: NO_TRAVEL_NOTE,
+  decorators: [PHONE],
+  parameters: PHONE_FRAME,
   play: async ({ canvasElement }) => {
     const meta = metaIn(canvasElement) as HTMLElement;
     const summary = summaryIn(canvasElement) as HTMLElement;
@@ -405,14 +498,55 @@ export const WithoutTravelNoteMobile: Story = {
 };
 
 /**
+ * The address alone — no dates, no venue name, no travel note — on a phone.
+ *
+ * The street is all the meta row has and the phone layout drops the street, so the row goes as well:
+ * left in place it would be an empty box still carrying its padding under the names. The desktop
+ * layout keeps it, which `WithoutTravelNote` covers.
+ */
+export const StreetOnlyMobile: Story = {
+  args: withSettings({
+    startDate: null,
+    endDate: null,
+    venue: { ...MOCK.weddingSettings?.venue, name: null, travelNote: null }
+  }),
+  decorators: [PHONE],
+  parameters: PHONE_FRAME,
+  play: async ({ canvasElement }) => {
+    const heading = within(canvasElement).getByRole('heading', { level: 1 });
+    const section = sectionIn(canvasElement);
+
+    await expect(metaIn(canvasElement)).not.toBeVisible();
+    // Nothing between the names and the section's own bottom padding.
+    await expect(rect(section).bottom - Number.parseFloat(getComputedStyle(section).paddingBottom)).toBeCloseTo(
+      rect(heading).bottom,
+      0
+    );
+  }
+};
+
+/**
  * No address: the right line is the travel note alone, with no separator in front of it.
  */
 export const WithoutAddress: Story = {
-  args: withSettings({ venue: { ...MOCK.weddingSettings?.venue, address: null } }),
-  decorators: [atWidth('80rem')],
+  args: withVenue({ address: null }),
+  decorators: [DESKTOP],
   play: async ({ canvasElement }) => {
-    await expect(lineText(directionsIn(canvasElement))).toBe(TRAVEL_NOTE);
+    await expect(shown(directionsIn(canvasElement))).toBe(TRAVEL_NOTE);
     await expect(streetIn(canvasElement)).toBeNull();
+  }
+};
+
+/**
+ * An address typed the way addresses get typed: a stray blank first line, and Windows line endings
+ * from a paste. The street is still the first line with anything on it, with nothing left over.
+ */
+export const MessyAddress: Story = {
+  args: withVenue({ address: '\n  \r\n406 Jamberoo Mountain Rd\r\nJamberoo NSW 2533' }),
+  decorators: [DESKTOP],
+  play: async ({ canvasElement }) => {
+    await expect(streetIn(canvasElement)?.textContent).not.toMatch(/[\r\n]/);
+    await expect(shown(directionsIn(canvasElement))).toBe(`406 Jamberoo Mountain Rd · ${TRAVEL_NOTE}`);
   }
 };
 
@@ -438,7 +572,7 @@ export const NamesOnly: Story = {
 export const WithoutSettings: Story = {
   args: { weddingSettings: null },
   play: async ({ canvasElement }) => {
-    await expect(lineText(within(canvasElement).getByRole('heading', { level: 1 }))).toBe('Sam & Lauren');
+    await expect(shown(within(canvasElement).getByRole('heading', { level: 1 }))).toBe('Sam & Lauren');
     await expect(metaIn(canvasElement)).toBeNull();
   }
 };
@@ -464,16 +598,16 @@ const DRAFT_BLANKS: IHeroWeddingSettings = {
  */
 export const DraftBlankFields: Story = {
   args: withSettings(DRAFT_BLANKS),
-  decorators: [atWidth('80rem')],
+  decorators: [DESKTOP],
   play: async ({ canvasElement }) => {
     // The trap is real first: every blank here is non-empty to a plain `.trim()`.
     await expect(DRAFT_BLANKS.coupleNames?.partnerTwo?.trim()).not.toBe('');
     await expect(DRAFT_BLANKS.venue?.name?.trim()).not.toBe('');
     await expect(DRAFT_BLANKS.venue?.travelNote?.trim()).not.toBe('');
 
-    await expect(lineText(within(canvasElement).getByRole('heading', { level: 1 }))).toBe('Sam');
-    await expect(lineText(summaryIn(canvasElement))).toBe('12–14.02.27');
-    await expect(lineText(directionsIn(canvasElement))).toBe('406 Jamberoo Mountain Rd');
+    await expect(shown(within(canvasElement).getByRole('heading', { level: 1 }))).toBe('Sam');
+    await expect(shown(summaryIn(canvasElement))).toBe('12–14.02.27');
+    await expect(shown(directionsIn(canvasElement))).toBe('406 Jamberoo Mountain Rd');
   }
 };
 
@@ -487,12 +621,12 @@ export const DraftBlankFields: Story = {
  */
 export const LongNames: Story = {
   args: withSettings({ coupleNames: { partnerOne: 'Alexandra', partnerTwo: 'Christopherson' } }),
-  decorators: [atWidth('23.4375rem')],
-  parameters: { design: { type: 'figma', url: `${FIGMA}1-112` } },
+  decorators: [PHONE],
+  parameters: PHONE_FRAME,
   play: async ({ canvasElement }) => {
     const heading = within(canvasElement).getByRole('heading', { level: 1 });
 
-    await expect(lineText(heading)).toBe('Alexandra & Christopherson');
+    await expect(shown(heading)).toBe('Alexandra & Christopherson');
     // Half a pixel of slack for sub-pixel layout.
     await expect(heading.scrollWidth).toBeLessThanOrEqual(heading.clientWidth + 0.5);
   }
@@ -503,15 +637,19 @@ export const LongNames: Story = {
  *
  * It moves beneath the dates *whole* and stays on the right edge, rather than squeezing both halves
  * into ragged columns — `flex-wrap` plus `.directions`' `margin-inline-start: auto`.
+ *
+ * The note is long for a reason, and it failed once for being shorter. The wrapper fixes the layout
+ * width at 80rem but not the type, which follows the window: opened in a narrow window, the mono line
+ * shrinks towards 11px and an 83-character note fitted beside the dates after all. This one is 102
+ * characters, which with the street is ~1000px at the smallest the type gets — past what the 80rem
+ * line has left beside the dates at any window size — and ~1080px at the largest, which still fits
+ * on a line of its own.
  */
 export const LongDirections: Story = {
-  args: withSettings({
-    venue: {
-      ...MOCK.weddingSettings?.venue,
-      travelNote: '90 min south of Sydney, 2 hrs from Canberra, 25 min from Wollongong station by taxi'
-    }
+  args: withVenue({
+    travelNote: '90 min south of Sydney, about 2 hrs from Canberra, and 25 min by taxi from Kiama or Wollongong station'
   }),
-  decorators: [atWidth('80rem')],
+  decorators: [DESKTOP],
   play: async ({ canvasElement }) => {
     const meta = metaIn(canvasElement) as HTMLElement;
     const summary = summaryIn(canvasElement) as HTMLElement;
@@ -537,9 +675,9 @@ const DARK: HeroArgs = { ...MOCK, sectionFields: mockSectionFields({ theme: 'dar
  */
 export const Dark: Story = {
   args: DARK,
-  decorators: [atWidth('80rem')],
+  decorators: [DESKTOP],
   play: async ({ canvasElement }) => {
-    const section = canvasElement.querySelector('section') as HTMLElement;
+    const section = sectionIn(canvasElement);
     const probe = document.createElement('span');
 
     await expect(section.dataset.theme).toBe('dark');

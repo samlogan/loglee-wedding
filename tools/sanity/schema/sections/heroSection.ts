@@ -1,5 +1,6 @@
 import { TbHearts } from 'react-icons/tb';
 import { defineType } from 'sanity';
+import type { ValidationContext } from 'sanity';
 
 import thumbnail from '../../../../sections/HeroSection/thumbnail.png';
 import ReadOnlyImageInput from '../../components/ReadOnlyImageInput';
@@ -50,17 +51,52 @@ interface IHeroSection {
   weddingSettings?: IHeroWeddingSettings | null;
 }
 
+/** The section types that render a page's `<h1>` — each forces it, whatever an editor picks. */
+const PAGE_HEADING_SECTIONS = new Set(['heroSection', 'headerDisplaySection']);
+
+/**
+ * Warns when this hero cannot be the page's one `<h1>` at the top of its outline.
+ *
+ * The hero forces `<h1>` (the AC), and so does `headerDisplaySection`, and nothing about the
+ * `sections` array stops an editor adding a second one or dragging the hero below an `<h2>` band.
+ * Either publishes a page whose outline is wrong (WCAG 1.3.1) from a choice made in the section
+ * list — the same class of mistake `weddingSettings` already guards against for its rich text. So it
+ * is said here, at the point of the choice.
+ *
+ * On the hero rather than on `page.sections`, because this section is the one that makes the claim
+ * and this ticket's to add; a page-level rule covering both heading sections is the fuller form.
+ * A warning, not an error: an editor mid-rearrangement passes through both states on the way to a
+ * correct page, and a blocking rule would stop them saving that draft.
+ *
+ * Exported for its unit test only — `export const`, not a name in the `export { … }` list below,
+ * which is where `yarn sections:register` looks for sub-types it would have to warn about.
+ */
+export const pageHeadingPlacement = (_value: unknown, context: ValidationContext): true | string => {
+  const sections = (context.document?.sections ?? []) as { _key?: string; _type?: string }[];
+  const [, segment] = context.path ?? [];
+  const key = typeof segment === 'object' && segment !== null && '_key' in segment ? segment._key : undefined;
+
+  if (sections.filter((section) => PAGE_HEADING_SECTIONS.has(section?._type ?? '')).length > 1) {
+    return 'This page has more than one section that renders its main heading (Hero, Header Display). Keep one: a page should have a single h1.';
+  }
+
+  if (key && sections[0]?._key !== key) {
+    return 'The hero renders the page’s main heading, so it should be the first section on the page.';
+  }
+
+  return true;
+};
+
 const heroSection = defineType({
   fields: [
-    internalLabelField,
     {
       /*
-       * The one place an editor opening this section learns where its content comes from, so the
-       * description carries it. Without a Data group (see `groups` below) this is the first field
-       * they see.
+       * First, above even the internal label, because it is the one place an editor opening this
+       * section learns where its content comes from. Without a Data group (see `groups` below) the
+       * Studio opens on "All fields", so this description is the first thing they read.
        */
       description:
-        'Everything this section shows — the couple’s names, the dates, the venue, its street and travel note — comes from Wedding Settings. Edit it there; this section only sets the theme and spacing.',
+        'Everything this section shows — the couple’s names, the dates, the venue, its street and travel note — comes from Wedding Settings. Edit it there; this section only sets the theme and spacing. The names are the page’s main heading, so place the hero once, as the first section.',
       name: 'sectionPreview',
       title: 'Section Preview',
       type: 'image',
@@ -70,6 +106,7 @@ const heroSection = defineType({
       readOnly: true,
       group: 'internal'
     },
+    internalLabelField,
     {
       group: 'styles',
       name: 'sectionFields',
@@ -102,7 +139,8 @@ const heroSection = defineType({
     }
   },
   title: 'Hero',
-  type: 'object'
+  type: 'object',
+  validation: (Rule) => Rule.custom(pageHeadingPlacement).warning()
 });
 
 export { heroSection };

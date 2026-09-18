@@ -2,27 +2,47 @@
  * The home hero: the couple's names stacked in oversized display type, over a meta row that is two
  * lines on a phone and one split line on a desktop. Nodes 1:63 (1280px frame) and 1:112 (390px).
  *
- * ## The one switch, and why it is a container query
+ * ## Two switches, in two units, and why both are container queries
  *
  * Everything that scales here scales through `fluid()` — the display type, the meta type, the gap
- * between them. What `fluid()` cannot interpolate is a change of *shape*: the meta row turning from a
- * stack into a split line, and the street dropping out of it. That needs a query, and it is a
- * **container** query on the section's own content box, for the reason `headerDisplaySection` gives:
- * in the app the two are equivalent, because the section is full width, and keying it to the
- * container is what lets the `Mobile` story reach the phone layout by rendering in a 375px column
- * rather than by owning the window.
+ * between them. What `fluid()` cannot interpolate is a change of *shape*, and this section has two:
+ * the meta row turning from a stack into a split line, and the street dropping out of it. Each needs
+ * a query, and both are **container** queries on the section's own content box, for the reason
+ * `headerDisplaySection` gives: in the app the two are equivalent, because the section is full width,
+ * and keying them to the container is what lets the `Mobile` story reach the phone layout by
+ * rendering in a 375px column rather than by owning the window.
  *
- * 60rem, the same value `$header-display-inline-switch` uses, and not by accident — the two page-
- * opening sections sit under the same bar and should change shape at the same width. It is also
- * comfortably clear of what the split line has to hold. Measured at 1025px, the first viewport whose
- * content box reaches 60rem: the drawn dates-and-venue line is 332px and the street-and-travel line
- * 398px, so they share the 960px line with over 200px to spare. Below the switch the street is
- * dropped because the design drops it (1:112), not because it would not fit.
+ * They are separate switches in different units because the rule at the head of
+ * `tools/sass/base/__media.scss` sorts them differently: a switch whose narrow branch is an
+ * *adaptation* is `rem`, and one whose narrow branch *hides* something is `px`.
+ */
+
+/*
+ * The reflow — stack below, split line above. `rem`, because the narrow branch only rearranges: a
+ * reader who raises their root font size gets the stack earlier, which is what larger text wants.
  *
- * `rem` rather than `px`, for the WCAG 1.4.4 reason `$header-inline-switch` states: a reader who
- * raises their root font size gets the stacked layout at a width where the split one would crowd.
+ * 60rem, the same value `$header-display-inline-switch` uses, so the two sections that open a page
+ * under the bar change shape at the same width. It is also comfortably clear of what the split line
+ * has to hold. Measured at 1025px, the first viewport whose content box reaches 60rem: the drawn
+ * dates-and-venue line is 332px and the street-and-travel line 398px, so they share the 960px line
+ * with over 200px to spare.
  */
 $hero-inline-switch: 60rem;
+
+/*
+ * Where the street appears. `px`, because below it the street is `display: none`, and a `rem`
+ * threshold would delete it on a text-size increase alone (WCAG 1.4.4) — measured before the split,
+ * when this was the 60rem switch: a 24px default font size removed the street at every desktop
+ * width, since the content box caps at ~1360px and 60rem was then 1440px.
+ *
+ * 400px, measured rather than borrowed from the reflow: it is the narrowest content box that holds
+ * the drawn street-and-travel line on one line. That line runs 377px (375px viewport) to 398px
+ * (1024px), as the mono size is fluid. Every phone frame falls below it — the 390px comp's 350px box,
+ * 414px's 373px, a 430px phone's 388px — so the street drops exactly where the design drops it
+ * (1:112). Above it, in the stacked layout of a tablet or a zoomed desktop window, the street is back
+ * on the second line rather than hidden until 960px of container for no reason the design gives.
+ */
+$hero-street-inline-switch: 400px;
 
 @layer defaults {
   /*
@@ -41,7 +61,7 @@ $hero-inline-switch: 60rem;
    * would survive both toggles.
    *
    * Anchored on the drawn numbers rather than extrapolated to the 1440px anchor, per the same
-   * convention: 28.2px / 23.2px at 390, 40.7px / 34.1px at 1280, 43px / 36px at 1440.
+   * convention: 28.2px / 23.2px at 390, 40.7px / 34.0px at 1280, 43px / 36px at 1440.
    *
    * Local, and the stock `sm` is the thing actually wrong. Every consumer of it is short on a phone —
    * `headerDisplaySection` draws 28px there on three frames and still renders 16, and
@@ -64,9 +84,12 @@ $hero-inline-switch: 60rem;
    * `headerDisplaySection`'s `.container` records the one cost of that containment — it collapses in
    * a shrink-to-fit ancestor — which does not arise for a section rendered as a block child of
    * `<main>`.
+   *
+   * Named `heroSection`, not `hero`: `container-name` is a global identifier CSS Modules does not
+   * hash, and `__media.scss` asks for section-specific names for exactly that reason.
    */
   .container {
-    container: hero / inline-size;
+    container: heroSection / inline-size;
   }
 
   // One partner per line, as drawn — "SAM &" over "LAUREN". See the note on the heading in `index.tsx`.
@@ -100,7 +123,7 @@ $hero-inline-switch: 60rem;
      */
     padding-top: #{fluid(15px, 22px)};
 
-    @container hero (width >= #{$hero-inline-switch}) {
+    @container heroSection (width >= #{$hero-inline-switch}) {
       /*
        * `flex-end`, per Figma's `items-end` on 1:66: the two lines share a bottom edge, the taller
        * dates line (24px) and the mono line (17px) hanging off the same baseline region.
@@ -116,6 +139,20 @@ $hero-inline-switch: 60rem;
       // them at 1280px, so this only matters for long copy; `--spacing-lg` is the step layout gaps
       // between inline blocks use.
       column-gap: var(--spacing-lg);
+    }
+  }
+
+  /*
+   * A meta row whose only content is the street — an address entered with no dates, venue name or
+   * travel note. Below the street switch that one line is hidden, so the row would be an empty box
+   * still carrying its `padding-top` under the names; it goes with the line instead. After `.meta`,
+   * so this `display` wins the tie within the module.
+   */
+  .meta_streetOnly {
+    display: none;
+
+    @container heroSection (width >= #{$hero-street-inline-switch}) {
+      display: flex;
     }
   }
 
@@ -137,6 +174,10 @@ $hero-inline-switch: 60rem;
    * on the same element changes what it resolves to without a fight. `--heading-line-height` (1.2) is
    * left alone: it is exact on desktop (24px on 20px), and the note on `.meta`'s gap accounts for the
    * 1.5px it gives up on a phone.
+   *
+   * The durable home for all three is `Text` and the token file — a family on `.variant_heading`, and
+   * a role pair beside `--body-lede` — once a second section needs them to agree; raised for
+   * `/consolidate`, since `ScheduleSection` is that second site.
    */
   .summary {
     @include heading-font();
@@ -156,49 +197,45 @@ $hero-inline-switch: 60rem;
   /*
    * The street-and-travel line. Its type is entirely `Text` props — see the note in `index.tsx` — so
    * this rule is layout only.
-   */
-  .directions {
-    min-width: 0;
-
-    @container hero (width >= #{$hero-inline-switch}) {
-      // Against the right edge whether it shares the line with the dates or has wrapped beneath them.
-      margin-inline-start: auto;
-    }
-  }
-
-  /*
-   * Right-aligned as a block above the switch, so a line long enough to wrap inside itself keeps its
-   * second line against the right edge too. `Text`'s `alignment` prop cannot say this: it applies at
-   * every width, and on a phone the line is left-aligned under the dates.
    *
    * Two classes, and that is the point of the selector. `Text` always emits an alignment class —
    * `alignment` defaults to `left` — and `.alignment_left` is a single class in the same layer, so
-   * `.directions` alone would tie with it and the winner would be whichever module the bundler
-   * happened to emit last. Descending from `.meta` settles it by specificity instead. A container
-   * query adds nothing to specificity, which is why the tie was real.
+   * `.directions` alone would tie with it over `text-align` and the winner would be whichever module
+   * the bundler happened to emit last. Descending from `.meta` settles it by specificity instead; a
+   * container query adds nothing to specificity, which is why the tie was real.
    */
   .meta .directions {
-    @container hero (width >= #{$hero-inline-switch}) {
+    // The automatic-minimum guard `.summary` carries, for the same reason.
+    min-width: 0;
+
+    @container heroSection (width >= #{$hero-inline-switch}) {
+      // Against the right edge whether it shares the line with the dates or has wrapped beneath them.
+      margin-inline-start: auto;
+      /*
+       * Right-aligned as a block, so a line long enough to wrap inside itself keeps its second line
+       * against the right edge too. `Text`'s `alignment` prop cannot say this: it applies at every
+       * width, and in the stacked layout the line sits left-aligned under the dates.
+       */
       text-align: right;
     }
   }
 
   /*
-   * The street is what the phone layout drops (1:112 keeps only "90 MIN SOUTH OF SYDNEY"), so a line
-   * holding nothing else is dropped with it — hidden, rather than left as an empty `<p>` taking the
-   * stack's 8px gap under the dates.
+   * A directions line holding only the street is dropped with it below the street switch — hidden,
+   * rather than left as an empty `<p>` taking the stack's 8px gap under the dates.
    */
   .directions_streetOnly {
     display: none;
 
-    @container hero (width >= #{$hero-inline-switch}) {
+    @container heroSection (width >= #{$hero-street-inline-switch}) {
       display: block;
     }
   }
 
   /*
-   * Hidden by default and shown above the switch, the mobile-first order `.meta` uses. The separator
-   * after the street is inside this span, so it goes with it.
+   * The street, dropped on a phone (1:112 keeps only "90 MIN SOUTH OF SYDNEY"). Hidden by default and
+   * shown above the switch, the mobile-first order `.meta` uses. The separator after the street is
+   * inside this span, so it goes with it and never leaves a leading "·" on the travel note.
    *
    * `display: none` rather than a visually-hidden clip, deliberately: the street is dropped from the
    * phone layout, not moved out of sight, and a screen reader that announced a street the page does
@@ -207,8 +244,33 @@ $hero-inline-switch: 60rem;
   .street {
     display: none;
 
-    @container hero (width >= #{$hero-inline-switch}) {
+    @container heroSection (width >= #{$hero-street-inline-switch}) {
       display: inline;
     }
+  }
+
+  /*
+   * What a screen reader hears in place of something drawn for the eye: the date in words, where the
+   * comp prints dotted digits, and a comma where it prints a middle dot. `index.tsx` pairs each with
+   * an `aria-hidden` visible twin.
+   *
+   * The clip recipe, not `display: none`, since this has to stay in the accessibility tree. It is out
+   * of flow (the section is `position: relative`), 1px, clipped to nothing and unwrapped, so it adds
+   * no box to the line and is not read word by word. `user-select: none` keeps it out of copied
+   * text: copying "12–14.02.27 · THE LODGE JAMBEROO" should not also yield the spoken date and a
+   * stray comma. `MediaTagsSection`'s `.tags` note records what any clipped text still costs —
+   * find-in-page matches it, explore-by-touch can land on it — acceptable for a date and a comma.
+   *
+   * A local class because the project has no shared visually-hidden utility; a second user would be
+   * the moment to add one.
+   */
+  .spoken {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    user-select: none;
   }
 }

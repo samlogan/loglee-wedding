@@ -106,13 +106,19 @@ const weddingSettings = defineType({
          * Sentence case in the Studio and capitals from CSS, for the reason `headerDisplaySection.items`
          * gives — short literal all-caps runs are what screen readers most often spell out letter by
          * letter, and `text-transform` already guarantees the display.
+         *
+         * 40 characters is the one line it gets on a phone: the hero sets it in the mono role at 11px
+         * with 0.1em tracking, about 7.7px a character, and a 375px screen leaves a 335px column.
+         * `.warning()` rather than `.error()` — a longer note wraps onto a second line, it is not lost.
          */
         {
           description:
             'One short line on where the venue is, from somewhere guests know — “90 min south of Sydney”. Shown beside the address on the home page. Type it in normal sentence case; it is displayed in uppercase automatically.',
           name: `travelNote`,
           title: `Travel Note`,
-          type: `string`
+          type: `string`,
+          validation: (Rule) =>
+            Rule.max(40).warning('Longer than this wraps onto a second line under the names on a phone.')
         },
         {
           description: 'Link used by the "Get directions" action and the map section.',
