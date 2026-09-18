@@ -47,22 +47,17 @@ interface ISpecCardGridSectionCard {
    */
   _key: string;
   /*
-   * `SanityImageSimple` **plus the two keys `imageProjection` returns and the global type does not
-   * declare**, listed in render order like every other field here.
+   * `SanityImageSimple`, which now declares `crop` and `hotspot` itself.
    *
-   * `tools/sanity/types/SanityImage.ts` models only `asset` and `altText`, but the shared
-   * projection returns `crop` and `hotspot` on every image field in the repo, `components/Image`
-   * reads both, and `imageElementSimple` sets `options: { hotspot: true }` so an editor can set
-   * them. Today they reach the card anyway, because the renderer spreads the whole object and a
-   * spread is a runtime operation — which is exactly the problem: the obvious future refactor to
-   * passing props explicitly would drop them silently, re-centring every crop with nothing to
-   * notice it by. Declared locally rather than by widening the global type, which is a shared file
-   * and a separate change.
+   * This field used to widen the global type locally, with a note explaining that the shared
+   * projection returns both keys on every image field in the repo, that `components/Image` reads
+   * both, that `imageElementSimple` sets `options: { hotspot: true }` so an editor can set them —
+   * and that they reach the card today only because the renderer spreads the whole object, so the
+   * obvious refactor to explicit props would drop them with no type error. That note ended
+   * "declared locally rather than by widening the global type, which is a shared file and a separate
+   * change". This is that change; the note lives on the type.
    */
-  image?: SanityImageSimple & {
-    crop?: { top?: number; bottom?: number; left?: number; right?: number };
-    hotspot?: { x?: number; y?: number; height?: number; width?: number };
-  };
+  image?: SanityImageSimple;
   caption?: string;
   title?: string;
   label?: string;
