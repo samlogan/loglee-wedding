@@ -55,6 +55,8 @@ import { revalidateTag, revalidatePath } from 'next/cache';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { normalisePath } from '@/helpers/link';
+
 import { validateWebhookAuth } from '../_helpers/auth';
 
 const logPrefix = '[🔖 Revalidate Tag]: ';
@@ -85,9 +87,18 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json({ revalidated: true });
     }
 
-    // if page revalidate the path provided
+    /*
+     * A page's `slug.current` is stored as its full pathname — `/weekend/`, or `/` for the home
+     * page — so it is normalised rather than prefixed. The template's `/${slug}` assumed a bare
+     * `weekend` and turned the stored values into `//weekend/` and `//`, which match no route, so no
+     * page edit refreshed its page. `home` stays as the template's alias for the home page.
+     */
     if (type === 'page') {
-      const path = slug === 'home' ? '/' : `/${slug}`;
+      const path = slug === 'home' ? '/' : normalisePath(slug);
+      if (!path) {
+        console.error(`${logPrefix}Page change arrived without a slug. Nothing to revalidate.`);
+        return NextResponse.json({ revalidated: false });
+      }
       await revalidatePath(path);
       console.log(`${logPrefix}Path "${path}" has been successfully revalidated.`);
       return NextResponse.json({ revalidated: true });

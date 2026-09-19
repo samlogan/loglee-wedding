@@ -35,18 +35,22 @@ export const linkEmpty = (link: ILinkElement) => {
 };
 
 /**
- * One spelling for a path, so two of them can be compared.
+ * One spelling for a path, so two of them can be compared — or handed to `revalidatePath`.
  *
  * Two normalisations, each fixing a real mismatch rather than a hypothetical one:
  *
- * - `/home/` → `/`. Sanity stores the home page's `pathname` as `/home/`, and `components/Link`
+ * - `/home/` → `/`. The template stored the home page's `pathname` as `/home/`, and `components/Link`
  *   rewrites exactly that value to `/` when it builds the `href`. So the browser is at `/` while the
  *   nav item still says `/home/`, and a strict comparison could never mark Home as the current page
- *   — on the one page where getting it wrong is most obvious.
+ *   — on the one page where getting it wrong is most obvious. This site's home page stores `/`,
+ *   because that is what `app/(frontend)/page.tsx` queries; both spellings come out as `/`.
  * - A trailing slash. `next.config.js` sets `trailingSlash: true`, so `usePathname()` always returns
  *   one; a CMS value entered without it would otherwise never match.
+ *
+ * `/api/revalidate` uses it too: a page's `slug.current` is stored as a full pathname
+ * (`/weekend/`, `/`), and `revalidatePath` wants the route path without the trailing slash.
  */
-const normalisePath = (value?: string | null): string | undefined => {
+export const normalisePath = (value?: string | null): string | undefined => {
   if (!value) {
     return undefined;
   }
