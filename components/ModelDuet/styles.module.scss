@@ -3,21 +3,22 @@
  *
  * ## The shape, and why it is capped in both directions
  *
- * `aspect-ratio` is 0.94, which is `DUET_NATURAL_ASPECT` in `duet.ts`: the ratio at which the pair
+ * `aspect-ratio` is 0.92, which is `DUET_NATURAL_ASPECT` in `duetPlacement.ts`: the ratio at which the pair
  * exactly fills the frame in both axes. That file has the measurements and the table; the one thing
  * worth repeating here, because it is the opposite of the intuition a portrait layout encourages,
  * is which direction is dangerous. A three.js `fov` is vertical, so the visible world *height* is
  * fixed whatever shape this box takes and vertical fit is never in question. Width is the only
  * thing this stylesheet can take away, so **wider is safe and taller is not**, with the floor at
- * 0.68 — below which a hand leaves the frame at the one moment both loops peak together.
+ * 0.83 — below which a hand leaves the frame at the one moment both loops peak together.
  *
  * The ratio alone is not enough, because it has no idea how big the column is. Unbounded, a 1280px
- * content column would make this 1359px tall — a scene you have to scroll to see. So it is capped
- * twice, for two different failures:
+ * content column would make this about 1390px tall — a scene you have to scroll to see. So it is
+ * capped twice, for two different failures:
  *
- *   `max-width`   stops the block growing into a wall on a desktop column. 520px is roughly where
- *                 the two figures stop gaining presence from extra size and start just being big.
- *   `max-height`  the landscape-phone case, where `svh` is small and the viewport is wide — the
+ *   `max-width`   stops the block growing into a wall on a desktop column. 640px, raised from 520px
+ *                 when the client asked for a bigger scene; the camera came in at the same time so
+ *                 the pair fills it (see `DUET_CAMERA`).
+ *   `max-height`  80svh, and the landscape-phone case, where `svh` is small and the viewport is wide — the
  *                 aspect ratio alone would happily fill the whole screen and push the page's words
  *                 off it. `aspect-ratio` then derives the width back down from the capped height,
  *                 which keeps the ratio intact rather than squashing the scene.
@@ -51,16 +52,16 @@
     --duet-hatch-step: 2.6cqw;
 
     position: relative;
-    /* See the file header: 0.94 is the natural ratio, floor 0.68, and wider is the safe direction. */
-    aspect-ratio: 0.94;
+    /* See the file header: 0.92 is the natural ratio, floor 0.83, and wider is the safe direction. */
+    aspect-ratio: 0.92;
     width: 100%;
-    max-width: 520px;
+    max-width: 640px;
     /*
      * `svh` and not `vh`: on a mobile browser `vh` is the viewport with the toolbars *retracted*,
      * so a stage sized in `vh` is taller than the screen on arrival — which is exactly when the
      * reader is deciding whether the page has finished loading.
      */
-    max-height: 70svh;
+    max-height: 80svh;
     border-radius: var(--radius-md);
     /* Clips the canvas, the fallback image and the hatch to the rounded box. */
     overflow: hidden;

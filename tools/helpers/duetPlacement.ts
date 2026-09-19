@@ -164,23 +164,21 @@ export const DUET_BACK: DuetPlacement = {
  * two characters — keeping it means the two surfaces render the same people at the same lens, and
  * a character does not subtly change shape between the player page and this one.
  *
- * The distance is not `ModelViewer`'s. At its 4.2 the swept pair fills 93% of the frame's height,
- * which leaves seven percent of headroom above a clip that *jumps*; 5.0 brings that to 72%. The
- * frame then reaches 2.48m — `5 · tan(16°)` above the 1.05m target — against Sam's 2.247m peak, so
- * about 0.24m of air over the top of the jump. The cost of the extra 0.8m is that both figures are
- * smaller, which is the right trade for a scene whose subject is the pair rather than a face.
+ * Level, at 1.0m, and 4.1m back: the position at which the pair's two vertical extremes meet the
+ * frame together. The bottom one is Lauren's feet, the nearer figure. The top one is Sam's
+ * 2.247m jump, which is 0.91m further back and so subtends less than its height suggests. Solving
+ * `h / d = (2.247 − h) / (d + 0.91)` gives `h ≈ 1.0` at any distance near this. At 4.1m the swept pair
+ * fills about 87% of the frame's height (`yarn duet:measure` prints the exact figure), where the
+ * first framing stood 5m back and filled 72%. The client asked for the characters to fill more of
+ * the canvas; the old headroom went on the rare moment Sam's jump peaks.
  */
-export const DUET_CAMERA = { fov: 32, position: [0, 1, 5] as const };
+export const DUET_CAMERA = { fov: 32, position: [0, 1, 4.1] as const };
 
 /**
- * What the camera looks at — chest height on Lauren, near enough.
- *
- * 1.05 rather than `ModelViewer`'s 0.95. The content spans 0 to 2.247m, whose midpoint is 1.12, and
- * pointing the camera at 0.95 spends frame below the feet that Sam's jump needs above his head.
- * 1.05 splits the difference: it keeps both pairs of feet and the contact shadow comfortably inside
- * the bottom of the frame, which is what grounds the pair, while clearing the peak.
+ * What the camera looks at: straight ahead at the camera's own height, so the frame is level and
+ * the half-angles above and below are the same. See `DUET_CAMERA` for why 1.0.
  */
-export const DUET_TARGET: [number, number, number] = [0, 1.05, 0];
+export const DUET_TARGET: [number, number, number] = [0, 1, 0];
 
 /*
  * The two aspect ratios, and which way the danger runs.
@@ -190,17 +188,18 @@ export const DUET_TARGET: [number, number, number] = [0, 1.05, 0];
  *
  * The asymmetry is the thing to hold on to, because it is the opposite of the intuition. A
  * three.js `fov` is **vertical**, and it does not change with the canvas's shape — so the visible
- * world *height* is a constant 2.87m here whatever the container does, and the content uses 72% of
- * it. Vertical fit is therefore not a constraint at all. The visible world *width* is that height
- * times the aspect, so width is the only thing a container shape can take away.
+ * world *height* is a constant 2.35m at the front mark whatever the container does, and the content
+ * uses 90% of it. Vertical fit is therefore not a constraint at all. The visible world *width* is that
+ * height times the aspect, so width is the only thing a container shape can take away.
  *
- *   aspect 0.55   1.58m visible   123% of what the pair needs   crops a hand
- *   aspect 0.68   1.95m visible   100%                          exactly fits
- *   aspect 0.94   2.70m visible    72%                          fills the frame both ways
- *   aspect 1.60   4.59m visible    42%                          fits, with air to spare
+ *   below 0.83   crops a hand at the moment both dancers are at full lateral extension
+ *   0.83         the pair exactly fits the frame's width
+ *   0.92         the pair fills the frame both ways, the shape the stage is drawn at
+ *   wider        fits, with air to spare at the sides
  *
  * Both figures are printed by `yarn duet:measure`, which is also what checks them against the two
- * constants below.
+ * constants below. They moved when the camera came in from 5m to 4.1m: a closer camera makes the pair
+ * larger in both axes, so the floor rose from 0.68 and the natural shape from 0.94.
  *
  * So **wider is always safe and taller is not**, which is worth stating because a portrait-column
  * layout drifts naturally toward the dangerous end. A container one percent below the floor does
@@ -209,20 +208,26 @@ export const DUET_TARGET: [number, number, number] = [0, 1.05, 0];
  */
 
 /** Where the pair exactly fills the frame in both axes. The framing this scene is designed at. */
-export const DUET_NATURAL_ASPECT = 0.942;
+export const DUET_NATURAL_ASPECT = 0.918;
 
-/** The floor. Below this the sides crop; see the table above. */
-export const DUET_MIN_ASPECT = 0.678;
+/** The floor. Below this the sides crop; see the list above. */
+export const DUET_MIN_ASPECT = 0.829;
 
 /**
  * The contact-shadow plane.
  *
- * Centred between the two marks rather than on the origin, because the pair is not centred on the
- * origin: `GROUP_OFFSET_X` moved them right and `DEPTH` moved Sam back, so a plane at `[0, 0, 0]`
- * would run out from under Sam's feet at the back edge. Sized to cover both swept footprints with
- * margin for the blur, which needs room outside the geometry or the shadow is cut off square.
+ * **At the origin, and it has to be.** It used to sit between the two marks, at
+ * `[GROUP_OFFSET_X, 0, -DEPTH / 2]`, and drei's `ContactShadows` does not survive being moved: the
+ * shadow it bakes is displaced by twice the plane's offset. Seen from above, a plane centred at
+ * z −0.455 put the whole pool about 0.9m in front of Lauren, clear of both pairs of feet. From the
+ * scene's camera that reads as two characters floating over a shadow on the floor in front of them.
+ * At the origin each shadow lands under its own dancer. `ModelViewer` never showed the fault, because
+ * its one character always stands at the origin.
+ *
+ * Sized to cover both swept footprints from the origin with margin for the blur, which needs room
+ * outside the geometry or the shadow is cut off square. The test checks that margin for each mark.
  */
 export const DUET_SHADOW = {
-  position: [GROUP_OFFSET_X, 0, -DEPTH / 2] as [number, number, number],
+  position: [0, 0, 0] as [number, number, number],
   scale: 5
 };

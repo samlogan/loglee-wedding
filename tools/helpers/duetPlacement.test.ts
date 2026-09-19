@@ -134,27 +134,37 @@ describe('duet framing', () => {
     expect(DUET_MIN_ASPECT).toBeLessThan(DUET_NATURAL_ASPECT);
   });
 
-  it('frames above the taller dancer’s jump', () => {
+  /*
+   * The frame's half-height at a given depth.
+   *
+   * three's `fov` is vertical, so the visible world height is `2 · d · tan(fov/2)` at distance `d`
+   * and does not depend on the canvas's shape at all. The camera is level (`DUET_TARGET` is at its
+   * height), so the frame is symmetric about that height and each half is `d · tan(fov/2)`.
+   */
+  const halfHeightAt = (z: number) => (DUET_CAMERA.position[2] - z) * Math.tan(((DUET_CAMERA.fov / 2) * Math.PI) / 180);
+
+  it('frames above each dancer’s own peak, at their own depth', () => {
     /*
      * The one framing fact that is genuinely derivable without a renderer.
      *
-     * three's `fov` is vertical, so the visible world height is `2 · d · tan(fov/2)` at the target
-     * and does not depend on the canvas's shape at all. Sam's clip peaks at 2.23m, and the camera
-     * looks at 1.05m — so the top of the frame has to clear 1.18m above the target.
+     * Measured at each dancer's mark rather than at the target. Sam's 2.247m jump is 0.91m further
+     * from the camera than Lauren's feet, and the frame is taller there. Measuring his peak at the
+     * front row's distance, as this test first did, understated the room by a fifth and would fail
+     * the framing `yarn duet:measure` confirms.
      */
-    const halfHeight = DUET_CAMERA.position[2] * Math.tan(((DUET_CAMERA.fov / 2) * Math.PI) / 180);
-    const peak = Math.max(...Object.values(DUET_CLIP_EXTENTS).map((extent) => extent.peak));
-
-    expect(halfHeight).toBeGreaterThan(peak - DUET_TARGET[1]);
+    for (const placement of [DUET_FRONT, DUET_BACK]) {
+      const { peak } = DUET_CLIP_EXTENTS[placement.clip];
+      expect(halfHeightAt(placement.position[2])).toBeGreaterThan(peak - DUET_TARGET[1]);
+    }
   });
 
   it('keeps the feet inside the bottom of the frame', () => {
-    // The other half of the same sum, and the reason the target is 1.05 rather than the 0.95
-    // `ModelViewer` uses: raising it to clear the jump must not push the floor out of shot, because
-    // the contact shadow is what grounds the pair.
-    const halfHeight = DUET_CAMERA.position[2] * Math.tan(((DUET_CAMERA.fov / 2) * Math.PI) / 180);
-
-    expect(halfHeight).toBeGreaterThan(DUET_TARGET[1]);
+    /*
+     * The other half of the same sum. The front dancer's feet are nearest the camera, so they are
+     * the lowest thing in shot. Clearing the jump must not push the floor out of it, because the
+     * contact shadow is what grounds the pair.
+     */
+    expect(halfHeightAt(DUET_FRONT.position[2])).toBeGreaterThan(DUET_TARGET[1]);
   });
 });
 
@@ -164,8 +174,8 @@ describe('duet contact shadow', () => {
 
     for (const placement of [DUET_FRONT, DUET_BACK]) {
       const reach = DUET_CLIP_EXTENTS[placement.clip].lateral;
-      // The plane is centred between the two of them rather than on the origin, so this is the
-      // check that the offset did not leave one of them hanging off the back edge.
+      // The plane sits at the origin (see `DUET_SHADOW` for why it cannot move), and the pair does
+      // not, so this is the check that neither of them hangs off an edge of it.
       expect(Math.abs(placement.position[0] - DUET_SHADOW.position[0]) + reach).toBeLessThan(half);
       expect(Math.abs(placement.position[2] - DUET_SHADOW.position[2]) + reach).toBeLessThan(half);
     }
