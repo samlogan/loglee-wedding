@@ -22,12 +22,8 @@ export interface HeaderProps {
   /** `headerDocument.header` — the five links and the RSVP action. */
   header?: IHeaderObject;
   /**
-   * `weddingSettings.rsvpLabel` — the short "reply by 13 November" line.
-   *
-   * It lives on the wedding singleton rather than on the header document because the same date is
-   * shown beside the RSVP action on the home page too, and one field cannot disagree with itself.
-   * Blank is a supported state: the pill falls back to the action's own label, which is the
-   * "RSVP →" the design draws.
+   * `weddingSettings.rsvpLabel` — the "RSVP by 11 December" line. The pill reads the action's own
+   * label ("RSVP") and falls back to this only when that is blank; see `tools/helpers/rsvpAction`.
    */
   rsvpLabel?: string | null;
 }
@@ -125,8 +121,7 @@ const Header = (props: HeaderProps) => {
           <div className={styles.actions}>
             {action && (
               <Link {...action.link} arrow="right" className={styles.action} mono size="sm" theme="accent" variant="ui">
-                <span className={styles.action_long}>{action.longLabel}</span>
-                <span className={styles.action_short}>{action.shortLabel}</span>
+                {action.label}
               </Link>
             )}
 

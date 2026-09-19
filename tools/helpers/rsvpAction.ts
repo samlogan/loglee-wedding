@@ -25,10 +25,8 @@ export interface RsvpActionFields {
 export interface RsvpAction {
   /** Where it goes. Spread onto `Link`. */
   link: ILinkElement;
-  /** The reply-by line, or the action's own label when that is blank. */
-  longLabel: string;
   /** The action's own label, or the reply-by line when that is blank. */
-  shortLabel: string;
+  label: string;
 }
 
 /**
@@ -46,12 +44,11 @@ export interface RsvpAction {
  *
  * 1. **No action without the switch and a button.** `addButton` is the Studio's "Add RSVP Action"
  *    toggle and `button` is where it goes. A reply-by line on its own has nowhere to send anyone.
- * 2. **Two labels, each the other's fallback.** `longLabel` is the reply-by line ("RSVP by 11
- *    December") with the action's own label behind it; `shortLabel` is the reverse, and is what the
- *    390px bar has room for. Blank `rsvpLabel` is a supported state, not an error: every surface then
- *    reads the action's own "RSVP", which is what the nav frames draw.
- * 3. **No label, no action.** Both labels come from the same two strings, so they are blank together
- *    or not at all — and a pill with no words in it is not drawn.
+ * 2. **One label: the action's own, the reply-by line behind it.** Every surface reads the button's
+ *    "RSVP". The reply-by line ("RSVP by 11 December") used to lead on the wide bar and the closing
+ *    CTA; the date came off the buttons at the couple's request, so it is now only the fallback for
+ *    a header button whose label was left blank.
+ * 3. **No label, no action.** A pill with no words in it is not drawn.
  *
  * ## Blank is tested after stega, and that is the reason this uses `textOrUndefined`
  *
@@ -78,15 +75,14 @@ const resolveRsvpAction = (fields?: RsvpActionFields | null): RsvpAction | undef
   const replyBy = textOrUndefined(rsvpLabel);
   const actionLabel = textOrUndefined(button.label);
 
-  const longLabel = replyBy ?? actionLabel;
-  const shortLabel = actionLabel ?? replyBy;
+  const label = actionLabel ?? replyBy;
 
   // Rule 3. The two are set together or not at all; both are tested so neither is `| undefined` below.
-  if (!longLabel || !shortLabel) {
+  if (!label) {
     return undefined;
   }
 
-  return { link: button.link, longLabel, shortLabel };
+  return { label, link: button.link };
 };
 
 export default resolveRsvpAction;

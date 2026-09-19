@@ -129,7 +129,7 @@ const ClosingCtaSection: FC<IClosingCtaSection> = (props) => {
              */}
             {primary && (
               <Link {...primary.link} fullWidthMobile size="md" theme="primary" variant="pill">
-                {primary.longLabel}
+                {primary.label}
               </Link>
             )}
           </div>

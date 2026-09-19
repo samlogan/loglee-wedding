@@ -161,8 +161,10 @@ export const Desktop: Story = {
       await expect(getComputedStyle(links[0], '::after').transform).toBe('matrix(0, 0, 0, 1, 0, 0)');
     });
 
-    // The reply-by line is what the accent pill reads at this width, and it came from the CMS.
-    await expect(canvas.getByRole('link', { name: rsvpLabel })).toBeVisible();
+    // The accent pill reads the action's own label — the reply-by date is not on the button.
+    const pill = canvas.getAllByRole('link', { name: actionLabel }).find((link) => !link.closest('nav'));
+    await expect(pill).toBeVisible();
+    await expect(canvas.queryByRole('link', { name: rsvpLabel })).not.toBeInTheDocument();
 
     // No hamburger above the breakpoint, and nothing to disclose. Polled for the same reason.
     await waitFor(async () => {
@@ -255,7 +257,9 @@ export const MobileOpen: Story = {
       await expect(menu.getAllByRole('link')).toHaveLength(6);
       await waitFor(async () => {
         await expect(menu.getByRole('link', { name: 'The Weekend' })).toBeVisible();
-        await expect(menu.getByRole('link', { name: rsvpLabel })).toBeVisible();
+        // The action closes the menu, under its own label rather than the reply-by line.
+        await expect(menu.getAllByRole('link').at(-1)).toHaveAccessibleName(actionLabel);
+        await expect(menu.getAllByRole('link').at(-1)).toBeVisible();
       });
 
       // The current page is announced here too, not only in the desktop list.
@@ -429,8 +433,8 @@ export const MobileOpenThenWidened: Story = {
 /**
  * `rsvpLabel` left blank in the Studio, which is a supported state rather than an error.
  *
- * The pill falls back to the action's own label from the header document — "RSVP →", which is
- * exactly what the design draws (node 1:61). Nothing is hardcoded and nothing renders empty.
+ * The pill reads the action's own label either way — "RSVP →" — so a blank reply-by line changes
+ * nothing on it. Nothing is hardcoded and nothing renders empty.
  */
 export const WithoutReplyByDate: Story = {
   args: { rsvpLabel: null },

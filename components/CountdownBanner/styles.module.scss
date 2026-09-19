@@ -1,0 +1,29 @@
+/*
+ * A slim dark band above the header. `data-theme="dark"` on the band re-points the theme tokens
+ * beneath it, so the fill and the ink are the dark theme's pair — the same pine the dress-code band
+ * uses — and nothing here names a colour.
+ */
+@layer defaults {
+  .banner {
+    background-color: var(--bg-default);
+    color: var(--fg-default);
+  }
+
+  // One centred line. 8px of padding keeps the band slimmer than the header below it.
+  .inner {
+    display: flex;
+    justify-content: center;
+    padding-block: var(--spacing-xs);
+    text-align: center;
+  }
+
+  // Tabular figures, so the line does not shift width as the seconds tick over.
+  .count {
+    font-variant-numeric: tabular-nums;
+  }
+
+  // Before hydration: holding the count's space so nothing moves when the real one arrives.
+  .pending {
+    visibility: hidden;
+  }
+}

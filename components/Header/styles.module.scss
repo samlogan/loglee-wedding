@@ -84,6 +84,19 @@
     --logo-height: #{fluid(14px, 15px)};
 
     flex-shrink: 0;
+
+    /*
+     * A 15px-tall mark was a 15px-tall target — hard to hit on a phone, and under the 24px WCAG 2.5.8
+     * asks for. An empty box reaching 15px above and below and 12px either side grows the clickable
+     * area to ~45px without moving the mark or the bar: it is absolutely positioned against `.logo`,
+     * which is already `position: relative`. Padding would have grown the link, but `.logo` fixes its
+     * height, so the padding would have come out of the mark instead.
+     */
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -15px -12px;
+    }
   }
 
   .actions {
@@ -96,33 +109,6 @@
   // The pill never wraps mid-label; it is the one element in the bar allowed to set its own width.
   .action {
     white-space: nowrap;
-  }
-
-  /*
-   * One control, two labels. `display: none` (rather than a visually-hidden technique) is what
-   * keeps the hidden one out of the accessible name, so the pill announces the words it shows.
-   *
-   * Written mobile-first — short shown by default, long swapped in above the switch — rather than as
-   * two symmetrical `display: none` rules, and that asymmetry is load-bearing. A container query
-   * cannot be evaluated before its container has been laid out, so on the first style pass *neither*
-   * query matches; with a rule each, both spans were visible for that frame and the pill painted
-   * "RSVP BY 01.12.26RSVP". One unconditional default means the pre-layout frame shows exactly one
-   * label, and the wrong-width frame is a swap rather than a doubling.
-   */
-  .action_long {
-    display: none;
-
-    @container header (width >= #{$header-inline-switch}) {
-      display: inline;
-    }
-  }
-
-  .action_short {
-    display: inline;
-
-    @container header (width >= #{$header-inline-switch}) {
-      display: none;
-    }
   }
 
   /*

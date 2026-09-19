@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import CSSLayerDefinitions from '@/components/AaCSSLayerDefinitions';
 import AccessibilityMenu from '@/components/AccessibilityMenu';
+import CountdownBanner from '@/components/CountdownBanner';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import ModalPortal from '@/components/Modal/ModalPortal';
@@ -63,6 +64,7 @@ const Layout = async (props: { children: ReactNode }) => {
       <CSSLayerDefinitions />
       <AccessibilityMenu />
       <WmAscii />
+      <CountdownBanner />
       <Header header={header} rsvpLabel={weddingSettings?.rsvpLabel} />
       <main>{children}</main>
       {(await draftMode()).isEnabled && <VisualEditing />}
