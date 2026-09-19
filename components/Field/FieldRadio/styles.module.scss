@@ -32,7 +32,7 @@
 
   .required {
     margin-inline-start: 0.25em;
-    color: var(--system-error-500);
+    color: var(--fg-error);
   }
 
   .options {
@@ -114,9 +114,14 @@
    * 44px tall: 12px of padding either side of the 18px line box, plus the border — the chip on the
    * design board, not `Button`'s `md` (46px), whose inset is a pixel wider. 15px Medium is `md`'s
    * type, which is what the token note in `_variables.scss` says these chips are set in.
+   *
+   * The type is fluid and the padding is not, so at the narrow end the line box is 16.8px and the
+   * chip came out 42.8px — under the 44px target WCAG 2.5.5 asks for, which `Button`'s `md` holds by
+   * its padding alone. The floor holds it here; it changes nothing at the wide end.
    */
   .variant_pill .control {
     gap: 0;
+    min-height: 44px;
     padding: var(--spacing-sm) var(--button-md-padding-x);
     border: var(--button-border-width) solid var(--pill-border-color, var(--button-secondary-bg));
     border-radius: var(--radius-full);

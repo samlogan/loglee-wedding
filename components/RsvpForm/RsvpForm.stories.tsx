@@ -290,7 +290,8 @@ export const Sending: Story = {
 
 /**
  * Submitted empty. Client validation stops it before the action is called, marks both required
- * fields invalid in words as well as colour, and moves focus to the first.
+ * fields invalid in words as well as colour, and moves focus to the first. Then the one rule that
+ * is not about a missing answer: a kids count typed past the stepper's range.
  */
 export const ClientErrors: Story = {
   args: { action: actionReturning({ status: 'success' }) },
@@ -313,6 +314,18 @@ export const ClientErrors: Story = {
     await waitFor(() =>
       expect(emailInput(canvas)).toHaveAccessibleDescription('Enter an email address, like name@example.com')
     );
+
+    // Typed past the ceiling and sent with Enter from inside the input — before the blur that would
+    // settle it. Everything else is valid now, so this alone holds the reply back.
+    await userEvent.type(nameInput(canvas), 'Ada Lovelace');
+    await userEvent.clear(emailInput(canvas));
+    await userEvent.type(emailInput(canvas), 'ada@example.com');
+    const kids = canvas.getByRole('spinbutton', { name: /^kids/i });
+    await userEvent.clear(kids);
+    await userEvent.type(kids, '11{Enter}');
+    await waitFor(() => expect(kids).toHaveAccessibleDescription('Enter a number from 0 to 10'));
+    await expect(kids).toHaveAttribute('aria-invalid', 'true');
+    await expect(callsOf(args.action)).toHaveLength(0);
   }
 };
 

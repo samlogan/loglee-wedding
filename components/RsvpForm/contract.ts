@@ -31,7 +31,10 @@ import type { IRsvpDay } from '@/tools/sanity/schema/documents/rsvp';
  *   plusOne.name,
  *   plusOne.dietary      present **only** while `plusOne.bringing` is ticked; see `RsvpForm`
  *   roomPreference       absent until one is picked, then one of `RSVP_ROOM_PREFERENCES`
- *   kidsCount            a whole number as a string, "0" by default
+ *   kidsCount            a whole number from 0 to `RSVP_KIDS_MAX`, as a string — "0" by default. The
+ *                        form checks that before sending; a post made without JavaScript is not
+ *                        checked, and there the number input can send "", "-3", "2.5" or "1e1". Parse
+ *                        it and range-check it in the action, like every other entry
  *   _gotcha              the honeypot from `Form` — present (value "on") only if something ticked it
  */
 export const RSVP_FIELD = {
@@ -116,6 +119,12 @@ export type RsvpFormState =
 
 /**
  * The action's signature — the one `useActionState` requires: the previous state, then the form.
+ *
+ * Expect the same guest more than once. Each call carries their whole reply, and a second one is
+ * normal rather than an edge case: the button offers to send again the moment a saved answer is
+ * edited, and it stays enabled while a reply is in flight (see `RsvpForm`), so a double press queues
+ * a second call behind the first. Store a call as the guest's reply, replacing any earlier one,
+ * rather than as one more reply.
  *
  * Takes `FormData` rather than a typed object on purpose. It is the only shape a form without
  * JavaScript can send, and the form posts to this same action when the client bundle has not loaded,

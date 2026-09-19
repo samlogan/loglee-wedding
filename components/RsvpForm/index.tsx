@@ -75,6 +75,17 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isFilled = (value: string) => value.trim() !== '';
 
 /**
+ * A count the stepper could have produced — digits only, and no more than its ceiling.
+ *
+ * The stepper settles a typed value when the input loses focus, but Enter submits from inside it,
+ * and a number input will then send "-3", "2.5", "1e1" or nothing at all. Checked as text rather
+ * than through `Number`, which reads "" as 0 and "1e1" as 10 — values that would pass here and
+ * still reach the action in a shape `contract.ts` does not promise. The value is a number when the
+ * buttons set it and a string when it was typed; `String` reads both.
+ */
+const isKidsCount = (value: unknown) => /^\d+$/.test(String(value ?? '')) && Number(value) <= RSVP_KIDS_MAX;
+
+/**
  * The action's flat `{ 'plusOne.name': message }` into the nested shape react-hook-form keys its
  * errors by. `set` is react-hook-form's own path writer, so a dotted name nests exactly the way a
  * client-side error for the same field would.
@@ -356,6 +367,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
               max={RSVP_KIDS_MAX}
               min={0}
               name={RSVP_FIELD.kidsCount}
+              validate={(value) => isKidsCount(value) || `Enter a number from 0 to ${RSVP_KIDS_MAX}`}
             />
           </div>
           <div className={styles.kidsAges}>

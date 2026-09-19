@@ -1,7 +1,5 @@
-import classNames from 'classnames';
-import type { FC } from 'react';
-
 import Text from '@/components/Text';
+import classNames from '@/helpers/classNames';
 
 import styles from './styles.module.scss';
 
@@ -14,7 +12,7 @@ interface FieldErrorProps {
   className?: string;
 }
 
-const FieldError: FC<FieldErrorProps> = (props) => {
+const FieldError = (props: FieldErrorProps) => {
   const { name, error, className } = props;
   const errorType = error?.type;
   const errorMessage = error?.message;

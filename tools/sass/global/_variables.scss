@@ -556,6 +556,12 @@
   --fg-link: var(--stone-900);
   --fg-icon: var(--pine-600);
   --fg-accent: var(--pine-600);
+  /*
+   * Error *text* — a field's message and the required asterisk. Not `--input-error-border`'s
+   * error/500, which is 3.3:1 on this page: enough for a rule (1.4.11 asks 3:1) and too little for
+   * words (1.4.3 asks 4.5:1). error/700 is 5.8:1.
+   */
+  --fg-error: var(--system-error-700);
 
   /* Stroke */
   --stroke-cards: var(--stone-900);
@@ -648,6 +654,8 @@
   --fg-link: var(--stone-50);
   --fg-icon: var(--pine-100);
   --fg-accent: var(--signal-300);
+  // Error text, as on the light theme. error/300 is 5.5:1 on pine/600; error/500 would be 2.8:1.
+  --fg-error: var(--system-error-300);
 
   /* Stroke */
   --stroke-cards: var(--stone-50);
