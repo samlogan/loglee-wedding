@@ -103,6 +103,15 @@ $footer-inline-switch: 40rem;
     flex-shrink: 0;
   }
 
+  // Full width when stacked, so the rows below can reach the edge; beside the wordmark it hugs its links.
+  .nav {
+    align-self: stretch;
+
+    @container footer (width >= #{$footer-inline-switch}) {
+      align-self: auto;
+    }
+  }
+
   /*
    * Type on the list, not on each link — `Link` renders through the shared button surface whose base
    * rule is `font: inherit`, a shorthand that resets family, size, weight and line-height in one go.
@@ -110,37 +119,64 @@ $footer-inline-switch: 40rem;
    * come down to the order the bundler happened to emit two CSS modules in. Setting it on the
    * ancestor sidesteps the race: `font: inherit` then does exactly what it says.
    *
-   * Matches the bar's nav (`--body-md`, medium, `--spacing-xl` between items) so the two lists are
-   * the same list to look at as well as in the CMS. The row gap is the smaller step: when the list
-   * wraps onto two lines the links should read as one block, not as two rows.
+   * On a phone the links stack as full-width rows between hairlines, each a comfortable tap target
+   * with a quiet arrow at its end — a menu to scan down, rather than a line of words wrapping
+   * wherever the width runs out. From the switch up they sit in a row beside the wordmark, matching
+   * the bar's nav (`--body-md`, medium, `--spacing-xl` between items).
    */
   .list {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--spacing-sm) var(--spacing-xl);
-    font-size: var(--body-md);
+    flex-direction: column;
+    border-top: 1px solid var(--stroke-divider);
+    font-size: var(--body-lg);
     font-weight: var(--font-weight-medium);
+
+    @container footer (width >= #{$footer-inline-switch}) {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--spacing-sm) var(--spacing-xl);
+      border-top: 0;
+      font-size: var(--body-md);
+    }
   }
 
   .item {
     display: flex;
+    border-bottom: 1px solid var(--stroke-divider);
+
+    @container footer (width >= #{$footer-inline-switch}) {
+      border-bottom: 0;
+    }
   }
 
   /*
    * Two classes, so this beats the shared `.button`'s own `&:hover { text-decoration: none }` on
-   * specificity rather than on source order.
-   *
-   * A plain underline, not the bar's animated rule. That rule is the header's "you are here"
-   * indicator, measured off the one Figma frame that draws an active state, and it doubles as the
-   * hover affordance; the footer marks no current page, so copying forty lines of measured CSS to
-   * get only the hover half of it would be duplication with none of the meaning.
+   * specificity rather than on source order. A plain underline: the footer marks no current page, so
+   * it has no use for the bar's animated "you are here" rule.
    */
   .item .link {
     &:hover,
     &:focus-visible {
       text-decoration: underline;
       text-underline-offset: 0.25em;
+    }
+
+    @container footer (width < #{$footer-inline-switch}) {
+      flex: 1;
+      justify-content: space-between;
+      padding-block: var(--spacing-md);
+
+      // Decorative: the alt text after the slash is empty, so screen readers skip it.
+      &::after {
+        content: '→' / '';
+        color: var(--fg-subtle);
+        transition: transform 0.2s ease;
+      }
+
+      &:hover::after {
+        transform: translateX(4px);
+      }
     }
   }
 
