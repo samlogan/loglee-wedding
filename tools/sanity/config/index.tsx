@@ -1,6 +1,7 @@
 'use client';
 
 import { colorInput } from '@sanity/color-input';
+import { googleMapsInput } from '@sanity/google-maps-input';
 import { table } from '@sanity/table';
 import { visionTool } from '@sanity/vision';
 import { defineConfig } from 'sanity';
@@ -61,10 +62,22 @@ export default defineConfig({
         }
       },
       title: 'Visual Editor'
+    }),
+    /*
+     * The picker for every `geopoint` field — `MapSection.location` and the FAQ map card's. The same
+     * browser key the site uses; it needs the Maps JavaScript, Places and Static Maps APIs enabled,
+     * and the Studio's origin in its HTTP referrer restrictions.
+     *
+     * `saveZoom` stores the zoom the editor leaves the picker at on the geopoint itself, which is
+     * what `components/Map` opens at — so framing the map is one action, not a second number field.
+     * The default location is Jamberoo, where the wedding is.
+     */
+    googleMapsInput({
+      apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+      defaultLocation: { lat: -34.6479, lng: 150.7766 },
+      defaultZoom: 12,
+      saveZoom: true
     })
-    // googleMapsInput({
-    //   apiKey: GATSBY_GOOGLE_MAPS_API_KEY,
-    // }),
   ],
   projectId: SANITY_STUDIO_PROJECT_ID || '',
   releases: {

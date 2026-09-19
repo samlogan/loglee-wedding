@@ -35,7 +35,9 @@ import { closingCtaSection } from './sections/closingCtaSection';
 import { faqSection } from './sections/faqSection';
 import { headerDisplaySection } from './sections/headerDisplaySection';
 import { heroSection } from './sections/heroSection';
+import { mapSection } from './sections/mapSection';
 import { mediaCardGridSection } from './sections/mediaCardGridSection';
+import { mediaSection } from './sections/mediaSection';
 import { mediaTagsSection } from './sections/mediaTagsSection';
 import { numberedGridSection } from './sections/numberedGridSection';
 import { playerSelectSection } from './sections/playerSelectSection';
@@ -92,7 +94,9 @@ const schema: SchemaTypeDefinition[] = [
   faqSection,
   headerDisplaySection,
   heroSection,
+  mapSection,
   mediaCardGridSection,
+  mediaSection,
   mediaTagsSection,
   numberedGridSection,
   playerSelectSection,

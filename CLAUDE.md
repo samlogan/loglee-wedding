@@ -123,12 +123,13 @@ All in `/components`:
 - **`Footer`**: Site footer
 - **`Header`**: Site header
 - **`Logo`**: Logo component
-- **`Map`**: Map embed
+- **`Map`**: Live Google map (`@vis.gl/react-google-maps`) centred on a Sanity `geopoint`, with a marker. Fills its parent; loads the Maps API only as it nears the viewport. Props: `location`, `label` (accessible name), `variant` (`default`/`compact`), `theme`. Used by `MapSection` and the FAQ map card
 - **`Modal`**: Modal/dialog
 - **`Navigation`**: Navigation menu
 - **`Socials`**: Social links
 - **`SocialsShare`**: Social share buttons
-- **`Video`**: Video player (React Player)
+- **`Video`**: YouTube / Vimeo player (React Player). `fill` fills the parent instead of drawing 16:9; `ambient` autoplays muted and looping. URL recognition lives in `tools/helpers/videoPlatform`
+- **`AspectRatioFrame`**: Full-width box with one editor-chosen ratio on desktop and another on mobile (or `fullscreen`, the viewport height), for a child to fill. Pairs with the `aspectRatioFields()` schema helper in `tools/sanity/schema/common/`. Used by `MapSection` and `MediaSection`
 - **`ThemeProvider`**: Theme context provider
 - **`Layout`**: Page layout wrapper
 - **`JsonLd`**: Structured data components (JsonLdPage, JsonLdArticle)
@@ -552,8 +553,11 @@ Required in `.env.development` (see `.env.template` for full list):
 - `SANITY_API_READ_TOKEN`
 - `SANITY_WEBHOOK_SECRET`
 
+- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` — browser key for `components/Map` and the Studio's `geopoint` picker (`@sanity/google-maps-input`). Needs billing plus the Maps JavaScript, Places and Static Maps APIs
+
 Optional:
 
+- `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` — cloud map ID for styling; falls back to `DEMO_MAP_ID`
 - `NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID` — GTM container ID
 - `LINEAR_TEAM_ID` / `LINEAR_PROJECT_ID` — Linear integration for slash commands
 

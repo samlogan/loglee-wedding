@@ -199,18 +199,6 @@ $faq-inline-switch: 960px;
       inset-block-start: var(--faq-map-inset);
       inset-inline-start: var(--faq-map-inset);
     }
-
-    /*
-     * Only the embed needs sizing. `components/Image`'s own `.container` is already
-     * `width: 100%; height: 100%`, so a rule here repeating it would be a no-op that reads as a
-     * decision.
-     */
-    .mapEmbed {
-      display: block;
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
   }
 
   /*

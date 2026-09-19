@@ -121,7 +121,7 @@ const FaqSection: FC<IFaqSection> = (props) => {
                */
               <TextBlock blocks={content} config={{ p: { size: 'lg' } }} />
             )}
-            {hasMap && map && <FaqMapCard {...map} accentTheme={accentTheme} />}
+            {hasMap && map && <FaqMapCard {...map} accentTheme={accentTheme} theme={theme} />}
           </div>
         )}
         <div className={styles.accordionColumn}>

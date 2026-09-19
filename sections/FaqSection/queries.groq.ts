@@ -44,8 +44,8 @@ const faqSectionProjection = groq`
     addMap,
     addMap == true => {
       map{
+        location{ lat, lng, zoom },
         image${imageProjection},
-        embedUrl,
         badge,
         address,
         link${buttonProjection}

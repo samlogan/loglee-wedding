@@ -2,6 +2,7 @@ import { MdQuestionAnswer } from 'react-icons/md';
 import { defineType } from 'sanity';
 
 import thumbnail from '../../../../sections/FaqSection/thumbnail.png';
+import type { MapLocation } from '../../../helpers/mapLocation';
 import ReadOnlyImageInput from '../../components/ReadOnlyImageInput';
 import defaultSectionGroups from '../common/defaultSectionGroups';
 import internalLabelField from '../common/internalLabelField';
@@ -15,23 +16,23 @@ import type { IButtonElement } from '../elements/button';
  * `tools/sanity/register-sections.ts` derives all four registrations from the section folder name,
  * and a *second* exported schema type sitting beside a section is the one thing it cannot derive —
  * it warns and asks for a hand-written entry in the `// Objects` block. An anonymous
- * `type: 'object'` field needs none of that, and nothing else in the repo wants a map card, so there
- * is no reuse to buy by promoting it. If a shared `Map` component lands (see the note in
- * `sections/FaqSection/FaqMapCard.tsx`), *that* is the moment to lift these five fields into
- * `tools/sanity/schema/objects/`.
+ * `type: 'object'` field needs none of that. What the card shares with `MapSection` is the
+ * `geopoint` and `components/Map`, not the card's own chrome.
  *
- * ## `image` **or** `embedUrl`, not both
+ * ## `location` **or** `image`
  *
- * The comp draws a hatched placeholder, which stands in for either a static map render or a live
- * embed; the ticket asks for both to be possible. The component prefers the image when one is set —
- * it is cheaper, carries no third-party frame, and is the treatment the card is drawn around — and
- * falls through to the embed when it is not. Stating the precedence once, in the component, keeps
- * the failure mode "the card shows the image you uploaded" rather than "the card is blank because a
- * radio says embed".
+ * A location draws a live Google map through `components/Map` — the same component and the same
+ * Studio picker `MapSection` uses. The image is the fallback for a card without one: a static
+ * render, or anything else the editor wants in the frame. Stating the precedence once, in the
+ * component, keeps the failure mode "the card shows the map you pinned" rather than "the card is
+ * blank because a radio says image".
+ *
+ * `location` replaced an `embedUrl` field (a pasted Google Maps iframe `src`). No published document
+ * had filled it in.
  */
 interface IFaqMapCard {
+  location?: MapLocation | null;
   image?: SanityImageSimple;
-  embedUrl?: string;
   badge?: string;
   address?: string;
   link?: IButtonElement;
@@ -133,26 +134,20 @@ const faqSection = defineType({
       type: 'boolean'
     },
     {
-      description: 'The map card beneath the intro copy. Upload a map image, or paste an embed URL.',
+      description: 'The map card beneath the intro copy. Pin a location for a live map, or upload a map image.',
       fields: [
         {
-          description: 'A static map image. Used in preference to the embed URL below when both are set.',
+          description:
+            'Search for the place, or drag the pin. Draws a live map; the zoom you leave the picker at is the zoom it opens at.',
+          name: 'location',
+          title: 'Location',
+          type: 'geopoint'
+        },
+        {
+          description: 'A static map image. Only used when no location is pinned.',
           name: 'image',
           title: 'Image',
           type: 'imageElementSimple'
-        },
-        {
-          description: 'An embeddable map URL (the “src” of a Google Maps embed). Only used when no image is uploaded.',
-          name: 'embedUrl',
-          title: 'Embed URL',
-          type: 'url',
-          /*
-           * `https` only. An `http:` embed is blocked outright as mixed content on the live site,
-           * which presents as "the map is blank" with nothing in the Studio to explain it. The
-           * likelier editor error — pasting the *share* URL rather than the embed `src` — cannot be
-           * validated without guessing at provider URL shapes, so the field description names it.
-           */
-          validation: (Rule) => Rule.uri({ scheme: ['https'] })
         },
         {
           description:
@@ -169,7 +164,8 @@ const faqSection = defineType({
           type: 'string'
         },
         {
-          description: 'The “Open in maps” link in the bottom bar. Point it at an external maps URL.',
+          description:
+            'The “Open in maps” link in the bottom bar. Give it a label; leave the link empty to point it at the pinned location in Google Maps.',
           name: 'link',
           title: 'Maps Link',
           type: 'buttonElement'
