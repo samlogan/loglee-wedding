@@ -32,6 +32,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  args: { variant: 'default' },
   play: async ({ canvasElement }) => {
     const region = within(canvasElement).getByRole('region', { name: 'Map of 406 Jamberoo Mountain Rd' });
 
