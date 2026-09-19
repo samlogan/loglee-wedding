@@ -1,0 +1,49 @@
+{
+  "_key": "home-players",
+  "_type": "playerSelectSection",
+  "caption": "3D canvas (react three fiber) · idle loop",
+  "players": [
+    {
+      "_id": "player-sam",
+      "clips": {
+        "hover": "FunnyDancing_03",
+        "idle": "Walking"
+      },
+      "fallbackImage": null,
+      "model": {
+        "asset": {
+          "url": "https://cdn.sanity.io/files/tftcitbh/production/68197743f6eabb948e9649d8664bdc5517dc411b.glb"
+        }
+      },
+      "name": "Sam",
+      "slug": {
+        "current": "sam"
+      }
+    },
+    {
+      "_id": "player-lauren",
+      "clips": {
+        "hover": "Cardio_Dance",
+        "idle": "Walking"
+      },
+      "fallbackImage": null,
+      "model": {
+        "asset": {
+          "url": "https://cdn.sanity.io/files/tftcitbh/production/68a86a3c38def53df56f9c582121bc1af63f1ae1.glb"
+        }
+      },
+      "name": "Lauren",
+      "slug": {
+        "current": "lauren"
+      }
+    }
+  ],
+  "prompt": "Select player",
+  "sectionFields": {
+    "spacingOptions": {
+      "removeBottomSpacing": true,
+      "removeTopSpacing": true
+    },
+    "themeOptions": null
+  }
+}

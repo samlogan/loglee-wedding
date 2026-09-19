@@ -1,0 +1,60 @@
+{
+  "_key": "home-cta",
+  "_type": "closingCtaSection",
+  "addButton": true,
+  "button": {
+    "label": "The Weekend",
+    "link": {
+      "action": null,
+      "email": null,
+      "externalLink": null,
+      "internalLink": {
+        "pathname": "/weekend/",
+        "slug": {
+          "_type": "slugElement",
+          "current": "/weekend/"
+        },
+        "title": "The Weekend"
+      },
+      "linkType": "internal",
+      "phone": null
+    }
+  },
+  "content": [
+    {
+      "_key": "intro",
+      "_type": "block",
+      "children": [
+        {
+          "_key": "intro-text",
+          "_type": "span",
+          "marks": [],
+          "text": "Three days among the pines by the Minnamurra River. Arrive Friday, marry Saturday, recover Sunday. Everyone stays on site."
+        }
+      ],
+      "markDefs": [],
+      "style": "normal"
+    }
+  ],
+  "rsvp": {
+    "addButton": true,
+    "button": {
+      "label": "RSVP",
+      "link": {
+        "action": null,
+        "email": null,
+        "externalLink": null,
+        "internalLink": {
+          "pathname": "/rsvp/",
+          "slug": null,
+          "title": "RSVP"
+        },
+        "linkType": "internal",
+        "phone": null
+      }
+    },
+    "rsvpLabel": "RSVP by 11 December"
+  },
+  "sectionFields": null,
+  "showRsvp": true
+}

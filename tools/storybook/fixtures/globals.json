@@ -1,6 +1,121 @@
 {
-  "header": null,
-  "socialMedia": null,
+  "header": {
+    "header": {
+      "addButton": true,
+      "button": {
+        "label": "RSVP",
+        "link": {
+          "action": null,
+          "email": null,
+          "externalLink": null,
+          "internalLink": {
+            "pathname": "/rsvp/",
+            "slug": null,
+            "title": "RSVP"
+          },
+          "linkType": "internal",
+          "phone": null
+        }
+      },
+      "navItems": [
+        {
+          "_key": "nav-weekend",
+          "link": {
+            "action": null,
+            "email": null,
+            "externalLink": null,
+            "internalLink": {
+              "pathname": "/weekend/",
+              "slug": {
+                "_type": "slugElement",
+                "current": "/weekend/"
+              },
+              "title": "The Weekend"
+            },
+            "linkType": "internal",
+            "phone": null
+          },
+          "title": "The Weekend"
+        },
+        {
+          "_key": "nav-stay",
+          "link": {
+            "action": null,
+            "email": null,
+            "externalLink": null,
+            "internalLink": {
+              "pathname": "/stay/",
+              "slug": {
+                "_type": "slugElement",
+                "current": "/stay/"
+              },
+              "title": "Stay"
+            },
+            "linkType": "internal",
+            "phone": null
+          },
+          "title": "Stay"
+        },
+        {
+          "_key": "nav-lodge",
+          "link": {
+            "action": null,
+            "email": null,
+            "externalLink": null,
+            "internalLink": {
+              "pathname": "/the-lodge/",
+              "slug": {
+                "_type": "slugElement",
+                "current": "/the-lodge/"
+              },
+              "title": "The Lodge"
+            },
+            "linkType": "internal",
+            "phone": null
+          },
+          "title": "The Lodge"
+        },
+        {
+          "_key": "nav-rsvp",
+          "link": {
+            "action": null,
+            "email": null,
+            "externalLink": null,
+            "internalLink": {
+              "pathname": "/rsvp/",
+              "slug": null,
+              "title": "RSVP"
+            },
+            "linkType": "internal",
+            "phone": null
+          },
+          "title": "RSVP"
+        },
+        {
+          "_key": "nav-faq",
+          "link": {
+            "action": null,
+            "email": null,
+            "externalLink": null,
+            "internalLink": {
+              "pathname": "/faq/",
+              "slug": {
+                "_type": "slugElement",
+                "current": "/faq/"
+              },
+              "title": "FAQ"
+            },
+            "linkType": "internal",
+            "phone": null
+          },
+          "title": "FAQ"
+        }
+      ]
+    }
+  },
+  "socialMedia": {
+    "socials": []
+  },
   "weddingSettings": {
     "coupleNames": {
       "partnerOne": "Sam",
@@ -14,7 +129,8 @@
     "venue": {
       "address": "406 Jamberoo Mountain Rd\nJamberoo NSW 2533",
       "mapUrl": "https://www.google.com/maps/search/?api=1&query=406+Jamberoo+Mountain+Rd+Jamberoo+NSW+2533",
-      "name": "The Lodge Jamberoo"
+      "name": "The Lodge Jamberoo",
+      "travelNote": "90 min south of Sydney"
     }
   }
 }

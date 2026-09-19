@@ -1,0 +1,18 @@
+{
+  "_key": "home-hero",
+  "_type": "heroSection",
+  "sectionFields": null,
+  "weddingSettings": {
+    "coupleNames": {
+      "partnerOne": "Sam",
+      "partnerTwo": "Lauren"
+    },
+    "endDate": "2027-02-14",
+    "startDate": "2027-02-12",
+    "venue": {
+      "address": "406 Jamberoo Mountain Rd\nJamberoo NSW 2533",
+      "name": "The Lodge Jamberoo",
+      "travelNote": "90 min south of Sydney"
+    }
+  }
+}
