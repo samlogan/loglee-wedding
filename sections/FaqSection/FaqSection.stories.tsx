@@ -589,36 +589,34 @@ export const OnDarkPage: Story = {
 };
 
 /**
- * The embed branch of the map card — the one raw DOM element in this section, and the only thing
- * here that loads a third-party document.
+ * The live-map branch of the map card — a pinned location, drawn through `components/Map` in its
+ * compact variant, and preferred over the image when both are set.
  *
- * `MOCK.map` carries an image and `hasEmbed` is `!hasImage && …`, so without this story the
- * `<iframe>` is never mounted by the test suite. The URL is a real Google Maps embed `src`; nothing
- * fetches it in the component test, which only asserts the attributes that make the frame safe and
- * nameable.
+ * The link is left without a destination, so it falls back to the pin in Google Maps.
  */
-export const EmbedMap: Story = {
+export const LiveMap: Story = {
   args: {
     ...MOCK,
     addMap: true,
     map: {
       ...MOCK.map,
-      image: undefined,
-      embedUrl: 'https://www.google.com/maps/embed/v1/place?q=406+Jamberoo+Mountain+Rd'
+      location: { lat: -34.6563, lng: 150.7449, zoom: 12 },
+      link: mockButton('Open in maps', { linkType: 'external' })
     }
   },
   decorators: [atWidth('1200px')],
   play: async ({ canvasElement }) => {
-    const frame = canvasElement.querySelector('iframe') as HTMLIFrameElement;
+    const canvas = within(canvasElement);
 
-    await expect(frame).toBeTruthy();
-    // The frame's accessible name. An untitled iframe announces as "frame" with nothing to go on.
-    await expect(frame).toHaveAccessibleName(`Map of ${MOCK.map?.address}`);
-    await expect(frame.getAttribute('loading')).toBe('lazy');
-    // Denied by omission, and the one that matters: the frame cannot navigate the page.
-    await expect(frame.getAttribute('sandbox')).not.toContain('allow-top-navigation');
+    await expect(canvas.getByRole('region', { name: `Map of ${MOCK.map?.address}` })).toBeTruthy();
+    // The image is the fallback, not a second layer under the map.
+    await expect(canvasElement.querySelector('img')).toBeNull();
+    await expect(canvas.getByRole('link', { name: /Open in maps/ })).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/search/?api=1&query=-34.6563,150.7449'
+    );
     // The badge and the bar still paint over it.
-    await expect(within(canvasElement).getByText(MOCK.map?.badge as string)).toBeVisible();
+    await expect(canvas.getByText(MOCK.map?.badge as string)).toBeVisible();
   }
 };
 

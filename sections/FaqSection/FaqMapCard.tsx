@@ -1,8 +1,11 @@
 import Image from '@/components/Image';
 import Link from '@/components/Link';
+import Map from '@/components/Map';
 import Tag from '@/components/Tag';
 import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
+import hasDestination from '@/helpers/hasDestination';
+import { getMapsUrl, resolveMapLocation } from '@/helpers/mapLocation';
 import type { IFaqMapCard } from '@/tools/sanity/schema/sections/faqSection';
 
 import styles from './styles.module.scss';
@@ -27,22 +30,18 @@ export interface FaqMapCardProps extends IFaqMapCard {
    * un-invert itself.
    */
   accentTheme: ProjectTheme;
+  /** The page's own theme, which the live map's colour scheme follows. */
+  theme?: ProjectTheme;
 }
 
 /**
  * The compact map card in the FAQ's left rail — nodes 16:643 (desktop) and 16:799 (mobile).
  *
- * ## Deliberately local, and deliberately replaceable
+ * ## The map is shared; the card is not
  *
- * There is no shared `Map` component in this repo, and a full-width map section remains undesigned,
- * so building one from a single 260px card would be inventing the general case from one example. The
- * card is instead three things this repo already owns — `components/Image`, `components/Tag`,
- * `components/Link` — arranged by a stylesheet, plus an `<iframe>` fallback for an embed URL.
- *
- * When a shared map *does* land, this is the seam: the schema object (`IFaqMapCard`) is five fields
- * an editor fills in, and the only thing this file contributes is the arrangement. Swapping the
- * `.mapMedia` block for `<Map variant="compact" …>` leaves the badge, the bar and every token in
- * place.
+ * A pinned location draws through `components/Map` — the same live Google map `MapSection` renders
+ * full-bleed, here in its `compact` variant so the zoom buttons do not cover a 260px frame. The
+ * badge, the bar and every token around it are this card's own arrangement.
  *
  * ## Overlay order is stated, not inherited
  *
@@ -54,22 +53,28 @@ export interface FaqMapCardProps extends IFaqMapCard {
  * `elementFromPoint` rather than by eye.
  */
 const FaqMapCard = (props: FaqMapCardProps) => {
-  const { accentTheme, address, badge, className, embedUrl, image, link } = props;
+  const { accentTheme, address, badge, className, image, link, location, theme } = props;
 
   /*
-   * Image first, embed second, nothing third — the precedence the schema's docblock states.
+   * Map first, image second, nothing third — the precedence the schema's docblock states.
    *
    * `image?.asset?.url` and not `image`, because a Sanity image field that an editor opened and
    * cleared still projects as `{ asset: null, altText: null, … }`: a truthy object with no picture
-   * in it. `components/Image` already returns `null` for that, so testing the object alone would
-   * suppress the embed *and* render nothing.
+   * in it. The same is true of a cleared geopoint, which `resolveMapLocation` handles.
    */
-  const hasImage = Boolean(image?.asset?.url);
-  const hasEmbed = !hasImage && Boolean(embedUrl);
+  const hasMap = Boolean(resolveMapLocation(location));
+  const hasImage = !hasMap && Boolean(image?.asset?.url);
   const linkLabel = link?.label?.trim();
+  /*
+   * An editor who labels the link and pins a location has said where it goes; a link field left
+   * empty points at that pin in Google Maps rather than rendering an inert label.
+   */
+  const mapsUrl = getMapsUrl(location);
+  const linkTarget =
+    hasDestination(link?.link) || !mapsUrl ? link?.link : { externalLink: mapsUrl, linkType: 'external' as const };
   const hasBar = Boolean(address?.trim()) || Boolean(linkLabel);
 
-  if (!(hasImage || hasEmbed || badge?.trim() || hasBar)) {
+  if (!(hasMap || hasImage || badge?.trim() || hasBar)) {
     return null;
   }
 
@@ -84,33 +89,18 @@ const FaqMapCard = (props: FaqMapCardProps) => {
          */
         <Image {...image} sizes="(max-width: 1024px) 100vw, 440px" />
       )}
-      {hasEmbed && (
+      {hasMap && (
         /*
-         * `title` is the frame's accessible name and is **required** — an untitled iframe is an
-         * unnamed landmark that a screen reader announces as "frame", with no way to know whether
-         * entering it is worth it (WCAG 4.1.2).
-         *
-         * "Map of <address>" rather than the bare address, because a name should describe the
-         * embedded *document*. The address alone is also rendered as visible text a few pixels below
-         * in `.mapBar`, so a screen-reader user would otherwise hear the same string twice in a row
-         * with nothing relating the two. `badge` is the fallback and a bare "Map" the last resort.
-         *
-         * `loading="lazy"` because the card is below the fold on both comps, and the embed is a
-         * third-party document — the single heaviest thing this section can pull in.
-         *
-         * `sandbox` states the three capabilities a maps embed actually needs and denies the rest —
-         * notably `allow-top-navigation`, so a compromised or mis-pasted embed cannot navigate the
-         * page out from under the reader. `allow-same-origin` is not the escape hatch it looks like
-         * here: the frame is cross-origin, so it grants the document its *own* origin rather than
-         * ours, which is what its tiles and storage need.
+         * "Map of <address>" rather than the bare address, because a name should describe the map.
+         * The address alone is also rendered as visible text a few pixels below in `.mapBar`, so a
+         * screen-reader user would otherwise hear the same string twice in a row with nothing
+         * relating the two. `badge` is the fallback and a bare "Map" the last resort.
          */
-        <iframe
-          className={styles.mapEmbed}
-          src={embedUrl}
-          title={address?.trim() ? `Map of ${address.trim()}` : badge?.trim() || 'Map'}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          sandbox="allow-scripts allow-same-origin allow-popups"
+        <Map
+          label={address?.trim() ? `Map of ${address.trim()}` : badge?.trim() || 'Map'}
+          location={location}
+          theme={theme}
+          variant="compact"
         />
       )}
       {/*
@@ -162,7 +152,7 @@ const FaqMapCard = (props: FaqMapCardProps) => {
              * `accentTheme` above for why the flip belongs on this element and not on the bar.
              */
             <Link
-              {...link?.link}
+              {...linkTarget}
               className={styles.mapLink}
               data-theme={accentTheme}
               variant="bare"
