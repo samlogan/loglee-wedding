@@ -60,7 +60,8 @@ export interface FieldCheckboxProps extends Omit<FieldProps, 'valueAs'> {
  * `string[]` — the shape the RSVP "attending" question wants. That is also why every input carries
  * the same `field` object and only its `id` and `value` differ.
  *
- * Three things here deliberately depart from the `FieldRadio` / `FieldToggle` siblings:
+ * Three things here depart from the older `Field` types — and are the pattern `FieldRadio` and
+ * `FieldToggle` were rebuilt on in MAM-1902:
  *
  * 1. **`label` never reaches `Field`.** `FieldCommon/Field` renders a `<label htmlFor={name}>`, which
  *    is wrong for a group — a `<label>` may only point at a single labelable control, and here there
@@ -81,10 +82,10 @@ export interface FieldCheckboxProps extends Omit<FieldProps, 'valueAs'> {
  *    fix — would quietly restore the padding. `Form` also defaults to `theme="primary"`, so that
  *    rule is live by default rather than opt-in.
  *
- * 3. **The input is transparent, not `display: none`.** Both siblings hide theirs outright, which
- *    removes them from the tab order and the accessibility tree — neither is operable by keyboard at
- *    all. This one is `opacity: 0` and stretched over the card, so it keeps native focus, Space
- *    toggling and the checked state a screen reader reads out.
+ * 3. **The input is transparent, not `display: none`.** `FieldRadio` and `FieldToggle` used to hide
+ *    theirs outright, which removed them from the tab order and the accessibility tree — neither was
+ *    operable by keyboard at all. This one is `opacity: 0` and stretched over the card, so it keeps
+ *    native focus, Space toggling and the checked state a screen reader reads out.
  */
 const FieldCheckbox = (props: FieldCheckboxProps) => {
   const {

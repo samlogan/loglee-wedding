@@ -1,11 +1,12 @@
-import React, { Children, cloneElement, isValidElement, useCallback, useState } from 'react';
+'use client';
+
+import React, { Children, cloneElement, isValidElement, startTransition, useCallback, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { UseFormReturn } from 'react-hook-form';
+import type { FieldErrors, UseFormReturn } from 'react-hook-form';
 import { useForm, FormProvider } from 'react-hook-form';
 
 import classNames from '@/helpers/classNames';
 
-import Field from '../Field';
 import FieldBotCheck from '../Field/FieldBotCheck';
 import type { FormSubmitProps } from './FormSubmit';
 import FormSubmit from './FormSubmit';
@@ -14,19 +15,50 @@ import styles from './styles.module.scss';
 
 interface FormProps {
   className?: string;
-  onSubmit?: (values: Record<string, unknown>, methods: UseFormReturn) => Promise<void>;
+  /**
+   * Called with the validated values. Runs after `action` is dispatched when both are set, so a
+   * caller can record what it sent without owning the submit path.
+   */
+  onSubmit?: (values: Record<string, unknown>, methods: UseFormReturn) => Promise<void> | void;
+  /**
+   * Ends the submit path in a server action: pass the dispatcher `useActionState` returns.
+   *
+   * The form is validated client-side first, and only a valid one is serialised — the `<form>`
+   * element itself, through `new FormData`, so the action receives exactly what a browser without
+   * JavaScript would post — and dispatched inside a transition, which is what keeps `isPending`
+   * honest. The same function is set as the element's `action`, so the form still reaches the
+   * server before the client bundle has loaded; `handleSubmit` calls `preventDefault`, which stops
+   * React dispatching it a second time once it has.
+   *
+   * Client validation is a convenience here, never the gate. The action is a public endpoint.
+   */
+  action?: (formData: FormData) => void;
+  /**
+   * Errors that came back from the server, keyed the way react-hook-form keys its own — nested for a
+   * dotted name. They are shown through the same `FieldError` path as client errors, and a field's
+   * clears the way a client error does, when it next validates.
+   *
+   * Memoise it. react-hook-form re-applies the object whenever its reference changes.
+   */
+  errors?: FieldErrors;
   defaultValues?: Record<string, unknown>;
   children: ReactNode;
   validationSchema?: Record<string, unknown>;
   formId?: string;
   submitText?: string;
   layout?: 'grid' | 'normal' | 'flex';
-  theme?: 'primary' | 'secondary';
+  /**
+   * `underline` is the design's own input — no box, a single rule beneath, the page showing
+   * through. See the note on it in the stylesheet.
+   */
+  theme?: 'primary' | 'secondary' | 'underline';
   submitButton?: FormSubmitProps['submitButton'];
 }
 
 const Form = (props: FormProps) => {
   const {
+    action,
+    errors,
     formId,
     className,
     onSubmit,
@@ -38,8 +70,11 @@ const Form = (props: FormProps) => {
     // validationSchema = {},
   } = props;
 
+  const formRef = useRef<HTMLFormElement>(null);
+
   const methods: UseFormReturn = useForm({
-    defaultValues
+    defaultValues,
+    errors
     // resolver: validationSchema
   });
 
@@ -49,19 +84,37 @@ const Form = (props: FormProps) => {
       if (values._gotcha) {
         return;
       }
-      setIsSubmitting(true);
-      if (onSubmit) {
-        await onSubmit(values, methods);
+      const form = formRef.current;
+      if (action && form) {
+        const formData = new FormData(form);
+        startTransition(() => action(formData));
       }
-      setIsSubmitting(false);
+      if (onSubmit) {
+        setIsSubmitting(true);
+        await onSubmit(values, methods);
+        setIsSubmitting(false);
+      }
     },
-    [onSubmit, methods]
+    [action, onSubmit, methods]
   );
 
   const classes = classNames(styles.form, styles[`theme_${theme}`], styles[`layout_${layout}`], className);
   return (
     <FormProvider {...methods}>
-      <form id={formId} onSubmit={methods.handleSubmit(onSubmitHandler)} className={classes}>
+      {/*
+       * `noValidate` because react-hook-form is the validator. Without it the browser runs its own
+       * constraint checks first — `type="email"`, a number input's `min`/`max` — and a failing one
+       * cancels the submit event, so the form's own messages, `aria-invalid` and focus handling
+       * never run and the reader gets a browser tooltip instead.
+       */}
+      <form
+        action={action}
+        className={classes}
+        id={formId}
+        noValidate
+        onSubmit={methods.handleSubmit(onSubmitHandler)}
+        ref={formRef}
+      >
         <FieldBotCheck register={methods?.register} />
         {Children.map(Children.toArray(children), (child) => {
           if (isValidElement(child)) {

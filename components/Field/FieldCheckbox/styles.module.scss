@@ -70,9 +70,9 @@
    * gap; not true of this one, which is a layout gap between blocks — the legend and the group, and
    * one card and the next — and which the design does in fact change with the viewport.
    *
-   * Note this is *not* what `FieldCommon/FieldLabel` draws, and the comp sets every field label in
-   * this same treatment ("01 · PLAYER NAME", "03 · DIETARY REQUIREMENTS"). Bringing `FieldLabel`
-   * into line is a change to ten other fields and belongs in its own ticket.
+   * The comp sets every field label in this same treatment ("03 · DIETARY REQUIREMENTS"), and since
+   * MAM-1902 `FieldCommon/FieldLabel` draws it too — this legend and that label are the same
+   * question-label, one for a group and one for a single control.
    */
   .legend {
     /*
@@ -149,7 +149,7 @@
    *
    * Stretched over the whole card so a press anywhere on it is a press on the checkbox, which is
    * what makes the card's entire area the hit target without a single event handler. `opacity: 0`
-   * rather than `display: none` (both siblings) or `visibility: hidden`, either of which would take
+   * rather than `display: none` or `visibility: hidden`, either of which would take
    * it out of the tab order and out of the accessibility tree.
    *
    * `box-sizing` is stated because the reset's list covers `div`, `span`, `label` and friends but

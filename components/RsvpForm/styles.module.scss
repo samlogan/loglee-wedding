@@ -1,0 +1,225 @@
+/*
+ * The RSVP page (Figma node 1:752 desktop, 1:874 mobile).
+ *
+ * ## One switch, and it is `px`
+ *
+ * Wide: a fixed-width rail — heading, intro, live summary — sticky beside the scrolling questions.
+ * Narrow: one column, nothing sticky, and three things gone — the summary panel, the second half of
+ * the intro, and the "(for nanny planning)" gloss on the ages label, exactly as the phone frame
+ * draws it.
+ *
+ * Because the narrow branch *removes content*, the threshold is `px`, not `rem`. A `rem` threshold
+ * in a container query moves with the root font size, so enlarging text alone would cross it and
+ * delete the summary with the viewport unchanged — the WCAG 1.4.4 failure `tools/sass/base/__media.scss`
+ * sets out, and that this repo has shipped twice. Everything that merely reflows below is fluid.
+ *
+ * The number is the layout's own minimum rather than a breakpoint from the map: the 440px rail, the
+ * 64px gutter and the 460px the attending cards need to sit three abreast (`FieldCheckbox`'s own
+ * switch). Below it the questions would be squeezed under the cards' wrap point beside a rail, so
+ * the rail comes down on top of them instead.
+ */
+$rsvp-inline-switch: 964px;
+
+@layer defaults {
+  /*
+   * The query container. `inline-size`: the width comes from the page and the height from the
+   * questions, so containing the block axis too would collapse it. Containment does not stop the
+   * rail sticking — it adds no scroll container — which the desktop story measures rather than
+   * assumes.
+   */
+  .rsvp {
+    container: rsvp / inline-size;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    // Rail to first question on the phone frame — the same step as between questions.
+    row-gap: var(--spacing-xl);
+
+    @container rsvp (width >= #{$rsvp-inline-switch}) {
+      // The comp's 440px rail is a fixed width — the questions take whatever is left.
+      grid-template-columns: 27.5rem minmax(0, 1fr);
+      column-gap: var(--spacing-3xl);
+      // Not stretched to the row, or the sticky rail would be as tall as the form and never move.
+      align-items: start;
+    }
+  }
+
+  .rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    min-width: 0;
+
+    /*
+     * Sticky against the page's scroll. `top` clears the site header, which is itself sticky and
+     * slides back in on an upward scroll: `--spacing-3xl` is 62px at the 1280px frame, where the
+     * header is 60px tall, so the returning bar meets the rail rather than covering its heading.
+     */
+    @container rsvp (width >= #{$rsvp-inline-switch}) {
+      position: sticky;
+      top: var(--spacing-3xl);
+    }
+  }
+
+  // `--display-md` is the comp's 132px at the wide end, with the display tier's 0.84 leading and
+  // -0.045em tracking — all of it `Text`'s. Only the colour is set here, so the element that sets it
+  // is also the one that paints on the theme's surface.
+  .heading {
+    color: var(--fg-default);
+  }
+
+  /*
+   * The summary box — a 1px ink rule at radius 8, with the comp's 25/19/17 insets less the border.
+   * Background left to the page, so it takes no colour of its own and needs none.
+   */
+  .summary {
+    display: none;
+    padding: var(--spacing-lg) #{fluid(16px, 18px)} var(--spacing-md);
+    border: var(--button-border-width) solid var(--stroke-cards);
+    border-radius: var(--radius-md);
+    color: var(--fg-default);
+
+    @container rsvp (width >= #{$rsvp-inline-switch}) {
+      display: block;
+    }
+  }
+
+  /*
+   * Bold at the *quiet* register's tracking — the comp draws "LOADOUT" at 1.2px on 12px, 0.1em —
+   * so the loud token is re-pointed at the quiet one, the escape hatch `FieldCheckbox`'s indicator
+   * takes for the same combination.
+   */
+  .summaryTitle {
+    --mono-letter-spacing-loud: var(--mono-letter-spacing);
+
+    // The same step the list below leaves between rows, so the title sits on the comp's even 20px pitch.
+    margin-bottom: var(--spacing-xxs);
+    color: var(--fg-accent);
+  }
+
+  /*
+   * Two columns sized by their content, so every value starts on the same character: "KIDS" is the
+   * widest term, and 1ch after it is where the comp's monospaced "FRI  IN" puts its value. The row
+   * gap makes up the comp's 20.4px row from the mono role's 1.3 leading.
+   */
+  .summaryList {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: 1ch;
+    row-gap: var(--spacing-xxs);
+    margin: 0;
+
+    dd {
+      margin: 0;
+    }
+  }
+
+  .wideOnly {
+    display: none;
+
+    @container rsvp (width >= #{$rsvp-inline-switch}) {
+      display: inline;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Questions
+
+  /*
+   * `--spacing-xl` is 24 → 32px across the fluid range: the comp's 32px between questions on the
+   * desktop frame, and within a few pixels of its 28px on the phone.
+   */
+  .fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    min-width: 0;
+  }
+
+  .question {
+    min-width: 0;
+  }
+
+  // The name is the one answer set large: 28px Medium in the comp, the heading scale's `sm` step here.
+  .nameField {
+    --form-input-font-size: var(--heading-sm);
+    --form-input-font-weight: var(--font-weight-medium);
+  }
+
+  // The plus-one switch and, when it is on, the two fields it reveals.
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+  }
+
+  /*
+   * Stepper and ages side by side, two up at every width. The stepper's track is the comp's 200px,
+   * 140px on the phone frame; ages takes the rest. Top-aligned, as the comp draws them, so the two
+   * labels share a line.
+   */
+  .kids {
+    display: grid;
+    grid-template-columns: #{fluid(140px, 200px)} minmax(0, 1fr);
+    align-items: start;
+    column-gap: var(--spacing-lg);
+  }
+
+  .kidsCount,
+  .kidsAges {
+    min-width: 0;
+  }
+
+  /*
+   * The ages input is drawn taller than the other text fields — 14px of inset rather than 12, 12
+   * rather than 10 on the phone — so its rule lands within a pixel or so of the stepper's foot beside
+   * it (Figma node 1:859).
+   */
+  .kidsAges {
+    --form-input-padding-block: #{fluid(12px, 14px)};
+  }
+
+  // ---------------------------------------------------------------------------
+  // Submit
+
+  // The comp holds the button 8px further off the last question than the questions are off each other.
+  .actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding-top: var(--spacing-xs);
+  }
+
+  /*
+   * Visible, and not by colour: the message says in words that the reply was not sent, and the rule
+   * beside it is a shape as well as a hue. Empty, it takes no space.
+   */
+  .alert {
+    max-width: 100%;
+    color: var(--fg-default);
+
+    &:not(:empty) {
+      padding-inline-start: var(--spacing-md);
+      border-inline-start: var(--button-focus-ring-width) solid var(--input-error-border);
+    }
+  }
+
+  // Full width on the phone frame, where the comp runs the button edge to edge.
+  .submit {
+    @container rsvp (width < #{$rsvp-inline-switch}) {
+      width: 100%;
+    }
+  }
+
+  .visuallyHidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

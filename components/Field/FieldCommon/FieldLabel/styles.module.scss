@@ -1,8 +1,19 @@
-.label {
-  display: block;
-  color: var(--fg-default);
-}
+@layer defaults {
+  .label {
+    /*
+     * The comp's tracking for this label: 1.68px on 12px and 1.54px on 11px, both 0.14em. Re-pointed
+     * rather than declared as `letter-spacing`, because `Text`'s bold mono rule reads this token —
+     * the same escape hatch `FieldCheckbox`'s legend takes. See the note in `_variables.scss`.
+     */
+    --mono-letter-spacing-loud: 0.14em;
 
-.required {
-  color: var(--system-error-500);
+    display: block;
+    // `--fg-accent` is pine/600 on the light theme — the comp's `#1e4632` — and signal/300 on dark.
+    color: var(--fg-accent);
+  }
+
+  .required {
+    margin-inline-start: 0.25em;
+    color: var(--system-error-500);
+  }
 }

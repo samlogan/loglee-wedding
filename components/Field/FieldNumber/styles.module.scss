@@ -1,87 +1,96 @@
-.container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 8px 12px 16px;
-  border-radius: var(--radius-sm);
-}
+/*
+ * The stepper — the RSVP comp's "KIDS" control (Figma node 1:849 desktop, 1:945 mobile): one bordered
+ * box, a button either end, the value centred in JetBrains Mono between them.
+ *
+ * It fills the width its container gives it; the comp's 200px (140px on the phone frame) is the
+ * RSVP form's column, not this component's.
+ */
+@layer defaults {
+  .stepper {
+    // Positions the visually hidden live value, which would otherwise hang off the nearest ancestor.
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    // A 1px ink rule at radius 8. The comp's `p-px` is that rule's allowance, not extra padding: its
+    // box is 54px tall, the 52px buttons plus the border.
+    border: var(--button-border-width) solid var(--input-border);
+    border-radius: var(--radius-md);
+    background-color: transparent;
+    color: var(--fg-default);
 
-.wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.label {
-  font-weight: var(--font-weight-bold);
-  user-select: none;
-}
-
-.button {
-  display: inline-flex;
-  margin: 0;
-  padding: 0 8px;
-  border: 0;
-  background-color: transparent;
-  box-shadow: none;
-  cursor: pointer;
-  color: var(--input-icon);
-
-  svg {
-    width: 22px;
-    height: 22px;
-    stroke: currentColor;
-    fill: transparent;
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    color: var(--input-disabled-icon);
-  }
-}
-
-.input {
-  padding: 0;
-  margin: 0;
-  border: 0;
-  box-shadow: none;
-  background-color: transparent;
-  cursor: pointer;
-  text-align: center;
-  width: 8px;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--body-sm);
-  color: var(--input-fg);
-
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  /* Firefox */
-  &[type='number'] {
-    -moz-appearance: textfield;
-  }
-
-  &.disabled {
-    color: var(--input-disabled-fg);
-  }
-}
-
-.warning {
-  label {
-    color: var(--input-disabled-fg);
-  }
-
-  .warningText {
-    cursor: not-allowed;
-    font-size: var(--body-xs);
-    padding: 4px;
-    border-radius: var(--radius-sm);
-
-    span {
-      color: var(--input-disabled-fg);
+    &.error {
+      border-color: var(--input-error-border);
+      box-shadow: 0 0 0 var(--button-border-width) var(--input-error-border);
     }
+  }
+
+  /*
+   * 48×52 on desktop, 44×48 on the phone frame — both clear the 44px target WCAG 2.5.5 asks for,
+   * which is why the narrow anchor is not allowed to drop further.
+   */
+  .button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: #{fluid(44px, 48px)};
+    min-height: #{fluid(48px, 52px)};
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--fg-default);
+    @include mono-font();
+    font-size: var(--body-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover:not([aria-disabled='true']) {
+      background-color: var(--bg-accent);
+    }
+
+    &[aria-disabled='true'] {
+      color: var(--input-disabled-fg);
+      cursor: not-allowed;
+    }
+  }
+
+  /*
+   * JetBrains Mono Medium at `--body-2xl` — `fluid(20px, 22px)`, the comp's 22px at the wide end.
+   * Transparent and borderless: the box around it is the stepper's.
+   */
+  .input {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background-color: transparent;
+    color: var(--fg-default);
+    @include mono-font();
+    font-size: var(--body-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.2;
+    text-align: center;
+    appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      margin: 0;
+      appearance: none;
+    }
+  }
+
+  .visuallyHidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
