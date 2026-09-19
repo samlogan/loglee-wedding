@@ -2,6 +2,7 @@ import { groq } from 'next-sanity';
 
 import blockContentProjection from '@/tools/sanity/projections/common/blockContent.groq';
 import imageProjection from '@/tools/sanity/projections/common/image.groq';
+import linkProjection from '@/tools/sanity/projections/common/link.groq';
 
 /**
  * Flat, single-document, no joins — every field is authored on the section itself.
@@ -41,6 +42,7 @@ const mediaCardGridSectionProjection = groq`
       hours,
       image${imageProjection},
       label,
+      link${linkProjection},
       theme,
       title
     }

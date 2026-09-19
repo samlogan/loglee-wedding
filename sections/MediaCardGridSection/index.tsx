@@ -220,6 +220,7 @@ const MediaCardGridSection: FC<IMediaCardGridSection> = (props) => {
                 caption={card.caption}
                 className={styles.venueCard}
                 description={card.content}
+                link={card.link}
                 /*
                  * The footer is a **slot**, and the hours go in as separate nodes rather than one
                  * joined string — the card gaps them with `--media-card-footer-gap` and wraps them
