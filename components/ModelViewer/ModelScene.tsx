@@ -1,12 +1,16 @@
 'use client';
 
 import { ContactShadows, OrbitControls } from '@react-three/drei';
-import { Canvas, useThree } from '@react-three/fiber';
-import { Suspense, useLayoutEffect } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Suspense, useLayoutEffect, useRef } from 'react';
+import type { RefObject } from 'react';
 import { NeutralToneMapping } from 'three';
+import type { PerspectiveCamera } from 'three';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 import type { ModelClipNames, ModelRestRole } from '@/helpers/modelClips';
 
+import { MODEL_BLEED } from './bleed';
 import ModelBoundary from './ModelBoundary';
 import ModelCharacter, { preloadCharacter } from './ModelCharacter';
 import ModelLighting from './ModelLighting';
@@ -57,6 +61,89 @@ const CameraTarget = () => {
 };
 
 /**
+ * Keeps the arch's framing on a canvas larger than the arch.
+ *
+ * The canvas reaches past the arch by `MODEL_BLEED`, so a raised hand can leave the dome. If the
+ * camera simply filled that larger canvas, the character would grow with it and drift upwards. So the
+ * camera keeps the arch's own frustum: its `aspect` is the arch's, and `setViewOffset` widens what is
+ * drawn by the same margins the CSS adds — `top` of the arch's height above it, `inline` of its width
+ * either side. Measured in pixels, the character stands exactly where it did when the canvas was the
+ * arch; the bleed is only extra room around it.
+ *
+ * `manual` stops R3F resetting `aspect` to the canvas's on every resize (`updateCamera` returns early
+ * for a manual camera), which is why this re-applies on every size change itself. `invalidate` redraws
+ * under `frameloop="demand"`, where nothing else would notice the projection changed.
+ */
+const CameraFrame = () => {
+  // `manual` is R3F's flag on its own `Camera` type, not three's; see `updateCamera` in the note above.
+  const camera = useThree((state) => state.camera) as PerspectiveCamera & { manual?: boolean };
+  const width = useThree((state) => state.size.width);
+  const height = useThree((state) => state.size.height);
+  const invalidate = useThree((state) => state.invalidate);
+
+  useLayoutEffect(() => {
+    if (!(camera.isPerspectiveCamera && width && height)) {
+      return;
+    }
+    const archWidth = width / (1 + 2 * MODEL_BLEED.inline);
+    const archHeight = height / (1 + MODEL_BLEED.top);
+    camera.manual = true;
+    camera.aspect = archWidth / archHeight;
+    camera.setViewOffset(
+      archWidth,
+      archHeight,
+      -MODEL_BLEED.inline * archWidth,
+      -MODEL_BLEED.top * archHeight,
+      width,
+      height
+    );
+    camera.updateProjectionMatrix();
+    invalidate();
+  }, [camera, height, invalidate, width]);
+
+  return null;
+};
+
+/**
+ * How far either side of straight-on the orbit may carry the camera: 25°.
+ *
+ * The client does not want the camera to show the characters' backs. The orbit used to auto-rotate
+ * through the full circle, so every character showed its back once every couple of minutes. It now
+ * sways between these limits, and a drag is held to them too. A clip that spins the character still
+ * turns its back for a moment, and that is fine: it is the choreography, not the camera.
+ */
+const ORBIT_SWAY = (25 * Math.PI) / 180;
+
+/** How close to a limit counts as having reached it. The controls clamp at the limit exactly. */
+const SWAY_EDGE = 0.005;
+
+/**
+ * Turns the auto-rotation round at each end of the sway.
+ *
+ * `OrbitControls` clamps the camera to `minAzimuthAngle`/`maxAzimuthAngle` but keeps pushing against
+ * the limit, so on its own the auto-rotation would stop dead at one end. Flipping the sign of
+ * `autoRotateSpeed` there makes it swing back. A positive speed decreases the azimuth (three's
+ * `rotateLeft`), hence the sign at each end. The magnitude is left as the controls were given it.
+ */
+const OrbitSway = ({ controls }: { controls: RefObject<OrbitControlsImpl | null> }) => {
+  useFrame(() => {
+    const current = controls.current;
+    if (!current?.autoRotate) {
+      return;
+    }
+    const azimuth = current.getAzimuthalAngle();
+    const speed = Math.abs(current.autoRotateSpeed);
+    if (azimuth <= -ORBIT_SWAY + SWAY_EDGE) {
+      current.autoRotateSpeed = -speed;
+    } else if (azimuth >= ORBIT_SWAY - SWAY_EDGE) {
+      current.autoRotateSpeed = speed;
+    }
+  });
+
+  return null;
+};
+
+/**
  * The device-pixel-ratio cap.
  *
  * `[1, 2]` — never below 1, never above 2, whatever the display reports. A modern phone reports 3
@@ -95,6 +182,16 @@ export interface ModelSceneProps {
   onClip?: (clip?: string) => void;
   /** The canvas or the model failed outright — the shell drops to the fallback image. */
   onError?: () => void;
+  /**
+   * The arch, which receives the canvas's pointer events.
+   *
+   * The canvas reaches past the arch (see `CameraFrame`), and it must not capture the pointer over
+   * that margin: on the select screen the margin crosses the gap into the neighbouring card, and on the
+   * player page it can sit over the content above the panel. With an `eventSource`, R3F sets its own
+   * container to `pointer-events: none` and listens on this element instead, and drei's `OrbitControls`
+   * binds to it too, so a drag starts on the arch and nowhere else.
+   */
+  eventSource?: RefObject<HTMLElement | null>;
 }
 
 /**
@@ -102,13 +199,17 @@ export interface ModelSceneProps {
  * on. Nothing above this file imports `three`, `@react-three/fiber` or `@react-three/drei`.
  */
 const ModelScene = (props: ModelSceneProps) => {
-  const { src, clips, restClip, animate, orbit, hoverSignal, environmentPreset, onClip, onError } = props;
+  const { src, clips, restClip, animate, orbit, hoverSignal, environmentPreset, onClip, onError, eventSource } = props;
+
+  // The orbit's controls, for `OrbitSway` to turn the auto-rotation round at each end.
+  const controls = useRef<OrbitControlsImpl>(null);
 
   return (
     <ModelBoundary label="canvas" onError={onError}>
       <Canvas
         camera={CAMERA}
         dpr={DPR}
+        eventSource={eventSource as RefObject<HTMLElement> | undefined}
         /*
          * `demand` under reduced motion: the scene is drawn when something asks for it —
          * `ModelCharacter` after it poses the skeleton, drei's controls on a drag — and never on a
@@ -166,6 +267,8 @@ const ModelScene = (props: ModelSceneProps) => {
           />
         </Suspense>
 
+        <CameraFrame />
+
         {orbit ? null : <CameraTarget />}
 
         {orbit ? (
@@ -190,9 +293,15 @@ const ModelScene = (props: ModelSceneProps) => {
              */
             maxPolarAngle={Math.PI * 0.56}
             minPolarAngle={Math.PI * 0.4}
+            // The horizontal limit: a sway either side of straight-on, never round the back.
+            maxAzimuthAngle={ORBIT_SWAY}
+            minAzimuthAngle={-ORBIT_SWAY}
+            ref={controls}
             target={TARGET}
           />
         ) : null}
+
+        {orbit ? <OrbitSway controls={controls} /> : null}
       </Canvas>
     </ModelBoundary>
   );

@@ -1,7 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 
 import Image from '@/components/Image';
 import Tag from '@/components/Tag';
@@ -9,6 +10,7 @@ import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
 import type { ModelClipNames, ModelRestRole } from '@/helpers/modelClips';
 
+import { MODEL_BLEED } from './bleed';
 import type { ModelEnvironmentPreset } from './ModelLighting';
 import { preloadModel } from './preload';
 import useModelCapability, { hasRenderer, prefersReducedMotion } from './useModelCapability';
@@ -151,6 +153,16 @@ export interface ModelViewerProps {
 const DEFAULT_PRESET: ModelEnvironmentPreset = 'studio';
 
 /**
+ * The canvas's reach past the arch, handed to the stylesheet as the same numbers `ModelScene` frames
+ * the camera with. See `./bleed`: if the two disagree, the character grows or slides instead of
+ * escaping.
+ */
+const BLEED_STYLE = {
+  '--model-bleed-inline': MODEL_BLEED.inline,
+  '--model-bleed-top': MODEL_BLEED.top
+} as CSSProperties;
+
+/**
  * The shared 3D character — the select screen's two cards and the player page's stage.
  *
  * ## What renders, and when
@@ -204,6 +216,13 @@ const ModelViewer = (props: ModelViewerProps) => {
   } = props;
 
   const capability = useModelCapability();
+
+  /*
+   * The arch, as the canvas's event source. The canvas reaches past the arch and ignores the pointer,
+   * so hover, tap and the player page's drag all have to be heard here instead. See `eventSource` on
+   * `ModelScene`.
+   */
+  const stageRef = useRef<HTMLDivElement>(null);
 
   /**
    * Everything the scene reports back, in one object keyed by the `src` it belongs to.
@@ -382,6 +401,7 @@ const ModelViewer = (props: ModelViewerProps) => {
         className={classNames(styles.stage, { [styles.resting]: !loading, [styles.settled]: settled })}
         onPointerDown={canHover ? triggerHover : undefined}
         onPointerEnter={canHover ? triggerHover : undefined}
+        ref={stageRef}
       >
         {/*
          * Always present, behind everything. Named only when it is the thing on show — otherwise
@@ -402,11 +422,12 @@ const ModelViewer = (props: ModelViewerProps) => {
            * exposes its subtree as one image with one name, which is exactly the right shape: the
            * canvas has no accessible content of its own to lose.
            */
-          <div aria-label={alt} className={styles.canvasHolder} role="img">
+          <div aria-label={alt} className={styles.canvasHolder} role="img" style={BLEED_STYLE}>
             <ModelScene
               animate={resolved === 'animated'}
               clips={clips}
               environmentPreset={environmentPreset}
+              eventSource={stageRef}
               hoverSignal={hoverSignal}
               onClip={handleClip}
               onError={handleError}

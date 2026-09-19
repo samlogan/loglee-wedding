@@ -227,17 +227,16 @@
      * exception to the derivation above. It has to come after the loop, which sets the same two
      * properties at the same specificity.
      *
-     * `--button-accent-bg` is signal/300: 16:1 against the near-black label it carries as a *fill*,
-     * but 1.02:1 as *text* on the light page behind it — invisible, not merely low contrast. In the
-     * dark theme it would read perfectly well (9.22:1 on pine/600 — `--fg-accent` is this colour and
-     * `.variant_bare:hover` sets body text in it), so the reason is not contrast there: the palette
-     * reserves the accent for interactive states. The outline form borrows `--fg-default`, the ink
-     * each theme already guarantees against its own surface, and brings the accent back on hover
-     * where it is a fill again.
+     * The rule was set when the accent was lime: 1.02:1 as *text* on the light page, invisible. It is
+     * plum now (`--signal-300`, #972a6a), which reads at 6.51:1 on that page but at 1.44:1 on pine,
+     * where the dark theme swaps in its light tint instead. So the fill still cannot be one ink for
+     * both themes, and the palette still reserves the accent for interactive states. The outline form
+     * borrows `--fg-default`, the ink each theme already guarantees against its own surface, and
+     * brings the accent back on hover where it is a fill again.
      *
      * That is also what the design draws: "GHOST / UI" sits beside "ACCENT / UI" with a neutral
-     * border and lights up lime on interaction. It keeps the accent to interactive states, which is
-     * the rule for this palette.
+     * border and lights up in the accent on interaction. It keeps the accent to interactive states,
+     * which is the rule for this palette.
      */
     &.theme_accent {
       border-color: var(--fg-default);

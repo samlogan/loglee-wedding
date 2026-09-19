@@ -220,7 +220,7 @@ export const Loaded: Story = {
         await expect(panel.dataset.modelLoaded).toBe('true');
         await expect(panel.dataset.modelClip).toBe(CLIPS.feature);
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
   }
 };
@@ -252,7 +252,7 @@ export const ReducedMotion: Story = {
         // Posed, not playing — but posed from the same clip the animated story loops.
         await expect(panel.dataset.modelClip).toBe(CLIPS.feature);
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
   }
 };
@@ -328,7 +328,7 @@ export const MissingClip: Story = {
         // Not `feature`, and not nothing.
         await expect(panel.dataset.modelClip).toBe(CLIPS.idle);
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
   }
 };
@@ -364,7 +364,7 @@ export const Interactive: Story = {
       async () => {
         await expect(panel.dataset.modelClip).toBe(CLIPS.idle);
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
 
     await userEvent.hover(stageOf(panel));

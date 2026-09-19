@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ILinkElement } from '../sanity/schema/elements/link';
-import { isCurrent, linkEmpty } from './link';
+import { isCurrent, linkEmpty, normalisePath } from './link';
 
 /**
  * `linkEmpty` decides whether a CTA renders at all. Getting it wrong either hides a working link or
@@ -53,5 +53,23 @@ describe('isCurrent', () => {
 
   it('is false for a link with neither', () => {
     expect(isCurrent('/about/', link({}))).toBe(false);
+  });
+});
+
+describe('normalisePath', () => {
+  it('drops the trailing slash a stored pathname carries', () => {
+    expect(normalisePath('/weekend/')).toBe('/weekend');
+    expect(normalisePath('/the-lodge/')).toBe('/the-lodge');
+  });
+
+  it('spells the home page `/`, whichever way it was stored', () => {
+    expect(normalisePath('/')).toBe('/');
+    expect(normalisePath('/home/')).toBe('/');
+  });
+
+  it('is undefined for a blank value, so a caller can skip it', () => {
+    expect(normalisePath('')).toBeUndefined();
+    expect(normalisePath(null)).toBeUndefined();
+    expect(normalisePath(undefined)).toBeUndefined();
   });
 });

@@ -557,7 +557,7 @@ export const DesignReference: Story = {
  *
  * Worth a story of its own because of one token. Four runs in this section paint `--fg-accent` — the
  * two eyebrows, every ordinal and the outline note chip — and `--fg-accent` is `--pine-600` on light
- * but `--signal-300` on dark, the lime `_variables.scss` reserves for interactive states. So a dark
+ * but `--signal-100` on dark, the plum tint `_variables.scss` reserves for interactive states. So a dark
  * FAQ puts the interactive colour on four things that are not interactive.
  *
  * Left as it is rather than papered over, because the fix is a design decision (the `components/Tag`

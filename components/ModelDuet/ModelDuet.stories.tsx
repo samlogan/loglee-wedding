@@ -13,8 +13,8 @@ import ModelDuet from '.';
  */
 const ALT = 'Sam and Lauren, as 3D characters, dancing together';
 
-/** Near-square, because the stage is 0.94:1 — `mockImage` ranks the pool by how close the shape is. */
-const FALLBACK = mockImage({ altText: ALT, height: 553, seed: 'model-duet', width: 520 });
+/** Near-square, because the stage is 0.92:1 — `mockImage` ranks the pool by how close the shape is. */
+const FALLBACK = mockImage({ altText: ALT, height: 696, seed: 'model-duet', width: 640 });
 
 /**
  * `Foundations`, beside `Foundations/Model Viewer`, and for the same reason that one gives.
@@ -147,7 +147,7 @@ export const Animated: Story = {
         // True only once *both* characters have reported in — the pair-readiness rule, observed.
         await expect(block.dataset.modelLoaded).toBe('true');
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
 
     // Still exactly one name, now that the canvas rather than the placeholder is carrying it.
@@ -178,7 +178,7 @@ export const ReducedMotion: Story = {
         await expect(canvasElement.querySelector('canvas')).not.toBeNull();
         await expect(block.dataset.modelLoaded).toBe('true');
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
   }
 };
@@ -236,8 +236,8 @@ export const Loading: Story = {
  *
  * This is the one thing on this page a real layout engine is needed for, and it is why the story
  * asserts a *measured* ratio rather than reading the declared `aspect-ratio` back out of the
- * stylesheet. `max-height: 70svh` and `max-width` can both override the ratio silently, and a
- * stage that quietly went taller than 0.678:1 would crop a hand at the one moment the two loops
+ * stylesheet. `max-height: 80svh` and `max-width` can both override the ratio silently, and a
+ * stage that quietly went taller than `DUET_MIN_ASPECT` (0.829:1) would crop a hand at the one moment the two loops
  * peak together — which is to say, not on load, and not in a screenshot.
  */
 export const Narrow: Story = {
@@ -282,7 +282,7 @@ export const SunsetLighting: Story = {
         await expect(canvasElement.querySelector('canvas')).not.toBeNull();
         await expect(block.dataset.modelLoaded).toBe('true');
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
   }
 };

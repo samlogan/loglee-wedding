@@ -338,13 +338,22 @@ export const MobileOpenThenWidened: Story = {
        * follow it. `aria-expanded` flips during the commit, but the scroll lock is released by a
        * `useEffect` cleanup — a passive effect, which React flushes *after* paint. Read straight
        * after the attribute settles, `body.style.overflow` is still `'hidden'` for that gap.
+       *
+       * Three seconds rather than `waitFor`'s default one. The close waits on a resize, a
+       * re-render and a passive effect, and under a full `yarn test` run — dozens of stories
+       * sharing one browser, several of them rasterising 3D in software — that chain was measured
+       * missing one second while passing every time the file ran alone. The assertions are
+       * unchanged; only the patience is.
        */
-      await waitFor(async () => {
-        await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-        // The two things the lockup actually cost: a scrollable page, and a panel out of the tab order.
-        await expect(document.body.style.overflow).toBe('');
-        await expect(panel).toHaveAttribute('inert');
-      });
+      await waitFor(
+        async () => {
+          await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+          // The two things the lockup actually cost: a scrollable page, and a panel out of the tab order.
+          await expect(document.body.style.overflow).toBe('');
+          await expect(panel).toHaveAttribute('inert');
+        },
+        { timeout: 3000 }
+      );
 
       /*
        * …and the keyboard user is still somewhere, which is a separate claim from the three above.

@@ -226,8 +226,8 @@ export const DarkTheme: Story = {
       // pine/600 under stone/50 — the pills' drawn pair (nodes 16:152, 16:261/263/265).
       await expect(styles.backgroundColor).toBe('rgb(30, 70, 50)');
       await expect(styles.color).toBe('rgb(243, 241, 234)');
-      // Never signal/300: the accent token is reserved for interactive states and this is not one.
-      await expect(styles.color).not.toBe('rgb(214, 255, 59)');
+      // Never the dark theme's accent (signal/100): it is reserved for interactive states and this is not one.
+      await expect(styles.color).not.toBe('rgb(242, 207, 227)');
     });
   }
 };

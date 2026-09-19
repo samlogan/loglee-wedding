@@ -32,18 +32,33 @@
   --pine-800: #112a1e;
   --pine-900: #0b1c14;
 
-  // Signal — bright accent, reserved for interactive states
-  --signal-25: #fbffe8;
-  --signal-50: #f5ffc9;
-  --signal-100: #ecff9e;
-  --signal-200: #e2ff6f;
-  --signal-300: #d6ff3b;
-  --signal-400: #c3ed2a;
-  --signal-500: #a8d01a;
-  --signal-600: #88ab12;
-  --signal-700: #66820e;
-  --signal-800: #47590b;
-  --signal-900: #2e3a08;
+  /*
+   * Signal — the plum accent, reserved for interactive states.
+   *
+   * 300 is the brand's #972a6a, which replaced the original lime (#d6ff3b) at the client's request.
+   * The rest of the ramp is the same hue (≈325°) stepped in lightness, so every existing `--signal-*`
+   * reference keeps its role.
+   *
+   * The swap turned the accent from a light colour into a dark one, and that changes where each step
+   * can go. Lime sat under near-black ink and read as text on pine; plum does neither:
+   *
+   *   300 under white          7.36:1   the fill, on both themes' light surfaces
+   *   400 / 500 under white    9.12 / 10.88:1   hover and pressed
+   *   300 as text on stone/50  6.51:1
+   *   300 on pine/600          1.44:1   so never text, a ring or a fill on the dark theme
+   *   100 on pine/600          7.49:1   the dark theme's accent (and 4.78:1 on pine/500)
+   */
+  --signal-25: #fcf5f9;
+  --signal-50: #f9e9f2;
+  --signal-100: #f2cfe3;
+  --signal-200: #e4aacc;
+  --signal-300: #972a6a;
+  --signal-400: #802359;
+  --signal-500: #6d1d4c;
+  --signal-600: #59173e;
+  --signal-700: #451130;
+  --signal-800: #320c22;
+  --signal-900: #220717;
 
   // System — Error
   --system-error-25: #fffbfa;
@@ -603,18 +618,19 @@
   --button-secondary-focus-ring: var(--stone-900);
 
   /*
-   * Button - Accent — "ACCENT / UI" and the RSVP action. Identical in both themes: signal is a
-   * fixed pairing of lime under near-black ink (16.04:1), not a colour that flips with the surface.
-   * It is the one theme whose fill cannot double as its outline ink — see the note in
-   * `components/Button/styles.module.scss`.
+   * Button - Accent — "ACCENT / UI" and the RSVP action. Plum under a white label: 7.36:1 at rest,
+   * darker and higher on hover (9.12:1) and when pressed (10.88:1). It is the one theme whose fill
+   * cannot double as its outline ink; see the note in `components/Button/styles.module.scss`.
+   *
+   * Pure white rather than `--stone-50` for the label, because the client's reference draws it white.
    */
   --button-accent-bg: var(--signal-300);
   --button-accent-bg-hover: var(--signal-400);
   --button-accent-bg-active: var(--signal-500);
   --button-accent-bg-disabled: var(--stone-200);
-  --button-accent-fg: var(--stone-900);
-  --button-accent-fg-hover: var(--stone-900);
-  --button-accent-fg-active: var(--stone-900);
+  --button-accent-fg: var(--shades-white);
+  --button-accent-fg-hover: var(--shades-white);
+  --button-accent-fg-active: var(--shades-white);
   --button-accent-fg-disabled: var(--stone-600);
   --button-accent-focus-ring: var(--stone-900);
 
@@ -653,7 +669,8 @@
   --fg-subtle: var(--pine-200);
   --fg-link: var(--stone-50);
   --fg-icon: var(--pine-100);
-  --fg-accent: var(--signal-300);
+  // The light plum tint, not the plum itself: 7.49:1 on pine/600 where #972a6a is 1.44:1.
+  --fg-accent: var(--signal-100);
   // Error text, as on the light theme. error/300 is 5.5:1 on pine/600; error/500 would be 2.8:1.
   --fg-error: var(--system-error-300);
 
@@ -676,15 +693,19 @@
    * of the two forms and the other quietly missed the bar the rest of the set clears. `pine-200`
    * covers both: 6.66:1 filled, 5.49:1 outlined.
    */
+  /*
+   * On this theme the accent is the light plum tint (see the ramp's note), so hover lights up pink
+   * under the same near-black label the lime used to carry.
+   */
   --button-primary-bg: var(--stone-50);
-  --button-primary-bg-hover: var(--signal-300);
-  --button-primary-bg-active: var(--signal-400);
+  --button-primary-bg-hover: var(--signal-100);
+  --button-primary-bg-active: var(--signal-200);
   --button-primary-bg-disabled: var(--pine-700);
   --button-primary-fg: var(--pine-600);
   --button-primary-fg-hover: var(--stone-900);
   --button-primary-fg-active: var(--stone-900);
   --button-primary-fg-disabled: var(--pine-200);
-  --button-primary-focus-ring: var(--signal-300);
+  --button-primary-focus-ring: var(--signal-100);
 
   /* Button - Secondary */
   --button-secondary-bg: var(--stone-50);
@@ -695,18 +716,22 @@
   --button-secondary-fg-hover: var(--pine-600);
   --button-secondary-fg-active: var(--pine-600);
   --button-secondary-fg-disabled: var(--pine-200);
-  --button-secondary-focus-ring: var(--signal-300);
+  --button-secondary-focus-ring: var(--signal-100);
 
-  /* Button - Accent — the same lime-under-ink pairing as the light theme. */
-  --button-accent-bg: var(--signal-300);
-  --button-accent-bg-hover: var(--signal-400);
-  --button-accent-bg-active: var(--signal-500);
+  /*
+   * Button - Accent — not the light theme's pairing any more. A plum fill on a pine page is 1.44:1,
+   * so the button's shape would all but vanish. The light tint carries the accent here instead, under
+   * the near-black label: lighter on hover, deeper when pressed.
+   */
+  --button-accent-bg: var(--signal-100);
+  --button-accent-bg-hover: var(--signal-50);
+  --button-accent-bg-active: var(--signal-200);
   --button-accent-bg-disabled: var(--pine-700);
   --button-accent-fg: var(--stone-900);
   --button-accent-fg-hover: var(--stone-900);
   --button-accent-fg-active: var(--stone-900);
   --button-accent-fg-disabled: var(--pine-200);
-  --button-accent-focus-ring: var(--signal-300);
+  --button-accent-focus-ring: var(--signal-100);
 
   /* Input */
   --input-bg: var(--pine-600);
@@ -715,8 +740,8 @@
   --input-icon: var(--pine-100);
   --input-active-bg: var(--pine-600);
   --input-active-fg: var(--stone-50);
-  --input-active-border: var(--signal-300);
-  --input-active-icon: var(--signal-300);
+  --input-active-border: var(--signal-100);
+  --input-active-icon: var(--signal-100);
   --input-disabled-bg: var(--pine-700);
   --input-disabled-fg: var(--pine-300);
   --input-disabled-border: var(--pine-400);
