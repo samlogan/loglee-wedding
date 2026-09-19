@@ -1,13 +1,200 @@
-.tabs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  @include media-down(tablet) {
-    max-width: 100%;
+/*
+ * The single-choice group. The `pill` variant is the RSVP comp's room preference (Figma node 1:832
+ * desktop, 1:928 mobile), drawn from the design system's `Chip` pair on the `Design items` board:
+ * `Chip` is an ink outline with ink text, `Chip · selected` the same box filled with ink. Those are the
+ * outline and filled forms of `Button`'s `secondary` theme, so the colours are its tokens — the same
+ * decision, and the same tokens, as `FieldCheckbox`'s cards.
+ */
+@layer defaults {
+  // Block, not flex — a `<legend>` is laid out by its fieldset. See `FieldCheckbox` for the full note.
+  .fieldset {
+    display: block;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  /*
+   * The field label's treatment (`FieldCommon/FieldLabel`) on a `<legend>`, as `FieldCheckbox` draws
+   * its own: mono bold, uppercase, 0.14em, in the accent ink. The gap beneath is the comp's 12px,
+   * 10px on the phone frame.
+   */
+  .legend {
+    --mono-letter-spacing-loud: 0.14em;
+
+    display: block;
     width: 100%;
-    gap: 8px 16px;
+    margin-bottom: #{fluid(10px, 12px)};
+    padding: 0;
+    color: var(--fg-accent);
+  }
+
+  .required {
+    margin-inline-start: 0.25em;
+    color: var(--fg-error);
+  }
+
+  .options {
+    display: flex;
     flex-wrap: wrap;
+    gap: var(--spacing-xs) var(--spacing-md);
+  }
+
+  .variant_pill {
+    // The comp's 10px between chips, 7–9px on the phone frame; `--spacing-xs` is the scale's step.
+    gap: var(--spacing-xs);
+  }
+
+  .option {
+    position: relative;
+    display: inline-flex;
+    min-width: 0;
+    cursor: pointer;
+  }
+
+  /*
+   * Present, focusable and announced — just not painted, and stretched over the option so the whole
+   * of it is the hit target. `FieldCheckbox` carries the long version of this note.
+   */
+  .input {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    appearance: none;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  .control {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--fg-default);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Default — a dot beside the label
+
+  .dot {
+    flex-shrink: 0;
+    width: 1em;
+    height: 1em;
+    border: var(--button-border-width) solid var(--input-border);
+    border-radius: var(--radius-full);
+    // The inner disc, drawn as an inset ring of the page colour so the checked state is a shape.
+    box-shadow: inset 0 0 0 0.2em var(--bg-default);
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+  }
+
+  .variant_default .input:checked + .control .dot {
+    background-color: var(--input-active-border);
+    border-color: var(--input-active-border);
+  }
+
+  .variant_default .input:focus-visible + .control {
+    outline: var(--button-focus-ring-width) solid var(--fg-default);
+    outline-offset: var(--button-focus-ring-offset);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pill — the `Chip` pair
+
+  /*
+   * 44px tall: 12px of padding either side of the 18px line box, plus the border — the chip on the
+   * design board, not `Button`'s `md` (46px), whose inset is a pixel wider. 15px Medium is `md`'s
+   * type, which is what the token note in `_variables.scss` says these chips are set in.
+   *
+   * The type is fluid and the padding is not, so at the narrow end the line box is 16.8px and the
+   * chip came out 42.8px — under the 44px target WCAG 2.5.5 asks for, which `Button`'s `md` holds by
+   * its padding alone. The floor holds it here; it changes nothing at the wide end.
+   */
+  .variant_pill .control {
+    gap: 0;
+    min-height: 44px;
+    padding: var(--spacing-sm) var(--button-md-padding-x);
+    border: var(--button-border-width) solid var(--pill-border-color, var(--button-secondary-bg));
+    border-radius: var(--radius-full);
+    background-color: transparent;
+    color: var(--button-secondary-bg);
+    font-size: var(--button-md-font-size);
+    font-weight: var(--button-font-weight);
+    line-height: 1.2;
+    white-space: nowrap;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  // Picked: `Chip · selected`. The border does not move, so a row of mixed states lines up.
+  .variant_pill .input:checked + .control {
+    background-color: var(--button-secondary-bg);
+    color: var(--button-secondary-fg);
+  }
+
+  // Hover on an unpicked pill tints the surface rather than previewing the fill — see the same
+  // decision, and its reason, on `FieldCheckbox`'s cards.
+  .variant_pill .input:not(:disabled):hover + .control {
+    background-color: var(--bg-accent);
+  }
+
+  .variant_pill .input:checked:not(:disabled):hover + .control {
+    background-color: var(--button-secondary-bg-hover);
+    color: var(--button-secondary-fg-hover);
+  }
+
+  .variant_pill .input:focus-visible + .control {
+    outline: var(--button-focus-ring-width) solid var(--button-secondary-focus-ring);
+    outline-offset: var(--button-focus-ring-offset);
+  }
+
+  .variant_pill .input:disabled + .control {
+    border-color: var(--pill-border-color, var(--button-secondary-bg-disabled));
+    color: var(--button-secondary-fg-disabled);
+  }
+
+  // Routed through a local so the error ink survives the state rules above — `FieldCheckbox`'s idiom.
+  .control.error {
+    --pill-border-color: var(--input-error-border);
+  }
+
+  .variant_default .control.error .dot {
+    border-color: var(--input-error-border);
+  }
+
+  /*
+   * Forced colours flatten the fill that is the pill's picked state, leaving two identical outlines.
+   * The system's own selected-row pair puts it back — `FieldCheckbox` makes the same repair.
+   */
+  @media (forced-colors: active) {
+    .variant_pill .input:checked:not(:disabled) + .control,
+    .variant_default .input:checked:not(:disabled) + .control .dot {
+      forced-color-adjust: none;
+      border-color: Highlight;
+      background-color: Highlight;
+      color: HighlightText;
+    }
+
+    .input:focus-visible + .control {
+      outline-color: CanvasText;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .variant_pill .control,
+    .dot {
+      transition: none;
+    }
   }
 }

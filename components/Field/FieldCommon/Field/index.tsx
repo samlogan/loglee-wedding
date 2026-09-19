@@ -1,4 +1,4 @@
-import type { JSX, ChangeEvent } from 'react';
+import type { JSX, ChangeEvent, ReactNode } from 'react';
 import type { FieldErrors, UseFormReturn } from 'react-hook-form';
 import { useFormContext } from 'react-hook-form';
 
@@ -13,15 +13,26 @@ import useFieldError from '../helpers/useFieldError';
 import styles from './styles.module.scss';
 
 export interface FieldProps {
-  label?: string;
+  /**
+   * A node rather than a string so a caller can mark part of it as decoration — the RSVP form's
+   * visible ordinal ("01 · ") is `aria-hidden` inside the label, which keeps it out of the control's
+   * accessible name. A plain string still works everywhere it did.
+   */
+  label?: ReactNode;
   name: string;
   className?: string;
   required?: boolean;
   // eslint-disable-next-line typescript-eslint/no-explicit-any -- render prop receives dynamic field shape from react-hook-form
   children?: (props: { field: Record<string, any>; hasError: boolean }) => JSX.Element | JSX.Element[];
   validate?: (value: string) => boolean | string;
+  /**
+   * Called after react-hook-form has stored the new value, so `getValues` already reads it.
+   *
+   * `checked` is the control's state after the change, for the fields where `value` says nothing — a
+   * checkbox or switch submits the same `value` ("on") whichever way it was flipped.
+   */
   // eslint-disable-next-line typescript-eslint/no-explicit-any -- field shape varies by form registration
-  onChange?: ({ value, field }: { value: string; field: any }) => void;
+  onChange?: ({ value, checked, field }: { value: string; checked: boolean; field: any }) => void;
   disabled?: boolean;
   valueAs?: 'number' | 'date';
   register?: UseFormReturn['register'];
@@ -68,7 +79,7 @@ const Field = (props: FieldProps) => {
       field.onChange(event);
     }
     if (onChange) {
-      onChange({ field: props, value: event.target.value });
+      onChange({ checked: event.target.checked, field: props, value: event.target.value });
     }
   };
 

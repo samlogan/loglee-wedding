@@ -1,12 +1,23 @@
 .container {
   display: block;
   max-height: 0;
+  /*
+   * Empty, this is still an item in its `FieldContainer`'s flex column, and a zero-height item still
+   * collects the column's gap — 8px of nothing under every field in every form, which the RSVP comp
+   * measures as the gap between its questions running long. It has to stay rendered, because it is
+   * a live region and one inserted along with its message is announced unreliably, so the step is
+   * taken back instead. Outside a `FieldContainer` (`FieldPhone` has its own) `--field-gap` is unset
+   * and this is `0`.
+   */
+  margin-block-start: calc(-1 * var(--field-gap, 0px));
 
   &.hasError {
     max-height: 200px;
+    margin-block-start: 0;
   }
 
+  // The theme's error *text* ink — see `--fg-error` for why it is not the rule's error/500.
   .message {
-    color: var(--system-error-500);
+    color: var(--fg-error);
   }
 }

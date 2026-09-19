@@ -63,3 +63,72 @@
     gap: 8px;
   }
 }
+
+/*
+ * The underline input — the RSVP comp's field (Figma node 1:795): no box, one rule beneath, the page
+ * showing through, and the type large enough to read as the answer rather than a form's chrome.
+ *
+ * In `@layer defaults`, unlike the two themes above it, and that is deliberate rather than
+ * inconsistent. Those are unlayered, so nothing in any component's layer can override them — the
+ * wart `FieldCheckbox` documents at length. This block is new and has no such constraint to honour,
+ * so it follows the house rule. Nothing unlayered targets `.input` under `.theme_underline`, so it
+ * still wins against the `global` layer beneath it.
+ *
+ * Three hooks a consumer can set on any ancestor, because a custom property resolves wherever it is
+ * declared regardless of layer or source order — the same reason `Button` exposes its mono pair:
+ *
+ *   --form-input-font-size       defaults to `--body-xl`, the comp's 20px answer
+ *   --form-input-font-weight     defaults to regular
+ *   --form-input-padding-block   defaults to the comp's 12px inset, 10px on the phone frame
+ */
+@layer defaults {
+  .theme_underline {
+    :global(.input) {
+      display: block;
+      width: 100%;
+      margin: 0;
+      padding-block: var(--form-input-padding-block, #{fluid(10px, 12px)});
+      padding-inline: 0;
+      border: 0;
+      // The comp's rule is full-strength ink (`#131412`), which `--input-border` is on the light theme.
+      border-bottom: var(--button-border-width) solid var(--input-border);
+      border-radius: 0;
+      background-color: transparent;
+      color: var(--fg-default);
+      font-family: inherit;
+      font-size: var(--form-input-font-size, var(--body-xl));
+      font-weight: var(--form-input-font-weight, var(--font-weight-regular));
+      // The comp sets these at `normal` (~1.2); the body's 1.5 would add 8px to every field.
+      line-height: 1.2;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+
+      /*
+       * `--fg-muted` rather than the comp's `#757575`. That grey is 4.2:1 on the off-white page and
+       * stone/500 — the nearest ramp step, and what `--input-fg` points at — is 3.2:1; placeholder
+       * text is still text, and `--fg-muted` is the theme's AA-safe secondary ink (5.6:1).
+       * `opacity: 1` because Firefox dims placeholders by default.
+       */
+      &::placeholder {
+        color: var(--fg-muted);
+        opacity: 1;
+      }
+
+      &:hover,
+      &:focus {
+        border-bottom-color: var(--input-active-border);
+      }
+
+      /*
+       * Invalid: the rule turns red *and* doubles in weight, so the state is a change of shape as
+       * well as hue — and the message beneath it says what is wrong in words. An inset shadow rather
+       * than a thicker border, so the field does not grow a pixel and shift everything below it.
+       */
+      &[aria-invalid='true'] {
+        border-bottom-color: var(--input-error-border);
+        box-shadow: inset 0 -1px 0 var(--input-error-border);
+      }
+    }
+  }
+}

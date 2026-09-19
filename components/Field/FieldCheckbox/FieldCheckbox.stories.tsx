@@ -135,9 +135,9 @@ export const AllSelected: Story = {
 /**
  * The keyboard contract, asserted rather than assumed.
  *
- * This is the reason the input here is `opacity: 0` instead of the `display: none` both sibling
- * field types use: hidden that way it is not in the tab order at all, and neither `FieldRadio` nor
- * `FieldToggle` can be operated without a pointer today.
+ * This is the reason the input here is `opacity: 0` rather than `display: none`: hidden that way it
+ * is not in the tab order at all — which is how `FieldRadio` and `FieldToggle` could not be operated
+ * without a pointer until MAM-1902 rebuilt them on this pattern.
  */
 export const KeyboardOperation: Story = {
   parameters: { formDefaults: {} },

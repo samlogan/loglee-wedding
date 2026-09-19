@@ -23,7 +23,7 @@ interface IRsvpDocument {
   submittedAt?: string;
   roomPreference?: string;
   kidsCount?: number;
-  kidsAges?: number[];
+  kidsAges?: string;
 }
 
 // Written by the RSVP server action with a server-only write token, never by hand, so the whole
@@ -126,13 +126,17 @@ const rsvp = defineType({
       type: `number`,
       validation: (Rule) => Rule.min(0)
     },
+    /*
+     * One string for all of a guest's children, as the form asks for it — not a number per child.
+     * Guests write "2 and 5", "18 months" or "newborn and 4", and a parse into `number[]` would drop
+     * exactly the answers the nannies most need. Changed in MAM-1902, before any reply was stored.
+     */
     {
-      description: 'One entry per child, used to plan the nannies.',
+      description: 'As the guest wrote it — one line for all their children, e.g. "2 and 5". Used to plan the nannies.',
       group: 'stay',
       name: `kidsAges`,
-      of: [{ type: 'number' }],
       title: `Kids' Ages`,
-      type: `array`
+      type: `string`
     }
   ],
   groups: [
