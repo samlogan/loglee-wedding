@@ -35,6 +35,7 @@ import { closingCtaSection } from './sections/closingCtaSection';
 import { faqSection } from './sections/faqSection';
 import { headerDisplaySection } from './sections/headerDisplaySection';
 import { heroSection } from './sections/heroSection';
+import { mapSection } from './sections/mapSection';
 import { mediaCardGridSection } from './sections/mediaCardGridSection';
 import { mediaTagsSection } from './sections/mediaTagsSection';
 import { numberedGridSection } from './sections/numberedGridSection';
@@ -92,6 +93,7 @@ const schema: SchemaTypeDefinition[] = [
   faqSection,
   headerDisplaySection,
   heroSection,
+  mapSection,
   mediaCardGridSection,
   mediaTagsSection,
   numberedGridSection,

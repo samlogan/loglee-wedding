@@ -6,6 +6,7 @@ export const pageSections = [
   { type: 'faqSection' },
   { type: 'headerDisplaySection' },
   { type: 'heroSection' },
+  { type: 'mapSection' },
   { type: 'mediaCardGridSection' },
   { type: 'mediaTagsSection' },
   { type: 'numberedGridSection' },
