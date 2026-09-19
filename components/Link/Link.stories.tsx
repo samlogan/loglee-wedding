@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { expect } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 
 import Link from '.';
 
@@ -260,5 +260,51 @@ export const NoDestination: Story = {
     const styles = getComputedStyle(span);
     await expect(styles.pointerEvents).toBe('none');
     await expect(styles.textDecorationLine).toBe('none');
+  }
+};
+
+/**
+ * An off-site link opens in a new tab, and says so to a screen reader: "(opens in a new tab)" joins
+ * its accessible name without showing on screen.
+ */
+export const External: Story = {
+  args: { externalLink: 'https://thelodgejamberoo.com.au/', linkType: 'external', text: 'The Lodge' },
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole('link');
+
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link.getAttribute('rel')).toContain('noreferrer');
+    await expect(link).toHaveAccessibleName('The Lodge (opens in a new tab)');
+    await expect(link).toHaveTextContent(/^The Lodge/);
+  }
+};
+
+/** Content rather than `text`: the note is hidden text inside the link instead. */
+export const ExternalWithChildren: Story = {
+  args: { children: 'Open in maps', externalLink: 'https://maps.google.com/', linkType: 'external', text: undefined },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('link')).toHaveAccessibleName('Open in maps (opens in a new tab)');
+  }
+};
+
+/** A caller that asks for the same tab gets it, and no note. */
+export const ExternalSameTab: Story = {
+  args: { externalLink: 'https://thelodgejamberoo.com.au/', linkType: 'external', target: '_self', text: 'The Lodge' },
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole('link');
+
+    await expect(link).toHaveAttribute('target', '_self');
+    await expect(link).toHaveAccessibleName('The Lodge');
+  }
+};
+
+/** Internal links stay in the same tab. */
+export const Internal: Story = {
+  args: { href: '/stay/', text: 'Stay' },
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole('link');
+
+    await expect(link).not.toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAccessibleName('Stay');
   }
 };
