@@ -39,7 +39,12 @@
     margin: 0;
     padding: 0;
     border: 0;
-    border-radius: var(--radius-sm);
+    /*
+     * Square on the side facing the value, and on the outer side the stepper's own radius less its
+     * rule — the curve of the box's *inner* edge. With one radius all round, the hover fill's outer
+     * corners were tighter than the box's and poked into its rounded corners.
+     */
+    border-radius: 0;
     background-color: transparent;
     color: var(--fg-default);
     @include mono-font();
@@ -47,6 +52,16 @@
     font-weight: var(--font-weight-medium);
     line-height: 1;
     cursor: pointer;
+
+    &:first-child {
+      border-start-start-radius: calc(var(--radius-md) - var(--button-border-width));
+      border-end-start-radius: calc(var(--radius-md) - var(--button-border-width));
+    }
+
+    &:last-of-type {
+      border-start-end-radius: calc(var(--radius-md) - var(--button-border-width));
+      border-end-end-radius: calc(var(--radius-md) - var(--button-border-width));
+    }
 
     &:hover:not([aria-disabled='true']) {
       background-color: var(--bg-accent);
