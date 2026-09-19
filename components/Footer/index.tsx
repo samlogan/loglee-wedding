@@ -101,7 +101,7 @@ const Footer = (props: FooterProps) => {
           <Logo className={styles.wordmark} />
 
           {Boolean(navItems?.length) && (
-            <nav aria-label="Footer">
+            <nav aria-label="Footer" className={styles.nav}>
               {/*
                * `role="list"` is not redundant here. The global reset sets `list-style-type: none`
                * on every `ul`, and WebKit deliberately strips the `list` role from an unstyled list
