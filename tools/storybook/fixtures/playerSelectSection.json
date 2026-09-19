@@ -1,12 +1,12 @@
 {
   "_key": "home-players",
   "_type": "playerSelectSection",
-  "caption": "3D canvas (react three fiber) · idle loop",
+  "caption": "Meet the bride and groom",
   "players": [
     {
       "_id": "player-sam",
       "clips": {
-        "hover": "FunnyDancing_03",
+        "hover": "Agree_Gesture",
         "idle": "Walking"
       },
       "fallbackImage": null,
