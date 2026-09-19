@@ -28,7 +28,32 @@ interface IMediaSection extends IAspectRatioFields {
   autoPlay?: boolean | null;
 }
 
-const isVideo = ({ parent }: { parent?: { mediaType?: string } }) => parent?.mediaType === 'video';
+const isVideo = (context: { parent?: unknown }) =>
+  (context.parent as { mediaType?: string } | undefined)?.mediaType === 'video';
+
+/*
+ * The two field validators below are exported for their unit test only — `export const`, not names
+ * in the `export { … }` list at the foot, which is where `yarn sections:register` looks for sub-types
+ * it would have to warn about.
+ */
+
+/** An image section needs an image. A video section does not, even with one left in the document. */
+export const validateMediaImage = (value: unknown, context: { parent?: unknown }): true | string =>
+  isVideo(context) || value ? true : 'Add an image, or switch to video.';
+
+/**
+ * A video section needs a link the player can play — YouTube or Vimeo. An image section ignores
+ * whatever is left in the field, which the projection does not fetch anyway.
+ */
+export const validateVideoUrl = (value: unknown, context: { parent?: unknown }): true | string => {
+  if (!isVideo(context)) {
+    return true;
+  }
+  if (typeof value !== 'string' || !value.trim()) {
+    return 'Add a YouTube or Vimeo link, or switch to image.';
+  }
+  return detectVideoPlatform(value) === 'unknown' ? 'Only YouTube and Vimeo links are supported.' : true;
+};
 
 const mediaSection = defineType({
   fields: [
@@ -65,10 +90,7 @@ const mediaSection = defineType({
       name: 'image',
       title: 'Image',
       type: 'imageElementSimple',
-      validation: (Rule) =>
-        Rule.custom((value, context) =>
-          isVideo(context as { parent?: { mediaType?: string } }) || value ? true : 'Add an image, or switch to video.'
-        )
+      validation: (Rule) => Rule.custom(validateMediaImage)
     },
     {
       description: 'A YouTube or Vimeo link — the address bar, the share link or an embed link all work.',
@@ -77,18 +99,7 @@ const mediaSection = defineType({
       name: 'videoUrl',
       title: 'Video URL',
       type: 'url',
-      validation: (Rule) =>
-        Rule.custom((value, context) => {
-          if (!isVideo(context as { parent?: { mediaType?: string } })) {
-            return true;
-          }
-          if (!value) {
-            return 'Add a YouTube or Vimeo link, or switch to image.';
-          }
-          return detectVideoPlatform(String(value)) === 'unknown'
-            ? 'Only YouTube and Vimeo links are supported.'
-            : true;
-        })
+      validation: (Rule) => Rule.custom(validateVideoUrl)
     },
     {
       description:
