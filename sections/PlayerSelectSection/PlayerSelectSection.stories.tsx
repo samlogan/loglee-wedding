@@ -252,12 +252,21 @@ export const Default: Story = {
 };
 
 /**
- * Desktop: two cards centred, each arch at the drawn 230 × 418 (node 1:85).
+ * The arch's width on a desktop: `--player-select-arch-max` in the stylesheet.
+ *
+ * The comp draws 230 × 418 (node 1:85). The client asked for the characters at least 360px wide, so
+ * the cap moved, and the arch's other measurements follow the stylesheet's own lines through the two
+ * comps rather than any drawn number: height `1.76W + 13.2`, foot radius `8%W + 5.6`, hatch bar
+ * `2%W + 5.4`. At the comp's 230 those give back its 418, 24 and 10.
+ */
+const DESKTOP_ARCH = 360;
+
+/**
+ * Desktop: two cards centred, each arch at its 360px cap.
  *
  * A 1280px window, the design's desktop frame. At that width a card has more room than it needs, so
- * the arch sits at its cap — which is what makes the comp's exact numbers assertable here. The gap
- * between the cards is `fluid()`'s value at 1280 rather than the comp's 120, which the scale reaches
- * at its 1440 anchor.
+ * the arch sits at its cap, which is what makes the numbers assertable here. The gap between the cards
+ * is `fluid()`'s value at 1280 rather than the comp's 120, which the scale reaches at its 1440 anchor.
  */
 export const Desktop: Story = {
   args: MOCK,
@@ -270,19 +279,24 @@ export const Desktop: Story = {
 
     for (const card of cards) {
       const arch = archOf(card).getBoundingClientRect();
-      await expect(arch.width).toBeCloseTo(230, 0);
-      await expect(arch.height).toBeCloseTo(418, 0);
-      // The foot radius, which the player page draws at 28px and this comp at 24.
-      await expect(parseFloat(getComputedStyle(archOf(card)).borderBottomLeftRadius)).toBeCloseTo(24, 1);
+      await expect(arch.width).toBeCloseTo(DESKTOP_ARCH, 0);
+      await expect(arch.height).toBeCloseTo(1.76 * DESKTOP_ARCH + 13.2, 0);
+      // The foot radius. The player page draws it at 28px; this comp's line gives 24 at 230.
+      await expect(parseFloat(getComputedStyle(archOf(card)).borderBottomLeftRadius)).toBeCloseTo(
+        0.08 * DESKTOP_ARCH + 5.6,
+        1
+      );
 
       /*
-       * The hatch the placeholder actually draws: 10px bars at this arch (1:85), where the viewer's own
-       * default would give ~6.6px. `--viewer-hatch-step` is a local of the viewer's rather than a hook,
-       * so this is what fails if it is renamed. Read from the gradient's resolved stops — `0 10 10 20`.
+       * The hatch the placeholder actually draws: the section's own bar (10px on the comp's 230px arch,
+       * 1:85), where the viewer's default would be narrower. `--viewer-hatch-step` is a local of the
+       * viewer's rather than a hook, so this is what fails if it is renamed. Read from the gradient's
+       * resolved stops, `0 bar bar 2×bar`.
        */
+      const bar = 0.02 * DESKTOP_ARCH + 5.4;
       const hatch = getComputedStyle(viewerOf(card).querySelector('[role="img"]') as HTMLElement).backgroundImage;
       const stops = [...hatch.matchAll(/([\d.]+)px/g)].map(([, px]) => Math.round(parseFloat(px)));
-      await expect(stops).toEqual([0, 10, 10, 20]);
+      await expect(stops).toEqual([0, bar, bar, 2 * bar].map(Math.round));
     }
 
     // Centred as a pair: the space either side of them is the same.
