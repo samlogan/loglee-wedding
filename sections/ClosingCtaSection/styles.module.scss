@@ -1,0 +1,197 @@
+/*
+ * The home page's closing block — the intro on the left, the actions on the right, both sitting on one
+ * bottom edge (Figma nodes 1:71 desktop, 1:119 mobile).
+ *
+ * ## Two switches, and they are different kinds on purpose
+ *
+ * **The row** is a container query on the section's own content box, like every other section's
+ * reflow. Whether the intro and the actions fit side by side is a question about the space the section
+ * has, and keying it to the container is what lets a story reach the stacked layout in a narrow column
+ * without owning the window. `rem`, because this branch only reflows: per the register at the head of
+ * `tools/sass/base/__media.scss`, a switch that removes nothing may arrive early for a reader with
+ * larger text, and should.
+ *
+ * **The phone treatment** — the RSVP action alone and full width — is `media-down(tablet)`: the mixin
+ * and the named breakpoint `Button`'s `fullWidthMobile` stretches the RSVP action at. The ticket asks
+ * for that prop, and the two halves of the treatment are one decision, so they name the same entry in
+ * the breakpoint map — the secondary action leaves at the width the RSVP action starts spanning the
+ * column. They are still two rules in two stylesheets, so the agreement is pinned by a test rather
+ * than assumed: the `PhoneEdge` and `TabletEdge` stories sit either side of the breakpoint and fail if
+ * one half moves without the other. A container query here would have to be tuned by arithmetic to
+ * land on the viewport width `fullWidthMobile` switches at, and would drift the day either moved.
+ *
+ * It is also the half that *hides* something, which the register says must not move with text size
+ * alone, and a `px` viewport query does not: enlarging only the text stacks the row and keeps both
+ * actions (WCAG 1.4.4). Browser zoom is different — it narrows the viewport in CSS pixels, so a
+ * 1280px window at about 175% crosses the breakpoint and loses the secondary action like a phone
+ * does. That is acceptable only because it is never the section's one way onward: it is hidden only
+ * beside an RSVP action, and the Studio asks for it to point at a page the navigation also reaches
+ * (WCAG 1.4.10).
+ *
+ * The cost of a viewport query is that it needs a real viewport to test, so those stories and
+ * `Mobile` set one through the viewport global, which `@storybook/addon-vitest` applies to the test
+ * browser.
+ *
+ * Between the two, on a tablet, the intro sits above both actions.
+ *
+ * ## The switch
+ *
+ * 60rem (960px) of content box, measured against what the row has to hold at the comp's own sizes: the
+ * intro's 520px measure, the drawn 100px between the columns, and ~340px of actions with the published
+ * "RSVP by 11 December". From here up the row carries the design's composition without squeezing the
+ * intro; in the app that is a ~1025px window, the `large-tablet` breakpoint. Local to this module, per
+ * the `$<owner>-inline-switch` convention.
+ */
+$closing-cta-inline-switch: 60rem;
+
+@layer defaults {
+  /*
+   * **A token re-point, not a hand-written padding** — the idiom `SpecCardGridSection` sets out.
+   *
+   * The band is drawn 30.7px below the section above it and 40px above the foot of the page at 390
+   * (node 1:119), and 55.2px and 64px at 1280 (node 1:71). No step on the section-spacing scale carries
+   * either ramp: the nearest, `md` above and `lg` below, miss by 6px on the phone and 10px on the
+   * desktop respectively, because the scale's narrow anchors were inherited from the pre-fluid stepped
+   * scale rather than measured from the comps.
+   *
+   * So `index.tsx` keeps choosing those two steps through `Section`'s `spacing` prop — the nearest stock
+   * values if this rule ever goes — and this re-points what each step reads, on the element that reads
+   * it. The prop stays the mechanism and the editor's remove-spacing toggles still swap the classes.
+   *
+   * Anchored on the drawn numbers, following the repo's convention for fluid values: exact at 390 and
+   * at the 1440 anchor, and ~4px under the drawn value at 1280 (51.4 against 55.2, 60.4 against 64).
+   * Nothing inside this section reads a `--section-spacing-*` token, so declaring it on the root
+   * re-points nothing else.
+   *
+   * TODO(design review): this is a local fork of the section-spacing scale, the second after
+   * `SpecCardGridSection`'s. The fix at source is re-measuring the scale's narrow anchors from the comps,
+   * the way `--container-gutter` was; when that lands, delete this rule and keep the `spacing` prop.
+   */
+  .section {
+    --section-spacing-md: #{fluid(31px, 55px)};
+    --section-spacing-lg: #{fluid(40px, 64px)};
+  }
+
+  /*
+   * The query container is `Section`'s own `Container`, via `containerClassName`, so the queried size
+   * is the content width — frame minus gutters — that the comp measures its columns in.
+   *
+   * `inline-size`, not `size`: the width comes from the page and the height from the content. The
+   * known cost, which the sibling sections document, is that an inline-size container collapses inside
+   * a shrink-to-fit ancestor; sections render as block children of `<main>` and of a plain `<div>` in
+   * Storybook, so neither applies.
+   */
+  .container {
+    container: closingCta / inline-size;
+  }
+
+  .row {
+    display: flex;
+    /*
+     * Stacked is the unconditional default and the row the addition. A container query cannot be
+     * evaluated before its container has been laid out, so the first style pass matches neither
+     * branch — and this way that frame paints the stacked block rather than an unstyled one.
+     */
+    flex-direction: column;
+    // 20px between the intro and the action on the phone frame (node 1:120 ends at 126.7, node 1:122
+    // starts at 146.7). `--spacing-lg` is the nearer step above it, fixed per the scale's rule below
+    // the 32px cutoff; `--spacing-md` is as far below.
+    gap: var(--spacing-lg);
+
+    @container closingCta (width >= #{$closing-cta-inline-switch}) {
+      /*
+       * `flex-end` is the composition: the actions hang off the intro's last line rather than its
+       * first. Figma sets `items-end` on node 1:71, and the pills' bottom edge meets the paragraph's
+       * at y = 145.2 to the pixel.
+       */
+      align-items: flex-end;
+      flex-direction: row;
+      /*
+       * The floor between the columns, not the gap the eye sees. The comp draws 100px between a 520px
+       * intro column and a 580px actions column that right-aligns 315px of buttons, so on the frame
+       * the visible space is ~400px, and here it comes from the actions' `margin-inline-start: auto`,
+       * which takes all the free space. This only binds just above the switch, where it keeps the
+       * intro off the buttons; `--spacing-3xl` is the layout-gap step.
+       */
+      column-gap: var(--spacing-3xl);
+    }
+  }
+
+  /*
+   * The paragraph column — `TextBlock`'s own wrapper, so there is no extra element for it.
+   *
+   * `32.5rem` is the comp's measure for this paragraph (node 1:72, `max-w-[520px]`), and it is a
+   * *measure* — a line length — rather than a content-width cap, which is why it is not a
+   * `--container-*` token: the nearest, `--container-xs` at 640px, sets the comp's three lines in two.
+   * The same kind of value as `FaqSection`'s answer measure. `rem` rather than the comp's `px` so the
+   * line keeps its length in characters for a reader who has raised their text size.
+   *
+   * It applies stacked as well as in the row: on a phone the column is narrower than the measure and it
+   * does nothing; on a tablet it stops the paragraph running the full width of the page.
+   *
+   * `min-inline-size: 0` so the row can shrink it below its longest word's width rather than pushing
+   * the actions out of the container.
+   */
+  .intro {
+    max-inline-size: 32.5rem;
+    min-inline-size: 0;
+  }
+
+  /*
+   * The lede's type, re-pointed rather than re-declared — the rule `HeaderDisplaySection.ledeText`
+   * sets out, applied to the paragraph that rule's tokens were measured from.
+   *
+   * `Text` writes `font-size` and `line-height` onto the paragraph through `.variant_body.size_2xl`, at
+   * a specificity one class in this module cannot beat. Setting the two custom properties those
+   * declarations read, on the same element, re-points them instead: `--body-lede` is fluid(17px, 22px)
+   * on fluid(23.8px, 29.7px) — the comp's 17/23.8 on the phone and its 22/29.7 at the 1440 anchor,
+   * landing on 21.25/28.8 at the 1280 frame the desktop comp is drawn in.
+   *
+   * `text-wrap: pretty` because a lede this short is where a one-word last line shows most. With the
+   * default greedy breaking the phone comp's "…Everyone stays / on site." renders as "…Everyone stays
+   * on / site." at 390 and 414; `pretty` balances the last lines and reproduces the comp's breaks at
+   * both, and leaves the desktop's three lines as drawn. A browser without it keeps greedy breaking.
+   */
+  .ledeText {
+    --body-2xl: var(--body-lede);
+    --body-line-height: var(--body-lede-line-height);
+
+    text-wrap: pretty;
+  }
+
+  .actions {
+    display: flex;
+    // Wraps rather than overflowing if two long labels meet a narrow column; 12px between the pills
+    // (node 1:74's `gap-[11.99px]`), fixed per the scale.
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+
+    @container closingCta (width >= #{$closing-cta-inline-switch}) {
+      // Against the right edge: the auto margin takes all the row's free space, with or without an
+      // intro beside it. Right-aligned if they wrap — the comp's `justify-end` on node 1:74.
+      justify-content: flex-end;
+      margin-inline-start: auto;
+    }
+  }
+
+  /*
+   * The phone drops the secondary action (node 1:119 draws the RSVP action alone), hidden from the same
+   * field below the breakpoint rather than authored as a mobile-only variant. `index.tsx` applies it
+   * only beside an RSVP action, so the wrapper is never left holding nothing. See the head of this file
+   * for why this one is a viewport query.
+   *
+   * Qualified with `.actions` on purpose. The class lands on `Link`'s own element, whose `.button` rule
+   * sets `display: inline-flex` — one class against one class, both in `@layer defaults`, would be won
+   * by whichever CSS module happened to be emitted later, which nothing guarantees and which differs
+   * between Next and Storybook. Two classes win outright.
+   *
+   * `display: none` takes it out of the accessibility tree and the tab order as well as off the page,
+   * and a flex container's `gap` does not open around an item that is not rendered, so the RSVP action
+   * is left alone with no orphaned space beside it.
+   */
+  .actions .phoneHidden {
+    @include media-down(tablet) {
+      display: none;
+    }
+  }
+}
