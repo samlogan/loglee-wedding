@@ -96,7 +96,7 @@ const HeaderNavigationMobile = (props: HeaderNavigationMobileProps) => {
           theme="accent"
           variant="ui"
         >
-          {action.longLabel}
+          {action.label}
         </Link>
       )}
     </div>

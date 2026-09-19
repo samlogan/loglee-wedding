@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import type { CSSProperties, FC } from 'react';
 
 import Section from '@/components/Section';
 import Text from '@/components/Text';
@@ -6,6 +6,7 @@ import TextBlock from '@/components/TextBlock';
 import TextTitle from '@/components/TextTitle';
 import classNames from '@/helpers/classNames';
 import hasBlockContent from '@/helpers/hasBlockContent';
+import longestWordLength from '@/helpers/longestWordLength';
 import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section';
 import type { IHeaderDisplaySection } from '@/tools/sanity/schema/sections/headerDisplaySection';
 
@@ -30,6 +31,11 @@ const HeaderDisplaySection: FC<IHeaderDisplaySection> = (props) => {
    */
   const hasLede = hasBlockContent(content);
   const hasMeta = Boolean(metaItems?.length);
+  /*
+   * The longest word in the title, for the stylesheet's size cap on `.heading` — so a word too wide
+   * for its column shrinks the heading rather than breaking mid-word ("WEEKEN / D").
+   */
+  const headingWordChars = longestWordLength(title);
 
   return (
     <Section
@@ -55,7 +61,10 @@ const HeaderDisplaySection: FC<IHeaderDisplaySection> = (props) => {
        */
       spacing="sm"
     >
-      <div className={classNames(styles.row, { [styles.row_split]: hasLede })}>
+      <div
+        className={classNames(styles.row, { [styles.row_split]: hasLede })}
+        style={{ '--heading-word-chars': headingWordChars || 1 } as CSSProperties}
+      >
         {/*
          * `as="h1"` is forced rather than taken from the editor's choice in the TitleInput. This
          * section is the top of Planner, Stay and The Lodge, and the heading has to be each page's

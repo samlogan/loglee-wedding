@@ -11,7 +11,12 @@ body {
   text-rendering: optimizeLegibility;
   font-smoothing: antialiased;
   text-shadow: 0 0 1px transparent;
-  background: white; // Needed for presentation iframe for some reason
+  /*
+   * The page's own surface, so the area below a short page's footer — and the overscroll bounce —
+   * is the theme rather than white. `<html>` carries `data-theme`, so the token resolves here. An
+   * opaque colour still covers the Studio's Presentation iframe, which is what `white` was for.
+   */
+  background: var(--bg-default);
 }
 
 // --------------------------------------------------------------------------

@@ -5,57 +5,21 @@
  * Drawn four times — the dress-code band on Planner (nodes 1:426 desktop, 1:566 mobile) and the
  * contribution band on Stay (1:669, 1:737).
  *
- * ## One panel treatment, and where it departs from the file
+ * ## One band treatment: full-bleed
  *
- * The two bands are drawn differently in Figma and this renders them the same way, so state the
- * divergence rather than let a design review discover it:
+ * The two bands are drawn differently in Figma. Stay (1:669) is an inset rounded panel one container
+ * gutter in from each side; Planner (1:426) is a full-bleed band, no radius. This renders both as
+ * Planner's band: `Section` carries the band's theme and paints it edge to edge, and the content sits
+ * on the page's grid inside `Section`'s `Container`. It was Stay's inset panel until design asked for
+ * the green to fill the width of the screen.
  *
- *   Stay (1:669)     x = -959, w = 1200 inside a 1280 frame — one container gutter in on each side —
- *                    `rounded-[8px]`, no stroke. An inset panel.
- *   Planner (1:426)  x = -999, w = 1280 — the full frame — no radius, 1px `#131412` top rule. A
- *                    full-bleed band.
- *
- * Planner's treatment is page composition rather than section design. Three things say so, and the
- * design review that went looking for a fourth found none:
- *
- *   1. **The rule is desktop-only.** 1:426 draws it; 1:566, the same band one breakpoint down, draws
- *      no rule and no stroke at all. A treatment the section owns does not evaporate at 390px.
- *   2. **It is the page's chrome, shared verbatim.** The rule, `pt-[41px] pb-[40px] px-[40px]` and
- *      `gap-[40px]` on 1:426 are identical — value for value, and under the same `HorizontalBorder`
- *      frame name — to `ScheduleSection`'s band (1:312) higher up the same page. A sibling section
- *      already renders that band without owning the rule.
- *   3. **On mobile the two frames are the same content box.** Planner's 390-wide band pads `px-20`,
- *      which is `--container-gutter`'s narrow anchor, leaving 350px; Stay's inset panel *is* 350px
- *      wide (1:737 is x=21 w=350 in the same 390 frame). At that width the only difference between
- *      the two is whether the green runs into the gutter and whether the corners are round — a
- *      surface decision taken at the page, not a different section.
- *
- * The ticket specifies the inset rounded panel, and the `variant` field exists to switch *what the
- * right column holds*; making it also switch the panel's geometry would give one control two
- * unrelated jobs. So both render as Stay draws it.
- *
- * State the cost rather than bury it: on Planner the columns come out ~540px at a 1280px viewport
- * against the drawn 580px, and on mobile the content box is ~302px at 375px against the drawn 350px,
- * because the unified treatment spends the page gutter *and* the panel's own padding where the
- * full-bleed band spends only the gutter. Nothing the design draws stops fitting — the four list
- * items and the two-line statement all hold — but the band reads tighter than the comp.
- *
- * The rule goes with the treatment it belongs to, so nothing here draws it — and that is the one
- * drawn element this section does not reproduce. On Planner desktop the join between
- * `ScheduleSection`'s last day band and this one loses a 1px `#131412` line the comp draws (the
- * three joins above it keep theirs, because `ScheduleSection.day` draws its own `border-top`).
- * Putting it back coherently is not a one-liner: on `.panel` it would cut across a rounded corner,
- * and on `Section` it would be a full-bleed line above an inset panel, drawn on Stay where the comp
- * has none unless it is gated on `variant` — which is the second job for one control this whole
- * decision refuses. If design wants the line, it wants the band.
- *
- * Reverting to Planner's band for the `list` variant is a modifier class and a `full` on `Section`,
- * if design review prefers it.
+ * What it still does not draw is Planner's 1px `#131412` top rule on desktop — a line the mobile frame
+ * omits, so it belongs to the page's composition rather than to this section.
  *
  * ## Nothing here names a colour
  *
- * The panel carries `data-theme` (see index.tsx for why it is on the panel and not on `Section`), so
- * every colour below resolves through the theme block in `tools/sass/global/_variables.scss`.
+ * `Section` carries the band's `data-theme` (see index.tsx), so every colour below resolves through
+ * the theme block in `tools/sass/global/_variables.scss`.
  * `--bg-default` on the dark theme is `--pine-600` = #1e4632, which is the drawn fill, and
  * `--fg-default` is `--stone-50` = #f3f1ea, which is the drawn *fill* on all fourteen text nodes
  * across the four frames — fill, not rendered colour: seven of the fourteen sit in a frame Figma
@@ -135,27 +99,21 @@ $two-column-list-inline-switch: 48rem;
 $two-column-list-body-measure: 27.5rem;
 
 @layer defaults {
+  /*
+   * The band's content box. The fill is `Section`'s — full-bleed, see `index.tsx` — so this carries
+   * only the container query and the vertical rhythm; the page gutter comes from `Section`'s
+   * `Container`, which keeps the columns on the page's grid.
+   *
+   * 40px desktop and 24px mobile, a measured pair rather than a `--section-spacing-*` step, because
+   * this is the section's entire vertical rhythm — `spacing="none"` on `Section` — and no step on
+   * that scale carries 24 → 40. Planner's band draws 41/40 desktop and 28/32 mobile; the pair is
+   * within a pixel at the wide end and a few short at the narrow one.
+   */
   .panel {
     container: twoColumnList / inline-size;
 
-    background-color: var(--bg-default);
-    // 8px on both frames (1:669, 1:737) — `--radius-md` exactly, no rounding.
-    border-radius: var(--radius-md);
     color: var(--fg-default);
-    /*
-     * 40px desktop and 24px mobile, one fluid pair covering all four frames: Stay sets 40 and 24
-     * flat, Planner sets 41/40/40/40 and 28/20/32/20 — where its horizontal 20 is the *page* gutter
-     * rather than panel padding, because that band is full-bleed. Two drawn values this misses, both
-     * on Planner mobile and both in the same direction: its 28px top (−4px) and its 32px bottom
-     * (−8px). Accepted rather than chased, because they are the one frame of the four that is
-     * full-bleed — that band pays its vertical padding where the other three pay a page gutter plus
-     * panel padding, so matching it would over-pad the inset panel this renders. The three inset
-     * values (Stay 40/24, Planner desktop 40) are exact.
-     *
-     * A measured pair rather than a `--section-spacing-*` step, because this is the section's entire
-     * vertical rhythm — `spacing="none"` on `Section` — and no step on that scale carries 24 → 40.
-     */
-    padding: #{fluid(24px, 40px)};
+    padding-block: #{fluid(24px, 40px)};
   }
 
   .inner {

@@ -157,7 +157,7 @@ const trackCount = (element: Element) => getComputedStyle(element).gridTemplateC
 /**
  * The comp's card at the comp's width.
  *
- * Pins the two-column grid, the full-width closer, the body-face swap on its value, and the rule
+ * Pins the two-column grid, the full-width closer (in the same face as the other values), and the rule
  * between the bands — everything the desktop frame states.
  */
 export const Default: Story = {
@@ -219,26 +219,15 @@ export const Default: Story = {
       await expect(getComputedStyle(closer).borderBottomStyle).toBe('none');
 
       /*
-       * The closer's value is the one set in the body face rather than the mono. Compared against a
-       * sibling rather than against a family name, so it holds whichever fonts are loaded — and
-       * both sides resolve through `--body-font` / `--mono-font`, which `next/font` sets on `<body>`,
-       * so this is polled like everything else that reads a custom property.
+       * The closer's value is in the same mono face and size as every other value — it used to be
+       * the one body-face run, and the couple asked for it to match. Compared against a sibling
+       * rather than a family name, so it holds whichever fonts are loaded.
        */
-      const closerValue = getComputedStyle(closer.querySelector('dd') as HTMLElement).fontFamily;
-      const ordinaryValue = getComputedStyle(ordinary.querySelector('dd') as HTMLElement).fontFamily;
-      await expect(closerValue).not.toBe('');
-      await expect(closerValue).not.toBe(ordinaryValue);
-
-      /*
-       * …and the *size* swaps with it. Asserted on the `<Text>` inside the `<dd>` rather than on the
-       * `<dd>`, because that is where the step now lives: the stylesheet states only the family, so
-       * reading the block would report the mono size it inherits and pass whatever `Text` did.
-       * Compared against the ordinary cell rather than against `16px`, so it survives a retune of
-       * `--body-md` and still fails if the prop is dropped.
-       */
-      const closerStep = getComputedStyle(closer.querySelector('dd > *') as HTMLElement).fontSize;
-      await expect(closerStep).not.toBe('');
-      await expect(closerStep).not.toBe(getComputedStyle(ordinary.querySelector('dd') as HTMLElement).fontSize);
+      const closerValue = getComputedStyle(closer.querySelector('dd') as HTMLElement);
+      const ordinaryValue = getComputedStyle(ordinary.querySelector('dd') as HTMLElement);
+      await expect(closerValue.fontFamily).not.toBe('');
+      await expect(closerValue.fontFamily).toBe(ordinaryValue.fontFamily);
+      await expect(closerValue.fontSize).toBe(ordinaryValue.fontSize);
     });
 
     /*

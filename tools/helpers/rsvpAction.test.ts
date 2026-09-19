@@ -38,29 +38,23 @@ describe('resolveRsvpAction', () => {
     expect(resolveRsvpAction({ addButton: true, rsvpLabel: 'RSVP by 11 December' })).toBeUndefined();
   });
 
-  it('reads the reply-by line long and the action label short, and passes the link through', () => {
+  it("reads the action's own label rather than the reply-by line, and passes the link through", () => {
     const fields: RsvpActionFields = { addButton: true, button: button('RSVP'), rsvpLabel: 'RSVP by 11 December' };
 
-    expect(resolveRsvpAction(fields)).toEqual({
-      link: RSVP_LINK,
-      longLabel: 'RSVP by 11 December',
-      shortLabel: 'RSVP'
-    });
+    // The date is off the buttons: "RSVP", not "RSVP by 11 December".
+    expect(resolveRsvpAction(fields)).toEqual({ label: 'RSVP', link: RSVP_LINK });
     // The same object, not a copy: `Link` is handed exactly what the projection returned.
     expect(resolveRsvpAction(fields)?.link).toBe(RSVP_LINK);
   });
 
   it.each([null, undefined, '', '   '])('falls back to the action label when the reply-by line is %j', (rsvpLabel) => {
-    expect(resolveRsvpAction({ addButton: true, button: button('RSVP'), rsvpLabel })).toMatchObject({
-      longLabel: 'RSVP',
-      shortLabel: 'RSVP'
-    });
+    expect(resolveRsvpAction({ addButton: true, button: button('RSVP'), rsvpLabel })).toMatchObject({ label: 'RSVP' });
   });
 
   it.each([null, '', '   '])('falls back to the reply-by line when the action label is %j', (label) => {
     expect(
       resolveRsvpAction({ addButton: true, button: button(label), rsvpLabel: 'RSVP by 11 December' })
-    ).toMatchObject({ longLabel: 'RSVP by 11 December', shortLabel: 'RSVP by 11 December' });
+    ).toMatchObject({ label: 'RSVP by 11 December' });
   });
 
   it('is undefined when both labels are blank — no empty pill', () => {
@@ -76,42 +70,14 @@ describe('resolveRsvpAction', () => {
     expect(stegaClean(encoded)).toBe(blank);
 
     expect(resolveRsvpAction({ addButton: true, button: button('RSVP'), rsvpLabel: encoded })).toMatchObject({
-      longLabel: 'RSVP',
-      shortLabel: 'RSVP'
+      label: 'RSVP'
     });
   });
 
-  it('returns an encoded reply-by line as it arrived, so the overlay can still find its field', () => {
+  it('returns an encoded reply-by line as it arrived when it is the fallback, so the overlay can still find its field', () => {
     const encoded = encodeStega('RSVP by 11 December', RSVP_LABEL);
 
     expect(encoded).not.toBe('RSVP by 11 December');
-    expect(resolveRsvpAction({ addButton: true, button: button('RSVP'), rsvpLabel: encoded })?.longLabel).toBe(encoded);
-  });
-
-  /*
-   * The header drew its action from these three expressions before this helper existed. Pinned here,
-   * across every combination of the three fields without whitespace or stega in them, so the move
-   * onto the helper provably changed nothing the header renders — the pill, both of its spans, and
-   * the menu's full-width action. Whitespace and stega are the deliberate difference, tested above.
-   */
-  describe('matches what the header computed inline before it', () => {
-    const inline = ({ addButton, button: rawButton, rsvpLabel }: RsvpActionFields) => {
-      const action = addButton ? rawButton : undefined;
-      const longLabel = rsvpLabel || action?.label;
-      const shortLabel = action?.label || rsvpLabel;
-      return action && longLabel ? { longLabel, shortLabel } : undefined;
-    };
-
-    const cases = [true, false, null].flatMap((addButton) =>
-      [undefined, button('RSVP'), button(''), button(null)].flatMap((rawButton) =>
-        [undefined, null, '', 'RSVP by 11 December'].map((rsvpLabel) => ({ addButton, button: rawButton, rsvpLabel }))
-      )
-    );
-
-    it.each(cases)('$addButton / $button.label / $rsvpLabel', (fields) => {
-      const resolved = resolveRsvpAction(fields);
-
-      expect(resolved && { longLabel: resolved.longLabel, shortLabel: resolved.shortLabel }).toEqual(inline(fields));
-    });
+    expect(resolveRsvpAction({ addButton: true, button: button(''), rsvpLabel: encoded })?.label).toBe(encoded);
   });
 });

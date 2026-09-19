@@ -369,4 +369,62 @@
      */
     font-size: var(--body-xs);
   }
+
+  /*
+   * ## A linked card
+   *
+   * The title is the link, and its `::after` is stretched over the whole card — the "stretched link"
+   * pattern. One link in the tab order and the accessibility tree, named for the card; a click
+   * anywhere on it lands on that link. `.card` is its containing block, which is why `.linked`
+   * positions it.
+   *
+   * The link is a `components/Link`, so it carries the shared button surface's base class, and that
+   * sets three things this has to undo: `position: relative` — which would contain the stretched
+   * layer to the title itself — `inline-flex`, and the button's own weight and leading. Two classes,
+   * so these beat the single-class `.button` whatever order the modules load in.
+   */
+  .linked {
+    position: relative;
+
+    .titleLink {
+      position: static;
+      display: inline;
+      padding: 0;
+      border: 0;
+      color: inherit;
+      font-weight: inherit;
+      line-height: inherit;
+      text-align: inherit;
+
+      &::after {
+        content: '';
+        position: absolute;
+        z-index: 1;
+        inset: 0;
+      }
+
+      // The ring goes round the card below, not round the title.
+      &:focus-visible {
+        outline: none;
+      }
+    }
+
+    // A link inside the description stays clickable above the stretched layer.
+    a:not(.titleLink) {
+      position: relative;
+      z-index: 2;
+    }
+
+    // Hover and keyboard focus both show on the whole card, since the whole card is the target.
+    &:hover .titleLink {
+      text-decoration: underline;
+      text-decoration-thickness: 0.06em;
+      text-underline-offset: 0.12em;
+    }
+
+    &:has(.titleLink:focus-visible) {
+      outline: var(--button-focus-ring-width, 3px) solid var(--fg-default);
+      outline-offset: var(--button-focus-ring-offset, 3px);
+    }
+  }
 }

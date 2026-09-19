@@ -115,9 +115,20 @@
         opacity: 1;
       }
 
-      &:hover,
-      &:focus {
+      &:hover {
         border-bottom-color: var(--input-active-border);
+      }
+
+      /*
+       * Focus is the rule itself rather than the global ring: it turns the accent and doubles in
+       * weight, so the state is a change of shape as well as hue (WCAG 2.4.11). signal/300 is 6.5:1
+       * on the light page and signal/100 7.5:1 on the dark one. The inset shadow is the second pixel,
+       * so the field does not grow and shift everything below it.
+       */
+      &:focus-visible {
+        outline: none;
+        border-bottom-color: var(--input-focus-border);
+        box-shadow: inset 0 -1px 0 var(--input-focus-border);
       }
 
       /*

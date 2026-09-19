@@ -7,6 +7,7 @@ import ReadOnlyImageInput from '../../components/ReadOnlyImageInput';
 import stripTitleTags from '../../helpers/stripTitleTags';
 import defaultSectionGroups from '../common/defaultSectionGroups';
 import internalLabelField from '../common/internalLabelField';
+import type { ILinkElement } from '../elements/link';
 
 /**
  * A grid of bordered media cards, each carrying a short spec label beside its name and a footnote
@@ -63,6 +64,8 @@ interface ISpecCardGridSectionCard {
   label?: string;
   description?: SanityTextBlock[];
   footnotes?: string[];
+  /** Optional. Makes the whole card a link — see `components/MediaCard`. */
+  link?: ILinkElement;
 }
 
 interface ISpecCardGridSection {
@@ -277,6 +280,13 @@ const specCardFields: FieldDefinition[] = [
      * carries the same rule for a stricter reason.
      */
     validation: (Rule) => Rule.unique()
+  },
+  {
+    description:
+      'Optional. Makes the whole card clickable — a page on the site, or an external link such as the Lodge’s own room page. Needs a Name on the card.',
+    name: 'link',
+    title: 'Link',
+    type: 'linkElement'
   }
 ];
 

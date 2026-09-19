@@ -26,8 +26,33 @@
         "Pool view",
         "Cot free"
       ],
-      "image": null,
+      "image": {
+        "altText": "King room",
+        "aspectRatio": null,
+        "asset": {
+          "_id": "image-80ecfef0d2389822b83657e486b925798160bf84-662x746-avif",
+          "altText": null,
+          "metadata": {
+            "dimensions": {
+              "height": 746,
+              "width": 662
+            },
+            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAXABQDASIAAhEBAxEB/8QAGAABAQADAAAAAAAAAAAAAAAAAAYCBQf/xAApEAABAwMDAAsBAAAAAAAAAAACAAEEAwURBhIhBxMVIiMxQUJRocHR/8QAGQEAAQUAAAAAAAAAAAAAAAAAAgABAwQF/8QAHhEAAgICAgMAAAAAAAAAAAAAAQIAAxESBCEUMVH/2gAMAwEAAhEDEQA/ANzpxz7WuLY8PP2qunbmrWoiYu+75YcfCjtP1BC83E9/De39WF76SqcW2PGt5jVkbtvI4w2Vn2lgo1lyhVY9iWrPjjGMIouPPmS6IVykELm2cN5MiMchYjRg4zOf2S5SoNxfefWFVF2fPqq62aPm6igi02NEhUXLcx0n3GX8RFPoGPcAMU9Suo6VkRqQUqNQCAWwzk/LoiIfHr+Ri5JzP//Z"
+          },
+          "url": "https://cdn.sanity.io/images/tftcitbh/production/80ecfef0d2389822b83657e486b925798160bf84-662x746.avif"
+        },
+        "crop": null,
+        "hotspot": null
+      },
       "label": "2 max",
+      "link": {
+        "action": null,
+        "email": null,
+        "externalLink": "https://www.thelodgejamberoo.com.au/rooms",
+        "internalLink": null,
+        "linkType": "external",
+        "phone": null
+      },
       "title": "<h2>King Room</h2>"
     },
     {
@@ -54,8 +79,33 @@
         "Pool view",
         "Sleeps four"
       ],
-      "image": null,
+      "image": {
+        "altText": "Twin room",
+        "aspectRatio": null,
+        "asset": {
+          "_id": "image-2d5e4f12954ea4e03928fad3ff0dee649e6744e0-662x746-avif",
+          "altText": null,
+          "metadata": {
+            "dimensions": {
+              "height": 746,
+              "width": 662
+            },
+            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAXABQDASIAAhEBAxEB/8QAGgABAAIDAQAAAAAAAAAAAAAAAAUGAwQHCP/EACEQAAEEAgIDAQEAAAAAAAAAAAEAAgMEBREhMQYSUQcj/8QAFgEBAQEAAAAAAAAAAAAAAAAABAED/8QAHBEAAgMAAwEAAAAAAAAAAAAAAQIAAxEEEkGR/9oADAMBAAIRAxEAPwC61KcMNln9AY3dFWl1SJ0LHQEHjtUfHWpMhYjrwREytB384U/BnoqGOBtOEhjPo70HWzxtAr5dnYBlz7Guo8krxFprnDfaLUNwWw2WJpDSAOkVfm2hiMkCLkzZptHxvxvIZWKuxr4YnEeo52uOfh+Zdks5kqeWaJ47OpWh3OjtESnOWqszQbWSZ6BhoVmMDY4mhvwIiJPUQ+mf/9k="
+          },
+          "url": "https://cdn.sanity.io/images/tftcitbh/production/2d5e4f12954ea4e03928fad3ff0dee649e6744e0-662x746.avif"
+        },
+        "crop": null,
+        "hotspot": null
+      },
       "label": "4 max",
+      "link": {
+        "action": null,
+        "email": null,
+        "externalLink": "https://www.thelodgejamberoo.com.au/rooms",
+        "internalLink": null,
+        "linkType": "external",
+        "phone": null
+      },
       "title": "<h2>Twin Double</h2>"
     },
     {
@@ -82,8 +132,33 @@
         "Two rooms",
         "No pool view"
       ],
-      "image": null,
+      "image": {
+        "altText": "Family room",
+        "aspectRatio": null,
+        "asset": {
+          "_id": "image-fe8502bc427e5aaec761cbd2a3ddefc508a22ebf-662x746-avif",
+          "altText": null,
+          "metadata": {
+            "dimensions": {
+              "height": 746,
+              "width": 662
+            },
+            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAXABQDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAUGBwIE/8QAJxAAAQMDAgUFAQAAAAAAAAAAAQACAwQFERIhBhMUUWEVFiIxcYH/xAAWAQEBAQAAAAAAAAAAAAAAAAACBAH/xAAdEQACAQQDAAAAAAAAAAAAAAAAAQIDEyFRERIi/9oADAMBAAIRAxEAPwDxXWlNfQ0xpRA6bltDjId2EeFzabPWyWmuo63pWayHQuYNw7uSrTxla222NlXSNIZ9P/VB0V2Ep0vDsbEb4UUqjhjgotxa7EN7dk0t62OGafG79yitQuMQGNGcd3Ijfeg40aDxtQN9IqYT83EZHjCxKnla2UjfLSWn+IiVdJM2D8ErHDzWh2cIiKcJ/9k="
+          },
+          "url": "https://cdn.sanity.io/images/tftcitbh/production/fe8502bc427e5aaec761cbd2a3ddefc508a22ebf-662x746.avif"
+        },
+        "crop": null,
+        "hotspot": null
+      },
       "label": "2 rooms",
+      "link": {
+        "action": null,
+        "email": null,
+        "externalLink": "https://www.thelodgejamberoo.com.au/rooms",
+        "internalLink": null,
+        "linkType": "external",
+        "phone": null
+      },
       "title": "<h2>Family Room</h2>"
     }
   ],

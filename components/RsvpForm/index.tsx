@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useActionState, useId, useMemo, useState } from 'react';
+import { useActionState, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { set, useFormContext, useWatch } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
@@ -8,12 +8,16 @@ import type { FieldErrors } from 'react-hook-form';
 import Button from '@/components/Button';
 import Field from '@/components/Field';
 import Form from '@/components/Form';
+import { preloadDuet } from '@/components/ModelDuet/preload';
 import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
+import { DUET_BACK, DUET_FRONT } from '@/helpers/duetPlacement';
 import formatOrdinal from '@/helpers/formatOrdinal';
 
-import { RSVP_DAYS, RSVP_FIELD, RSVP_INITIAL_STATE, RSVP_KIDS_MAX, RSVP_ROOM_PREFERENCES } from './contract';
+import { RSVP_FIELD, RSVP_INITIAL_STATE, RSVP_KIDS_MAX } from './contract';
 import type { RsvpAction, RsvpFieldErrors, RsvpFormState } from './contract';
+import RsvpModel from './RsvpModel';
+import type { RsvpModelOption } from './RsvpModel';
 
 import styles from './styles.module.scss';
 
@@ -32,11 +36,15 @@ export interface RsvpFormProps {
   intro?: string;
   /** The rest of it. Wide layouts only — the phone frame keeps just `intro` (Figma node 1:884). */
   introDetail?: string;
+  /**
+   * The players' models. The rail shows one at random, looping one of its animations at random —
+   * see `RsvpModel`. Nothing renders in its place when there are none.
+   */
+  models?: RsvpModelOption[];
 }
 
 /** What react-hook-form holds — one key per name in `RSVP_FIELD`, nested where the name is dotted. */
 export interface RsvpFormValues {
-  attending: string[];
   dietary: string;
   email: string;
   kidsAges: string;
@@ -44,27 +52,23 @@ export interface RsvpFormValues {
   kidsCount: number | string;
   name: string;
   plusOne: { bringing: boolean; dietary?: string; name?: string };
-  roomPreference: string;
   songRequest: string;
 }
 
 const DEFAULT_VALUES: RsvpFormValues = {
-  attending: [],
   dietary: '',
   email: '',
   kidsAges: '',
   kidsCount: 0,
   name: '',
   plusOne: { bringing: false, dietary: '', name: '' },
-  roomPreference: '',
   songRequest: ''
 };
 
 const DEFAULT_COPY = {
   heading: 'RSVP',
   intro: 'One form per guest.',
-  introDetail:
-    "Tell us which days you'll join, what you eat, where you'd like to sleep and what you'd like to hear on the dancefloor."
+  introDetail: "Tell us what you eat, who you're bringing and what you'd like to hear on the dancefloor."
 };
 
 // Deliberately loose — `name@domain.tld` with no spaces. The server is the gate; this only catches a
@@ -113,14 +117,13 @@ const numbered = (index: number, title: ReactNode): ReactNode => (
 );
 
 /**
- * The RSVP page: a rail holding the heading, the intro and a live summary, beside the numbered
- * questions and the submit button.
+ * The RSVP page: a rail holding the heading, the intro and one of the couple's 3D characters,
+ * beside the numbered questions and the submit button.
  *
  * ## Why one component and not two sections
  *
- * The rail is sticky against the questions' scroll, and its summary mirrors the form's live state.
- * Both need the two halves inside one react-hook-form context, so the heading cannot be a separate
- * page-builder section.
+ * The rail is sticky against the questions' scroll, so the two halves share one layout; the page is
+ * a route rather than a page-builder document for the reason `app/(frontend)/rsvp/page.tsx` gives.
  *
  * ## The submit path
  *
@@ -128,8 +131,9 @@ const numbered = (index: number, title: ReactNode): ReactNode => (
  * validation first — a convenience, never the gate — and only a valid form is serialised from the
  * `<form>` element and dispatched to the action inside a transition. The state that comes back
  * drives everything after: field errors are handed to react-hook-form through `Form`'s `errors`, so
- * they render and clear exactly like client errors, and a success fills the submit button with its
- * "saved" state, which is the whole confirmation.
+ * they render and clear exactly like client errors. A success never comes back to the form in the
+ * app: the action redirects to the thank-you page. The button's "saved" state remains for the moment
+ * before the navigation lands, and for the stories, which drive the form with a mock action.
  *
  * ## How an error reaches a screen reader
  *
@@ -151,7 +155,8 @@ const RsvpForm = (props: RsvpFormProps) => {
     className,
     heading = DEFAULT_COPY.heading,
     intro = DEFAULT_COPY.intro,
-    introDetail = DEFAULT_COPY.introDetail
+    introDetail = DEFAULT_COPY.introDetail,
+    models
   } = props;
 
   const [state, formAction, isPending] = useActionState(action, RSVP_INITIAL_STATE);
@@ -186,6 +191,7 @@ const RsvpForm = (props: RsvpFormProps) => {
         intro={intro}
         introDetail={introDetail}
         isPending={isPending}
+        models={models}
         sentValues={sentValues}
         state={state}
       />
@@ -198,19 +204,34 @@ interface RsvpFormBodyProps {
   intro: string;
   introDetail?: string;
   isPending: boolean;
+  models?: RsvpModelOption[];
   sentValues: string | null;
   state: RsvpFormState;
 }
 
 /** Everything inside the react-hook-form context — which is why it is a component of its own. */
 const RsvpFormBody = (props: RsvpFormBodyProps) => {
-  const { heading, intro, introDetail, isPending, sentValues, state } = props;
+  const { heading, intro, introDetail, isPending, models, sentValues, state } = props;
 
   const { control, resetField } = useFormContext<RsvpFormValues>();
   const values = useWatch({ control });
 
   const bringing = Boolean(values.plusOne?.bringing);
   const isSaved = state.status === 'success' && !isPending && sentValues === JSON.stringify(values);
+
+  /*
+   * A saved reply sends the guest to the thank-you page, where the two of them dance — two
+   * multi-megabyte models. Warmed the first time the guest starts filling the form in, so the pair is
+   * on stage when they land rather than a placeholder for several seconds. An event handler rather
+   * than an effect: the guest engaging with the form is the cause. Once per visit.
+   */
+  const warmed = useRef(false);
+  const warmThankYou = () => {
+    if (!warmed.current) {
+      warmed.current = true;
+      preloadDuet([DUET_BACK.src, DUET_FRONT.src]);
+    }
+  };
 
   /*
    * Turning the plus one off clears their answers, not just hides them.
@@ -281,16 +302,6 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
       )
     },
     {
-      key: 'attending',
-      render: (label) => (
-        <Field.Checkbox
-          label={label('Attending')}
-          name={RSVP_FIELD.attending}
-          options={RSVP_DAYS.map(({ eyebrow, label: title, value }) => ({ eyebrow, label: title, value }))}
-        />
-      )
-    },
-    {
       key: 'dietary',
       render: (label) => (
         <Field.Text
@@ -340,17 +351,6 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
       )
     },
     {
-      key: 'roomPreference',
-      render: (label) => (
-        <Field.Radio
-          label={label('Room preference')}
-          name={RSVP_FIELD.roomPreference}
-          options={RSVP_ROOM_PREFERENCES.map((room) => ({ label: room, value: room }))}
-          variant="pill"
-        />
-      )
-    },
-    {
       key: 'kids',
       render: (label) => (
         /*
@@ -397,7 +397,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
   ];
 
   return (
-    <div className={styles.rsvp}>
+    <div className={styles.rsvp} onFocusCapture={warmThankYou}>
       <div className={styles.layout}>
         <div className={styles.rail}>
           <Text as="h1" className={styles.heading} size="md" text={heading} variant="display" />
@@ -405,7 +405,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
             {intro}
             {introDetail && <span className={styles.wideOnly}> {introDetail}</span>}
           </Text>
-          <RsvpSummary attending={values.attending} kidsCount={values.kidsCount} />
+          {models && models.length > 0 && <RsvpModel models={models} />}
         </div>
 
         <div className={styles.fields}>
@@ -453,63 +453,6 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
         </div>
       </div>
     </div>
-  );
-};
-
-interface RsvpSummaryProps {
-  attending?: string[];
-  kidsCount?: number | string;
-}
-
-/**
- * The rail's live summary — the day selections and the kids count, mirrored from the form as it is
- * filled in. Wide layouts only.
- *
- * Deliberately not a live region. Every change it shows is one the reader has just made on a control
- * that announced it; saying it again from here would be the same fact twice.
- */
-const RsvpSummary = (props: RsvpSummaryProps) => {
-  const { attending = [], kidsCount } = props;
-  const headingId = useId();
-  const kids = Number.parseInt(String(kidsCount ?? 0), 10);
-
-  return (
-    <section aria-labelledby={headingId} className={styles.summary}>
-      <Text
-        as="h2"
-        className={styles.summaryTitle}
-        id={headingId}
-        size="xs"
-        text="Your reply"
-        textTransform="uppercase"
-        variant="mono"
-        weight="bold"
-      />
-      <dl className={styles.summaryList}>
-        {RSVP_DAYS.map((day) => (
-          <Fragment key={day.value}>
-            <Text as="dt" size="xs" text={day.short} textTransform="uppercase" variant="mono" weight="regular" />
-            <Text
-              as="dd"
-              size="xs"
-              text={attending.includes(day.value) ? 'In' : 'Out'}
-              textTransform="uppercase"
-              variant="mono"
-              weight="regular"
-            />
-          </Fragment>
-        ))}
-        <Text as="dt" size="xs" text="Kids" textTransform="uppercase" variant="mono" weight="regular" />
-        <Text
-          as="dd"
-          size="xs"
-          text={Number.isFinite(kids) ? kids : 0}
-          textTransform="uppercase"
-          variant="mono"
-          weight="regular"
-        />
-      </dl>
-    </section>
   );
 };
 

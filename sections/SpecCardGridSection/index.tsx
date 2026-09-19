@@ -197,6 +197,7 @@ const SpecCardGridSection: FC<ISpecCardGridSection> = (props) => {
             <MediaCard
               caption={card.caption}
               description={card.description}
+              link={card.link}
               /*
                * **One node, joined here.** `components/MediaCard`'s footer is a slot rather than a
                * list precisely so that this section can join with a middot while `/the-lodge` lays

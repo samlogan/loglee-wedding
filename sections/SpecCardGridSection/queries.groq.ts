@@ -2,6 +2,7 @@ import { groq } from 'next-sanity';
 
 import blockContentProjection from '@/tools/sanity/projections/common/blockContent.groq';
 import imageProjection from '@/tools/sanity/projections/common/image.groq';
+import linkProjection from '@/tools/sanity/projections/common/link.groq';
 
 /**
  * One array, projected field by field.
@@ -37,7 +38,8 @@ const specCardGridSectionProjection = groq`
       title,
       label,
       description[]${blockContentProjection},
-      footnotes
+      footnotes,
+      link${linkProjection}
     }
   },
 `;

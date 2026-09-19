@@ -5,7 +5,7 @@ import hasText from './hasText';
  * test a value and render it in one expression, or fall back with `??`.
  *
  *   const cardLevel = textOrUndefined(level);
- *   const longLabel = textOrUndefined(rsvpLabel) ?? textOrUndefined(button.label);
+ *   const label = textOrUndefined(button.label) ?? textOrUndefined(rsvpLabel);
  *
  * Blank is `hasText`'s answer, for the reason given there: in draft mode a field left blank still
  * arrives with a stega payload appended, and `.trim()` does not remove it.

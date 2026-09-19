@@ -3,12 +3,15 @@ import type { ReactNode } from 'react';
 
 import Image from '@/components/Image';
 import type { ImagePropsSanity } from '@/components/Image';
+import Link from '@/components/Link';
 import Tag from '@/components/Tag';
 import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import classNames from '@/helpers/classNames';
 import hasBlockContent from '@/helpers/hasBlockContent';
+import hasDestination from '@/helpers/hasDestination';
 import stripTitleTags from '@/helpers/stripTitleTags';
+import type { ILinkElement } from '@/tools/sanity/schema/elements/link';
 
 import styles from './styles.module.scss';
 
@@ -29,6 +32,13 @@ export type MediaCardImage = Omit<ImagePropsSanity, 'className' | 'fill'>;
 
 export interface MediaCardProps {
   className?: string;
+  /**
+   * Makes the whole card a link. The title is the link — so a screen reader announces one link
+   * named for the card, not every word in it — and a transparent layer stretched from it covers the
+   * card, so a click anywhere lands on it. Needs a title to hang on; ignored without one, and
+   * ignored when it resolves nowhere (`hasDestination`).
+   */
+  link?: ILinkElement | null;
   /**
    * The chip inset at the bottom-left of the media panel — a `Tag`, and the only boxed thing on the
    * card.
@@ -160,7 +170,7 @@ export interface MediaCardProps {
  * the card is a plain `<div>` with a heading in it.
  */
 const MediaCard = (props: MediaCardProps) => {
-  const { caption, className, description, footer, image, label, theme, title, titleAs } = props;
+  const { caption, className, description, footer, image, label, link, theme, title, titleAs } = props;
 
   /*
    * `stripTitleTags(...).text`, not `title?.trim()`.
@@ -189,9 +199,13 @@ const MediaCard = (props: MediaCardProps) => {
    * render nothing at all rather than a rule with a gap under it.
    */
   const hasFooter = Children.toArray(footer).length > 0;
+  const isLinked = Boolean(headingText) && hasDestination(link);
 
   return (
-    <div className={classNames(styles.card, className)} {...(theme && { 'data-theme': theme })}>
+    <div
+      className={classNames(styles.card, { [styles.linked]: isLinked }, className)}
+      {...(theme && { 'data-theme': theme })}
+    >
       {media && (
         <div className={styles.media}>
           {/*
@@ -230,7 +244,7 @@ const MediaCard = (props: MediaCardProps) => {
               <Text
                 as={titleAs || markupAs}
                 className={styles.title}
-                text={headingText}
+                text={isLinked ? undefined : headingText}
                 /*
                  * Capitals from CSS, which is how every display heading in this repo is set
                  * (`HeaderDisplaySection` passes the same prop). The *stored* string stays sentence
@@ -253,7 +267,13 @@ const MediaCard = (props: MediaCardProps) => {
                  * exists for is done above with the same exported helper, so nothing is lost.
                  */
                 variant="display"
-              />
+              >
+                {isLinked && (
+                  <Link {...link} className={styles.titleLink}>
+                    {headingText}
+                  </Link>
+                )}
+              </Text>
             )}
             {labelText && (
               <Text className={styles.label} size="2xs" text={labelText} textTransform="uppercase" variant="mono" />

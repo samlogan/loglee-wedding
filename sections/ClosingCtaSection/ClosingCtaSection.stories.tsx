@@ -111,7 +111,7 @@ const RSVP: RsvpActionFields = {
 };
 
 /** What the RSVP button reads for a given `rsvp`, worked out the way the section works it out. */
-const rsvpLabelOf = (rsvp?: RsvpActionFields | null) => resolveRsvpAction(rsvp)?.longLabel ?? '';
+const rsvpLabelOf = (rsvp?: RsvpActionFields | null) => resolveRsvpAction(rsvp)?.label ?? '';
 
 const INTRO =
   'Three days among the pines by the Minnamurra River. Arrive Friday, marry Saturday, recover Sunday. Everyone stays on site.';
@@ -195,7 +195,7 @@ export const PublishedContent: Story = {
     // The actions the section should draw from this data, filtered the way the section filters them.
     const expected = [
       addButton && hasText(button?.label) && hasDestination(button?.link) ? button?.label : undefined,
-      rsvpAction && hasDestination(rsvpAction.link) ? rsvpAction.longLabel : undefined
+      rsvpAction && hasDestination(rsvpAction.link) ? rsvpAction.label : undefined
     ].filter(Boolean);
 
     // Not vacuous: `PUBLISHED` is the fixture or `MOCK`, and either carries at least the RSVP action.

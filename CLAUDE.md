@@ -122,14 +122,16 @@ All in `/components`:
 - **`Form`**: Form container
 - **`Footer`**: Site footer
 - **`Header`**: Site header
+- **`CountdownBanner`**: Slim dark band above the header counting down to `WEDDING_COUNTDOWN_TARGET` (`tools/helpers/countdown`) — 3pm Friday 12 February 2027, Sydney time
 - **`Logo`**: Logo component
-- **`Map`**: Live Google map (`@vis.gl/react-google-maps`) centred on a Sanity `geopoint`, with a marker. Fills its parent; loads the Maps API only as it nears the viewport. Props: `location`, `label` (accessible name), `variant` (`default`/`compact`), `theme`. Used by `MapSection` and the FAQ map card
+- **`Map`**: Live Google map (`@vis.gl/react-google-maps`) centred on a Sanity `geopoint`, with a marker. Fills its parent; loads the Maps API only as it nears the viewport. Styled in the site's stone/pine palette by a JSON style (`components/Map/mapStyle.ts`, colours read from the tokens) with a custom pin — unless `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` is set, when the Cloud style and an `AdvancedMarker` take over (Google allows one or the other). Props: `location`, `label` (accessible name), `variant` (`default`/`compact`), `theme`. Drawn through `MapCard` by `MapSection` (`fill`) and the FAQ and RSVP rails
+- **`MapCard`**: The compact map card — live `Map` (or an image), a corner badge and an address bar with an "Open in maps" link. Fields are the `mapCard` schema object. Used by the FAQ's rail and the RSVP page's rail (built from `weddingSettings.venue`)
 - **`Modal`**: Modal/dialog
 - **`Navigation`**: Navigation menu
 - **`Socials`**: Social links
 - **`SocialsShare`**: Social share buttons
 - **`Video`**: YouTube / Vimeo player (React Player). `fill` fills the parent instead of drawing 16:9; `ambient` autoplays muted and looping. URL recognition lives in `tools/helpers/videoPlatform`
-- **`AspectRatioFrame`**: Full-width box with one editor-chosen ratio on desktop and another on mobile (or `fullscreen`, the viewport height), for a child to fill. Pairs with the `aspectRatioFields()` schema helper in `tools/sanity/schema/common/`. Used by `MapSection` and `MediaSection`
+- **`AspectRatioFrame`**: Full-width box with one editor-chosen ratio on desktop and another on mobile (or `fullscreen`, the viewport height), for a child to fill. `rounded` for a frame inside the page container. Pairs with the `aspectRatioFields()` schema helper in `tools/sanity/schema/common/`. Used by `MapSection` and `MediaSection`, which also share the `sectionWidthField` (Full width by default, or Contained) — read it with `tools/helpers/isContained`
 - **`ThemeProvider`**: Theme context provider
 - **`Layout`**: Page layout wrapper
 - **`JsonLd`**: Structured data components (JsonLdPage, JsonLdArticle)
@@ -557,7 +559,7 @@ Required in `.env.development` (see `.env.template` for full list):
 
 Optional:
 
-- `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` — cloud map ID for styling; falls back to `DEMO_MAP_ID`
+- `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` — Cloud map ID. Unset (the default) uses the repo's JSON style; set, the Cloud console's style replaces it
 - `NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID` — GTM container ID
 - `LINEAR_TEAM_ID` / `LINEAR_PROJECT_ID` — Linear integration for slash commands
 

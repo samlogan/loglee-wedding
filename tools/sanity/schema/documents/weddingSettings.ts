@@ -2,6 +2,8 @@ import { FiDatabase } from 'react-icons/fi';
 import { TbCoin, TbHeart, TbMailHeart, TbMapPin } from 'react-icons/tb';
 import { defineType } from 'sanity';
 
+import type { MapLocation } from '../../../helpers/mapLocation';
+
 interface IWeddingSettingsDocument {
   // Sanity fields
   _createdAt: string;
@@ -20,6 +22,7 @@ interface IWeddingSettingsDocument {
     address?: string;
     travelNote?: string;
     mapUrl?: string;
+    location?: MapLocation | null;
   };
   rsvpDeadline?: string;
   rsvpLabel?: string;
@@ -125,6 +128,17 @@ const weddingSettings = defineType({
           name: `mapUrl`,
           title: `Map URL`,
           type: `url`
+        },
+        /*
+         * The venue's pin, set once for the site: the RSVP page's map card draws it, and a FAQ map
+         * card with no pin of its own falls back to it (see `sections/FaqSection/queries.groq.ts`).
+         */
+        {
+          description:
+            'Pin the venue. Used by the map on the RSVP page, and by the FAQ map when it has no location of its own. The zoom you leave the picker at is the zoom the maps open at.',
+          name: `location`,
+          title: `Location`,
+          type: `geopoint`
         }
       ],
       group: 'venue',

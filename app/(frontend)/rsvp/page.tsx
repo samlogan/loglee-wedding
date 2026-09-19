@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 
 import RsvpForm from '@/components/RsvpForm';
+import type { RsvpModelOption } from '@/components/RsvpForm/RsvpModel';
 import Section from '@/components/Section';
+import { PLAYER_SLUGS } from '@/templates/PlayerTemplate';
+import { sanityFetch } from '@/tools/sanity/lib/fetch';
+import { RSVP_MODELS_QUERY } from '@/tools/sanity/lib/queries.groq';
 
 import { submitRsvp } from './actions';
 
@@ -18,11 +22,20 @@ import { submitRsvp } from './actions';
  * `sm`, and 64px under the button, which is `md`. `lg` caps the content at the frame's 1200px, the
  * width the rail and the questions were drawn against.
  */
-const RsvpPage = () => (
-  <Section containerWidth="lg" name="rsvp" spacing={['sm', 'md']} theme="light">
-    <RsvpForm action={submitRsvp} />
-  </Section>
-);
+const RsvpPage = async () => {
+  // The players' models, for the character in the rail — chosen at random in the browser, per visit.
+  const models = await sanityFetch<RsvpModelOption[] | null>({
+    params: { routes: [...PLAYER_SLUGS] },
+    query: RSVP_MODELS_QUERY,
+    tags: ['player']
+  });
+
+  return (
+    <Section containerWidth="lg" name="rsvp" spacing={['sm', 'md']} theme="light">
+      <RsvpForm action={submitRsvp} models={models ?? []} />
+    </Section>
+  );
+};
 
 /**
  * Out of the index. The whole site is private, and this page in particular collects personal

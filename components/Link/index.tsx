@@ -40,6 +40,23 @@ export interface LinkProps extends AnchorHTMLAttributes<HTMLAnchorElement>, Butt
   tabIndex?: number;
 }
 
+/**
+ * Spoken after the name of a link that opens a new tab, so a screen-reader user is not dropped into
+ * a fresh tab with no history to go back through (WCAG G201). Visually hidden rather than shown:
+ * the arrow and the context already say "this goes elsewhere" to a sighted reader.
+ */
+const NEW_TAB_NOTE = ' (opens in a new tab)';
+
+// No shared sr-only utility exists in this repo, deliberately; this is the one place Link needs it.
+const VISUALLY_HIDDEN = {
+  clipPath: 'inset(50%)',
+  height: 1,
+  overflow: 'hidden',
+  position: 'absolute',
+  whiteSpace: 'nowrap',
+  width: 1
+} as const;
+
 const Link = (props: LinkProps) => {
   const {
     children,
@@ -54,7 +71,7 @@ const Link = (props: LinkProps) => {
     phone,
     email,
     externalLink,
-    target = '_self',
+    target,
     newWindow = false,
     tabIndex = 0,
     arrow,
@@ -179,9 +196,26 @@ const Link = (props: LinkProps) => {
         </NextLink>
       );
     }
+    /*
+     * Off-site links open in a new tab, so the wedding site stays open behind them — unless a caller
+     * asked for something else with `target` or `newWindow`. `noreferrer` also implies `noopener`, so
+     * the opened page cannot reach back and navigate this one.
+     *
+     * The note joins the accessible name whichever way it is formed: appended to an explicit
+     * `aria-label`, which would otherwise override the content, or as hidden text inside it.
+     */
+    const opensNewTab = (linkTarget ?? '_blank') === '_blank';
+    const label = commonProps['aria-label'];
     return (
-      <a href={linkHref} rel="nofollow noreferrer" {...commonProps}>
+      <a
+        href={linkHref}
+        rel="nofollow noreferrer"
+        {...commonProps}
+        aria-label={label && opensNewTab ? `${label}${NEW_TAB_NOTE}` : label}
+        target={linkTarget ?? '_blank'}
+      >
         {child}
+        {opensNewTab && !label && <span style={VISUALLY_HIDDEN}>{NEW_TAB_NOTE}</span>}
       </a>
     );
   }

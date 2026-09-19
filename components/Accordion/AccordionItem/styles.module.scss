@@ -32,14 +32,15 @@
    *
    * ## Fluid rather than a breakpoint
    *
-   * 40 × 38 with a 20px glyph at the desktop comp (16:658), 32 × 32 with a 17px one at mobile
-   * (16:743). `fluid()` interpolates between the two across the whole viewport range, which is the
-   * rule `_variables.scss` states for every sized token here — a `media-up()` override would
-   * reintroduce the jump the fluid scale exists to remove. The width and height anchors differ (the
-   * desktop chip is a 40 × 38 lozenge, the mobile one a 32 × 32 circle), so they interpolate
-   * independently and the radius is `--radius-full` rather than a computed half-height.
-   *
-   * ## Two re-pointed mono properties
+   * A circle at every width: 32px with a 17px glyph at mobile (16:743), 40px with a 20px one at
+ * desktop. `fluid()` interpolates between the two across the whole viewport range, which is the rule
+ * `_variables.scss` states for every sized token here — a `media-up()` override would reintroduce
+ * the jump the fluid scale exists to remove.
+ *
+ * The desktop comp (16:658) draws a 40 × 38 lozenge, and this followed it until the couple pointed
+ * out that it reads as a squashed circle. `--radius-full` rounds it whatever size it resolves to.
+ *
+ * ## Two re-pointed mono properties
    *
    * `--mono-line-height` to 1, because the chip's height is set here and a 1.3 line box would push
    * the glyph off centre inside it; `--mono-letter-spacing` to `normal`, because tracking is trailing
@@ -58,7 +59,8 @@
     align-items: center;
     justify-content: center;
     width: #{fluid(32px, 40px)};
-    height: #{fluid(32px, 38px)};
+    // A circle at every width — one value for both sides, so they cannot drift apart. See above.
+    aspect-ratio: 1;
 
     border: 1px solid currentColor;
     border-radius: var(--radius-full);

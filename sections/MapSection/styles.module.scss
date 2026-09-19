@@ -1,0 +1,59 @@
+/*
+ * Contained only: the map sits in the same dashed panel the Select Player section draws around its
+ * characters — dashed `--fg-accent`, `--radius-md`, filled `--bg-accent` — so the dark theme resolves
+ * it the same way. Full width has no panel: a frame at the viewport's edges would be half off-screen.
+ */
+@layer defaults {
+  /*
+   * On the `AspectRatioFrame`, so the panel is the shape the editor chose and the map fills what is
+   * inside its padding. The frame already rounds and clips when contained.
+   */
+  .panel {
+    padding: #{fluid(8px, 12px)};
+    border: 1px dashed var(--fg-accent);
+    background-color: var(--bg-accent);
+  }
+
+  /*
+   * The card's own corners one step down, so they sit inside the panel's curve rather than parallel
+   * to it. Two classes, so this beats `MapCard`'s single-class `.mapCard` whatever order the modules
+   * load in.
+   */
+  .panel .map {
+    border-radius: var(--radius-sm);
+  }
+
+  /*
+   * The optional title and copy above the map: side by side, bottom-aligned, where there is room, and
+   * stacked where there is not — `flex-wrap` with a basis on each, so no breakpoint is needed. The
+   * copy is held to a reading measure.
+   */
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--spacing-md) var(--spacing-xl);
+    margin-block-end: var(--spacing-xl);
+  }
+
+  /*
+   * `--display-md` reaches 132px for a page header; a section title here is drawn at the dress-code
+   * band's size, and with its leading and tracking. Re-pointing the tokens the display tier reads is
+   * the same move `TwoColumnListSection`'s `.title` makes, with the same values — change one, change
+   * both.
+   */
+  .title {
+    --display-md: #{fluid(30px, 44px)};
+    --display-line-height: 0.95;
+    --display-letter-spacing: -0.03em;
+
+    flex: 1 1 20rem;
+    min-width: 0;
+  }
+
+  .content {
+    flex: 1 1 24rem;
+    max-width: 40rem;
+  }
+}

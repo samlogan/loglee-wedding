@@ -12,8 +12,7 @@ import type { RsvpAction, RsvpFormState } from './contract';
 const COPY = {
   heading: 'RSVP',
   intro: 'One form per guest.',
-  introDetail:
-    "Tell us which days you'll join, what you eat, where you'd like to sleep and what you'd like to hear on the dancefloor."
+  introDetail: "Tell us what you eat, who you're bringing and what you'd like to hear on the dancefloor."
 };
 
 /**
@@ -41,7 +40,7 @@ const ROUND_TRIP = { timeout: 5000 };
 const callsOf = (action: RsvpAction) => (action as unknown as Mock<RsvpAction>).mock.calls;
 
 /**
- * A fixed width, in `px`, because the component's one switch is `px` — it hides the summary, so it
+ * A fixed width, in `px`, because the component's one switch is `px` — it hides the character, so it
  * must not move with the root font size, and a `rem` wrapper would reintroduce exactly that
  * dependency here (see the same note in `MediaTagsSection`'s stories). The padding keeps focus rings
  * off the canvas edge.
@@ -67,6 +66,16 @@ const atWidth: Decorator = (Story, { parameters }) => (
   </div>
 );
 
+/** The two players' models, as the page fetches them — the committed GLBs in `public/`. */
+const MODELS = [
+  {
+    clips: { feature: 'Gangnam_Groove', hover: 'Agree_Gesture', idle: 'Excited_Walk_M' },
+    name: 'Sam',
+    src: '/sam.glb'
+  },
+  { name: 'Lauren', src: '/lauren.glb' }
+];
+
 const meta = {
   title: 'Forms/RSVP Form',
   component: RsvpForm,
@@ -79,7 +88,8 @@ const meta = {
   },
   args: {
     ...COPY,
-    action: actionReturning({ status: 'success' })
+    action: actionReturning({ status: 'success' }),
+    models: MODELS
   },
   decorators: [atWidth]
 } satisfies Meta<typeof RsvpForm>;
@@ -93,18 +103,12 @@ type Story = StoryObj<typeof meta>;
 
 const nameInput = (canvas: ReturnType<typeof within>) => canvas.getByRole('textbox', { name: /^name/i });
 const emailInput = (canvas: ReturnType<typeof within>) => canvas.getByRole('textbox', { name: /^email/i });
-const dayBoxes = (canvas: ReturnType<typeof within>) =>
-  within(canvas.getByRole('group', { name: /^attending/i })).getAllByRole('checkbox');
 const plusOneSwitch = (canvas: ReturnType<typeof within>) =>
   canvas.getByRole('switch', { name: /bringing a plus one/i });
 const submitButton = (canvas: ReturnType<typeof within>) => canvas.getByRole('button', { name: /send rsvp|saved/i });
 
-/** The summary panel's value for one row — `Fri` → `In`. */
-const summaryValue = (canvasElement: HTMLElement, term: string) => {
-  const summary = within(canvasElement).getByRole('region', { name: /your reply/i });
-  const dt = within(summary).getByText(term, { selector: 'dt' });
-  return dt.nextElementSibling?.textContent;
-};
+/** The character in the rail, found by the name `ModelViewer` gives whatever is in the arch. */
+const railModel = (canvas: ReturnType<typeof within>) => canvas.queryByRole('img', { name: /as a 3D character/ });
 
 /**
  * The element that describes a control, which must also be a live region — that is what makes the
@@ -126,8 +130,8 @@ const fillRequired = async (canvas: ReturnType<typeof within>) => {
  * The page as a guest first meets it — nothing answered, nothing sent.
  *
  * Asserts the three things the ticket fixes about its structure: the game layer is gone, the
- * numbering is derived from position (01–08 with email and the plus one inserted, not the comp's
- * 01–06), and the two groups are real fieldsets named by their legends.
+ * numbering is derived from position (01–06 now that the days and room questions are gone), and
+ * the rail holds one of the couple's 3D characters.
  */
 export const Empty: Story = {
   play: async ({ canvasElement }) => {
@@ -139,50 +143,45 @@ export const Empty: Story = {
     // No game-layer copy anywhere — the comp's "PLAYER NAME", "LOADOUT", "PRESS START" and its ▸.
     await expect(canvasElement.textContent).not.toMatch(/player|loadout|press start|[▶▸]/i);
 
-    // The ordinals, in document order, are 01–08 and hidden from assistive technology.
+    // The ordinals, in document order, are 01–06 and hidden from assistive technology.
     const ordinals = [...canvasElement.querySelectorAll('span[aria-hidden="true"]')]
       .map((span) => span.textContent ?? '')
       .filter((text) => /^\d{2} · $/.test(text));
-    await expect(ordinals).toEqual(['01 · ', '02 · ', '03 · ', '04 · ', '05 · ', '06 · ', '07 · ', '08 · ']);
+    await expect(ordinals).toEqual(['01 · ', '02 · ', '03 · ', '04 · ', '05 · ', '06 · ']);
     await expect(nameInput(canvas)).toHaveAccessibleName(/^name/i);
 
-    for (const name of [/^attending/i, /^room preference/i]) {
-      const group = canvas.getByRole('group', { name });
-      await expect(group.tagName).toBe('FIELDSET');
-      await expect(group.querySelector(':scope > legend')).not.toBeNull();
-    }
+    // Neither dropped question is asked any more.
+    await expect(canvas.queryByRole('group', { name: /^attending/i })).toBeNull();
+    await expect(canvas.queryByRole('radio')).toBeNull();
 
-    await expect(summaryValue(canvasElement, 'Fri')).toBe('Out');
-    await expect(summaryValue(canvasElement, 'Kids')).toBe('0');
+    // Present and named from first paint; drawn once the character loads, with nothing behind it until then.
+    await expect(railModel(canvas)).toBeInTheDocument();
     await expect(submitButton(canvas)).toHaveAccessibleName('Send RSVP');
   }
 };
 
 /**
- * Desktop, with the rail's summary following the answers as they change — the reason the heading
- * and the form are one component rather than two sections.
+ * Desktop: the rail is sticky beside the questions, and holds one of the couple's 3D characters —
+ * picked at random in the browser, so the name settles on one of the two after hydration.
  */
-export const LiveSummary: Story = {
+export const RailModel: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const [fri, , sun] = dayBoxes(canvas);
 
     // The rail is sticky on this layout. Measured on the element, not assumed from the stylesheet.
     const rail = canvas.getByRole('heading', { level: 1 }).parentElement as HTMLElement;
     await expect(getComputedStyle(rail).position).toBe('sticky');
 
-    await userEvent.click(fri);
-    await userEvent.click(sun);
-    await expect(summaryValue(canvasElement, 'Fri')).toBe('In');
-    await expect(summaryValue(canvasElement, 'Sat')).toBe('Out');
-    await expect(summaryValue(canvasElement, 'Sun')).toBe('In');
+    await waitFor(() => expect(railModel(canvas)).toHaveAccessibleName(/^(Sam|Lauren), as a 3D character$/));
+    await expect(rail.contains(railModel(canvas))).toBe(true);
+  }
+};
 
-    await userEvent.click(canvas.getByRole('button', { name: 'Add a child' }));
-    await userEvent.click(canvas.getByRole('button', { name: 'Add a child' }));
-    await expect(summaryValue(canvasElement, 'Kids')).toBe('2');
-
-    await userEvent.click(fri);
-    await expect(summaryValue(canvasElement, 'Fri')).toBe('Out');
+/** No models to show — the rail is the heading and the intro alone. */
+export const WithoutModel: Story = {
+  args: { models: [] },
+  play: async ({ canvasElement }) => {
+    await expect(railModel(within(canvasElement))).toBeNull();
   }
 };
 
@@ -196,14 +195,10 @@ export const Filled: Story = {
     const canvas = within(canvasElement);
 
     await fillRequired(canvas);
-    const [fri, , sun] = dayBoxes(canvas);
-    await userEvent.click(fri);
-    await userEvent.click(sun);
     await userEvent.type(canvas.getByRole('textbox', { name: /^dietary requirements/i }), 'Vegetarian');
     await userEvent.click(plusOneSwitch(canvas));
     await userEvent.type(canvas.getByRole('textbox', { name: /^plus one name/i }), 'Charles Babbage');
     await userEvent.type(canvas.getByRole('textbox', { name: /^plus one dietary/i }), 'None');
-    await userEvent.click(canvas.getByRole('radio', { name: 'Family Room' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Add a child' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Add a child' }));
     await userEvent.type(canvas.getByRole('textbox', { name: /^ages/i }), '2 and 5');
@@ -216,12 +211,13 @@ export const Filled: Story = {
     await expect(previousState).toEqual({ status: 'idle' });
     await expect(formData.get('name')).toBe('Ada Lovelace');
     await expect(formData.get('email')).toBe('ada@example.com');
-    await expect(formData.getAll('attending')).toEqual(['friday', 'sunday']);
+    // The two dropped questions send nothing.
+    await expect(formData.has('attending')).toBe(false);
+    await expect(formData.has('roomPreference')).toBe(false);
     await expect(formData.get('dietary')).toBe('Vegetarian');
     await expect(formData.get('plusOne.bringing')).toBe('on');
     await expect(formData.get('plusOne.name')).toBe('Charles Babbage');
     await expect(formData.get('plusOne.dietary')).toBe('None');
-    await expect(formData.get('roomPreference')).toBe('Family Room');
     await expect(formData.get('kidsCount')).toBe('2');
     await expect(formData.get('kidsAges')).toBe('2 and 5');
     await expect(formData.get('songRequest')).toBe('September');
@@ -446,14 +442,17 @@ export const PlusOne: Story = {
 };
 
 /**
- * The whole form, completed and sent from the keyboard alone — every field, the cards, the switch,
- * the pills, the stepper and the button, reached in order by Tab.
+ * The whole form, completed and sent from the keyboard alone — every field, the switch, the stepper
+ * and the button, reached in order by Tab.
  */
 export const KeyboardOnly: Story = {
-  args: { action: actionReturning({ status: 'success' }) },
+  /*
+   * Without the character, whose canvas has nothing a keyboard reaches but is the heaviest thing on
+   * the page to load — this story is about the questions.
+   */
+  args: { action: actionReturning({ status: 'success' }), models: undefined },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    const [fri, sat, sun] = dayBoxes(canvas);
 
     await userEvent.tab();
     await expect(nameInput(canvas)).toHaveFocus();
@@ -462,15 +461,6 @@ export const KeyboardOnly: Story = {
     await userEvent.tab();
     await expect(emailInput(canvas)).toHaveFocus();
     await userEvent.keyboard('ada@example.com');
-
-    await userEvent.tab();
-    await expect(fri).toHaveFocus();
-    await userEvent.keyboard('[Space]');
-    await userEvent.tab();
-    await expect(sat).toHaveFocus();
-    await userEvent.keyboard('[Space]');
-    await userEvent.tab();
-    await expect(sun).toHaveFocus();
 
     await userEvent.tab();
     await expect(canvas.getByRole('textbox', { name: /^dietary requirements/i })).toHaveFocus();
@@ -486,13 +476,6 @@ export const KeyboardOnly: Story = {
     await userEvent.keyboard('Charles Babbage');
     await userEvent.tab();
     await expect(canvas.getByRole('textbox', { name: /^plus one dietary/i })).toHaveFocus();
-
-    // Into the pills: Tab lands on the first, Space picks it, an arrow moves the choice.
-    await userEvent.tab();
-    await expect(canvas.getByRole('radio', { name: 'King Room' })).toHaveFocus();
-    await userEvent.keyboard('[Space]');
-    await userEvent.keyboard('{ArrowRight}');
-    await expect(canvas.getByRole('radio', { name: 'Twin Double' })).toBeChecked();
 
     // The stepper: the floor button keeps focus (it is aria-disabled, not disabled), then + twice.
     await userEvent.tab();
@@ -520,8 +503,6 @@ export const KeyboardOnly: Story = {
 
     await waitFor(() => expect(callsOf(args.action)).toHaveLength(1), ROUND_TRIP);
     const [, formData] = callsOf(args.action)[0];
-    await expect(formData.getAll('attending')).toEqual(['friday', 'saturday']);
-    await expect(formData.get('roomPreference')).toBe('Twin Double');
     await expect(formData.get('kidsCount')).toBe('2');
     await expect(formData.get('plusOne.name')).toBe('Charles Babbage');
     await expect(await canvas.findByRole('button', { name: 'Saved' }, ROUND_TRIP)).toHaveFocus();
@@ -529,7 +510,7 @@ export const KeyboardOnly: Story = {
 };
 
 /**
- * The phone frame: one column, nothing sticky, the summary panel gone, and the kids stepper and the
+ * The phone frame: one column, nothing sticky, the character gone, and the kids stepper and the
  * ages input still sharing a row.
  */
 export const Mobile: Story = {
@@ -541,7 +522,7 @@ export const Mobile: Story = {
     await expect(getComputedStyle(rail).position).toBe('static');
 
     // `display: none`, so it is out of the accessibility tree as well as off the screen.
-    await expect(canvas.queryByRole('region', { name: /your reply/i })).toBeNull();
+    await expect(railModel(canvas)).toBeNull();
     // The intro keeps its first sentence and loses the rest, as the phone frame draws it.
     await expect(canvas.getByText(COPY.intro, { exact: false })).toBeVisible();
     await expect(canvas.getByText(COPY.introDetail, { exact: false })).not.toBeVisible();

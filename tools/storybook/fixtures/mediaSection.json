@@ -1,0 +1,45 @@
+{
+  "_key": "790d6020be43",
+  "_type": "mediaSection",
+  "aspectRatioDesktop": "21x9",
+  "aspectRatioMobile": "4x3",
+  "image": {
+    "altText": "Loglee Wedding",
+    "aspectRatio": null,
+    "asset": {
+      "_id": "image-60cd9dbfd935181a6010d2562e00937c96ff943b-3000x903-avif",
+      "altText": null,
+      "metadata": {
+        "dimensions": {
+          "height": 903,
+          "width": 3000
+        },
+        "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAGABQDASIAAhEBAxEB/8QAFwABAAMAAAAAAAAAAAAAAAAAAAMFB//EAB4QAAIDAAIDAQAAAAAAAAAAAAECAAMEERIFBiEx/8QAFQEBAQAAAAAAAAAAAAAAAAAAAwT/xAAYEQADAQEAAAAAAAAAAAAAAAAAAQIRMf/aAAwDAQACEQMRAD8Az6v1w9mtFysE5HV1+Ss1+OfLqpd7Q6t+qB8iJNL4PcpaTZfL7K6umevKKwTwGr5MREXAtZ//2Q=="
+      },
+      "url": "https://cdn.sanity.io/images/tftcitbh/production/60cd9dbfd935181a6010d2562e00937c96ff943b-3000x903.avif"
+    },
+    "crop": {
+      "_type": "sanity.imageCrop",
+      "bottom": 0,
+      "left": 0,
+      "right": 0,
+      "top": 0.06250521311201934
+    },
+    "hotspot": {
+      "_type": "sanity.imageHotspot",
+      "height": 0.640931270331137,
+      "width": 1,
+      "x": 0.5,
+      "y": 0.6319907832179498
+    }
+  },
+  "mediaType": "image",
+  "sectionFields": {
+    "spacingOptions": {
+      "removeBottomSpacing": false,
+      "removeTopSpacing": true
+    },
+    "themeOptions": null
+  },
+  "width": "contained"
+}

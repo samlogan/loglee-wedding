@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { CSSProperties, ReactNode } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import Text from '@/components/Text';
 import { mockBlock } from '@/tools/storybook/mockBlockContent';
@@ -750,5 +750,68 @@ export const PerCardTheme: Story = {
       await expect(topOf(lunch)).toBeCloseTo(topOf(dinner), 0);
       await expect(dinner.getBoundingClientRect().left).toBeGreaterThan(lunch.getBoundingClientRect().right);
     });
+  }
+};
+
+/**
+ * A linked card: the title is the one link, named for the card, and its click area is stretched
+ * over the whole card — a click on the photograph lands on it too.
+ */
+export const Linked: Story = {
+  args: { ...KING_ROOM, link: { externalLink: 'https://thelodgejamberoo.com.au/', linkType: 'external' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const links = canvas.getAllByRole('link');
+
+    // One link, not one per piece of text.
+    await expect(links).toHaveLength(1);
+    await expect(links[0]).toHaveAccessibleName(/king room/i);
+    await expect(links[0]).toHaveAttribute('href', 'https://thelodgejamberoo.com.au/');
+
+    // The stretched layer covers the card: the photograph's centre hits the link.
+    const card = canvasElement.querySelector('[class*="card"]') as HTMLElement;
+    const media = card.querySelector('img') as HTMLElement;
+    const box = media.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    await expect(hit).toBe(links[0]);
+
+    // Keyboard focus rings the card, not just the title.
+    await userEvent.tab();
+    await expect(links[0]).toHaveFocus();
+    await expect(getComputedStyle(card).outlineStyle).toBe('solid');
+  }
+};
+
+/** A link that resolves nowhere leaves the card as it was — no link at all. */
+export const LinkWithoutDestination: Story = {
+  args: { ...KING_ROOM, link: { linkType: 'external' } },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByRole('link')).toBeNull();
+  }
+};
+
+/**
+ * `titleAs` overrides the heading level stored in the title's markup — the section decides where the
+ * card sits in the page's outline, not the editor's tag choice.
+ */
+export const TitleAsH2: Story = {
+  args: { ...LULUS, titleAs: 'h2' },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('heading', { level: 2 })).toBeInTheDocument();
+  }
+};
+
+export const TitleAsH3: Story = {
+  args: { ...LULUS, titleAs: 'h3' },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('heading', { level: 3 })).toBeInTheDocument();
+  }
+};
+
+/** A span: a card title that should not be a heading at all. */
+export const TitleAsSpan: Story = {
+  args: { ...LULUS, titleAs: 'span' },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByRole('heading')).toBeNull();
   }
 };

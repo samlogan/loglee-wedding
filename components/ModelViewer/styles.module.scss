@@ -327,6 +327,29 @@
    * panel. The arch is the canvas's event source instead, so hover, tap and the orbit drag all still
    * work, but only over the arch.
    */
+  /*
+   * `backdrop={false}` — no arch behind the character. The stage keeps its size, so the character is
+   * framed exactly as it would be in the arch; the fill, the loading hatch, the rounded clip and the
+   * margin above go. Two classes, so this beats `.stage` and `.placeholder` wherever they are written.
+   *
+   * The hatch is made transparent rather than `display: none`, because while nothing else is in the
+   * arch it is the element carrying the character's accessible name, and a hidden element has none.
+   */
+  .noBackdrop {
+    // The margin above the stage is the arch's breathing room inside the panel; with no arch and no
+    // panel it is only a gap above the character's headroom.
+    .stage {
+      margin-block-start: 0;
+      border-radius: 0;
+      background-color: transparent;
+    }
+
+    .placeholder {
+      opacity: 0;
+      animation: none;
+    }
+  }
+
   .canvasHolder {
     position: absolute;
     inset: calc(var(--model-bleed-top, 0) * -100%) calc(var(--model-bleed-inline, 0) * -100%) 0;

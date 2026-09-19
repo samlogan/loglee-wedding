@@ -6,38 +6,27 @@ import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
 import hasDestination from '@/helpers/hasDestination';
 import { getMapsUrl, resolveMapLocation } from '@/helpers/mapLocation';
-import type { IFaqMapCard } from '@/tools/sanity/schema/sections/faqSection';
+import type { IMapCard } from '@/tools/sanity/schema/objects/mapCard';
 
 import styles from './styles.module.scss';
 
-export interface FaqMapCardProps extends IFaqMapCard {
+export interface MapCardProps extends IMapCard {
   className?: string;
   /**
-   * The theme the **bottom bar's contents** resolve against, which is the inverse of the page's.
+   * Fill the parent instead of being a 260px card — for `MapSection`, whose frame sets the shape. The
+   * map keeps its zoom buttons, which a card this large has room for, and the bar hugs its contents.
    *
-   * The bar is the design's ink chip — `--button-secondary-bg` / `-fg`, stone-900 under stone-50 on
-   * a light page and the reverse on a dark one — so its label and its link sit on a surface that is
-   * the opposite of everything around them. The label follows automatically (it is
-   * `--button-secondary-fg`), but the "open in maps" link is drawn in the *accent*, and
-   * `--fg-accent` is pine-600 on light and signal-300 on dark. Read from the page's own theme it
-   * would be pine-600 on a stone-900 bar: 2.0:1, unreadable.
-   *
-   * Writing the flipped theme on the link itself re-points the whole `[data-theme]` block beneath
-   * that one element, so `--fg-accent` resolves against the surface the link is actually on —
-   * signal-300 on the ink bar, pine-600 on the off-white one. Both clear AA. The surrounding card
-   * keeps the page's theme, which is why this is a prop on the link rather than an attribute on the
-   * bar: putting it on the bar would flip `--button-secondary-bg` too and the ink chip would
-   * un-invert itself.
+   *   bleed      edge to edge of the viewport: square corners, the chip and the bar on the page gutter
+   *   contained  inside the page container: the card's own rounded corners and inset
    */
-  accentTheme: ProjectTheme;
-  /** The page's own theme, which the live map's colour scheme follows. */
+  fill?: 'bleed' | 'contained';
+  /** The page's theme. The live map's colour scheme follows it, and the bar's link inverts it. */
   theme?: ProjectTheme;
 }
 
 /**
- * The compact map card in the FAQ's left rail — nodes 16:643 (desktop) and 16:799 (mobile).
- *
- * ## The map is shared; the card is not
+ * The compact map card — drawn for the FAQ's left rail (nodes 16:643 desktop, 16:799 mobile) and
+ * reused in the RSVP page's rail.
  *
  * A pinned location draws through `components/Map` — the same live Google map `MapSection` renders
  * full-bleed, here in its `compact` variant so the zoom buttons do not cover a 260px frame. The
@@ -52,8 +41,25 @@ export interface FaqMapCardProps extends IFaqMapCard {
  * stylesheet gives the overlays an explicit `z-index`, and the story asserts the result with
  * `elementFromPoint` rather than by eye.
  */
-const FaqMapCard = (props: FaqMapCardProps) => {
-  const { accentTheme, address, badge, className, image, link, location, theme } = props;
+const MapCard = (props: MapCardProps) => {
+  const { address, badge, className, fill, image, link, location, theme = 'light' } = props;
+
+  /*
+   * The theme the **bar's link** resolves against — the inverse of the page's.
+   *
+   * The bar is the design's ink chip — `--button-secondary-bg` / `-fg`, stone-900 under stone-50 on
+   * a light page and the reverse on a dark one — so its contents sit on a surface that is the
+   * opposite of everything around them. The label follows automatically (it is
+   * `--button-secondary-fg`), but the "open in maps" link is drawn in the *accent*, and
+   * `--fg-accent` is pine-600 on light and signal-300 on dark. Read from the page's own theme it
+   * would be pine-600 on a stone-900 bar: 2.0:1, unreadable.
+   *
+   * Writing the flipped theme on the link itself re-points the whole `[data-theme]` block beneath
+   * that one element, so `--fg-accent` resolves against the surface the link is actually on. The
+   * card keeps the page's theme: putting the flip on the bar would flip `--button-secondary-bg` too,
+   * and the ink chip would un-invert itself.
+   */
+  const accentTheme: ProjectTheme = theme === 'dark' ? 'light' : 'dark';
 
   /*
    * Map first, image second, nothing third — the precedence the schema's docblock states.
@@ -79,7 +85,13 @@ const FaqMapCard = (props: FaqMapCardProps) => {
   }
 
   return (
-    <div className={classNames(styles.mapCard, className)}>
+    <div
+      className={classNames(
+        styles.mapCard,
+        { [styles.fill]: Boolean(fill), [styles.bleed]: fill === 'bleed', [styles.live]: hasMap },
+        className
+      )}
+    >
       {hasImage && image && (
         /*
          * `sizes` is stated rather than left to `components/Image`'s default, which assumes a
@@ -87,7 +99,7 @@ const FaqMapCard = (props: FaqMapCardProps) => {
          * the stack point and 440px above it (node 16:643). Getting it wrong costs bandwidth on
          * every page load rather than anything visible, which is why it is easy to leave wrong.
          */
-        <Image {...image} sizes="(max-width: 1024px) 100vw, 440px" />
+        <Image {...image} sizes={fill ? '100vw' : '(max-width: 1024px) 100vw, 440px'} />
       )}
       {hasMap && (
         /*
@@ -100,7 +112,7 @@ const FaqMapCard = (props: FaqMapCardProps) => {
           label={address?.trim() ? `Map of ${address.trim()}` : badge?.trim() || 'Map'}
           location={location}
           theme={theme}
-          variant="compact"
+          variant={fill ? 'default' : 'compact'}
         />
       )}
       {/*
@@ -167,4 +179,4 @@ const FaqMapCard = (props: FaqMapCardProps) => {
   );
 };
 
-export default FaqMapCard;
+export default MapCard;

@@ -1,0 +1,85 @@
+/*
+ * The moving strip. See `index.tsx` for why it is a CSS animation rather than a carousel library.
+ *
+ * ## Slide widths
+ *
+ * The standard slide width fits 1.5 across on a phone, 3.5 on a tablet and 4.5 on a desktop.
+ * Portrait and square slides are that width and stand taller; landscape slides span more than one
+ * width and sit a little shorter. The row is centred on its middle. See `slideStyle` in `index.tsx`.
+ * `cqi` resolves against `.viewport`, the full-bleed strip.
+ *
+ * On a phone the span is capped at one width. A standard slide there is already two thirds of the
+ * screen, and a 3:2 slide spanning 1.33 widths would fill nearly all of it, with none of the next
+ * showing — so every slide is the standard width and a landscape one is simply shorter. Neighbours
+ * still differ in height, because they still differ in shape.
+ *
+ * The gap is a margin on each slide rather than `gap` on the track, so each copy of the list is
+ * exactly half the track: `gap` would leave one gap too few, and the loop would jump by that much.
+ */
+@layer defaults {
+  .viewport {
+    --carousel-gap: #{fluid(8px, 16px)};
+    --carousel-visible: 1.5;
+    // The widest a slide may span, in standard widths — one on a phone. See the note above.
+    --carousel-span-max: 1;
+
+    container-type: inline-size;
+    overflow: hidden;
+
+    @include media-up(tablet) {
+      --carousel-visible: 3.5;
+      --carousel-span-max: 3;
+    }
+
+    @include media-up(large-tablet) {
+      --carousel-visible: 4.5;
+    }
+  }
+
+  .track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    animation: carousel-scroll var(--carousel-duration, 40s) linear infinite;
+  }
+
+  .slide {
+    flex: 0 0 auto;
+    // The standard width, times the slide's span: 1 for portrait and square, more for landscape — up
+    // to the cap, which is one width on a phone.
+    width: calc(
+      (100cqi / var(--carousel-visible) - var(--carousel-gap)) * min(var(--slide-span, 1), var(--carousel-span-max))
+    );
+    margin-inline-end: var(--carousel-gap);
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background-color: var(--bg-accent);
+  }
+
+  /*
+   * Reduced motion: no animation, no duplicate copy, and the row scrolls under the reader's own
+   * control instead — the photographs stay reachable without anything moving by itself.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .viewport {
+      overflow-x: auto;
+    }
+
+    .track {
+      animation: none;
+    }
+
+    .slide[aria-hidden='true'] {
+      display: none;
+    }
+  }
+
+  @keyframes carousel-scroll {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}

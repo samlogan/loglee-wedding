@@ -268,6 +268,9 @@
    */
   .fullWidth {
     grid-column: 1 / -1;
+    // The label sits on a paragraph here rather than a one-line value, and touching it read as one
+    // block. The short stats keep the comp's tight pairing.
+    gap: var(--spacing-xs);
     padding-bottom: var(--card-stat-padding);
     border-bottom: 0;
   }
@@ -298,27 +301,6 @@
     color: var(--fg-default);
     font-size: var(--card-value-size);
     overflow-wrap: anywhere;
-  }
-
-  /*
-   * The one value the comp sets in the body face rather than the mono — 15px Instrument Sans
-   * desktop (node 1:206), 14px mobile (node 1:274). That step is `<Text size="md">` on the value
-   * itself, which resolves `--body-md` = `fluid(14px, 16px)`: the narrow anchor is exact and the
-   * wide one is a pixel over, which is the trade `FieldCheckbox` already makes for its title in
-   * exchange for staying on the type scale.
-   *
-   * The **family** is the only thing this rule exists for, and it cannot move to the prop:
-   * `Text`'s `.variant_body` sets a weight and a size and no `font-family` at all, so an inline
-   * `<Text>` inside the `<dd>` inherits the mono face `variant="mono"` puts on it and renders the
-   * one body-face run in the card in JetBrains Mono. Two classes, so it beats `.variant_mono`.
-   *
-   * Size and line-height are deliberately *not* restated here. They were, and the two declarations
-   * agreed only because both happened to name `--body-md` — two places to change, no way for either
-   * to notice the other, and the browser silently taking whichever won. The component prop owns the
-   * step; the stylesheet owns the face.
-   */
-  .fullWidth .statValue {
-    @include body-font();
   }
 
   /*

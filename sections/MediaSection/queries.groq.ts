@@ -17,6 +17,7 @@ const mediaSectionProjection = groq`
       videoUrl,
       autoPlay
     },
+    width,
     aspectRatioDesktop,
     aspectRatioMobile
   },

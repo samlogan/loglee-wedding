@@ -1,9 +1,9 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 
-import { RSVP_DAYS, RSVP_FIELD, RSVP_KIDS_MAX, RSVP_ROOM_PREFERENCES } from '@/components/RsvpForm/contract';
-import type { RsvpFieldErrors, RsvpFieldName, RsvpRoomPreference } from '@/components/RsvpForm/contract';
-import type { IRsvpDay, IRsvpDocument } from '@/tools/sanity/schema/documents/rsvp';
+import { RSVP_FIELD, RSVP_KIDS_MAX } from '@/components/RsvpForm/contract';
+import type { RsvpFieldErrors, RsvpFieldName } from '@/components/RsvpForm/contract';
+import type { IRsvpDocument } from '@/tools/sanity/schema/documents/rsvp';
 
 /**
  * The server side of the RSVP form: every check the action makes before it writes, as pure functions.
@@ -17,8 +17,14 @@ import type { IRsvpDay, IRsvpDocument } from '@/tools/sanity/schema/documents/rs
  * `unit` project aliases the marker to its empty module.
  */
 
-/** A reply that passed every check, shaped exactly as the `rsvp` document stores it. */
-export type RsvpReply = Omit<IRsvpDocument, '_createdAt' | '_updatedAt' | 'submittedAt'>;
+/**
+ * A reply that passed every check, shaped exactly as the `rsvp` document stores it — less the two
+ * questions the form no longer asks, which only replies sent before the change carry.
+ */
+export type RsvpReply = Omit<
+  IRsvpDocument,
+  '_createdAt' | '_updatedAt' | 'submittedAt' | 'attending' | 'roomPreference'
+>;
 
 export type RsvpParseResult = { ok: true; reply: RsvpReply } | { ok: false; fieldErrors: RsvpFieldErrors };
 
@@ -68,13 +74,6 @@ type RsvpTextField = keyof typeof RSVP_TEXT_MAX_LENGTH;
 // The form's own pattern, deliberately loose — `name@domain.tld` with no spaces. Whether the address
 // is real is not something a pattern can know.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const DAY_VALUES: readonly IRsvpDay[] = RSVP_DAYS.map((day) => day.value);
-
-const isDay = (value: unknown): value is IRsvpDay => DAY_VALUES.includes(value as IRsvpDay);
-
-const isRoomPreference = (value: string): value is RsvpRoomPreference =>
-  RSVP_ROOM_PREFERENCES.includes(value as RsvpRoomPreference);
 
 /**
  * One entry as trimmed text, or `''` when it is absent.
@@ -152,14 +151,6 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
     fieldErrors[RSVP_FIELD.email] = 'Enter an email address, like name@example.com';
   }
 
-  // Zero days is a real answer — a guest declining — so only a value that is not a day is refused.
-  // Stored deduplicated and in weekend order, whatever order the entries came in.
-  const days = entries.getAll(RSVP_FIELD.attending);
-  if (!days.every(isDay)) {
-    fieldErrors[RSVP_FIELD.attending] = 'Choose from the days listed';
-  }
-  const attending = DAY_VALUES.filter((day) => days.includes(day));
-
   // A native checkbox: present when ticked, absent when not. The plus one's own answers are read only
   // while it is ticked, so a post that sends them with the box unticked stores neither.
   const bringing = entries.get(RSVP_FIELD.plusOneBringing) !== null;
@@ -170,11 +161,6 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
         name: required(RSVP_FIELD.plusOneName, "Enter your plus one's name")
       }
     : { bringing };
-
-  const room = readText(entries, RSVP_FIELD.roomPreference);
-  if (room && !isRoomPreference(room)) {
-    fieldErrors[RSVP_FIELD.roomPreference] = 'Choose one of the rooms listed';
-  }
 
   // Checked as text, as the form does: `Number` reads "" as 0 and "1e1" as 10, and neither is a count
   // the stepper could have produced. `\d` without the `u` flag is ASCII digits only.
@@ -195,14 +181,12 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
   return {
     ok: true,
     reply: {
-      attending,
       dietary,
       email,
       kidsAges,
       kidsCount,
       name,
       plusOne,
-      roomPreference: room ? (room as RsvpRoomPreference) : undefined,
       songRequest
     }
   };
@@ -236,12 +220,10 @@ const replyKey = (reply: Partial<RsvpReply>) =>
   JSON.stringify([
     reply.name,
     reply.email,
-    reply.attending ?? [],
     reply.dietary,
     reply.plusOne?.bringing ?? false,
     reply.plusOne?.name,
     reply.plusOne?.dietary,
-    reply.roomPreference,
     reply.kidsCount,
     reply.kidsAges,
     reply.songRequest

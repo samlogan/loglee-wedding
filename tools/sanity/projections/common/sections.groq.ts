@@ -5,6 +5,7 @@ import closingCtaSectionProjection from '@/sections/ClosingCtaSection/queries.gr
 import faqSectionProjection from '@/sections/FaqSection/queries.groq';
 import headerDisplaySectionProjection from '@/sections/HeaderDisplaySection/queries.groq';
 import heroSectionProjection from '@/sections/HeroSection/queries.groq';
+import imageCarouselSectionProjection from '@/sections/ImageCarouselSection/queries.groq';
 import mapSectionProjection from '@/sections/MapSection/queries.groq';
 import mediaCardGridSectionProjection from '@/sections/MediaCardGridSection/queries.groq';
 import mediaSectionProjection from '@/sections/MediaSection/queries.groq';
@@ -29,6 +30,7 @@ const sectionProjections = [
   faqSectionProjection,
   headerDisplaySectionProjection,
   heroSectionProjection,
+  imageCarouselSectionProjection,
   mapSectionProjection,
   mediaCardGridSectionProjection,
   mediaSectionProjection,

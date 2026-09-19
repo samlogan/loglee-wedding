@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 
 import Link from '@/components/Link';
+import MapCard from '@/components/MapCard';
 import Section from '@/components/Section';
 import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
@@ -11,7 +12,6 @@ import { getSectionSpacingProps, getSectionTheme } from '@/tools/helpers/section
 import type { IFaqSection } from '@/tools/sanity/schema/sections/faqSection';
 
 import FaqItems from './FaqItems';
-import FaqMapCard from './FaqMapCard';
 
 import styles from './styles.module.scss';
 
@@ -46,12 +46,6 @@ const FaqSection: FC<IFaqSection> = (props) => {
   const { tagline, title, content, addMap, map, addButton, buttonEyebrow, button, faqItems } = props;
 
   const theme = getSectionTheme(props, 'light');
-  /*
-   * The map bar's contents resolve against the inverse of the page — see the note on
-   * `FaqMapCard`'s `accentTheme` prop. Computed here because this is where the page's theme is
-   * known; the card itself takes no view on what the page is.
-   */
-  const accentTheme: ProjectTheme = theme === 'dark' ? 'light' : 'dark';
 
   // `hasTitleText` and not `title?.trim()` — `TitleInput` stores markup, so an emptied field is the
   // truthy string `'<h2></h2>'`. The helper's docblock carries the trap; five sections had it inline.
@@ -105,7 +99,12 @@ const FaqSection: FC<IFaqSection> = (props) => {
                     weight="bold"
                   />
                 )}
-                {hasTitle && <TextTitle title={title} variant="heading" size="lg" />}
+                {/*
+                 * The page-title treatment the site's other page headings use — Archivo Black in
+                 * capitals at `--display-md`, as the RSVP page sets its "RSVP" in the same 440px rail.
+                 * The tag stays the editor's: this is the FAQ page's `h1`.
+                 */}
+                {hasTitle && <TextTitle size="md" textTransform="uppercase" title={title} variant="display" />}
               </div>
             )}
             {hasBlockContent(content) && (
@@ -121,7 +120,7 @@ const FaqSection: FC<IFaqSection> = (props) => {
                */
               <TextBlock blocks={content} config={{ p: { size: 'lg' } }} />
             )}
-            {hasMap && map && <FaqMapCard {...map} accentTheme={accentTheme} theme={theme} />}
+            {hasMap && map && <MapCard {...map} theme={theme} />}
           </div>
         )}
         <div className={styles.accordionColumn}>
@@ -146,19 +145,19 @@ const FaqSection: FC<IFaqSection> = (props) => {
                 />
               )}
               {/*
-               * The design's outlined ink pill (node 16:717), where this used to render a filled
-               * pine `rounded` button. `theme` is required alongside `outline` — the pair
-               * `outline` + no theme is one of the three combinations CLAUDE.md closes in CSS
-               * rather than in the types.
+               * The header's RSVP pill, prop for prop — the accent `ui` button in mono capitals with
+               * its arrow (`components/Header`) — so the site's call to action looks the same
+               * wherever it appears. It replaced the design's outlined ink pill (node 16:717).
                */}
               <Link
                 {...button?.link}
+                arrow="right"
                 className={styles.footerButton}
-                outline
-                size="md"
-                theme="secondary"
-                variant="pill"
+                mono
+                size="sm"
                 text={button?.label}
+                theme="accent"
+                variant="ui"
               />
             </div>
           )}

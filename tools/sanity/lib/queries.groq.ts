@@ -108,9 +108,13 @@ export const SITEMAP_QUERY = groq`
  * breaks ties in `order` — the field is optional, and GROQ leaves equal keys in no stated order, so
  * without it two unnumbered players could swap places between fetches.
  *
- * `originalFilename` is projected for `ModelViewer`'s file-name chip, which must name the file this
- * player actually loads. The comp prints `sam-dance.glb` on both players' layouts; read from the
- * asset, Lauren's page cannot show Sam's file.
+ * `gallery` sits beside `player` rather than inside it because it is not the showcase's — the
+ * template hands it to `ImageCarouselSection` under the showcase, so `PlayerShowcasePlayer` does not
+ * grow a field it never reads.
+ *
+ * `modelLabel` and `modelBadge` are the 3D panel's corner label and chip, authored per player. The
+ * chip used to be read from the model file's `originalFilename`; it is plain text now, so it can say
+ * anything — or nothing.
  */
 export const PLAYER_PAGE_QUERY = groq`{
   "player": *[_type == "player" && slug.current == $slug && defined(name)][0]{
@@ -120,11 +124,35 @@ export const PLAYER_PAGE_QUERY = groq`{
     level,
     clips,
     stats,
-    "model": model.asset->{ url, originalFilename },
+    "model": model.asset->{ url },
+    modelLabel,
+    modelBadge,
     fallbackImage${imageProjection}
   },
   "roster": *[_type == "player" && slug.current in $routes && defined(name)] | order(order asc, _id asc){
     name,
-    "slug": slug.current
+    "slug": slug.current,
+    selectLabel,
+    eyebrow
+  },
+  "gallery": *[_type == "player" && slug.current == $slug && defined(name)][0].gallery[]{
+    _key,
+    ...@${imageProjection}
   }
 }`;
+
+/**
+ * The players' models, for the RSVP page's rail, which shows one of them at random.
+ *
+ * Only players with a page (`$routes`) and a model file — a player with no GLB has nothing to put in
+ * the rail. The fields are the ones `ModelViewer` takes; `clips` is the three authored names the
+ * rail chooses an animation from.
+ */
+export const RSVP_MODELS_QUERY = groq`
+  *[_type == "player" && slug.current in $routes && defined(name) && defined(model.asset)] | order(order asc, _id asc){
+    name,
+    clips,
+    "src": model.asset->url,
+    fallbackImage${imageProjection}
+  }
+`;

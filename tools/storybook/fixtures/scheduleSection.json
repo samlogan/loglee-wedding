@@ -24,7 +24,22 @@
       "events": [
         {
           "_key": "k7",
-          "description": null,
+          "description": [
+            {
+              "_key": "66e2d7951d98",
+              "_type": "block",
+              "children": [
+                {
+                  "_key": "bae4e61befba",
+                  "_type": "span",
+                  "marks": [],
+                  "text": "Settle into your room and have a look around the Lodge before dinner."
+                }
+              ],
+              "markDefs": [],
+              "style": "normal"
+            }
+          ],
           "location": "The Lodge",
           "time": "TBC",
           "title": "Arrivals and check-in"
@@ -40,7 +55,7 @@
                   "_key": "k10",
                   "_type": "span",
                   "marks": [],
-                  "text": "The location is still being decided — options include the Champagne Garden, the wedding terrace or Fin's Bar."
+                  "text": "Options include the Champagne Garden, the wedding terrace or Fin's Bar."
                 }
               ],
               "markDefs": [],
@@ -121,7 +136,22 @@
         },
         {
           "_key": "k20",
-          "description": null,
+          "description": [
+            {
+              "_key": "5755ab671bc0",
+              "_type": "block",
+              "children": [
+                {
+                  "_key": "42dbfc2c4fcb",
+                  "_type": "span",
+                  "marks": [],
+                  "text": "Dinner, speeches and dancing into the night."
+                }
+              ],
+              "markDefs": [],
+              "style": "normal"
+            }
+          ],
           "location": "Wedding Hall",
           "time": "TBC",
           "title": "Reception"
@@ -152,14 +182,44 @@
       "events": [
         {
           "_key": "k24",
-          "description": null,
+          "description": [
+            {
+              "_key": "055777c85583",
+              "_type": "block",
+              "children": [
+                {
+                  "_key": "b683036efb9d",
+                  "_type": "span",
+                  "marks": [],
+                  "text": "Coffee, a big breakfast and the stories from last night."
+                }
+              ],
+              "markDefs": [],
+              "style": "normal"
+            }
+          ],
           "location": "Lulu's",
           "time": "TBC",
           "title": "Recovery breakfast"
         },
         {
           "_key": "k25",
-          "description": null,
+          "description": [
+            {
+              "_key": "c95e1c786367",
+              "_type": "block",
+              "children": [
+                {
+                  "_key": "9574a5a78732",
+                  "_type": "span",
+                  "marks": [],
+                  "text": "Pack up, say goodbye and travel home safely."
+                }
+              ],
+              "markDefs": [],
+              "style": "normal"
+            }
+          ],
           "location": "The Lodge",
           "time": "TBC",
           "title": "Check-out"

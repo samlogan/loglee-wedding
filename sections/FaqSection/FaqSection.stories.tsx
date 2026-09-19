@@ -13,6 +13,7 @@ import sectionFixture from '@/tools/storybook/sectionFixture';
 import FaqSection from '.';
 
 import styles from './styles.module.scss';
+import mapCardStyles from '@/components/MapCard/styles.module.scss';
 
 const FIGMA = 'https://www.figma.com/design/KxvsJuCNaG4n2QVp3iD4jd/Wedding?node-id=';
 
@@ -247,7 +248,9 @@ export const PublishedContent: Story = {
      * present one.
      */
     await expect(Boolean(canvasElement.querySelector(`.${styles.tagline}`))).toBe(Boolean(data.tagline?.trim()));
-    await expect(Boolean(canvasElement.querySelector(`.${styles.mapCard}`))).toBe(Boolean(data.addMap && data.map));
+    await expect(Boolean(canvasElement.querySelector(`.${mapCardStyles.mapCard}`))).toBe(
+      Boolean(data.addMap && data.map)
+    );
     await expect(Boolean(canvasElement.querySelector(`.${styles.footer}`))).toBe(
       Boolean(data.addButton && data.button?.label)
     );
@@ -400,7 +403,9 @@ export const MapBarTypography: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const address = canvas.getByText(MOCK.map?.address as string);
-    const link = canvas.getByRole('link', { name: MOCK.map?.link?.label as string });
+    // External, so its name carries the "(opens in a new tab)" note after the visible label.
+    const link = canvas.getByRole('link', { name: new RegExp(`^${MOCK.map?.link?.label}`) });
+    await expect(link).toHaveAttribute('target', '_blank');
 
     await waitFor(async () => {
       for (const run of [address, link]) {

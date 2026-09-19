@@ -1,0 +1,356 @@
+{
+  "_key": "latest-uploads-carousel",
+  "_type": "imageCarouselSection",
+  "images": [
+    {
+      "_key": "c94235e8-c1d",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-5f7b592ae1c9b8f02e9d88bcfbde97093a23ba0e-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAQUBAAAAAAAAAAAAAAAAAAMFBgcIBP/EACYQAAIBBAECBgMAAAAAAAAAAAECAwAEBREhBhMHEhQxQVEiMmH/xAAXAQEBAQEAAAAAAAAAAAAAAAAFBAEC/8QAHhEAAgICAwEBAAAAAAAAAAAAAQIAAxEhBAUTEmH/2gAMAwEAAhEDEQA/AH6JIYetpZ0mXtywaLb43Sl+IV6i7jzRAG3IBLe/NV31E0sTQwXLntqjSyFD9fFd2EV8vibCcBpGKkrsc8e1dnmhMqozg5mL1i2fBY4ypG/ySDH21i1vuZIWcsTthz70U23GSvbJlgOEdiq8tre6Krr5qBQCIfb11hckSAXtxHdwu2QzEckcxPbEJ15R/asLwnymN9AbS3lWaSJd8HehWc7diFGj91N/CSV4OpwkTFVkibzAfND11+OgY89nuhYiaaihju41m2PyFFNHTsjnHcsf3airvP63DzaV1P/Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/5f7b592ae1c9b8f02e9d88bcfbde97093a23ba0e-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "9ba92201-644",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-45f6da0ec8c5fcd3926d7f7a8d085966d651767e-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGwAAAQQDAAAAAAAAAAAAAAAAAAQFBgcBAgP/xAApEAACAgIBAwMCBwAAAAAAAAABAgMEAAURBhIhEzFBIjIUQlFhkcHx/8QAGAEAAwEBAAAAAAAAAAAAAAAAAgMEAAX/xAAhEQABAwMEAwAAAAAAAAAAAAABAAIRAxIxBCEiURQykf/aAAwDAQACEQMRAD8AlO66jraq4KqoJpQO5wp+0fvi3X7fWbP0lr2ELuvd285Ru66qmo9S7Cdqqsl1foPz3AfOd9D1FDT1AduEsnn3Xwr85KHk4Gy6RpsHsYO6u2YQrIR6qfzhlML1PbXkStHM3P3qfBww+PamuPSxsddUbWR/iVaSeX6uR+TIfsGu1EtRRlBA/kKTyf8AcUzXLArORK3I8++N9li1KWZiTKIiwY+/P64dXSu0j7JlZlfyW88rTWbaKvTSKxQtNIvyg8HDG3W7nYCqALLe/wAgH+sMUWmcJrbYyfgX/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/45f6da0ec8c5fcd3926d7f7a8d085966d651767e-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "be3b055a-b9b",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-56dc25eb6dc525d4831039b7178be1b6e53781f6-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGwAAAgIDAQAAAAAAAAAAAAAAAAYEBQECAwf/xAAjEAACAQMEAgMBAAAAAAAAAAABAgMABREEEiExBkETIjJS/8QAGAEAAwEBAAAAAAAAAAAAAAAAAgQFAQP/xAAfEQABAwQDAQAAAAAAAAAAAAABAAIRAwQSIRMUUaH/2gAMAwEAAhEDEQA/AEfxSf5oZNoxIEO4k4OB7rpbL2WuqLEu3L4LYzx7NUVv10S3NYtHuBliYB8djFY8es1xuGGgmEe7kDOCea4Ua+EPOoWGlmIXqLXbVlj8GlcoOiR3RSfLLeIJGigZnRDjcfdFA6/uSSeT6g6tIahaeIWmGW5Q6wxbNLFFtIP9Y5NNHjtm0k0TSGEwMScMrHgZ7qq8YQR2mPZxv5bns03W76xOo4AHVTbhzhoFOObiJ9UtdHFEqp9XwP1juio7uwwAxAAoqdCUlf/Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/56dc25eb6dc525d4831039b7178be1b6e53781f6-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "4bd58079-f45",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-ffd5543ffac601a17ea3e2aee212a132fc097bfc-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAUDBAcG/8QAJxAAAgIBAwMDBQEAAAAAAAAAAQIDBAAFBhESMUEhIlETFEJSYZH/xAAXAQADAQAAAAAAAAAAAAAAAAAAAwQF/8QAHhEBAAICAQUAAAAAAAAAAAAAAQACAxEhEiIyQVH/2gAMAwEAAhEDEQA/AEl2va1GeR7sDSMfR+luCcUWtpwTu7VoJ6yfqPcOf7ms0dG6xKZSiN8swGcVuHUb9HWJalOq07DyDwn+5Jj7nlld8QGiu5nbbOKMw+6bv2+n2wzTae4oIoAmqJSS0voVfuBhg9W+GBhx+yMN56NW1ezG2kXp4kjXojUuR1E+f7ku4duy14tCr05eq5XTi3Kfy58HJ9yxp0QyAcOjAqw9ODli9anTTKcyyMJZJfc3k5LbLYAJqGEbCyna2Rp92QTSHqcgBiV7nDO40t2ekjPwT88YYsvf7GtMe/Gf/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/ffd5543ffac601a17ea3e2aee212a132fc097bfc-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "3bfd0aa3-472",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-aa046048490c471dc1eaef72d9887688e9eae67f-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAYDBAUH/8QAJhAAAQMDAwMFAQAAAAAAAAAAAQIDBAAFEQYHIRJBURQiMUKR0f/EABcBAAMBAAAAAAAAAAAAAAAAAAECAwT/xAAbEQACAgMBAAAAAAAAAAAAAAAAAQIREiFRMf/aAAwDAQACEQMRAD8AfLlq2zQ3Oh64R1y1HCGUrBUT4pXue8Ol4ClsveoXIRwtCEZwfGap7XaL09AcmXG+usy5hOUl/wCgHcVk37RDOo9QzDb47MW19ZWh5Hyvj+1mUNWXpePTHrT24tkvFsRLbeDSVEp6HSAoY80Vx97bRIXhu4LbA4IA70VJxXRqfB4t86EGXxIHt4SknvWRc58qLeI/pZqxGW5w2OMVBHAJig85dGf2qF8OLswB8BZx+07jU9BybjQ/AIUMqOSaKyFvOJCQFEe0UU1Bs//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/aa046048490c471dc1eaef72d9887688e9eae67f-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "2488c9e6-dbb",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-81b14fd442c1770c82b2e5cc10a52a726368d7c0-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAUGBwgD/8QAIxAAAgIBAgcBAQAAAAAAAAAAAQIDBAAFEQYSEyExQVEjgf/EABcBAQEBAQAAAAAAAAAAAAAAAAIAAQP/xAAbEQACAgMBAAAAAAAAAAAAAAAAAQIREzFRQf/aAAwDAQACEQMRAD8AviyeRXYegTkMs8aU4LPQsmFH5gDu+3n5jyxq9TUadtKFlGmEZ/h2zLVnTpbGusNQmZ0Fgcx37jv4ydjgk9s1A0yMQyndSNxhiPT/AMqUCIxKKgA387YYbMopzga7r1lKq3YJpHvhgZI/J2+/MXQaVqrcR265hZzG5dvex9DLvjRKHDV2WmqwyIVVWUdwD8ztoFeLorJ0152G5bbucUbprpVGMr4IdOt31pQrLAFdVAIOGSe8qifso8fMMOKXTpkh6j//2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/81b14fd442c1770c82b2e5cc10a52a726368d7c0-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "25dd7041-914",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-3a7fd7b39c3f38c10da8797aae334e78606ea077-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAgMBAQAAAAAAAAAAAAAAAAcEBQYCA//EACcQAAEDBAEDAwUAAAAAAAAAAAECAwQABQYRIRITMQcUcUFCcsHR/8QAFgEBAQEAAAAAAAAAAAAAAAAABAMF/8QAHhEBAAIBBAMAAAAAAAAAAAAAAQADAhESEyEEFEH/2gAMAwEAAhEDEQA/AG1NMJ1mG8p5DLshIUlBPNR5VqUOSCT8Vgp9596i2OsBQDQDZJGgrR+leuXZVcl3FESE+uMppoOfkf5Sq7nHv5D5+OZho9s1a7YsHlOvmiuceyyBebRHlTH0NyNdDiQfuHmir+0wrQSO/Jt6FFhwNJLXhGhxSlvEgzcpnz1vJaYYHbSCfIq5x9xch+6PPqLjgdIClckCk3lcp8X+4JDqgku6IB4qF93I8YaRtFXHiWPcbGPx4cm3h2OdoUsk9PjdFUHpw84nGwAs67qv1RWfluFNY/HYgpP/2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/3a7fd7b39c3f38c10da8797aae334e78606ea077-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "a16f4c11-ee1",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-4fff8f3777a051df73e9505f4f54dd3224d61ad6-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAQDBQcG/8QAJRAAAgEDBAIBBQAAAAAAAAAAAQIDAAQFBhESITFBIgcTMkKB/8QAGAEAAwEBAAAAAAAAAAAAAAAAAgUGAAH/xAAhEQABAwQBBQAAAAAAAAAAAAABAAIDBBESIQUyM0FRkf/aAAwDAQACEQMRAD8ArrDNzQCN7S7E4Tsqf2FW0WrAZUS7h4FvQrNcfg1xcDLd5GRLofILH4AqwlMlzp+6l5xtJFuwnLEMm3raghqZINMdpcNG2cZEeFrFpLbXcIlimUKetie6KzjB4nKXGKt548girIvPYg+6Kbt5KW2wEodSxA9Slz92cdcwQTWBe6l2+2CO238UvqjBPal7OUBFu4w80SH8WrptWxpPl9L3EqhpjOqlz5I3pfXzsfqM6EngIV6qcHcawKqjAZCT60jS0OWssJbQRxwXMSDZHkYKwX0CKKVaJZ2ZpORIPEfIjYfyiidK0EjazabIXsPi/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/4fff8f3777a051df73e9505f4f54dd3224d61ad6-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "eda06238-89c",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-197d56ed7530c63215e80c9cfef9f033ee59d1c4-2048x1536-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1536,
+            "width": 2048
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAPABQDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQFBv/EACMQAAIBBAEDBQAAAAAAAAAAAAECAwAEBRExBhIhEyIyYXH/xAAUAQEAAAAAAAAAAAAAAAAAAAAE/8QAHhEAAgIBBQEAAAAAAAAAAAAAAQIABAMUFTFBUVL/2gAMAwEAAhEDEQA/AN7j8QbSzMtxkbQ2+tlQ/H3UC3hTL3t3FEq+nEfa4Phvysx1jnUMNlj7SCNQzEyPrWwBxTvSk/dh7e4KiKRh29qcaFPrWnQBV4EJlrKwLN3LTdNMG+NFPpczSIrByfGuaKfuGT5EBpB7P//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/197d56ed7530c63215e80c9cfef9f033ee59d1c4-2048x1536.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "bf072876-f0c",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-cebc9a6062dbf1ffc80a78b42977fa3242998280-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAwADAAAAAAAAAAAAAAAAAAYHAgUI/8QAKBAAAgEEAgEBCQEAAAAAAAAAAQIDAAQFERIhBjEHExQWIjJBUXGh/8QAFwEBAQEBAAAAAAAAAAAAAAAAAwIAAf/EAB0RAQACAgIDAAAAAAAAAAAAAAEAAgMRIUESMVH/2gAMAwEAAhEDEQA/AFMpkMlNh8bej3l1ZB4mRB9XFfTdUK1x93mbtLW4tHhaOPfAHi3HWu6RhdTv5df5LDzyhpoxykaPvZ9eqe8H5beLZQxSSSz3jgrI6qAQo/2tW9e5xrZ0kxnzFlgiuPeQxPEumVH63RU78qeB85cPPC7Mx3st+KKBy33xJ19jBcZZMWFnt0CNvRLLoa/lbDxi2OWu55kl+HkVdllH3bqU39xM8pV5GZVl0AT6V0FjkRPEomRVVhaqdga7p8urWF9HUXHRdI6SJuYu8bBetHeRo0ygAltbNFSH2mu/zdcnm3aqT2f1RU+A8kdzNXST/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/cebc9a6062dbf1ffc80a78b42977fa3242998280-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "e17620e0-547",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-d09a59379f949158e106837974991a08f8ac13b6-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAwADAAAAAAAAAAAAAAAAAAYHAwUI/8QAKBAAAQMDAwMDBQAAAAAAAAAAAgEDBAAFERIhUQYHMSJBYRMUFSMy/8QAGAEAAgMAAAAAAAAAAAAAAAAAAgQBAwX/xAAbEQACAwEBAQAAAAAAAAAAAAABAgADERIEBf/aAAwDAQACEQMRAD8AY3J1ubVNU1jfgs1li3GA4BkxIB7R/SAvik8uj7YLDky1zBCPJwraKepE5wtLcdyFAv6W5bjmO8Ki2YrjUXytatn1rCmosQp+fWWALSsyOoIccxADaJNKLuWFT4orny9EIXWUDE2QDYnhEzmiqh672Gwz461ObKnAsiQLBZrU84T0c2v2G0XpTPFTvuZaYli/ERIPqJFU0NPPnytV+3ppjoA7CAIIpwlIXdOMydj+6JtFkNvIIn7onFLO+Wcx2pNr6iCzGOZrecNdakuc7UVsYyJ9ENvaip0wuQZ//9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/d09a59379f949158e106837974991a08f8ac13b6-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "d00af825-bf1",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-402541556a90458c42b88e579baf2f05701eff58-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAcCBAYF/8QAKRAAAQMEAQMBCQAAAAAAAAAAAQIDBAAFERIGEzFBIRQjJDNCUWGRof/EABcBAQEBAQAAAAAAAAAAAAAAAAIDAAT/xAAeEQEAAgIBBQAAAAAAAAAAAAABAAIRIQMSQVGB8P/aAAwDAQACEQMRAD8Abt1uyIlxUwUJKEo3Ks+tcq58iixYjbyk4DpwjY96pc3ucBMVL7Cgpb6SjdPYA+axfLLy1bmLTH+YgpOFEeD5qNq2VwTcbrFnc0r/ACCTvluEhxBGQoLxRWTkhTnSVFmR2UlsbIW6M7eaKk8fLnSfe4us7jKsu4MToRYEpprJwQlskAfj7VGXLjS47ntTJ6LTQbadI9FUrY9xl6j36v5Tc4i2iRaWg+kOApyQoZrpsYMRVs5HxKUO3cXkxkOTWVrkYwpW5Gf1RTAtVviCGn4drufpopVDBqCxtn//2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/402541556a90458c42b88e579baf2f05701eff58-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "17e2c779-1d1",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-55464a63117aef7273993c54f874306a121ed73b-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAQUBAAAAAAAAAAAAAAAAAAECBAUGB//EACMQAAEDBAEEAwAAAAAAAAAAAAIAAQMEBREhEhMiMUEjcXL/xAAXAQADAQAAAAAAAAAAAAAAAAACBAYF/8QAIBEAAQMEAgMAAAAAAAAAAAAAAQACEQMEIUETURIx8P/aAAwDAQACEQMRAD8AvjdN5YbLp91mp7bH1Ks+I+NbSi8RywgOxlHLF6VsbimMTlS3g8iYwoxT70yE6opujMQvEBe88kJE3jgYJTAogiQFm7xLcrPbacJRasknwTibZcH9qoud4rqO526mkHgzi0j4fPnwt7XfJdLa0nc3fp/pQ6GCGofqTxAcgAPEibbYPSnuWGhpHqc7+C1qcOz3rSrq6WrkmYhmMMi2W452hdAMRIsuAu/5ZCXh/aDmaNL/2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/55464a63117aef7273993c54f874306a121ed73b-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "f501f7fd-3a8",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-0f0d08d869f1ecf4503d12d7846702d2289e6c83-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAwADAAAAAAAAAAAAAAAAAAYHAwQF/8QAKRAAAQMDAgUDBQAAAAAAAAAAAQIDBAAFEQYSBxMhQVExMmEUFSJxgf/EABYBAQEBAAAAAAAAAAAAAAAAAAMEAv/EAB4RAAICAgIDAAAAAAAAAAAAAAACAQMREzFBBBIU/9oADAMBAAIRAxEAPwBYgsPsITyCW2c/ipHt/lbswERlvzpbikp7EZyfFdbicYNjDbMWQliUtAQGU+3p8dqSkawu94ctdpfYiRuU9uDqkYSsjzSrY0xLdB2UKrQscmFu/W8AiSiQ04DgpIop9OgJNzUqW7MjqLhyMsdqKx9K9yJPhzngi2obxNvFxcn3B9Tr/k9vgVSrVCGrbVbG5CVhuKgK3tgDr+6kl5G1p3b06mqzwdcWNDXBQUdyScHPp0prm1rhQ6l92yxUbaRHhtshS0pQNoClZOKKRfuc3lNH6heSgE+lFQai7Yf/2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/0f0d08d869f1ecf4503d12d7846702d2289e6c83-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "62eba731-9a1",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-20acb8d48fd38fb6fc595be5e3d989781f3b3bf2-2048x1536-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1536,
+            "width": 2048
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAPABQDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABAAG/8QAIxAAAQMEAQQDAAAAAAAAAAAAAgEDBAAGERIFExUhYSJRcf/EABYBAQEBAAAAAAAAAAAAAAAAAAMCBP/EABoRAAMBAAMAAAAAAAAAAAAAAAABAhESE0H/2gAMAwEAAhEDEQA/AMPbTS8o4SOTEba21USXx+0a4m5EVrpACpHaPGwqmD90+ZbBWk5FTkJewvllVbHOMUlriWrhnPxOPcccER3JSXVUx9Zqexq88F4yo0RZsVyVwouiAKimXkkX1VW5sWJ2rgAidJXNHC+WU81VjuW6bASR/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/20acb8d48fd38fb6fc595be5e3d989781f3b3bf2-2048x1536.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "b5a828bc-a5e",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-642f5ddb230220ebe031aa4f3122d08f0769a77e-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAYCBAcF/8QAJxAAAgIBAwMCBwAAAAAAAAAAAQIDBAAFBhEhMUESEwgVJDIzQlL/xAAXAQADAQAAAAAAAAAAAAAAAAACAwQB/8QAHREAAgMAAgMAAAAAAAAAAAAAAAECESEDEiJB0f/aAAwDAQACEQMRAD8AZRt7TFsLE9zjr9/p6HI/JK1K4GZjYi7gx9MrXKx0+ET3LFkr4QEE5Xta6YDWi0+SSzPYUssbkDhR5OUN1rEKLliGeabS5GDCu6DjjjDOJpmoxX6izM7QuCVdG45BHfDNsB5jDdiXtQSKYU2E9dvaaP8AoH9sy/fN+XaO5tILxM0qRkyN6vyKx7AeOM1jVLU/t6mfdfmOYBevYc5kHxEMW3LpnJ5+kXAfWTeFnWXHCMr9/Bfu71uvesSU3EcMjlgpHbDEpSevXzhhJUqEvyds/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/642f5ddb230220ebe031aa4f3122d08f0769a77e-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "13cb1505-86c",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-03bfaab388442dd85744ac95b1eb007335fee83f-1536x2048-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2048,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAgIDAAAAAAAAAAAAAAAAAAYFBwIDBP/EACQQAAEDBAICAgMAAAAAAAAAAAIBAwQABREhBhITQQciFTFx/8QAGAEAAgMAAAAAAAAAAAAAAAAAAwYAAgT/xAAeEQACAgICAwAAAAAAAAAAAAAAAQIDERMEIQYSQf/aAAwDAQACEQMRAD8AgXJLsfrl8AUlwnb3UzZI0ufJRpZYtLjWs5pUuROOzRltwHZMXxqA/XQmvum7kkcYvH4C25TZn+MTOUh4wi/tET3QlmXUWGnVKprYjnuhSIU5xhJaOIK6JFxRSZIHqeFdNxcbIlyqrRV9bBey+G4L1OkQnHnXfCI6FsdaqH5JfQCasaA++bAMimTPt9lTdYmS9VTOqTpCr+Qk791KoqL6G/ybjqqmtosW1cV5DNt0eTGEXGnA7CXairf+FgF749t5Op2LJJlf7RWjSn2JLuw8H//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/03bfaab388442dd85744ac95b1eb007335fee83f-1536x2048.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "0b4bc613-c25",
+      "altText": null,
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-83b43bc2a66062d29997fae0ef865f681bd9f8b1-1600x896-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 896,
+            "width": 1600
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAALABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAACAAEB//EACMQAAEDBAEEAwAAAAAAAAAAAAECAwQABQYRIQcSMUETIjL/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A5h04zRdhZhxbVGbemvAocKx+RukjPlQ7ljjYmBsKWkfN28A8c80UensZlxDjy2wXUK+qvYpLvADFZaQBpNu7wNe9eaAyZ5EhxMnltQxtkHadDxVWC4POPyluPLK1nyTVQf/Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/83b43bc2a66062d29997fae0ef865f681bd9f8b1-1600x896.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    }
+  ],
+  "sectionFields": {
+    "spacingOptions": {
+      "removeBottomSpacing": null,
+      "removeTopSpacing": false
+    },
+    "themeOptions": null
+  },
+  "speed": "medium"
+}

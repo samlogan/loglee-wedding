@@ -12,7 +12,8 @@ interface IRsvpDocument {
   // Defined fields
   name: string;
   email: string;
-  attending: IRsvpDay[];
+  /** No longer asked — present only on replies sent before the form dropped the question. */
+  attending?: IRsvpDay[];
   dietary?: string;
   plusOne: {
     bringing: boolean;
@@ -21,6 +22,7 @@ interface IRsvpDocument {
   };
   songRequest?: string;
   submittedAt?: string;
+  /** No longer asked — present only on replies sent before the form dropped the question. */
   roomPreference?: string;
   kidsCount?: number;
   kidsAges?: string;
@@ -46,8 +48,10 @@ const rsvp = defineType({
       validation: (Rule) => Rule.required().email()
     },
     {
-      description: 'The days of the weekend this guest is coming to.',
+      description:
+        'The days of the weekend this guest is coming to. No longer asked on the form — shown only on replies sent before it was removed.',
       group: 'response',
+      hidden: ({ value }) => !(Array.isArray(value) && value.length > 0),
       name: `attending`,
       of: [{ type: 'string' }],
       options: {
@@ -113,8 +117,9 @@ const rsvp = defineType({
     },
     {
       description:
-        'Free text rather than a reference, because room types are not a document type. The Lodge offers the King Room, the Twin Double and the Family Room.',
+        'The room this guest asked for. No longer asked on the form — shown only on replies sent before it was removed.',
       group: 'stay',
+      hidden: ({ value }) => !value,
       name: `roomPreference`,
       title: `Room Preference`,
       type: `string`
