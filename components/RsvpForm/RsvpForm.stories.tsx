@@ -16,9 +16,12 @@ const COPY = {
     "Tell us which days you'll join, what you eat, where you'd like to sleep and what you'd like to hear on the dancefloor."
 };
 
-/** What the stub in `app/(frontend)/rsvp/actions.ts` says, restated so no story imports the server. */
-const NOT_OPEN_YET =
-  "We're not taking RSVPs through the site just yet, so your reply hasn't been saved. Please try again soon.";
+/**
+ * What `app/(frontend)/rsvp/actions.ts` says when a guest sends a changed reply seconds after their
+ * last one, restated so no story imports the server.
+ */
+const TOO_SOON =
+  "You sent a reply a moment ago, so this change hasn't been saved yet. Give it a few seconds, then send it again.";
 
 /**
  * A mock action that resolves to `result`. Every story gets its own, so call counts never leak
@@ -374,11 +377,11 @@ export const ServerErrors: Story = {
 };
 
 /**
- * What the stub action answers until MAM-1903 lands: nothing stored, a form-level message, no field
- * at fault. The button must never claim a save.
+ * A refusal that is no one field's fault — here the action's per-guest rate limit: nothing stored, a
+ * form-level message, no field marked. The button must never claim a save.
  */
-export const NotAcceptingYet: Story = {
-  args: { action: actionReturning({ fieldErrors: {}, message: NOT_OPEN_YET, status: 'error' }) },
+export const RefusedTooSoon: Story = {
+  args: { action: actionReturning({ fieldErrors: {}, message: TOO_SOON, status: 'error' }) },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -386,7 +389,7 @@ export const NotAcceptingYet: Story = {
     await userEvent.click(submitButton(canvas));
 
     await waitFor(
-      () => expect(canvas.getAllByRole('alert').map((alert) => alert.textContent)).toContain(NOT_OPEN_YET),
+      () => expect(canvas.getAllByRole('alert').map((alert) => alert.textContent)).toContain(TOO_SOON),
       ROUND_TRIP
     );
     await expect(canvas.queryByRole('button', { name: 'Saved' })).toBeNull();
