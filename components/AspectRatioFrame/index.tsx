@@ -13,6 +13,8 @@ export interface AspectRatioFrameProps {
   desktop?: FrameAspectRatio | null;
   /** The shape below the tablet breakpoint. */
   mobile?: FrameAspectRatio | null;
+  /** Round the corners — for a frame inside the page container, where a square edge reads as cut off. */
+  rounded?: boolean;
 }
 
 /**
@@ -27,7 +29,7 @@ export interface AspectRatioFrameProps {
  * and a `cover` crop cannot spill out.
  */
 const AspectRatioFrame = (props: AspectRatioFrameProps) => {
-  const { children, className, desktop, mobile } = props;
+  const { children, className, desktop, mobile, rounded = false } = props;
 
   // `stringClean`, because in draft mode a stega payload rides on every string — including these.
   const desktopRatio = stringClean(desktop ?? '') || '21x9';
@@ -39,6 +41,7 @@ const AspectRatioFrame = (props: AspectRatioFrameProps) => {
         styles.frame,
         styles[`desktop_${desktopRatio}`],
         styles[`mobile_${mobileRatio}`],
+        { [styles.rounded]: rounded },
         className
       )}
     >

@@ -2,48 +2,18 @@ import { MdQuestionAnswer } from 'react-icons/md';
 import { defineType } from 'sanity';
 
 import thumbnail from '../../../../sections/FaqSection/thumbnail.png';
-import type { MapLocation } from '../../../helpers/mapLocation';
 import ReadOnlyImageInput from '../../components/ReadOnlyImageInput';
 import defaultSectionGroups from '../common/defaultSectionGroups';
 import internalLabelField from '../common/internalLabelField';
 import type { IButtonElement } from '../elements/button';
-
-/**
- * The compact map card in the left rail — nodes 16:643 (desktop) and 16:799 (mobile).
- *
- * ## Why this is an inline object and not a registered type
- *
- * `tools/sanity/register-sections.ts` derives all four registrations from the section folder name,
- * and a *second* exported schema type sitting beside a section is the one thing it cannot derive —
- * it warns and asks for a hand-written entry in the `// Objects` block. An anonymous
- * `type: 'object'` field needs none of that. What the card shares with `MapSection` is the
- * `geopoint` and `components/Map`, not the card's own chrome.
- *
- * ## `location` **or** `image`
- *
- * A location draws a live Google map through `components/Map` — the same component and the same
- * Studio picker `MapSection` uses. The image is the fallback for a card without one: a static
- * render, or anything else the editor wants in the frame. Stating the precedence once, in the
- * component, keeps the failure mode "the card shows the map you pinned" rather than "the card is
- * blank because a radio says image".
- *
- * `location` replaced an `embedUrl` field (a pasted Google Maps iframe `src`). No published document
- * had filled it in.
- */
-interface IFaqMapCard {
-  location?: MapLocation | null;
-  image?: SanityImageSimple;
-  badge?: string;
-  address?: string;
-  link?: IButtonElement;
-}
+import type { IMapCard } from '../objects/mapCard';
 
 interface IFaqSection {
   tagline?: string;
   title?: string;
   content?: SanityTextBlock[];
   addMap?: boolean;
-  map?: IFaqMapCard;
+  map?: IMapCard;
   /*
    * Optional, like its twin `addMap` — a section authored before this toggle existed has no value
    * for it at all, and `initialValue: false` only applies to documents created after it was added.
@@ -135,47 +105,11 @@ const faqSection = defineType({
     },
     {
       description: 'The map card beneath the intro copy. Pin a location for a live map, or upload a map image.',
-      fields: [
-        {
-          description:
-            'Search for the place, or drag the pin. Draws a live map; the zoom you leave the picker at is the zoom it opens at.',
-          name: 'location',
-          title: 'Location',
-          type: 'geopoint'
-        },
-        {
-          description: 'A static map image. Only used when no location is pinned.',
-          name: 'image',
-          title: 'Image',
-          type: 'imageElementSimple'
-        },
-        {
-          description:
-            'The chip in the top-left corner — “Map · Sydney → Jamberoo, 90 min”. Shown exactly as typed, so any arrow or separator goes in the text.',
-          name: 'badge',
-          title: 'Badge Label',
-          type: 'string'
-        },
-        {
-          description:
-            'The address in the bar along the bottom — “406 Jamberoo Mountain Rd”. Type it in normal case; it is displayed in uppercase mono automatically.',
-          name: 'address',
-          title: 'Address',
-          type: 'string'
-        },
-        {
-          description:
-            'The “Open in maps” link in the bottom bar. Give it a label; leave the link empty to point it at the pinned location in Google Maps.',
-          name: 'link',
-          title: 'Maps Link',
-          type: 'buttonElement'
-        }
-      ],
       group: 'data',
       hidden: ({ parent }) => !parent?.addMap,
       name: 'map',
       title: 'Map Card',
-      type: 'object'
+      type: 'mapCard'
     },
     /*
      * Above the button pair, deliberately — and moved there by this ticket. The button now renders
@@ -274,4 +208,4 @@ const faqSection = defineType({
 });
 
 export { faqSection };
-export type { IFaqMapCard, IFaqSection };
+export type { IFaqSection };

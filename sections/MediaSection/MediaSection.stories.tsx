@@ -26,7 +26,9 @@ const PUBLISHED = sectionFixture<IMediaSection>('mediaSection') ?? IMAGE;
 const sectionOf = (canvasElement: HTMLElement) =>
   canvasElement.querySelector('[data-name="MediaSection"]') as HTMLElement | null;
 
-const frameOf = (canvasElement: HTMLElement) => sectionOf(canvasElement)?.querySelector('div') as HTMLElement;
+/** The `AspectRatioFrame` — inside `Section`'s container when contained, so found by class, not position. */
+const frameOf = (canvasElement: HTMLElement) =>
+  sectionOf(canvasElement)?.querySelector('[class*="frame"]') as HTMLElement;
 
 /**
  * One image or one YouTube / Vimeo video, edge to edge, at an editor-chosen shape per viewport. The
@@ -135,5 +137,29 @@ export const Dark: Story = {
   globals: { theme: 'dark' },
   play: async ({ canvasElement }) => {
     await expect(sectionOf(canvasElement)).toHaveAttribute('data-theme', 'dark');
+  }
+};
+
+/** Contained: inside the page container, with rounded corners, rather than edge to edge. */
+export const Contained: Story = {
+  args: { ...IMAGE, aspectRatioDesktop: '16x9', width: 'contained' },
+  globals: { viewport: { value: 'desktop' } },
+  play: async ({ canvasElement }) => {
+    const frame = frameOf(canvasElement);
+
+    await expect(frame.getBoundingClientRect().width).toBeLessThan(window.innerWidth - 20);
+    await expect(Number.parseFloat(getComputedStyle(frame).borderTopLeftRadius)).toBeGreaterThan(0);
+  }
+};
+
+/** Full width is the default: edge to edge, square corners. */
+export const FullWidth: Story = {
+  args: { ...IMAGE, aspectRatioDesktop: '16x9', width: 'full' },
+  globals: { viewport: { value: 'desktop' } },
+  play: async ({ canvasElement }) => {
+    const frame = frameOf(canvasElement);
+
+    await expect(frame.getBoundingClientRect().width).toBeCloseTo(window.innerWidth, 0);
+    await expect(getComputedStyle(frame).borderTopLeftRadius).toBe('0px');
   }
 };

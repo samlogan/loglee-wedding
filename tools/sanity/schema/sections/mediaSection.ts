@@ -8,6 +8,8 @@ import { aspectRatioFields } from '../common/aspectRatioFields';
 import type { IAspectRatioFields } from '../common/aspectRatioFields';
 import defaultSectionGroups from '../common/defaultSectionGroups';
 import internalLabelField from '../common/internalLabelField';
+import sectionWidthField from '../common/sectionWidthField';
+import type { ISectionWidthField } from '../common/sectionWidthField';
 
 /**
  * One photograph or one video, edge to edge, at an editor-chosen shape per viewport.
@@ -17,7 +19,7 @@ import internalLabelField from '../common/internalLabelField';
  * found and cleared it. The projection gates on the same value, so the unused branch's fields stay
  * off the wire.
  */
-interface IMediaSection extends IAspectRatioFields {
+interface IMediaSection extends IAspectRatioFields, ISectionWidthField {
   mediaType?: 'image' | 'video' | null;
   image?: SanityImageSimple | null;
   /**
@@ -111,6 +113,7 @@ const mediaSection = defineType({
       title: 'Autoplay (muted, looping)',
       type: 'boolean'
     },
+    sectionWidthField,
     ...aspectRatioFields({ desktop: 'fullscreen', mobile: '4x5' }),
     {
       group: 'styles',
@@ -139,7 +142,7 @@ const mediaSection = defineType({
       videoUrl: 'videoUrl'
     }
   },
-  title: 'Media',
+  title: 'Media Section',
   type: 'object'
 });
 

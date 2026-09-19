@@ -104,3 +104,12 @@ export const Unset: Story = {
     await expect(ratioOf(canvasElement.firstElementChild as Element)).toBeCloseTo(21 / 9, 1);
   }
 };
+
+/** Rounded — for a frame inside the page container. */
+export const Rounded: Story = {
+  args: { rounded: true },
+  play: async ({ canvasElement }) => {
+    const frame = canvasElement.firstElementChild as Element;
+    await expect(Number.parseFloat(getComputedStyle(frame).borderTopLeftRadius)).toBeGreaterThan(0);
+  }
+};

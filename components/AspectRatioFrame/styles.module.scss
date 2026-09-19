@@ -55,4 +55,8 @@ $frame-ratios: (
     --frame-ratio-mobile: auto;
     --frame-height-mobile: 100svh;
   }
+
+  .rounded {
+    border-radius: var(--radius-md);
+  }
 }

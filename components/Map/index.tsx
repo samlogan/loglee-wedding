@@ -1,6 +1,6 @@
 'use client';
 
-import { AdvancedMarker, APIProvider, Map as GoogleMap } from '@vis.gl/react-google-maps';
+import { AdvancedMarker, APIProvider, ControlPosition, Map as GoogleMap, Marker, Pin } from '@vis.gl/react-google-maps';
 import { useInView } from 'motion/react';
 import { useRef } from 'react';
 
@@ -8,16 +8,28 @@ import classNames from '@/helpers/classNames';
 import { resolveMapLocation } from '@/helpers/mapLocation';
 import type { MapLocation } from '@/helpers/mapLocation';
 
+import { mapStyle, pinSvg, readToken } from './mapStyle';
+
 import styles from './styles.module.scss';
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 /*
- * `AdvancedMarker` needs a map ID. `DEMO_MAP_ID` is Google's shared one: default styling, no cloud
- * configuration. Set `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` to a map ID from the Cloud console to restyle
- * the map without a deploy.
+ * ## Two ways to style the map, and Google allows only one at a time
+ *
+ * A map with a **map ID** is styled in the Cloud console and can use `AdvancedMarker`; Google refuses
+ * a JSON `styles` array on it outright. A map **without** one takes the JSON style — `mapStyle.ts`,
+ * the site's own stone and pine — but not `AdvancedMarker`, so its pin is the legacy `Marker`.
+ *
+ * With no `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` set, which is the default, the map uses the JSON style:
+ * it matches the site with nothing to configure outside the repo. Set a map ID and the Cloud style
+ * takes over, with an `AdvancedMarker` pin in the same colours — at which point the look is the
+ * Cloud style's to match.
+ *
+ * `google.maps.Marker` is deprecated in favour of `AdvancedMarker`, but Google has announced no
+ * removal date and commits to twelve months' notice; the console notes the deprecation once per load.
  */
-const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
+const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
 export interface MapProps {
   className?: string;
@@ -58,6 +70,26 @@ export interface MapProps {
  * it would zoom the map instead. `cooperative` scrolls the page on one finger / a plain wheel and
  * moves the map on two fingers / ctrl+wheel, and Google draws the hint itself.
  */
+/**
+ * The legacy marker with the site's pin. Its icon needs `google.maps.Size` and `Point`, which exist
+ * only once the API has loaded — true by the time the map renders its children.
+ */
+const VenueMarker = (props: { position: google.maps.LatLngLiteral; theme?: ProjectTheme; title: string }) => {
+  const { position, theme, title } = props;
+
+  return (
+    <Marker
+      icon={{
+        anchor: new google.maps.Point(16, 43),
+        scaledSize: new google.maps.Size(32, 44),
+        url: pinSvg(theme)
+      }}
+      position={position}
+      title={title}
+    />
+  );
+};
+
 const Map = (props: MapProps) => {
   const { className, label, location, theme, variant = 'default' } = props;
 
@@ -77,14 +109,34 @@ const Map = (props: MapProps) => {
         <APIProvider apiKey={API_KEY}>
           <GoogleMap
             className={styles.canvas}
+            // Business and landmark pins are hidden by the style; this stops the ones Google still
+            // draws from opening an info window over the venue.
+            clickableIcons={false}
             colorScheme={theme === 'dark' ? 'DARK' : 'LIGHT'}
             defaultCenter={center}
             defaultZoom={point.zoom}
-            disableDefaultUI={variant === 'compact'}
+            // Only zoom, and only on the full-size map: map/satellite, Street View and fullscreen
+            // are Google's chrome rather than anything a guest finding the venue needs.
+            disableDefaultUI
             gestureHandling="cooperative"
             mapId={MAP_ID}
+            styles={MAP_ID ? undefined : mapStyle(theme)}
+            zoomControl={variant === 'default'}
+            // Top right, clear of the chip at top left and of the address bar along the bottom that
+            // `MapCard` lays over the map.
+            zoomControlOptions={{ position: ControlPosition.RIGHT_TOP }}
           >
-            <AdvancedMarker position={center} title={label} />
+            {MAP_ID ? (
+              <AdvancedMarker position={center} title={label}>
+                <Pin
+                  background={readToken(theme === 'dark' ? 'stone-50' : 'stone-900')}
+                  borderColor={readToken(theme === 'dark' ? 'pine-600' : 'stone-50')}
+                  glyphColor={readToken(theme === 'dark' ? 'pine-600' : 'stone-50')}
+                />
+              </AdvancedMarker>
+            ) : (
+              <VenueMarker position={center} theme={theme} title={label} />
+            )}
           </GoogleMap>
         </APIProvider>
       )}

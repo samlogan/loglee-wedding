@@ -24,6 +24,12 @@ import imageProjection from '@/tools/sanity/projections/common/image.groq';
  * them, which is what lets `tools/storybook/sectionFixture.ts` tell "nobody filled this in" from
  * "this section has no map".
  *
+ * ## `location` falls back to the venue
+ *
+ * A card with no pin of its own shows the venue's, from Wedding Settings — so the venue is pinned
+ * once for the whole site and the FAQ and the RSVP page cannot disagree about where it is. The
+ * card's own pin, when it has one, wins.
+ *
  * `title` needs no sub-projection — the `title` element is a plain string holding an HTML tag, which
  * `TextTitle` strips. `note` is a plain string and projects as-is.
  *
@@ -44,7 +50,10 @@ const faqSectionProjection = groq`
     addMap,
     addMap == true => {
       map{
-        location{ lat, lng, zoom },
+        "location": coalesce(
+          location{ lat, lng, zoom },
+          *[_type == "weddingSettings" && _id == "weddingSettings"][0].venue.location{ lat, lng, zoom }
+        ),
         image${imageProjection},
         badge,
         address,

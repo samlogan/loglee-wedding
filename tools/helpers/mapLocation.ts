@@ -18,8 +18,13 @@ export interface ResolvedMapLocation {
   zoom: number;
 }
 
-/** Street level with the surrounding roads legible — what a guest wants from "where is it?". */
-export const DEFAULT_MAP_ZOOM = 15;
+/**
+ * The zoom a map opens at when its pin has none saved: the valley and the towns around it — Jamberoo,
+ * Kiama, the coast — so a guest sees where the venue sits relative to places they know. Street level
+ * (15) read as an unlabelled patch of fields. An editor who zooms the Studio picker and saves overrides
+ * it for that one map.
+ */
+export const DEFAULT_MAP_ZOOM = 11;
 
 /**
  * The location with its zoom filled in, or `undefined` when there is nothing to put on a map.
