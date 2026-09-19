@@ -3,6 +3,7 @@
 
 export { default as FaqSection } from './FaqSection';
 export { default as HeaderDisplaySection } from './HeaderDisplaySection';
+export { default as HeroSection } from './HeroSection';
 export { default as MediaCardGridSection } from './MediaCardGridSection';
 export { default as MediaTagsSection } from './MediaTagsSection';
 export { default as NumberedGridSection } from './NumberedGridSection';

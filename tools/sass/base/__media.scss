@@ -53,14 +53,18 @@ $breakpoints: (
  *         exactly what 1.4.4 prohibits. Measured in Chromium: `MediaTagsSection`'s three place names
  *         vanish at a 32px root on a 1280px viewport, and at a 24px root on a 1024px one.
  *
- * The three `px` switches are `$media-tags-inline-switch` (clips the location pills),
- * `$numbered-grid-meta-inline-switch` (hides the heading's qualifier) and `$faq-inline-switch`
- * (hides the "still stuck?" eyebrow). Every other switch reflows and is `rem`. A switch that grows a
- * hiding branch has to change unit with it; a switch that loses one can go back.
+ * The four `px` switches are `$media-tags-inline-switch` (clips the location pills),
+ * `$numbered-grid-meta-inline-switch` (hides the heading's qualifier), `$faq-inline-switch` (hides
+ * the "still stuck?" eyebrow) and `$hero-street-inline-switch` (drops the street from the home
+ * hero's meta row). Every other switch reflows and is `rem`. A switch that grows a hiding branch has
+ * to change unit with it; a switch that loses one can go back — or, as the hero does, split in two,
+ * a `rem` switch for the reflow beside a `px` one for what it hides.
  *
- * Note no story can catch this either way: the `atWidth` decorator sizes its wrapper in `rem` too,
+ * Note no story can catch this with a `rem` wrapper: the `atWidth` decorator sizes it in `rem` too,
  * so in Storybook the container and a `rem` threshold scale together and stay in agreement. It only
- * diverges on a real page, where the container is sized by the viewport in CSS pixels.
+ * diverges on a real page, where the container is sized by the viewport in CSS pixels — or in a story
+ * that pins a `px` wrapper and raises the root size itself, which is what `HeroSection`'s
+ * `EnlargedText` does.
  */
 
 /*

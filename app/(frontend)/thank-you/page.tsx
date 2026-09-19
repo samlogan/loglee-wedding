@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import ModelDuet from '@/components/ModelDuet';
 import Section from '@/components/Section';
 import Text from '@/components/Text';
+import coupleNames from '@/helpers/coupleNames';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
 import { WEDDING_SETTINGS_QUERY } from '@/tools/sanity/lib/queries.groq';
 import type { IWeddingSettingsDocument } from '@/tools/sanity/schema/documents/weddingSettings';
@@ -45,38 +46,19 @@ import styles from './styles.module.scss';
  * two of them would be strictly better and the prop is already there for it.
  */
 
-/**
- * Falls back when the singleton is missing or both name fields are blank.
- *
- * Not a placeholder to be replaced later — it is the correct answer, and the reason the page can
- * afford to read the CMS at all. `weddingSettings` is a singleton with no `initialValue` on either
- * name, so "published but empty" is a reachable state, and a thank-you page signed "With love, "
- * is worse than one signed with the names hard-coded.
- */
-const FALLBACK_NAMES = 'Sam & Lauren';
-
-/**
- * Both partners, joined the way the Studio joins them.
- *
- * `coupleNames` is `{ partnerOne?, partnerTwo? }` rather than a string, and each half is
- * independently optional. The ` & ` and the `filter(Boolean)` are lifted from this document's own
- * `preview.prepare` in `tools/sanity/schema/documents/weddingSettings.ts` — so an editor looking at
- * the singleton in the Studio sees the same string this page signs off with, and one partner
- * entered alone does not render a dangling ampersand.
- */
-const coupleNames = (settings: Partial<IWeddingSettingsDocument> | null): string =>
-  [settings?.coupleNames?.partnerOne, settings?.coupleNames?.partnerTwo]
-    .map((name) => name?.trim())
-    .filter(Boolean)
-    .join(' & ') || FALLBACK_NAMES;
-
 const ThankYouPage = async () => {
   const settings = await sanityFetch<Partial<IWeddingSettingsDocument> | null>({
     query: WEDDING_SETTINGS_QUERY,
     tags: ['weddingSettings']
   });
 
-  const names = coupleNames(settings);
+  /*
+   * "Sam & Lauren", one partner alone with no dangling ampersand, or the fallback names when neither
+   * is filled in — a thank-you page signed "With love, " is worse than one signed with the names
+   * hard-coded. The join, the fallback and the reasons for both live in `tools/helpers/coupleNames`,
+   * which the home hero shares, so the two cannot print the couple differently.
+   */
+  const names = coupleNames(settings?.coupleNames);
 
   return (
     <Section containerWidth="sm" name="thank-you" spacing="lg" theme="light">
