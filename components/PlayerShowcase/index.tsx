@@ -8,7 +8,9 @@ import PlayerCard from '@/components/PlayerCard';
 import Section from '@/components/Section';
 import Text from '@/components/Text';
 import formatOrdinal from '@/helpers/formatOrdinal';
+import hasText from '@/helpers/hasText';
 import type { ModelClipNames } from '@/helpers/modelClips';
+import textOrUndefined from '@/helpers/textOrUndefined';
 import type { IPlayerStat } from '@/tools/sanity/schema/documents/player';
 
 import styles from './styles.module.scss';
@@ -90,7 +92,8 @@ const MODEL_LABEL = '3D canvas · dance';
  *
  * In draft mode `sanityFetch` sets `stega: true`, which appends an invisible payload to every plain
  * string — the Presentation tool's click-to-edit map. So every *test* below reads a `stegaClean`
- * copy while the markup keeps the original, the split `components/Footer` makes for the same reason.
+ * copy — directly, or through `hasText` and `textOrUndefined` for the blank checks — while the markup
+ * keeps the original, the split `components/Footer` makes for the same reason.
  * Without it three things go wrong, all of them only where an editor is looking:
  *
  * - the payload's alphabet includes U+FEFF, which `\s` matches, so the name's longest "word" is the
@@ -133,8 +136,8 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
     1
   );
 
-  const hasEyebrow = Boolean(eyebrow && stegaClean(eyebrow).trim());
-  const cardLevel = level && stegaClean(level).trim() ? level : undefined;
+  const hasEyebrow = hasText(eyebrow);
+  const cardLevel = textOrUndefined(level);
   const statList = stats ?? [];
   const hasCard = statList.length > 0 || Boolean(cardLevel);
 

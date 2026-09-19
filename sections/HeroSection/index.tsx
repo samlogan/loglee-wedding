@@ -7,20 +7,25 @@ import { couplePartners } from '@/helpers/coupleNames';
 import formatDateRange from '@/helpers/formatDateRange';
 import hasText from '@/helpers/hasText';
 import { getSectionSpacingProps, getSectionTheme } from '@/helpers/section';
+import textOrUndefined from '@/helpers/textOrUndefined';
 import type { IHeroSection } from '@/tools/sanity/schema/sections/heroSection';
 
 import styles from './styles.module.scss';
 
 /**
- * A plain CMS string when it has text in it, `undefined` when it does not — so the JSX below can
- * test a value and render it in one expression.
+ * `textOrUndefined`, trimmed: a plain CMS string when it has text in it, `undefined` when it does
+ * not — so the JSX below can test a value and render it in one expression.
  *
- * Blank is `hasText`'s answer rather than `.trim()`'s, because in the Presentation tool a field left
- * blank arrives stega-encoded and a plain `.trim()` test reads it as filled: the venue would render
+ * Blank is decided after stega, for the reason the helper gives: in the Presentation tool a field
+ * left blank arrives encoded, and a plain `.trim()` test reads it as filled — the venue would render
  * as a separator with nothing after it. The string kept is trimmed but still encoded, for the reason
  * `couplePartners` gives.
+ *
+ * The trim is this section's own, and it is for `Separator`: the space in front of its dot is a
+ * no-break space so that a wrapped line never starts with the dot, and a space typed after the street
+ * would put an ordinary one — a break opportunity — back in front of it.
  */
-const textOf = (value?: string | null): string | undefined => (hasText(value) ? value?.trim() : undefined);
+const textOf = (value?: string | null): string | undefined => textOrUndefined(value)?.trim();
 
 /**
  * The street: the first line of the venue's address that has anything on it.
