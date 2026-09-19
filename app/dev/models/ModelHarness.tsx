@@ -1,12 +1,13 @@
 'use client';
 
-import { Environment, OrbitControls, useAnimations, useGLTF } from '@react-three/drei';
+import { OrbitControls, useAnimations, useGLTF } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { Group } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 
+import ModelLighting, { FallbackLighting } from '@/components/ModelViewer/ModelLighting';
 import classNames from '@/helpers/classNames';
 
 import styles from './styles.module.scss';
@@ -53,8 +54,12 @@ const Model = (props: ModelProps) => {
   const { url, clip, playing, speed, showNormals, onLoad } = props;
   const group = useRef<Group>(null);
 
-  // drei's useGLTF enables meshopt by default, which the compressed tiers require.
-  const { scene, animations } = useGLTF(url);
+  /*
+   * `useDraco` off, as in `ModelCharacter`: drei's default attaches a `DRACOLoader` pointed at a Google
+   * CDN, and these files are meshopt, not Draco. Meshopt stays on (drei's third argument defaults to
+   * `true`) — the compressed tiers need it, and its decoder is bundled from `three-stdlib`.
+   */
+  const { scene, animations } = useGLTF(url, false);
 
   /**
    * `SkeletonUtils.clone`, not `scene.clone(true)`.
@@ -248,14 +253,13 @@ const ModelHarness = () => {
               gl={{ toneMapping: TONE_MAPPING[tone], toneMappingExposure: exposure }}
             >
               <color args={['#131412']} attach="background" />
-              {environment ? (
-                <Environment preset="studio" />
-              ) : (
-                <>
-                  <ambientLight intensity={0.6} />
-                  <directionalLight intensity={2.5} position={[2, 3, 4]} />
-                </>
-              )}
+              {/*
+               * The viewers' own lighting, not a harness copy of it: the self-hosted HDRI, passed to drei
+               * as a `map`. Three canvases share one cached texture here, which is the exact case where
+               * `<Environment preset>` disposes it on unmount — see `ModelLighting`. Off is
+               * `FallbackLighting`, i.e. what a reader whose HDRI failed to load sees.
+               */}
+              {environment ? <ModelLighting preset="studio" /> : <FallbackLighting />}
               <Suspense fallback={null}>
                 <Model
                   clip={clip}

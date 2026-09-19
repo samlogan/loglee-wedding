@@ -262,18 +262,14 @@ export const Narrow: Story = {
 /**
  * A different HDRI on the pair.
  *
- * `environmentPreset` is drei's ten-name preset union, and this is the **one** story that moves it
- * rather than one story per name — a deliberate departure from the one-story-per-literal rule, for a
- * cost reason worth stating. Every preset story is a second two-character canvas rasterised in
- * software by the test runner, so ten of them would add minutes to a suite that currently finishes
- * in under thirty seconds, to assert something that is really drei's to assert: that a preset name
- * loads an HDRI. What is this component's to get right is that the prop is *wired through* — it
- * crosses the `next/dynamic` boundary into `ModelDuetScene` and reaches `ModelLighting` — and one
- * non-default value proves that as well as ten would.
+ * `environmentPreset` is the set of HDRIs the site hosts itself — `studio` and `sunset`, see
+ * `ModelLighting` — so with every other story on the `studio` default, this one completes the
+ * one-story-per-literal rule. What is this component's to get right is that the prop is *wired
+ * through*: it crosses the `next/dynamic` boundary into `ModelDuetScene` and reaches `ModelLighting`.
  *
- * `sunset` specifically because it is the furthest from `studio` in colour temperature, so a
- * regression that dropped the prop on the floor shows up as a visibly identical render rather than
- * as a subtle one.
+ * `sunset` is hosted for this story alone — no page asks for it — and it is the one chosen because it
+ * is the furthest from `studio` in colour temperature, so a regression that dropped the prop on the
+ * floor shows up as a visibly identical render rather than as a subtle one.
  */
 export const SunsetLighting: Story = {
   args: { environmentPreset: 'sunset', mode: 'animated' },
