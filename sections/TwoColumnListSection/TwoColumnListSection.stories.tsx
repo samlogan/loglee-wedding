@@ -136,35 +136,33 @@ const richTextData: ITwoColumnListSection = {
   }
 };
 
-/** The section element itself — the page the panel is inset into, and the owner of the page theme. */
+/** The section element itself — the full-bleed band, which carries the band's theme and paints it. */
 const sectionOf = (canvasElement: HTMLElement) =>
   canvasElement.querySelector('[data-name="TwoColumnListSection"]') as HTMLElement;
 
-/** The inset panel — the element that carries `data-theme` and paints the fill. */
-const panelOf = (canvasElement: HTMLElement) => sectionOf(canvasElement).querySelector('[data-theme]') as HTMLElement;
+/** The band's content box inside the page container — the container-query host. */
+const panelOf = (canvasElement: HTMLElement) =>
+  sectionOf(canvasElement).querySelector('[class*="panel"]') as HTMLElement;
 
 /** The drawn pair, as `getComputedStyle` resolves them. */
 const PINE_600 = 'rgb(30, 70, 50)';
 const STONE_50 = 'rgb(243, 241, 234)';
 
 /**
- * The panel is the *inverse* of the page it sits on, asserted as both halves of the pair.
+ * The band is the *inverse* of the theme chosen for the section, painted edge to edge.
  *
- * Derived from the section's own resolved theme rather than pinned to `dark`, and that is a fix
- * rather than a generalisation: `tools/storybook/sectionStory` feeds the toolbar's theme into
- * `sectionFields` for every `Sections/*` story, so a hardcoded `'dark'` threw the moment a reader
- * flipped the toolbar — a red interaction panel, on a client-facing Storybook, for a section that
- * was behaving exactly as designed. What the AC actually claims is the *inversion*, so that is what
- * this asserts, with the two drawn fills still pinned so a hardcoded colour past the theme fails it.
+ * Derived from the chosen theme rather than pinned to `dark`: `tools/storybook/sectionStory` feeds the
+ * toolbar's theme into `sectionFields` for every `Sections/*` story, so a hardcoded `'dark'` would go
+ * red the moment a reader flipped the toolbar. The two drawn fills are still pinned, so a hardcoded
+ * colour past the theme fails it. The panel inside paints nothing of its own — the fill is the band's.
  */
-const expectInvertedPanel = async (canvasElement: HTMLElement) => {
+const expectInvertedBand = async (canvasElement: HTMLElement, chosenTheme: unknown) => {
   const section = sectionOf(canvasElement);
-  const panel = panelOf(canvasElement);
-  const onDarkPage = section.dataset.theme === 'dark';
+  const onDarkPage = chosenTheme === 'dark';
 
-  await expect(panel.dataset.theme).toBe(onDarkPage ? 'light' : 'dark');
-  await expect(getComputedStyle(section).backgroundColor).toBe(onDarkPage ? PINE_600 : STONE_50);
-  await expect(getComputedStyle(panel).backgroundColor).toBe(onDarkPage ? STONE_50 : PINE_600);
+  await expect(section.dataset.theme).toBe(onDarkPage ? 'light' : 'dark');
+  await expect(getComputedStyle(section).backgroundColor).toBe(onDarkPage ? STONE_50 : PINE_600);
+  await expect(getComputedStyle(panelOf(canvasElement)).backgroundColor).toBe('rgba(0, 0, 0, 0)');
 };
 
 /** The two-column flex row inside the panel. */
@@ -189,7 +187,7 @@ const ordinalsOf = (canvas: ReturnType<typeof within>) =>
  */
 export const Default: Story = {
   args: listData,
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, globals }) => {
     const canvas = within(canvasElement);
 
     // AC: the statement is an `<h2>`, forced rather than taken from the editor's tag selector.
@@ -206,10 +204,9 @@ export const Default: Story = {
 
     /*
      * AC: the dark treatment comes from the theme rather than from hardcoded values. On the light
-     * page this story renders by default that is `--pine-600` (#1e4632) inside `--stone-50`
-     * (#f3f1ea); `OnDarkPage` below asserts the same helper with the pair the other way round.
+     * page this story renders by default that is a `--pine-600` (#1e4632) band; `OnDarkPage` below asserts the same helper with the pair the other way round.
      */
-    await expectInvertedPanel(canvasElement);
+    await expectInvertedBand(canvasElement, globals.theme ?? 'light');
 
     /*
      * The two micro-labels are drawn *quieter than the copy beside them*, and this pins that
@@ -244,7 +241,7 @@ export const Default: Story = {
 };
 
 /**
- * The page flipped to dark, so the panel flips to light — the inversion, pinned.
+ * The section set to dark, so the band flips to light — the inversion, pinned.
  *
  * A story-level `globals.theme` rather than `args.sectionFields`, and the difference matters: this
  * is the *same* path the toolbar drives, so it exercises `tools/storybook/sectionStory`'s injection
@@ -254,14 +251,14 @@ export const Default: Story = {
  * had noticed it did nothing — an inversion only a human flipping a toolbar ever exercises is an
  * inversion that will break unnoticed.
  *
- * The same `expectInvertedPanel` as `Default`, which is the point: one assertion, both directions.
+ * The same `expectInvertedBand` as `Default`, which is the point: one assertion, both directions.
  */
 export const OnDarkPage: Story = {
   args: listData,
   decorators: [atWidth('80rem')],
   globals: { theme: 'dark' },
   play: async ({ canvasElement }) => {
-    await expectInvertedPanel(canvasElement);
+    await expectInvertedBand(canvasElement, 'dark');
   }
 };
 

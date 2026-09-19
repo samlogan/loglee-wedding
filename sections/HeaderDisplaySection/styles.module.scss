@@ -103,6 +103,11 @@ $header-display-inline-switch: 60rem;
         flex: 1 1 0;
       }
 
+      // Half the row, less half the gap between the columns (the gap `.row` sets above).
+      .heading {
+        --heading-fit-width: calc((100cqi - #{fluid(24px, 40px)}) / 2);
+      }
+
       .aside {
         align-items: stretch;
       }
@@ -127,6 +132,29 @@ $header-display-inline-switch: 60rem;
      * where the same restatement was removed from all eleven sites at once.
      */
     min-width: 0;
+
+    /*
+     * ## The size is capped so the longest word fits its column
+     *
+     * `--display-md` reaches 132px, and in the split row the heading gets half the content width:
+     * at a 1440px viewport that is 660px, and "WEEKEND" needs ~700px at 132px — so it broke,
+     * "WEEKEN / D". The cap is the column width divided by the longest word's width, which the
+     * component counts in characters (`--heading-word-chars`, set on `.row`).
+     *
+     * 0.8em a character: measured in Archivo Black at the display tracking, uppercase words run
+     * 0.66–0.76em a character ("STAY" 0.66, "LODGE" 0.72, "WEEKEND" 0.76), with a little headroom
+     * for sub-pixel rounding. A word made mostly of W and M (0.95em each) can still break; nothing in
+     * the site's titles is.
+     *
+     * Re-pointing `--display-md` rather than setting `font-size`, because `Text` sets the size from
+     * that token on this same element; the leading and tracking follow it. The fluid pair is
+     * restated because a custom property cannot refer to itself — it is `--display-md`'s own
+     * definition in `_variables.scss`, and has to move with it.
+     *
+     * `cqi` resolves against `.container`, the section's content box.
+     */
+    --heading-fit-width: 100cqi;
+    --display-md: min(#{fluid(56px, 132px)}, calc(var(--heading-fit-width) / (var(--heading-word-chars, 1) * 0.8)));
 
     /*
      * No type declared here on purpose. The leading and tracking this header needs are the display

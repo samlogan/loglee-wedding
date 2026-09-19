@@ -108,29 +108,27 @@ const TwoColumnListSection: FC<ITwoColumnListSection> = (props) => {
    * the two are easy to confuse: the ink chip is `--stone-900` (#131412), which is the rule colour
    * on the *bands above* this one, not the panel. `PlayerCard` picked the wrong one of the two.
    *
-   * But the theme cannot go on `Section`. `Section` paints `--bg-default` across its whole width, so
-   * `theme="dark"` would publish a full-bleed green strip — and the design draws an **inset** panel
-   * on a light page (node 1:669 sits at x=-959 inside a 1280 frame, i.e. one container gutter in on
-   * each side). So the section keeps the page's theme and the panel carries the other one on its own
-   * `data-theme`, where the whole `[data-theme]` block in `_variables.scss` re-points beneath it:
-   * `--bg-default`, `--fg-default`, `--radius-*` consumers, the `currentColor` the amount chip mixes
-   * from. Nothing in `styles.module.scss` names a colour.
+   * ## The band is full-bleed, so the theme goes on `Section`
    *
-   * The panel is the *inverse* of the section rather than fixed at dark, so the Studio's Light/Dark
-   * radio does something honest: it flips which of the two is the page and which is the panel,
-   * keeping the contrast the design is built on. Fixing the panel at dark would have made that radio
-   * inert, which is the bug that was just fixed in `sections.groq.ts` — the projection did not
-   * return `themeOptions` at all, so nobody had noticed the control did nothing.
+   * This was an inset rounded panel on a light page (Stay's node 1:669), with the theme on the
+   * panel's own `data-theme`. It is now Planner's full-bleed band (node 1:426): `Section` paints
+   * `--bg-default` across the whole viewport, so giving it the band's theme is the whole change, and
+   * the `[data-theme]` block in `_variables.scss` re-points beneath it — `--bg-default`,
+   * `--fg-default`, the `currentColor` the amount chip mixes from. Nothing in `styles.module.scss`
+   * names a colour. The content stays on the page's grid inside `Section`'s `Container`.
+   *
+   * The band is the *inverse* of the chosen theme rather than fixed at dark, so the Studio's
+   * Light/Dark radio still does something honest: it flips the band against the pages around it.
    *
    * `'light'` is the fallback because that is the page both instances sit on.
    */
   const pageTheme = getSectionTheme(props, 'light');
-  const panelTheme: ProjectTheme = pageTheme === 'dark' ? 'light' : 'dark';
+  const bandTheme: ProjectTheme = pageTheme === 'dark' ? 'light' : 'dark';
 
   return (
     <Section
       name="TwoColumnListSection"
-      theme={pageTheme}
+      theme={bandTheme}
       {...getSectionSpacingProps(props)}
       /*
        * **After** the spread, deliberately: `getSectionSpacingProps` returns a hardcoded
@@ -165,7 +163,7 @@ const TwoColumnListSection: FC<ITwoColumnListSection> = (props) => {
        * to its padding. Safe here for the same reason: sections render as block children of `<main>`
        * and of a plain `<div>` in Storybook.
        */}
-      <div className={styles.panel} data-theme={panelTheme}>
+      <div className={styles.panel}>
         {/*
          * `hasStatement && hasAside`, not `hasAside` alone.
          *
