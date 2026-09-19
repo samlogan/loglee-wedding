@@ -10,10 +10,26 @@ import ImageCarouselSection from '.';
 /** Five camera photos, all the same 3:2 landscape — the section varies them itself. */
 const SHAPES: [number, number][] = Array.from({ length: 5 }, () => [1600, 1067]);
 
+/**
+ * A mock image whose *recorded* shape is exactly the one asked for. `mockImage` draws a real asset
+ * from the fixtures, the nearest in shape it has — which, once real photos are in the dataset, is
+ * often not the shape a story is about. The carousel reads the asset's dimensions, so pinning them
+ * keeps these stories about the carousel rather than about what happens to be uploaded; the photo
+ * shown is still a real one, cropped to fit.
+ */
+const shaped = (width: number, height: number, seed: string, altText: string) => {
+  const image = mockImage({ altText, height, seed, width });
+  return {
+    ...image,
+    asset: { ...image.asset, metadata: { ...image.asset?.metadata, dimensions: { height, width } } },
+    crop: undefined
+  } as typeof image;
+};
+
 const MOCK: IImageCarouselSection = {
   images: SHAPES.map(([width, height], index) => ({
     _key: `image-${index}`,
-    ...mockImage({ altText: `Photo ${index + 1}`, height, seed: `carousel-${index}`, width })
+    ...shaped(width, height, `carousel-${index}`, `Photo ${index + 1}`)
   })),
   speed: 'medium'
 };
@@ -22,7 +38,7 @@ const MOCK: IImageCarouselSection = {
 const PORTRAIT: IImageCarouselSection = {
   images: SHAPES.map((_, index) => ({
     _key: `portrait-${index}`,
-    ...mockImage({ altText: `Portrait ${index + 1}`, height: 1600, seed: `carousel-p-${index}`, width: 1200 })
+    ...shaped(1200, 1600, `carousel-p-${index}`, `Portrait ${index + 1}`)
   })),
   speed: 'medium'
 };
