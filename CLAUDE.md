@@ -128,7 +128,8 @@ All in `/components`:
 - **`Navigation`**: Navigation menu
 - **`Socials`**: Social links
 - **`SocialsShare`**: Social share buttons
-- **`Video`**: Video player (React Player)
+- **`Video`**: YouTube / Vimeo player (React Player). `fill` fills the parent instead of drawing 16:9; `ambient` autoplays muted and looping. URL recognition lives in `tools/helpers/videoPlatform`
+- **`AspectRatioFrame`**: Full-width box with one editor-chosen ratio on desktop and another on mobile (or `fullscreen`, the viewport height), for a child to fill. Pairs with the `aspectRatioFields()` schema helper in `tools/sanity/schema/common/`. Used by `MapSection` and `MediaSection`
 - **`ThemeProvider`**: Theme context provider
 - **`Layout`**: Page layout wrapper
 - **`JsonLd`**: Structured data components (JsonLdPage, JsonLdArticle)
