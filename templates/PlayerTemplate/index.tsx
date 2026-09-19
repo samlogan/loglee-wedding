@@ -5,13 +5,15 @@ import { notFound } from 'next/navigation';
 import PlayerShowcase from '@/components/PlayerShowcase';
 import type { PlayerShowcasePlayer, PlayerShowcaseRosterEntry } from '@/components/PlayerShowcase';
 import website from '@/config/website';
+import ImageCarouselSection from '@/sections/ImageCarouselSection';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
 import { PLAYER_PAGE_QUERY } from '@/tools/sanity/lib/queries.groq';
+import type { IImageCarouselSection } from '@/tools/sanity/schema/sections/imageCarouselSection';
 
 /**
  * The players that have a page: one static route file each under `app/(frontend)`, and the only
  * slugs `PLAYER_PAGE_QUERY` admits to the roster. A player created in the Studio with any other slug
- * has no route, so it is kept out of the pager and can never become a switch target that 404s.
+ * has no route, so it is kept out of the roster and can never become a switch target that 404s.
  * Adding a player is a route file plus an entry here.
  */
 export const PLAYER_SLUGS = ['sam', 'lauren'] as const;
@@ -22,6 +24,7 @@ export type PlayerSlug = (typeof PLAYER_SLUGS)[number];
 interface PlayerPageData {
   player: PlayerShowcasePlayer | null;
   roster: PlayerShowcaseRosterEntry[];
+  gallery: IImageCarouselSection['images'];
 }
 
 /**
@@ -51,13 +54,22 @@ interface PlayerTemplateProps {
  */
 const PlayerTemplate = async (props: PlayerTemplateProps) => {
   const { slug } = props;
-  const { player, roster } = await fetchPlayerPage(slug);
+  const { gallery, player, roster } = await fetchPlayerPage(slug);
 
   if (!player) {
     notFound();
   }
 
-  return <PlayerShowcase player={player} roster={roster} />;
+  /*
+   * The player's photo strip, from the Gallery tab of their document, under the showcase. The
+   * section renders nothing without images, so a player with an empty gallery gets no strip.
+   */
+  return (
+    <>
+      <PlayerShowcase player={player} roster={roster} />
+      <ImageCarouselSection images={gallery} />
+    </>
+  );
 };
 
 /**

@@ -2,8 +2,7 @@
   /*
    * The one layout switch, and it is `px` rather than `rem` deliberately.
    *
-   * Crossing it *hides* things — the inactive copy of the switch control and the inactive pager
-   * label — and a `rem` threshold inside a container query resolves against the live root font
+   * Crossing it *hides* things — the inactive copy of the switch control — and a `rem` threshold inside a container query resolves against the live root font
    * size, so a text-size increase alone would cross it and delete content (WCAG 1.4.4). The rule is
    * stated once in `tools/sass/base/__media.scss`: `px` where crossing hides, `rem` where it only
    * reflows. Both of this batch's section tickets hit exactly that failure before settling on `px`.
@@ -37,67 +36,31 @@
   }
 
   /*
-   * Back, pager, switch. Mobile has two items and spreads them to the edges; desktop has three and
-   * centres the pager with a symmetric grid — `space-between` would only centre it if the back link
-   * and the switch control were the same width, and they are not.
+   * Back and switch, spread to the edges. There used to be a "Player 01 / 02" pager centred between
+   * them on a three-column grid; with it gone, `space-between` is the whole layout.
    */
   .barRow {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--spacing-md);
-
-    @container playerShowcase (min-width: #{$player-showcase-inline-switch}) {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-    }
-  }
-
-  .back {
-    justify-self: start;
   }
 
   /*
-   * `flex` so the paragraph sets no line box of its own. Its spans are `xs`, but a block holding
-   * inline content still gets a strut at its *own* font size — the inherited 16px body — which
-   * would stand the pager ~24px tall and make it, not the controls, the tallest thing in the bar.
-   * Its ink is each span's `color` prop, as the eyebrow's is.
-   */
-  .pager {
-    display: flex;
-    margin: 0;
-    white-space: nowrap;
-  }
-
-  /*
-   * One control, two labels — and the same for the switch below. Written mobile-first, with one
-   * unconditional default and the other swapped in above the switch, rather than as two symmetric
-   * `display: none` rules. A container query cannot be evaluated before its container is laid out,
-   * so on the first style pass *neither* query matches; two symmetric rules would paint both copies
-   * for that frame. `components/Header` hit exactly this ("RSVP BY 01.12.26RSVP") and documents it.
+   * The switch control is drawn twice — in the bar on desktop, full width at the bottom on mobile.
+   * Written mobile-first, with one unconditional default and the other swapped in above the switch,
+   * rather than as two symmetric `display: none` rules: a container query cannot be evaluated before
+   * its container is laid out, so on the first style pass *neither* query matches, and two symmetric
+   * rules would paint both copies for that frame. `components/Header` hit exactly this.
    *
    * `display: none` rather than a visually-hidden technique because it is the one that also takes
-   * the inactive copy out of the accessibility tree and the tab order. The project has no sr-only
-   * utility, deliberately.
+   * the inactive copy out of the accessibility tree and the tab order.
    */
-  .pagerLong {
-    display: none;
-  }
-
   .switchBar {
     display: none;
-    justify-self: end;
   }
 
   @container playerShowcase (min-width: #{$player-showcase-inline-switch}) {
-    .pagerShort {
-      display: none;
-    }
-
-    .pagerLong {
-      display: inline;
-    }
-
     .switchBar {
       display: inline-flex;
     }

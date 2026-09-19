@@ -1,5 +1,5 @@
 import { FiDatabase } from 'react-icons/fi';
-import { TbCards, TbCube3dSphere, TbDeviceGamepad2, TbLetterCase, TbProgress } from 'react-icons/tb';
+import { TbCards, TbCube3dSphere, TbDeviceGamepad2, TbLetterCase, TbPhoto, TbProgress } from 'react-icons/tb';
 import { defineType } from 'sanity';
 import slugify from 'slugify';
 
@@ -43,9 +43,17 @@ interface IPlayerDocument {
     feature?: string;
   };
   fallbackImage?: SanityImageSimple;
+  /** The label beside the name on the home page's Select Player card. Blank shows the position, `P1`. */
+  selectLabel?: string;
+  /** The corner label on the player page's 3D panel. Blank hides it. */
+  modelLabel?: string;
+  /** The chip under the character on the player page. Blank hides it. */
+  modelBadge?: string;
   eyebrow?: string;
   level?: string;
   stats: IPlayerStat[];
+  /** The photo strip under the player card — drawn by `ImageCarouselSection`. */
+  gallery?: (SanityImageSimple & { _key?: string })[];
 }
 
 // A text stat and a meter stat are separate types rather than one type with a `kind` switch, so the
@@ -159,6 +167,14 @@ const player = defineType({
       type: `number`
     },
     {
+      description:
+        'The short label beside the name on the home page’s Select Player card — “Groom”. Leave blank to show the position (P1, P2). Displayed in capitals automatically.',
+      group: 'data',
+      name: `selectLabel`,
+      title: `Select Player Label`,
+      type: `string`
+    },
+    {
       description: 'The short line above the name, e.g. "PLAYER 01 — GROOM".',
       group: 'data',
       name: `eyebrow`,
@@ -207,6 +223,21 @@ const player = defineType({
       type: `object`
     },
     {
+      description:
+        'The small label in the top-left corner of the 3D panel on this player’s page — “3D canvas · dance”. Leave blank to hide it. Type it in normal case; it is displayed in capitals automatically.',
+      group: 'model',
+      name: `modelLabel`,
+      title: `Model Label`,
+      type: `string`
+    },
+    {
+      description: 'The chip under the character on this player’s page — “sam.glb”. Leave blank to hide it.',
+      group: 'model',
+      name: `modelBadge`,
+      title: `Model Badge`,
+      type: `string`
+    },
+    {
       description: 'Shown whenever the 3D is unavailable — no WebGL, reduced motion, or a failed load.',
       group: 'model',
       name: `fallbackImage`,
@@ -228,6 +259,16 @@ const player = defineType({
       of: [{ type: 'playerTextStat' }, { type: 'playerMeterStat' }],
       title: `Player Card Stats`,
       type: `array`
+    },
+    {
+      description:
+        'The strip of photos under the player card. Each is cropped to a different shape as it scrolls, so set hotspots to keep faces in frame. Leave empty for no strip.',
+      group: 'gallery',
+      name: `gallery`,
+      of: [{ type: 'imageElementSimple' }],
+      options: { layout: 'grid' },
+      title: `Gallery`,
+      type: `array`
     }
   ],
   groups: [
@@ -246,6 +287,11 @@ const player = defineType({
       icon: TbCards,
       name: 'card',
       title: 'Player Card'
+    },
+    {
+      icon: TbPhoto,
+      name: 'gallery',
+      title: 'Gallery'
     }
   ],
   icon: TbDeviceGamepad2,

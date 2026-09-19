@@ -597,3 +597,18 @@ export const Loaded: Story = {
     await waitFor(async () => expect(viewer.dataset.modelClip).toBe('Excited_Walk_M'), { timeout: 10_000 });
   }
 };
+
+/**
+ * Each player's Select Player Label replaces its position beside the name; a player without one keeps
+ * `P2`.
+ */
+export const CustomLabels: Story = {
+  args: { ...MOCK, players: [{ ...SAM, selectLabel: 'Groom' }, LAUREN] },
+  play: async ({ canvasElement }) => {
+    const cards = cardsOf(canvasElement);
+
+    await expect(cards[0]).toHaveTextContent(/Groom/i);
+    await expect(cards[0]).not.toHaveTextContent('P1');
+    await expect(cards[1]).toHaveTextContent('P2');
+  }
+};

@@ -6,6 +6,7 @@ import type { ModelViewerMode } from '@/components/ModelViewer';
 import Tag from '@/components/Tag';
 import Text from '@/components/Text';
 import classNames from '@/helpers/classNames';
+import textOrUndefined from '@/helpers/textOrUndefined';
 
 import { playerPath } from './players';
 import type { SelectablePlayer } from './players';
@@ -18,7 +19,7 @@ export interface PlayerSelectCardProps {
   mode?: ModelViewerMode;
   /** Only a player that has been through `isSelectablePlayer` — one with a name and a path. */
   player: SelectablePlayer;
-  /** 1-based. Printed as `P1`, `P2` — the position is the only source of the label. */
+  /** 1-based. Printed as `P1`, `P2` when the player has no Select Player Label of its own. */
   position: number;
 }
 
@@ -59,7 +60,10 @@ export interface PlayerSelectCardProps {
  */
 const PlayerSelectCard = (props: PlayerSelectCardProps) => {
   const { className, mode, player, position } = props;
-  const { clips, fallbackImage, model, name, slug } = player;
+  const { clips, fallbackImage, model, name, selectLabel, slug } = player;
+  // The player's own label, or the position — `textOrUndefined` so a field emptied in a draft, still
+  // carrying its stega payload, falls back rather than printing nothing.
+  const label = textOrUndefined(selectLabel) ?? `P${position}`;
 
   const plainName = stegaClean(name).trim();
 
@@ -107,7 +111,15 @@ const PlayerSelectCard = (props: PlayerSelectCardProps) => {
          * pixel under on the desktop, and a step on the scale rather than a size set in the stylesheet.
          * The chip is re-pointed to the same step in `.name`, so the two stay one size.
          */}
-        <Text as="span" color="themeFgAccent" size="xs" text={`P${position}`} variant="mono" weight="bold" />
+        <Text
+          as="span"
+          color="themeFgAccent"
+          size="xs"
+          text={label}
+          textTransform="uppercase"
+          variant="mono"
+          weight="bold"
+        />
         <Tag className={styles.name} label={name} uppercase variant="filled" weight="bold" />
       </div>
     </Link>

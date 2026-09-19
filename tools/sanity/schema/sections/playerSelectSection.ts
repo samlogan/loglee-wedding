@@ -24,6 +24,8 @@ import internalLabelField from '../common/internalLabelField';
 interface IPlayerSelectSectionPlayer {
   _id: string;
   name?: string | null;
+  /** `player.selectLabel` — the label beside the name. Blank falls back to the position. */
+  selectLabel?: string | null;
   slug?: { current?: string | null } | null;
   model?: { asset?: { url?: string | null } | null } | null;
   clips?: Pick<ModelClipNames, 'idle' | 'hover'> | null;
@@ -34,8 +36,9 @@ interface IPlayerSelectSectionPlayer {
  * The home page's character select — a framed panel, a corner caption, a centred prompt, and one card
  * per player (Figma nodes 1:79 desktop, 1:124 mobile).
  *
- * There is no `players` field and no field for `P1` / `P2`: every `player` document is joined in by
- * the projection, in its own `order`, and the labels are the position. See
+ * There is no `players` field: every `player` document is joined in by the projection, in its own
+ * `order`. The label beside each name is the player's own Select Player Label, and the position
+ * (`P1`, `P2`) when that is blank. See
  * `sections/PlayerSelectSection/queries.groq.ts` for why that is a join rather than a reference array.
  */
 interface IPlayerSelectSection {

@@ -7,7 +7,6 @@ import ModelViewer from '@/components/ModelViewer';
 import PlayerCard from '@/components/PlayerCard';
 import Section from '@/components/Section';
 import Text from '@/components/Text';
-import formatOrdinal from '@/helpers/formatOrdinal';
 import hasText from '@/helpers/hasText';
 import type { ModelClipNames } from '@/helpers/modelClips';
 import textOrUndefined from '@/helpers/textOrUndefined';
@@ -23,28 +22,30 @@ export interface PlayerShowcasePlayer {
   level?: string | null;
   clips?: ModelClipNames | null;
   stats?: IPlayerStat[] | null;
-  model?: { url?: string | null; originalFilename?: string | null } | null;
+  model?: { url?: string | null } | null;
+  /** The 3D panel's corner label. Blank or absent hides it. */
+  modelLabel?: string | null;
+  /** The chip under the character. Blank or absent hides it. */
+  modelBadge?: string | null;
   fallbackImage?: SanityImageSimple | null;
 }
 
-/** One entry in the roster — enough to count the players and link to the next one. */
+/** One entry in the roster — enough to link to the next player and say who they are. */
 export interface PlayerShowcaseRosterEntry {
   name: string;
   slug: string;
+  /** "Groom" / "Bride" — the switch control reads "Meet the groom". */
+  selectLabel?: string | null;
+  /** The fallback when there is no `selectLabel`. */
+  eyebrow?: string | null;
 }
 
 export interface PlayerShowcaseProps {
   className?: string;
   player: PlayerShowcasePlayer;
-  /** Every player, in the Studio's `order`. Drives the pager and the switch target. */
+  /** Every player, in the Studio's `order`. Drives the switch target. */
   roster: PlayerShowcaseRosterEntry[];
 }
-
-/**
- * Describes the view rather than the player, so it is true on both pages. The comp's desktop form
- * names the rendering library; the mobile form is this one, and one string has to serve both.
- */
-const MODEL_LABEL = '3D canvas · dance';
 
 /**
  * The player page — utility bar, the model beside the name and player card, and the switch control.
@@ -108,20 +109,17 @@ const MODEL_LABEL = '3D canvas · dance';
  */
 const PlayerShowcase = (props: PlayerShowcaseProps) => {
   const { className, player, roster } = props;
-  const { clips, eyebrow, fallbackImage, level, model, name, slug, stats } = player;
+  const { clips, eyebrow, fallbackImage, level, model, modelBadge, modelLabel, name, slug, stats } = player;
 
   /*
    * `PLAYER_PAGE_QUERY` filters the player and the roster alike, so this player is always in it. The
-   * clamps are for a roster handed in by anything else: an empty one reads "01 / 01" rather than
-   * "01 / 00", and one without this player counts from the first entry rather than from -1.
+   * clamp is for a roster handed in by anything else: one without this player links on from the
+   * first entry rather than from -1.
    */
-  const total = Math.max(roster.length, 1);
   const index = Math.max(
     roster.findIndex((entry) => entry.slug === slug),
     0
   );
-  const position = `${formatOrdinal(index)} / ${formatOrdinal(total - 1)}`;
-
   const next = roster.length > 1 ? roster[(index + 1) % roster.length] : undefined;
 
   /*
@@ -142,15 +140,21 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
   const hasCard = statList.length > 0 || Boolean(cardLevel);
 
   /*
-   * Named "Switch player, Lauren" — the visible words in their visible order (WCAG 2.5.3), so a
-   * speech-input user saying what they see gets a match. The arrow is a symbol rather than a word,
-   * so it is left out rather than spoken as "right arrow" or translated into a "to" that splits the
-   * visible label in two.
+   * "Meet the groom" — the next player's role, from their Select Player Label, else their eyebrow.
+   * Without either it names them: "Meet Sam".
+   *
+   * Named "Meet the groom, Sam": the visible words first and in their visible order (WCAG 2.5.3), so a
+   * speech-input user saying what they see gets a match, then the name the role stands for. The
+   * arrow is a symbol rather than a word, so it is left out rather than spoken as "right arrow".
    */
+  const nextRole = next ? (textOrUndefined(next.selectLabel) ?? textOrUndefined(next.eyebrow)) : undefined;
+  const switchText = nextRole ? `Meet the ${stegaClean(nextRole).trim().toLowerCase()}` : `Meet ${next?.name}`;
+  const switchName = nextRole ? `${switchText}, ${next?.name}` : switchText;
+
   const switchControl = (placement: 'bar' | 'bottom') =>
     next ? (
       <Link
-        ariaLabel={`Switch player, ${next.name}`}
+        ariaLabel={switchName}
         className={placement === 'bar' ? styles.switchBar : styles.switchBottom}
         fullWidth={placement === 'bottom'}
         href={`/${next.slug}/`}
@@ -160,7 +164,7 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
         theme="accent"
         variant="ui"
       >
-        Switch player → {next.name}
+        {switchText} →
       </Link>
     ) : null;
 
@@ -172,26 +176,6 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
             <Link ariaLabel="Back to home" arrow="left" className={styles.back} href="/" mono size="sm" variant="bare">
               Back
             </Link>
-            <p className={styles.pager}>
-              <Text
-                as="span"
-                className={styles.pagerShort}
-                color="themeFgAccent"
-                size="xs"
-                text={`P ${position}`}
-                textTransform="uppercase"
-                variant="mono"
-              />
-              <Text
-                as="span"
-                className={styles.pagerLong}
-                color="themeFgAccent"
-                size="xs"
-                text={`Player ${position}`}
-                textTransform="uppercase"
-                variant="mono"
-              />
-            </p>
             {switchControl('bar')}
           </div>
         </Container>
@@ -217,10 +201,12 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
           <div className={styles.model}>
             <ModelViewer
               alt={`${name}, dancing`}
-              badge={model?.originalFilename ?? undefined}
+              // Authored per player; `textOrUndefined` so a field emptied in a draft — still carrying
+              // its stega payload — hides the chrome rather than drawing an empty chip.
+              badge={textOrUndefined(modelBadge)}
               clips={stegaClean(clips)}
               fallbackImage={fallbackImage}
-              label={MODEL_LABEL}
+              label={textOrUndefined(modelLabel)}
               orbit
               // The page's hero. Only the fallback image can be an LCP candidate — see the prop.
               priority
@@ -231,7 +217,7 @@ const PlayerShowcase = (props: PlayerShowcaseProps) => {
 
           {hasCard ? (
             <div className={styles.card}>
-              <PlayerCard level={cardLevel} stats={statList} />
+              <PlayerCard level={cardLevel} stats={statList} title="About me" />
             </div>
           ) : null}
         </div>

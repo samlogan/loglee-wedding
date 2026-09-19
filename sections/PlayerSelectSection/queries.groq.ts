@@ -47,6 +47,7 @@ const playerSelectSectionProjection = groq`
     "players": *[_type == 'player'] | order(order asc, _createdAt asc) {
       _id,
       name,
+      selectLabel,
       slug {
         current
       },

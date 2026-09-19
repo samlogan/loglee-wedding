@@ -47,8 +47,8 @@ const DESIGN_STATS: IPlayerStat[] = [
 ];
 
 const ROSTER: PlayerShowcaseRosterEntry[] = [
-  { name: 'Sam', slug: 'sam' },
-  { name: 'Lauren', slug: 'lauren' }
+  { name: 'Sam', selectLabel: 'Groom', slug: 'sam' },
+  { name: 'Lauren', selectLabel: 'Bride', slug: 'lauren' }
 ];
 
 /** The clip names as they actually appear inside each GLB — see `components/ModelViewer`. */
@@ -56,7 +56,9 @@ const SAM: PlayerShowcasePlayer = {
   clips: { feature: 'Gangnam_Groove', hover: 'Agree_Gesture', idle: 'restpose' },
   eyebrow: 'P1 · Groom',
   level: 'Lvl 33',
-  model: { originalFilename: 'sam.glb', url: '/sam.glb' },
+  model: { url: '/sam.glb' },
+  modelBadge: 'sam.glb',
+  modelLabel: '3D canvas · dance',
   name: 'Sam',
   slug: 'sam',
   stats: DESIGN_STATS
@@ -64,7 +66,9 @@ const SAM: PlayerShowcasePlayer = {
 
 const LAUREN: PlayerShowcasePlayer = {
   clips: { feature: 'Crystal_Beads', idle: 'restpose' },
-  model: { originalFilename: 'lauren.glb', url: '/lauren.glb' },
+  model: { url: '/lauren.glb' },
+  modelBadge: 'lauren.glb',
+  modelLabel: '3D canvas · dance',
   name: 'Lauren',
   slug: 'lauren',
   stats: DESIGN_STATS
@@ -183,13 +187,16 @@ export const Desktop: Story = {
     await expect(model.right).toBeLessThanOrEqual(heading.left);
     await expect(heading.bottom).toBeLessThanOrEqual(card.top);
 
-    const switches = canvas.getAllByRole('link', { name: 'Switch player, Lauren' });
+    const switches = canvas.getAllByRole('link', { name: 'Meet the bride, Lauren' });
     await expect(switches).toHaveLength(1);
     await expect(canvas.getByRole('navigation', { name: 'Player' })).toContainElement(switches[0]);
     await expectLabelInName(switches[0]);
 
-    await expect(canvas.getByText('Player 01 / 02')).toBeVisible();
-    await expect(canvas.getByText('P 01 / 02')).not.toBeVisible();
+    // The switch reads the next player's role, and there is no "Player 01 / 02" pager beside it.
+    await expect(switches[0]).toHaveTextContent(/Meet the bride/i);
+    await expect(canvas.queryByText(/Player 0\d \/ 0\d/)).toBeNull();
+    // The card's header band.
+    await expect(canvas.getByText('About me')).toBeVisible();
 
     // The bar's rule runs edge to edge, as the comp and the site header both draw it, while its
     // controls sit inside the gutter — so the nav is wider than the row it holds.
@@ -227,13 +234,12 @@ export const Mobile: Story = {
     await expect(model.getBoundingClientRect().bottom).toBeLessThanOrEqual(card.getBoundingClientRect().top);
 
     // One switch control in the tree, and it is the bottom copy rather than the bar's.
-    const switches = canvas.getAllByRole('link', { name: 'Switch player, Lauren' });
+    const switches = canvas.getAllByRole('link', { name: 'Meet the bride, Lauren' });
     await expect(switches).toHaveLength(1);
     await expect(canvas.getByRole('navigation', { name: 'Player' })).not.toContainElement(switches[0]);
     await expectLabelInName(switches[0]);
 
-    await expect(canvas.getByText('P 01 / 02')).toBeVisible();
-    await expect(canvas.getByText('Player 01 / 02')).not.toBeVisible();
+    await expect(canvas.queryByText(/P 0\d \/ 0\d/)).toBeNull();
 
     // The foot copy is the comp's tall full-width action (52px drawn), not the bar's compact `sm`
     // box, which alone would stand about 33px — under the 44px a thumb wants at the foot of a page.
@@ -242,9 +248,8 @@ export const Mobile: Story = {
 };
 
 /**
- * The second player: the pager counts to her, the switch points back, and the file-name chip names
- * her own GLB. The comp prints `sam-dance.glb` on both players' layouts; read from the asset, this
- * page cannot show Sam's file.
+ * The second player: the switch points back to the groom, and the chip under her shows
+ * her own document's Model Badge.
  */
 export const SecondPlayer: Story = {
   args: { player: LAUREN },
@@ -253,8 +258,7 @@ export const SecondPlayer: Story = {
     const canvas = within(canvasElement);
 
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent(/^Lauren$/);
-    await expect(canvas.getByText('Player 02 / 02')).toBeVisible();
-    await expect(canvas.getByRole('link', { name: 'Switch player, Sam' })).toHaveAttribute('href', '/sam/');
+    await expect(canvas.getByRole('link', { name: 'Meet the groom, Sam' })).toHaveAttribute('href', '/sam/');
     await expect(canvasElement).toHaveTextContent(/lauren\.glb/i);
     await expect(canvasElement).not.toHaveTextContent(/sam\.glb/i);
   }
@@ -335,7 +339,7 @@ export const AsPublished: Story = {
     // The page still works without its content: the model and the way back and onward are intact.
     await expect(canvasElement.querySelector(`.${styles.model}`)).not.toBeNull();
     await expect(canvas.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', '/');
-    await expect(canvas.getByRole('link', { name: 'Switch player, Lauren' })).toHaveAttribute('href', '/lauren/');
+    await expect(canvas.getByRole('link', { name: 'Meet the bride, Lauren' })).toHaveAttribute('href', '/lauren/');
   }
 };
 
@@ -364,7 +368,36 @@ export const SinglePlayer: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.queryAllByRole('link', { name: /switch player/i })).toHaveLength(0);
-    await expect(canvas.getByText('Player 01 / 01')).toBeVisible();
+    await expect(canvas.queryAllByRole('link', { name: /^meet /i })).toHaveLength(0);
+  }
+};
+
+/** Model Label and Model Badge are authored per player, and say whatever the editor typed. */
+export const CustomModelLabels: Story = {
+  args: { player: { ...SAM, modelBadge: 'Now dancing', modelLabel: 'Player one · warming up' } },
+  decorators: [atWidth('80rem')],
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement).toHaveTextContent(/Player one · warming up/i);
+    await expect(canvasElement).toHaveTextContent(/Now dancing/);
+    await expect(canvasElement).not.toHaveTextContent(/sam\.glb/i);
+  }
+};
+
+/** Left blank, both disappear — no empty chip, no stray label. */
+export const WithoutModelLabels: Story = {
+  args: { player: { ...SAM, modelBadge: '  ', modelLabel: undefined } },
+  decorators: [atWidth('80rem')],
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement).not.toHaveTextContent(/3D canvas/i);
+    await expect(canvasElement).not.toHaveTextContent(/sam\.glb/i);
+  }
+};
+
+/** A next player with no Select Player Label or eyebrow is named instead: "Meet Lauren". */
+export const SwitchWithoutRole: Story = {
+  args: { roster: [ROSTER[0], { name: 'Lauren', slug: 'lauren' }] },
+  decorators: [atWidth('80rem')],
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('link', { name: 'Meet Lauren' })).toHaveAttribute('href', '/lauren/');
   }
 };

@@ -105,19 +105,11 @@ const PlayerCard = (props: PlayerCardProps) => {
                * technology reports would silently slide onto the next stat's value. An empty `<dd>`
                * is valid and keeps the grid cell and its rule where the comp draws them.
                *
-               * The full-width stat is the only one set in the body face, so it gets a nested
-               * `<Text>` on the proportional scale inside the mono `<dd>`. That nesting is the whole
-               * reason `.fullWidth .statValue` still includes `body-font()`: `variant_body` declares
-               * no `font-family` at all, so an inline `<Text>` here would otherwise inherit the mono
-               * face from the `<dd>` around it and render the card's one body-face run in JetBrains
-               * Mono.
-               *
-               * `size="md"` is the single statement of that step. The stylesheet used to restate it
-               * as `font-size: var(--body-md)` on the `<dd>` as well; it owns only the face.
+               * Every value is in the mono face, the full-width one included. It used to be the one
+               * run set in the body face, as the comp drew it; the couple asked for it to match the
+               * rest of the card.
                */}
-              <Text as="dd" className={styles.statValue} variant="mono" weight="regular">
-                {stat.fullWidth ? <Text as="span" size="md" text={stat.value} /> : stat.value}
-              </Text>
+              <Text as="dd" className={styles.statValue} text={stat.value} variant="mono" weight="regular" />
             </div>
           ))}
         </dl>
