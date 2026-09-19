@@ -14,6 +14,14 @@
  *   - a page that knows where the reader is going next — the select screen prefetching a player
  *     page's model on hover, which is the whole reason this is exported rather than private.
  *
+ * On the home page the viewer's own call fires once per card, in the same commit, so both characters
+ * (~8MB together) start downloading at once. That is decided, not accidental: MAM-1926 kept both eager,
+ * and the reasoning lives with the implementation in `sections/PlayerSelectSection/index.tsx`, under
+ * "Both models load eagerly" — a staggered reveal reads as one broken card, and calling this any
+ * earlier than the viewer does would send ~8MB to the devices that end up on the fallback image. If
+ * deferral is ever wanted the lever is the section withholding the second card's `src` until idle or
+ * interaction, not a change here.
+ *
  * Returns nothing rather than a promise, so a caller cannot be tempted to await an optimisation.
  * Safe to call with nothing, on the server, and repeatedly.
  */
