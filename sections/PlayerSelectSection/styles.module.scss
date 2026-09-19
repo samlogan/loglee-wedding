@@ -1,0 +1,282 @@
+/*
+ * The character select — Figma 1:79 (desktop, 1280) and 1:124 (mobile, 390).
+ *
+ * Every `fluid()` pair below takes the mobile comp's value as its narrow anchor and the desktop
+ * comp's as its wide one, which is the convention `_variables.scss` sets out. Nothing on the shared
+ * spacing scale is drawn at these ramps, so they are local pairs rather than tokens.
+ *
+ * ## The colours, and which are exact
+ *
+ *   panel fill    #edebe3  stone/100  → `--bg-accent`    exact on the light theme
+ *   panel stroke  #1e4632  pine/600   → `--fg-accent`    exact
+ *   caption, P1   #1e4632  pine/600   → `--fg-accent`    exact
+ *   prompt        #131412  stone/900  → `--fg-default`   exact
+ *   name chip     #131412 on #f3f1ea  → `--fg-default` under `--bg-default` — the page's own pair,
+ *                                        inverted; exact
+ *
+ * The panel's frame is the same object `ModelViewer` draws around its own arch on the player page
+ * (dashed `--fg-accent`, `--radius-md`, `--bg-accent`), so the dark theme resolves it the same way:
+ * lime stroke and chrome on pine. That component's stylesheet records the decision to keep it.
+ */
+
+@layer defaults {
+  .panel {
+    border: 1px dashed var(--fg-accent);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-accent);
+  }
+
+  /*
+   * The caption and the prompt, as grid rows rather than an absolutely positioned corner label.
+   *
+   * The comp draws the caption *above* the prompt with clear space between (nodes 1:82 and 1:81), so
+   * both can be in flow — and in flow is the version that survives content. An absolute caption long
+   * enough to wrap, or one under a 200% text size, prints straight over the prompt (WCAG 1.4.4); here
+   * it grows its row and pushes the prompt down instead.
+   *
+   * Row 1 keeps **one caption line's height even when there is no caption**, so an editor clearing
+   * the caption does not lift the prompt up against the border — it stays where the comp puts it. The
+   * height is one line at `--body-2xs` and the mono role's leading, which is what the caption renders
+   * at *because* the component passes it `size="2xs"`; the two are coupled, and the call site says so.
+   *
+   * Only that first row is declared. The prompt places itself in row 2 — which also keeps it out of
+   * row 1 when there is no caption — and a row that exists only when there is a prompt means a caption
+   * with no prompt under it leaves no dangling gap.
+   */
+  .header {
+    display: grid;
+    grid-template-rows: minmax(calc(var(--body-2xs) * var(--mono-line-height)), auto);
+    // Caption line → prompt: 36px from the border to the prompt at 1280, 30px at 390.
+    row-gap: #{fluid(7px, 10px)};
+    // The caption's corner inset: 14 × 12 at desktop (1:82), 12 × 10 at mobile (1:127), measured from
+    // inside the stroke. Symmetric inline, so the prompt still centres on the panel.
+    padding: #{fluid(10px, 12px)} #{fluid(12px, 14px)} 0;
+  }
+
+  .caption {
+    // 0.66px on 11px and 0.54px on 9px — 0.06em both, the quiet chrome register `ModelViewer`'s own
+    // corner label is drawn in. Re-pointed rather than declared as `letter-spacing`; see the mono
+    // role's note in `_variables.scss` for why that is the deterministic form.
+    --mono-letter-spacing: 0.06em;
+  }
+
+  .prompt {
+    // 3.36px on 14px and 2.88px on 12px: 0.24em, wider than the loud register's 0.2em.
+    --mono-letter-spacing-loud: 0.24em;
+
+    grid-row: 2;
+  }
+
+  /*
+   * The cards, side by side at every width — they never stack (a ticket criterion, and what both comps
+   * draw).
+   *
+   * ## Grid rather than a wrapping flex row, and the difference is reachable
+   *
+   * A wrapping row with two half-width items fits them on one line only while `2 × ((100% − gap) / 2) +
+   * gap` rounds to no more than 100% — and layout rounds to 1/64px, so at the wrong width the second
+   * card wraps under the first. One implicit column per card cannot wrap at all.
+   *
+   * Each column is `minmax(0, max)`: the grid grows every column equally until it reaches the max,
+   * then centres the set (`justify-content`). So the cards share the panel on a phone and stop at the
+   * drawn size on a desktop, with the gap taking the rest — which is exactly the difference between the
+   * two comps. A third player would add a third column rather than a second row; nothing in the design
+   * has three, and three narrow columns are a better failure than a stacked list.
+   */
+  .players {
+    // 120px between the two cards at 1280 (1:84 → 1:93), 16px at 390 (1:129 → 1:138).
+    --player-select-gap: #{fluid(16px, 120px)};
+    // The card's own inset around the arch: 28px at desktop, 12px at mobile.
+    --player-select-card-padding-inline: #{fluid(12px, 28px)};
+    /*
+     * The drawn arch width at desktop (1:85), and the size a card stops growing at. A named local
+     * rather than a bare `230px` in the track below: it is a measurement off one frame, nothing on the
+     * scale sits at it, and it is the number to change if the design resizes the characters.
+     */
+    --player-select-arch-max: 230px;
+
+    display: grid;
+    grid-auto-columns: minmax(0, calc(var(--player-select-arch-max) + 2 * var(--player-select-card-padding-inline)));
+    grid-auto-flow: column;
+    justify-content: center;
+    column-gap: var(--player-select-gap);
+    // Prompt → cards 28 / 20, cards → stroke 40 / 24. Inline 12 is the mobile comp's; on a desktop the
+    // cards are centred well clear of it.
+    padding: #{fluid(20px, 28px)} var(--spacing-sm) #{fluid(24px, 40px)};
+  }
+
+  /*
+   * `grid`, so the card inside stretches on both axes: the full column width, which is what sizes the
+   * arch, and the full row height, so two cards whose label rows wrap differently keep one hit area
+   * each rather than one short one.
+   */
+  .player {
+    display: grid;
+  }
+
+  /*
+   * The card is a `Link` whose only appearance prop is `variant="rounded"` (the comp's 8px corner), so
+   * it arrives carrying `.button`'s base: `inline-flex`, centred on both axes, a transparent 1px border
+   * and an 8px gap. Every property the card needs different is overridden here; none of them is a
+   * prop, because the card's layout is its own.
+   *
+   * **Two classes, and that is load-bearing.** `.button` and a one-class rule here are a tie inside
+   * `@layer defaults`, decided by CSS-module emission order, which nothing in the build guarantees and
+   * which differs between Next and Storybook (`sections/FaqSection`'s map link documents losing exactly
+   * this race). `.players .card` is (0,2,0) and wins outright.
+   *
+   * The focus ring is **not** restated. `.button:focus-visible` already draws the design system's
+   * ring — `--fg-default`, 3px, 3px clear of the box — and it follows the rounded corners.
+   */
+  .players .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    // Arch → label row: 18 at desktop (1:85 → 1:88), 12 at mobile.
+    gap: #{fluid(12px, 18px)};
+    // 16 × 28 at desktop (1:84), 10 × 12 at mobile (1:129).
+    padding: #{fluid(10px, 16px)} var(--player-select-card-padding-inline);
+    // `.button`'s transparent border would take a pixel out of each side of the arch; the comp has none.
+    border: 0;
+
+    /*
+     * Forced colours paints no surface, so without this an unfocused card is two words floating under
+     * an arch — the box that says "this whole thing is one control" disappears. `.button` gets that
+     * from its transparent border, which the line above removes; this puts it back where it is needed.
+     * The pixel it adds is fine there, the same trade `components/Tag` makes.
+     */
+    @media (forced-colors: active) {
+      border: 1px solid LinkText;
+    }
+  }
+
+  /*
+   * The whole card's hover, in colour: the name chip takes the accent fill.
+   *
+   * `ModelViewer`'s wave only answers a pointer over the arch, only on a device that renders the canvas,
+   * and not at all under reduced motion — so without this, the pointer cursor was the only thing that
+   * said the label row, a fallback image or a still character was part of a link. "Focus is geometry;
+   * hover is colour" is the Button surface's rule, and this follows it: the ring is untouched.
+   *
+   * `--fg-accent` is pine/600 on light and signal/300 on dark — the palette's interactive accent — and
+   * the chip keeps `--bg-default` ink over it: 9.4:1 and 9.2:1. Not drawn in the comp, which shows no
+   * hover state at all; raised at design review.
+   *
+   * There is no story for it, and that is a limit of the tool rather than an oversight: the stories'
+   * `userEvent.hover` dispatches synthetic pointer events, which run React handlers (the wave) but never
+   * set the browser's `:hover`. It was checked with a real pointer instead.
+   */
+  .players .card:hover .name {
+    --tag-fill: var(--fg-accent);
+  }
+
+  /*
+   * Stretched, and not left to the card's `align-items: center`. `ModelViewer`'s root is an
+   * inline-size query container, and a query container contributes nothing to its own intrinsic width
+   * — centred, it would shrink-to-fit around nothing and collapse to zero.
+   */
+  .arch {
+    align-self: stretch;
+  }
+
+  /*
+   * ## `ModelViewer`, without its frame
+   *
+   * The viewer ships as the player page's panel: its own dashed frame and fill, with the arch inset at
+   * 57–64% of it. The select comp draws neither — the section's panel is the frame, and each arch fills
+   * its card. The viewer has no prop for that, so the section re-points it here, which is the one place
+   * this stylesheet reaches into another component. Everything else in this file is its own.
+   *
+   * Scoped under `.arch` so each rule is two classes against the viewer's one, and wins on specificity
+   * rather than on module order. The stage is selected structurally: it is the root's only `div`
+   * child, which `ModelViewer.stories.tsx` relies on too — and `:only-of-type` means that if the viewer
+   * ever grows a second `div`, the override switches off rather than resizing both.
+   *
+   * **The stories check this independently.** They find the stage as the parent of whatever the viewer
+   * is showing (its `role="img"` placeholder or canvas holder, or the fallback image's frame) and fail if
+   * that is not the element this selector reaches, before measuring its geometry. A viewer that wraps
+   * its stage, reorders it or renames it therefore fails `yarn test` rather than shipping the player
+   * page's arch. The durable fix belongs to the viewer: an option that drops its frame, a stable hook on
+   * the stage, and the height, foot and hatch as re-pointable properties. When that exists, this block
+   * becomes a prop and three custom properties.
+   *
+   * ### The arch's geometry, as lines through the two comps
+   *
+   * Each value is a straight line in the arch's own width `W` (`1cqw` = 1% of it, resolved against the
+   * viewer's root, which is the query container), through the desktop arch (230 wide, 1:85) and the
+   * mobile one (130 wide, 1:130). The same arithmetic the viewer uses for its own panel, against the
+   * container rather than the window:
+   *
+   *   height         418 at 230, 242 at 130   →  1.76W + 13.2px
+   *   foot radius     24 at 230,  16 at 130   →  0.08W +  5.6px
+   *   hatch stripe    10 at 230,   8 at 130   →  0.02W +  5.4px
+   *   crown radius   W/2                      →  a true semicircle at every width
+   *
+   * A height rather than the viewer's `aspect-ratio: 330 / 622`, because the two comps do not share a
+   * ratio — 0.550 at desktop, 0.537 at mobile — and the player page's is neither: pinned to it, the
+   * desktop arch drew 15px taller than the comp. The line is exact at both.
+   *
+   * `--viewer-hatch-step` is the viewer's own local, set on its root; re-pointing it from a more
+   * specific rule is the only hook there is. `Desktop` asserts the stripe the placeholder actually
+   * draws, so a rename in the viewer fails there too.
+   *
+   * None of this is layout-dependent in the way that matters: it is all CSS, so the arch has its final
+   * size in the server HTML and the canvas arrives inside it without moving anything.
+   */
+  .arch .viewer {
+    --viewer-hatch-step: calc(2cqw + 5.4px);
+
+    border: 0;
+    background-color: transparent;
+  }
+
+  .arch .viewer > div:only-of-type {
+    width: 100%;
+    height: calc(176cqw + 13.2px);
+    margin-block: 0;
+    aspect-ratio: auto;
+    border-radius: 50cqw 50cqw calc(8cqw + 5.6px) calc(8cqw + 5.6px);
+  }
+
+  /*
+   * The position and the name chip.
+   *
+   * Both are drawn at 1.56px on 13px and 1.32px on 11px — 0.12em. The two are the same register but
+   * reach it differently: `P1` is a bold `Text`, which tracks at `--mono-letter-spacing-loud`, and the
+   * chip is a bold `Tag`, which re-points loud onto `--mono-letter-spacing` on itself. Setting both here,
+   * the second in terms of the first, gives one value to change.
+   *
+   * Wraps rather than overflows: a long name at 320px drops the chip under the position instead of
+   * pushing the card wider than its column.
+   */
+  .label {
+    --mono-letter-spacing: 0.12em;
+    --mono-letter-spacing-loud: var(--mono-letter-spacing);
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    // 10 at desktop (1:88), 8 at mobile (1:133).
+    gap: #{fluid(8px, 10px)};
+  }
+
+  /*
+   * The name chip — `Tag` filled at its default `md` step (10 × 6), against the drawn 12 × 6 and
+   * 10 × 5. Rounded to the step rather than re-padded: `Tag` keeps its padding a closed set, and the
+   * difference is two pixels a side.
+   *
+   * Its fill and ink are the page's own pair inverted, which is what the comp draws: stone/900 under
+   * stone/50 on light. On dark the same two tokens give an off-white chip with pine type. Set through
+   * the chip's re-pointable properties, which win over its defaults without a specificity contest.
+   *
+   * The type is `--body-xs`, the step `P1` beside it takes through `size="xs"` — fluid(11px, 12px)
+   * against the drawn 11 and 13 — so the two stay one size wherever the scale moves.
+   */
+  .name {
+    --tag-fill: var(--fg-default);
+    --tag-ink: var(--bg-default);
+    --tag-font-size: var(--body-xs);
+  }
+}
