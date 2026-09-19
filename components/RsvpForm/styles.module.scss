@@ -3,20 +3,19 @@
  *
  * ## One switch, and it is `px`
  *
- * Wide: a fixed-width rail — heading, intro, live summary — sticky beside the scrolling questions.
- * Narrow: one column, nothing sticky, and four things gone — the summary panel, the second half of
+ * Wide: a fixed-width rail — heading, intro, a 3D character — sticky beside the scrolling
+ * questions. Narrow: one column, nothing sticky, and four things gone — the character, the second half of
  * the intro, "requirements" from the dietary label and the "(for nanny planning)" gloss on the ages
  * label, exactly as the phone frame draws it.
  *
  * Because the narrow branch *removes content*, the threshold is `px`, not `rem`. A `rem` threshold
  * in a container query moves with the root font size, so enlarging text alone would cross it and
- * delete the summary with the viewport unchanged — the WCAG 1.4.4 failure `tools/sass/base/__media.scss`
+ * delete the character with the viewport unchanged — the WCAG 1.4.4 failure `tools/sass/base/__media.scss`
  * sets out, and that this repo has shipped twice. Everything that merely reflows below is fluid.
  *
  * The number is the layout's own minimum rather than a breakpoint from the map: the 440px rail, the
- * 64px gutter and the 460px the attending cards need to sit three abreast (`FieldCheckbox`'s own
- * switch). Below it the questions would be squeezed under the cards' wrap point beside a rail, so
- * the rail comes down on top of them instead.
+ * 64px gutter and a 460px question column. It was first sized for the three day cards the form no
+ * longer asks for; kept, because 460px is still where the two-up kids row starts to crowd.
  */
 $rsvp-inline-switch: 964px;
 
@@ -55,7 +54,7 @@ $rsvp-inline-switch: 964px;
 
   /*
    * The rail's step switches with the layout rather than scaling: 24px between heading, intro and
-   * summary beside the questions, and 12px (the phone frame's 13px) once it stacks above them and
+   * character beside the questions, and 12px (the phone frame's 13px) once it stacks above them and
    * is only the heading and one sentence.
    */
   .rail {
@@ -90,57 +89,31 @@ $rsvp-inline-switch: 964px;
   }
 
   /*
-   * The summary box — a 1px ink rule at radius 8, with the comp's 25/19/17 insets less the border.
-   * Background left to the page, so it takes no colour of its own and needs none.
+   * One of the couple's 3D characters — `RsvpModel`, a `ModelViewer`. Wide layouts only, where the
+   * live summary and then the map card were: on a phone the rail stacks above the questions, and a
+   * 600px character there would push the first question below the fold — and load a multi-megabyte
+   * model the reader cannot see without scrolling past it.
+   *
+   * The viewer's dashed panel and fill are turned off, as the player-select cards turn them off, so
+   * the character stands on the page itself. Two classes, so these beat `ModelViewer`'s single-class
+   * `.viewer` whatever order the modules load in.
    */
-  .summary {
-    // The comp's 20.4px row on 12px mono — 1.7, against the role's 1.3.
-    --mono-line-height: 1.7;
-
+  .rail .model {
     display: none;
-    padding: var(--spacing-lg) #{fluid(16px, 18px)} var(--spacing-md);
-    border: var(--button-border-width) solid var(--stroke-cards);
-    border-radius: var(--radius-md);
-    color: var(--fg-default);
+    /*
+     * Up into the stage's own headroom. The camera frames the character with room above its head for
+     * the arch's dome (~74px at this rail width) — with no dome, most of it is empty page between the
+     * intro and the character. 48px leaves ~26px above the head, enough for a raised arm.
+     */
+    margin-block-start: -48px;
+    border: 0;
+    // The pull-up lays the viewer's empty top over the intro's last line. The character takes no
+    // input here (no hover clip, no orbit), so clicks and text selection pass through to the copy.
+    pointer-events: none;
+    background-color: transparent;
 
     @container rsvp (width >= #{$rsvp-inline-switch}) {
-      display: block;
-    }
-  }
-
-  /*
-   * Bold at the *quiet* register's tracking — the comp draws "LOADOUT" at 1.2px on 12px, 0.1em —
-   * so the loud token is re-pointed at the quiet one, the escape hatch `FieldCheckbox`'s indicator
-   * takes for the same combination.
-   */
-  .summaryTitle {
-    --mono-letter-spacing-loud: var(--mono-letter-spacing);
-
-    color: var(--fg-accent);
-  }
-
-  /*
-   * Two columns sized by their content, so every value starts on the same character: "KIDS" is the
-   * widest term, and 1ch after it is where the comp's monospaced "FRI  IN" puts its value. Untracked,
-   * as the comp sets these rows — tracking would push the value column a character's width right.
-   * The row pitch is the leading set on `.summary`, with no gap.
-   *
-   * The rows' face and size are set on the list as well, and only for `1ch`: it resolves against
-   * the element that declares it, and on the inherited body font it came out ~3.5px wider than one
-   * of the mono characters it stands for.
-   */
-  .summaryList {
-    --mono-letter-spacing: 0;
-
-    @include mono-font();
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    column-gap: 1ch;
-    margin: 0;
-    font-size: var(--body-xs);
-
-    dd {
-      margin: 0;
+      display: flex;
     }
   }
 

@@ -1,5 +1,3 @@
-import type { IRsvpDay } from '@/tools/sanity/schema/documents/rsvp';
-
 /**
  * The RSVP form's contract with the server action that receives it.
  *
@@ -26,11 +24,9 @@ import type { IRsvpDay } from '@/tools/sanity/schema/documents/rsvp';
  * The `FormData` the action receives, field by field:
  *
  *   name, email, dietary, kidsAges, songRequest   one string each, possibly empty
- *   attending            zero to three entries, read with `getAll` — each one of `RSVP_DAYS`' values
  *   plusOne.bringing     present (value "on") when ticked, **absent** when not — a native checkbox
  *   plusOne.name,
  *   plusOne.dietary      present **only** while `plusOne.bringing` is ticked; see `RsvpForm`
- *   roomPreference       absent until one is picked, then one of `RSVP_ROOM_PREFERENCES`
  *   kidsCount            a whole number from 0 to `RSVP_KIDS_MAX`, as a string — "0" by default. The
  *                        form checks that before sending; a post made without JavaScript is not
  *                        checked, and there the number input can send "", "-3", "2.5" or "1e1". Parse
@@ -38,7 +34,6 @@ import type { IRsvpDay } from '@/tools/sanity/schema/documents/rsvp';
  *   _gotcha              the honeypot from `Form` — present (value "on") only if something ticked it
  */
 export const RSVP_FIELD = {
-  attending: 'attending',
   dietary: 'dietary',
   email: 'email',
   kidsAges: 'kidsAges',
@@ -47,46 +42,16 @@ export const RSVP_FIELD = {
   plusOneBringing: 'plusOne.bringing',
   plusOneDietary: 'plusOne.dietary',
   plusOneName: 'plusOne.name',
-  roomPreference: 'roomPreference',
   songRequest: 'songRequest'
 } as const;
 
 export type RsvpFieldName = (typeof RSVP_FIELD)[keyof typeof RSVP_FIELD];
 
-export interface RsvpDayOption {
-  /** What the checkbox submits, and what the document's `attending` array stores. */
-  value: IRsvpDay;
-  /** The summary panel's row label. */
-  short: string;
-  /** The small mono line above the card's title — the date. */
-  eyebrow: string;
-  /** The card's title. */
-  label: string;
-}
-
-/**
- * The three days, in weekend order.
- *
- * `value` is typed against the schema's own `IRsvpDay`, so a day renamed there fails to compile here
- * rather than quietly submitting a value the document's option list does not contain.
+/*
+ * The form no longer asks which days a guest is coming or which room they would like. Both fields
+ * stay on the `rsvp` document so replies sent before the change keep their answers, but nothing here
+ * submits them and the action does not read them.
  */
-export const RSVP_DAYS: readonly RsvpDayOption[] = [
-  { eyebrow: 'Fri 12 Feb', label: 'Arrival dinner', short: 'Fri', value: 'friday' },
-  { eyebrow: 'Sat 13 Feb', label: 'The wedding', short: 'Sat', value: 'saturday' },
-  { eyebrow: 'Sun 14 Feb', label: 'Recovery breakfast', short: 'Sun', value: 'sunday' }
-];
-
-/**
- * The room choices, submitted as the label itself.
- *
- * The schema stores `roomPreference` as free text — room types are not a document type — so the
- * string an editor reads in the Studio is the one the guest picked. A slug would need a lookup to be
- * readable there. "No preference" is a real answer rather than the absence of one: the field is
- * optional, and a guest who has not picked anything submits no `roomPreference` at all.
- */
-export const RSVP_ROOM_PREFERENCES = ['King Room', 'Twin Double', 'Family Room', 'No preference'] as const;
-
-export type RsvpRoomPreference = (typeof RSVP_ROOM_PREFERENCES)[number];
 
 /** The stepper's ceiling. The floor is zero. */
 export const RSVP_KIDS_MAX = 10;

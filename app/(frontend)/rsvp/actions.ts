@@ -1,6 +1,7 @@
 'use server';
 
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 import type { RsvpFormState } from '@/components/RsvpForm/contract';
 import createRateLimiter from '@/tools/helpers/rateLimiter';
@@ -92,10 +93,9 @@ const summarise = (error: unknown) => {
  *
  * Anyone who knows a guest's email can replace that guest's reply. The earlier version is still in
  * the document's history in the Studio; the invitation code (MAM-1917) is what keeps strangers out.
- *
- * `_previousState` is unused: every call carries the guest's whole reply.
+
  */
-export const submitRsvp = async (_previousState: RsvpFormState, formData: FormData): Promise<RsvpFormState> => {
+const storeRsvp = async (formData: FormData): Promise<RsvpFormState> => {
   if (isHoneypotFilled(formData)) {
     return notSaved(MESSAGE.refused);
   }
@@ -148,4 +148,30 @@ export const submitRsvp = async (_previousState: RsvpFormState, formData: FormDa
     console.error(`RSVP not saved: ${summarise(error)}`);
     return notSaved(MESSAGE.failed);
   }
+};
+
+/**
+ * Where a guest lands once their reply is stored.
+ */
+const THANK_YOU_PATH = '/thank-you';
+
+/**
+ * The form's action: store the reply, then send the guest to the thank-you page.
+ *
+ * `_previousState` is unused: every call carries the guest's whole reply.
+ *
+ * The redirect is here rather than in `storeRsvp` because `redirect` works by throwing — inside that
+ * function's `try` it would be caught and reported as a failed save. It fires for every saved reply,
+ * including a double submit answered as saved without writing, and for a post made without JavaScript
+ * as well: the browser follows it like any other response. Anything else — field errors, a refusal,
+ * a failure — comes back as state, and the form shows it where the guest is.
+ */
+export const submitRsvp = async (_previousState: RsvpFormState, formData: FormData): Promise<RsvpFormState> => {
+  const state = await storeRsvp(formData);
+
+  if (state.status === 'success') {
+    redirect(THANK_YOU_PATH);
+  }
+
+  return state;
 };

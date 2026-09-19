@@ -29,15 +29,11 @@ import styles from './styles.module.scss';
  * form. The couple's names are the exception and do come from the CMS, because they are the one
  * thing here that is already authored somewhere and would be embarrassing to have disagree.
  *
- * ## What is still missing
+ * ## What is wired, and what is still missing
  *
- * **The redirect.** There is no RSVP form in the repo yet — `tools/sanity/schema/documents/rsvp.ts`
- * describes the document a server action will write, and that action has not been built. So nothing
- * currently sends anyone here; the page is ready for it, not wired to it. When the form lands, its
- * success path should `redirect('/thank-you')`, and it should call `preloadDuet` from
- * `@/components/ModelDuet` as the form is being filled in — these are two four-megabyte characters,
- * and that call is the difference between the pair being on stage when the guest arrives and the
- * guest watching a hatched placeholder for several seconds on a phone connection.
+ * **The redirect** is wired: `submitRsvp` in `app/(frontend)/rsvp/actions.ts` sends every saved
+ * reply here, and the RSVP form calls `preloadDuet` the first time a guest focuses a field, so the
+ * pair are usually loaded by the time they arrive.
  *
  * **A fallback image.** `ModelDuet` takes one and is not given one here, because there is no
  * rendered still of the pair in the dataset yet. Until there is, a guest with no WebGL — or on a

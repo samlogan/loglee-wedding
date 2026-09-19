@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { RSVP_FIELD, RSVP_KIDS_MAX, RSVP_ROOM_PREFERENCES } from '@/components/RsvpForm/contract';
+import { RSVP_FIELD, RSVP_KIDS_MAX } from '@/components/RsvpForm/contract';
 
 import {
+  RSVP_HONEYPOT_FIELD,
+  RSVP_ID_PREFIX,
   RSVP_REPEAT_WINDOW_MS,
   RSVP_TEXT_MAX_LENGTH,
   isHoneypotFilled,
@@ -56,7 +58,6 @@ describe('parseRsvpSubmission', () => {
   it('stores a full reply field for field, in the shape of the rsvp document', () => {
     expect(
       replyOf({
-        attending: ['friday', 'saturday', 'sunday'],
         dietary: 'Vegetarian',
         email: 'sam@example.com',
         kidsAges: '2 and 5',
@@ -65,18 +66,15 @@ describe('parseRsvpSubmission', () => {
         'plusOne.bringing': 'on',
         'plusOne.dietary': 'No shellfish',
         'plusOne.name': 'Alex Lee',
-        roomPreference: 'Family Room',
         songRequest: 'September'
       })
     ).toEqual({
-      attending: ['friday', 'saturday', 'sunday'],
       dietary: 'Vegetarian',
       email: 'sam@example.com',
       kidsAges: '2 and 5',
       kidsCount: 2,
       name: 'Sam Logan',
       plusOne: { bringing: true, dietary: 'No shellfish', name: 'Alex Lee' },
-      roomPreference: 'Family Room',
       songRequest: 'September'
     });
   });
@@ -84,7 +82,6 @@ describe('parseRsvpSubmission', () => {
   it('accepts the smallest reply: a name, an address and the default kids count', () => {
     const reply = replyOf({});
     expect(reply).toEqual({
-      attending: [],
       email: 'sam@example.com',
       kidsCount: 0,
       name: 'Sam Logan',
@@ -119,14 +116,11 @@ describe('parseRsvpSubmission', () => {
   });
 
   it('reports every failing field at once, under the names the controls submit', () => {
-    expect(
-      errorsOf({ email: 'sam', kidsCount: '-1', name: '', 'plusOne.bringing': 'on', roomPreference: 'Penthouse' })
-    ).toEqual({
+    expect(errorsOf({ email: 'sam', kidsCount: '-1', name: '', 'plusOne.bringing': 'on' })).toEqual({
       email: 'Enter an email address, like name@example.com',
       kidsCount: `Enter a number from 0 to ${RSVP_KIDS_MAX}`,
       name: 'Enter your name',
-      'plusOne.name': "Enter your plus one's name",
-      roomPreference: 'Choose one of the rooms listed'
+      'plusOne.name': "Enter your plus one's name"
     });
   });
 
@@ -155,18 +149,10 @@ describe('parseRsvpSubmission', () => {
     });
   });
 
-  describe('attending', () => {
-    it('takes no days as an answer — a guest declining', () => {
-      expect(replyOf({ attending: undefined }).attending).toEqual([]);
-    });
-
-    it('stores each day once, in weekend order, whatever order they came in', () => {
-      expect(replyOf({ attending: ['sunday', 'friday', 'sunday'] }).attending).toEqual(['friday', 'sunday']);
-    });
-
-    it.each(['monday', 'Friday', ''])('refuses a value that is not one of the days (%j)', (day) => {
-      expect(errorsOf({ attending: ['saturday', day] })).toEqual({ attending: 'Choose from the days listed' });
-    });
+  it('ignores the days and room a stale form might still send — the form no longer asks for them', () => {
+    const reply = replyOf({ attending: ['saturday'], roomPreference: 'Penthouse' });
+    expect(reply).not.toHaveProperty('attending');
+    expect(reply).not.toHaveProperty('roomPreference');
   });
 
   describe('plus one', () => {
@@ -182,20 +168,6 @@ describe('parseRsvpSubmission', () => {
         bringing: true,
         name: 'Alex Lee'
       });
-    });
-  });
-
-  describe('room preference', () => {
-    it('is left off when none was picked', () => {
-      expect(replyOf({}).roomPreference).toBeUndefined();
-    });
-
-    it.each(RSVP_ROOM_PREFERENCES)('accepts %s', (room) => {
-      expect(replyOf({ roomPreference: room }).roomPreference).toBe(room);
-    });
-
-    it.each(['Penthouse', 'king room'])('refuses a room that is not offered (%j)', (room) => {
-      expect(errorsOf({ roomPreference: room })).toEqual({ roomPreference: 'Choose one of the rooms listed' });
     });
   });
 
@@ -323,7 +295,6 @@ describe('isRepeatTooSoon', () => {
 
 describe('isSameRsvpReply', () => {
   const reply = replyOf({
-    attending: ['saturday'],
     dietary: 'Vegetarian',
     'plusOne.bringing': 'on',
     'plusOne.name': 'Alex Lee'
@@ -337,7 +308,6 @@ describe('isSameRsvpReply', () => {
       _rev: 'abc',
       _type: 'rsvp',
       _updatedAt: '2026-09-19T08:30:00Z',
-      attending: ['saturday' as const],
       dietary: 'Vegetarian',
       email: 'sam@example.com',
       kidsCount: 0,
@@ -351,10 +321,30 @@ describe('isSameRsvpReply', () => {
   it.each<[string, Partial<RsvpReply>]>([
     ['a changed answer', { dietary: 'Vegan' }],
     ['an answer removed', { dietary: undefined }],
-    ['a day added', { attending: ['saturday', 'sunday'] }],
+    ['a plus one added', { plusOne: { bringing: true, name: 'Jo' } }],
     ['the plus one dropped', { plusOne: { bringing: false } }],
     ['a different count', { kidsCount: 1 }]
   ])('does not match after %s', (_, change) => {
     expect(isSameRsvpReply({ ...reply, ...change }, reply)).toBe(false);
+  });
+});
+
+describe('RSVP_HONEYPOT_FIELD', () => {
+  it('is the name `FieldBotCheck` renders inside every `Form` — the field no guest can see', () => {
+    expect(RSVP_HONEYPOT_FIELD).toBe('_gotcha');
+  });
+
+  it('is not one of the names a real answer is submitted under', () => {
+    expect(Object.values(RSVP_FIELD)).not.toContain(RSVP_HONEYPOT_FIELD);
+  });
+});
+
+describe('RSVP_ID_PREFIX', () => {
+  it('ends in a dot, which makes every reply a path document — readable only with a token', () => {
+    expect(RSVP_ID_PREFIX.endsWith('.')).toBe(true);
+  });
+
+  it('is the prefix every reply is filed under', () => {
+    expect(rsvpDocumentId('sam@example.com').startsWith(RSVP_ID_PREFIX)).toBe(true);
   });
 });
