@@ -290,11 +290,14 @@ export const Desktop: Story = {
       /*
        * The hatch the placeholder actually draws: the section's own bar (10px on the comp's 230px arch,
        * 1:85), where the viewer's default would be narrower. `--viewer-hatch-step` is a local of the
-       * viewer's rather than a hook, so this is what fails if it is renamed. Read from the gradient's
-       * resolved stops, `0 bar bar 2×bar`.
+       * viewer's rather than a hook, so this is what fails if it is renamed. The hatch is drawn on the placeholder's `::before`, the layer that
+       * slides while the model loads. Read from the gradient's resolved stops, `0 bar bar 2×bar`.
        */
       const bar = 0.02 * DESKTOP_ARCH + 5.4;
-      const hatch = getComputedStyle(viewerOf(card).querySelector('[role="img"]') as HTMLElement).backgroundImage;
+      const hatch = getComputedStyle(
+        viewerOf(card).querySelector('[role="img"]') as HTMLElement,
+        '::before'
+      ).backgroundImage;
       const stops = [...hatch.matchAll(/([\d.]+)px/g)].map(([, px]) => Math.round(parseFloat(px)));
       await expect(stops).toEqual([0, bar, bar, 2 * bar].map(Math.round));
     }

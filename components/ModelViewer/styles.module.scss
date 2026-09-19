@@ -218,7 +218,7 @@
   .placeholder {
     /*
      * The stripe's alpha lives in the colour rather than on the element, because the element's
-     * `opacity` is the fade-out and the breathe and it has to leave the ground at full strength.
+     * `opacity` is the fade-out and it has to leave the ground at full strength.
      * 34% is the measured match against the comp's stone/300 stripe; see the top of this file.
      */
     --viewer-hatch-ink: color-mix(in srgb, var(--fg-subtle) 34%, transparent);
@@ -233,61 +233,71 @@
      * has to show through it. See the note at the top of this file on why the two are split.
      */
     background-color: var(--bg-accent);
-    /*
-     * Both hard stops sit on the same position, so there is no interpolation into `transparent` and
-     * none of the grey-out that premultiplied alpha produces across a soft gradient.
-     */
-    background-image: repeating-linear-gradient(
-      135deg,
-      var(--viewer-hatch-ink) 0,
-      var(--viewer-hatch-ink) var(--viewer-hatch-step),
-      transparent var(--viewer-hatch-step),
-      transparent calc(var(--viewer-hatch-step) * 2)
-    );
-    /* Full strength at rest: the ground is this element's, and the breathe below is what moves. */
+    overflow: hidden;
     opacity: 1;
     transition: opacity 400ms ease;
 
     /*
-     * Reads as "still working" without a spinner, a layout shift or anything that moves. The whole
-     * ground lifts towards the arch's lit surface and settles back, which keeps the hatch legible
-     * throughout — fading the stripes alone made the arch flicker between "empty" and "blank".
+     * The hatch, on its own layer so it can move while the model loads: the stripes slide along the
+     * arch, which reads as "loading" without a spinner or anything that shifts the layout.
+     *
+     * The layer is one stripe period wider than the arch, off its left edge, and slides right by
+     * exactly that period — so the last frame matches the first and the loop has no jump. On a 135°
+     * hatch the horizontal distance between stripes is the perpendicular period (two bars) times √2.
+     *
+     * `transform` rather than `background-position`, so the browser moves one composited layer
+     * instead of repainting the gradient every frame.
+     *
+     * Both hard stops sit on the same position, so there is no interpolation into `transparent` and
+     * none of the grey-out that premultiplied alpha produces across a soft gradient.
      */
-    animation: model-viewer-breathe 2.4s ease-in-out infinite;
+    &::before {
+      --viewer-hatch-period: calc(var(--viewer-hatch-step) * 2 * 1.41421);
+
+      content: '';
+      position: absolute;
+      inset-block: 0;
+      inset-inline: calc(var(--viewer-hatch-period) * -1) 0;
+      background-image: repeating-linear-gradient(
+        135deg,
+        var(--viewer-hatch-ink) 0,
+        var(--viewer-hatch-ink) var(--viewer-hatch-step),
+        transparent var(--viewer-hatch-step),
+        transparent calc(var(--viewer-hatch-step) * 2)
+      );
+      animation: model-viewer-hatch 0.9s linear infinite;
+    }
 
     @media (prefers-reduced-motion: reduce) {
-      animation: none;
       transition: none;
+
+      &::before {
+        animation: none;
+      }
     }
   }
 
-  @keyframes model-viewer-breathe {
-    0%,
-    100% {
-      opacity: 1;
-    }
-
-    50% {
-      opacity: 0.78;
+  @keyframes model-viewer-hatch {
+    to {
+      transform: translateX(var(--viewer-hatch-period));
     }
   }
 
   /*
-   * Nothing is on its way any more — so the breathe stops, whether or not the hatch goes with it.
+   * Nothing is on its way any more — so the hatch stops moving, whether or not the hatch goes with it.
    *
    * `.resting` covers the case `.settled` cannot: an arch whose final render *is* the placeholder,
    * because no GLB was authored or because this browser has no WebGL and no fallback image was
    * given either. There the hatch has to stay — it is the comp's empty-arch ground, not a spinner —
-   * but pulsing it says "still working" about something that has finished, forever, with no pause
+   * but moving it says "still working" about something that has finished, forever, with no pause
    * or stop mechanism. See the note on `loading` in `index.tsx`.
    *
-   * Declared at the same specificity as the `prefers-reduced-motion` override nested in
-   * `.placeholder` above, which also resolves to `animation: none`, so the two cannot disagree
-   * whichever way the cascade falls.
+   * Like the `prefers-reduced-motion` override nested in `.placeholder` above, this resolves to
+   * `animation: none`, so the two cannot disagree whichever way the cascade falls.
    */
   .resting,
   .settled {
-    .placeholder {
+    .placeholder::before {
       animation: none;
     }
   }
@@ -296,7 +306,7 @@
    * The arch has its final content — a character on the stage, or the fallback image.
    *
    * Both, and not just the canvas: the image *is* the settled render for a browser with no WebGL,
-   * so leaving the placeholder up behind it would pulse a loading hatch through the letterbox of a
+   * so leaving the placeholder up behind it would slide a loading hatch through the letterbox of a
    * `contain`-fitted picture that had finished loading. The canvas branch shows a clean
    * `--bg-raised` surround once it is up, and the fallback is only a fallback if it stands in.
    */

@@ -363,15 +363,15 @@ const ModelViewer = (props: ModelViewerProps) => {
    * Three states, not two, and conflating the last two was a bug.
    *
    * `loading`  something is genuinely still on its way: the capability decision (the server render
-   *            and the first hydrating render), or the model itself. The hatch shows *and breathes*.
+   *            and the first hydrating render), or the model itself. The hatch shows *and slides*.
    * `settled`  the arch is holding its final content — a character on the stage, or the fallback
    *            image — so the placeholder fades out entirely.
    * neither    the placeholder **is** the final render: no GLB authored, or a browser with no WebGL
    *            and no fallback image to offer it. The hatch stays, because it is the arch's empty
-   *            ground rather than a spinner, and the breathe stops.
+   *            ground rather than a spinner, and the hatch stops moving.
    *
    * That third case is why `.resting` exists. `settled` alone used to carry both jobs, so an empty
-   * arch pulsed "still working" forever beside page content, with no pause, stop or hide — an
+   * arch animated "still working" forever beside page content, with no pause, stop or hide — an
    * animation that both misinforms and fails WCAG 2.2.2 outright in the two branches
    * (`Loading`, `NoFallbackImage`) where neither disjunct could ever become true.
    *
