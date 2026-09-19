@@ -1,8 +1,24 @@
 {
   "_key": "k79",
   "_type": "faqSection",
-  "addButton": null,
-  "addMap": null,
+  "addButton": true,
+  "addMap": true,
+  "button": {
+    "label": "RSVP",
+    "link": {
+      "action": null,
+      "email": null,
+      "externalLink": null,
+      "internalLink": {
+        "pathname": "/rsvp/",
+        "slug": null,
+        "title": "RSVP"
+      },
+      "linkType": "internal",
+      "phone": null
+    }
+  },
+  "buttonEyebrow": "Ready?",
   "content": [
     {
       "_key": "k72",
@@ -20,6 +36,195 @@
     }
   ],
   "faqItems": [
+    {
+      "_key": "when-where",
+      "answer": [
+        {
+          "_key": "when-wherea0",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "when-wherea0s",
+              "_type": "span",
+              "marks": [],
+              "text": "Friday 12 to Sunday 14 February 2027, at The Lodge Jamberoo, 406 Jamberoo Mountain Rd, Jamberoo NSW. It is about 90 minutes south of Sydney."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": null,
+      "question": "When and where is it?"
+    },
+    {
+      "_key": "rsvp",
+      "answer": [
+        {
+          "_key": "rsvpa0",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "rsvpa0s",
+              "_type": "span",
+              "marks": [],
+              "text": "Please RSVP by 11 December 2026 on the RSVP page. It also asks for dietary requirements, your kids’ ages and a song request, so it is the one place to tell us everything."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": "RSVP by 11 December",
+      "question": "When do I need to RSVP by?"
+    },
+    {
+      "_key": "stay",
+      "answer": [
+        {
+          "_key": "staya0",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "staya0s",
+              "_type": "span",
+              "marks": [],
+              "text": "Everyone stays on site. The Lodge has 39 rooms, and we have booked them for the whole weekend so no one has to sort out accommodation."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "staya1",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "staya1s",
+              "_type": "span",
+              "marks": [],
+              "text": "There are King Rooms, Twin Doubles and Family Rooms. The Stay page has the details of each."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": null,
+      "question": "Where are we staying?"
+    },
+    {
+      "_key": "contribution",
+      "answer": [
+        {
+          "_key": "contributiona0",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "contributiona0s",
+              "_type": "span",
+              "marks": [],
+              "text": "We’ve taken care of the rooms so everyone can stay together. If you’d like to contribute towards yours, we’ll send the details with your RSVP confirmation."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": null,
+      "question": "Do I need to pay for my room?"
+    },
+    {
+      "_key": "getting-there",
+      "answer": [
+        {
+          "_key": "getting-therea0",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "getting-therea0s",
+              "_type": "span",
+              "marks": [],
+              "text": "The Lodge is about 90 minutes’ drive south of Sydney. The map above opens directions."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "getting-therea1",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "getting-therea1s",
+              "_type": "span",
+              "marks": [],
+              "text": "If we arrange any shared transport, we’ll post the details here."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": null,
+      "question": "How do I get there?"
+    },
+    {
+      "_key": "check-in",
+      "answer": [
+        {
+          "_key": "check-ina0",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "check-ina0s",
+              "_type": "span",
+              "marks": [],
+              "text": "Arrive and check in on Friday, then join us for dinner that evening. We finish with a recovery breakfast at Lulu’s on Sunday before check-out."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "check-ina1",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "check-ina1s",
+              "_type": "span",
+              "marks": [],
+              "text": "Exact check-in and check-out times are still to be confirmed."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": "Times TBC",
+      "question": "When do I arrive and leave?"
+    },
+    {
+      "_key": "kids",
+      "answer": [
+        {
+          "_key": "kidsa0",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "kidsa0s",
+              "_type": "span",
+              "marks": [],
+              "text": "Yes. Add their ages to your RSVP so we can plan for them."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": null,
+      "question": "Are kids welcome?"
+    },
     {
       "_key": "k74",
       "answer": [
@@ -54,8 +259,85 @@
       ],
       "note": "Times and ages TBC",
       "question": "Is there childcare?"
+    },
+    {
+      "_key": "dress-code",
+      "answer": [
+        {
+          "_key": "dress-codea0",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "dress-codea0s",
+              "_type": "span",
+              "marks": [],
+              "text": "We’ll confirm the dress code for each event before invitations go out. The ceremony is outdoors, at the Tree Cathedral by the river."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": "Dress code TBC",
+      "question": "What should I wear?"
+    },
+    {
+      "_key": "between-events",
+      "answer": [
+        {
+          "_key": "between-eventsa0",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "between-eventsa0s",
+              "_type": "span",
+              "marks": [],
+              "text": "The pool, Swedish sauna, outdoor hot tub, gym, games room, tennis court and yard games are free for all guests. The pool has service from midday."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "between-eventsa1",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "between-eventsa1s",
+              "_type": "span",
+              "marks": [],
+              "text": "The day spa is extra. Book treatments directly with the venue."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": null,
+      "question": "What is there to do between events?"
     }
   ],
+  "map": {
+    "address": "406 Jamberoo Mountain Rd",
+    "badge": "Map · Sydney → Jamberoo, 90 min",
+    "image": null,
+    "link": {
+      "label": "Open in maps",
+      "link": {
+        "action": null,
+        "email": null,
+        "externalLink": "https://www.google.com/maps/search/?api=1&query=406+Jamberoo+Mountain+Rd+Jamberoo+NSW+2533",
+        "internalLink": null,
+        "linkType": "external",
+        "phone": null
+      }
+    },
+    "location": {
+      "lat": -34.655680499999995,
+      "lng": 150.732857,
+      "zoom": 9
+    }
+  },
   "sectionFields": null,
   "tagline": null,
   "title": "<h1>FAQ</h1>"

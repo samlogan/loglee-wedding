@@ -3,7 +3,10 @@ import closingCtaSection from './closingCtaSection.json';
 import faqSection from './faqSection.json';
 import headerDisplaySection from './headerDisplaySection.json';
 import heroSection from './heroSection.json';
+import imageCarouselSection from './imageCarouselSection.json';
+import mapSection from './mapSection.json';
 import mediaCardGridSection from './mediaCardGridSection.json';
+import mediaSection from './mediaSection.json';
 import numberedGridSection from './numberedGridSection.json';
 import playerSelectSection from './playerSelectSection.json';
 import scheduleSection from './scheduleSection.json';
@@ -15,7 +18,10 @@ const fixtures: Record<string, unknown> = {
   faqSection,
   headerDisplaySection,
   heroSection,
+  imageCarouselSection,
+  mapSection,
   mediaCardGridSection,
+  mediaSection,
   numberedGridSection,
   playerSelectSection,
   scheduleSection,

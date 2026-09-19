@@ -14,7 +14,7 @@
               "_key": "k49",
               "_type": "span",
               "marks": [],
-              "text": "The restaurant, with original art, ceiling murals and antique furniture. Sunday's recovery breakfast is here."
+              "text": "The restaurant, with original art, ceiling murals and antique furniture."
             }
           ],
           "markDefs": [],
@@ -26,8 +26,26 @@
         "Dinner 5pm–10pm",
         "Last orders 8:30pm"
       ],
-      "image": null,
+      "image": {
+        "altText": "Lulu",
+        "aspectRatio": "4-3",
+        "asset": {
+          "_id": "image-5d8240ad6d7df651b89e09e494f0646bf124b7ca-528x922-avif",
+          "altText": null,
+          "metadata": {
+            "dimensions": {
+              "height": 922,
+              "width": 528
+            },
+            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAjABQDASIAAhEBAxEB/8QAGwABAAICAwAAAAAAAAAAAAAAAAUGAgcDBAj/xAAlEAABAwMCBwEBAAAAAAAAAAABAgMEAAURBjESEyEiQVFhFBX/xAAZAQACAwEAAAAAAAAAAAAAAAACAwAEBQb/xAAjEQABAwMDBQEAAAAAAAAAAAABAAIRAxIhFEGRBCJhodFS/9oADAMBAAIRAxEAPwDdK5DKpAJcUlA2JqDuOp7WxcRH/oNfoOwUrzWpNd64kPtNN2+alpuQMnlpyoj5VSg6fEtxtx6Y8y471CndyaxqldrWy45nyuhpdHVee0YjwvS0S7RlMA3EcMg74VkEeDStHxLXqVlkNsTea0nohXF4pSNQTm4cotGRgtPCgtMtRU3dptlCpcgngSpaexHo1eYmk0TLimTd5wf4D2MRkEgVGaXxBukeOGedG4ghD2PP33V9eFxcBbZw2M7NpxQPdaMiVoUzeZY63Anb6s2osSKgNIaaQkbB13upXQFrAyJctCHc9UqPWlKud+B6RxR3qH39UNpdIMSNkDtSCPhq02ZSiy5lSujmN6UqExKqOEjhcklCXH1KWlKj7IpSlVyUTRgL/9k="
+          },
+          "url": "https://cdn.sanity.io/images/tftcitbh/production/5d8240ad6d7df651b89e09e494f0646bf124b7ca-528x922.avif"
+        },
+        "crop": null,
+        "hotspot": null
+      },
       "label": "Restaurant",
+      "link": null,
       "theme": "light",
       "title": "<h2>Lulu's</h2>"
     },
@@ -53,8 +71,26 @@
       "hours": [
         "Open 12pm until late"
       ],
-      "image": null,
+      "image": {
+        "altText": "Fin's Bar",
+        "aspectRatio": "4-3",
+        "asset": {
+          "_id": "image-b991f80c7472d0d08ccd9c5d7d7a19ed5127dd78-528x922-avif",
+          "altText": null,
+          "metadata": {
+            "dimensions": {
+              "height": 922,
+              "width": 528
+            },
+            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAjABQDASIAAhEBAxEB/8QAGgABAQACAwAAAAAAAAAAAAAAAAQDBQIGCP/EACQQAAIBAwQCAgMAAAAAAAAAAAECAwAEEQUSEyEGgTFBI1Fx/8QAFgEBAQEAAAAAAAAAAAAAAAAAAwIE/8QAHREAAgICAwEAAAAAAAAAAAAAAAECEQMhEhMxYf/aAAwDAQACEQMRAD8A83SwKmpSCBhxZyCayygEjdKuP7W50rTYI/JBb3H5olbBP7rL5tZWsGq2otoOJHxlfdByqSh8G67g52dalklaQ8Wdg6FK3F7AiXkyou1Q3Q9ClImqDcdnLSLS6nuS0chRwO3+aaxbzLIvPM80+7ERHxUED3Frv45CYyduM491FNOxhcSTMSGyveamDvYklx0WXT3aTtzhxIezSpjqYKoCCSqgEn7pTA2WXCgmQY6zWplReNjj7pSs+PwfJ6Rt0aUpTgH/2Q=="
+          },
+          "url": "https://cdn.sanity.io/images/tftcitbh/production/b991f80c7472d0d08ccd9c5d7d7a19ed5127dd78-528x922.avif"
+        },
+        "crop": null,
+        "hotspot": null
+      },
       "label": "Bar",
+      "link": null,
       "theme": "dark",
       "title": "<h2>Fin's Bar</h2>"
     }
