@@ -1,11 +1,11 @@
-import { stegaClean, stegaEncodeSourceMap } from '@sanity/client/stega';
-import type { ContentSourceMap } from '@sanity/client/stega';
+import { stegaClean } from '@sanity/client/stega';
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 
 import coupleNames from '@/helpers/coupleNames';
 import formatDateRange from '@/helpers/formatDateRange';
 import type { IHeroSection, IHeroWeddingSettings } from '@/tools/sanity/schema/sections/heroSection';
+import encodeStega from '@/tools/storybook/encodeStega';
 import globalFixture from '@/tools/storybook/globalFixture';
 import mockSectionFields from '@/tools/storybook/mockSectionFields';
 import sectionFixture from '@/tools/storybook/sectionFixture';
@@ -170,21 +170,6 @@ const shownLine = (...halves: (string | null | undefined)[]) => halves.filter(Bo
 const spokenLine = (...halves: (string | null | undefined)[]) => halves.filter(Boolean).join(', ');
 
 const rect = (element: Element) => element.getBoundingClientRect();
-
-/**
- * A string as `sanityFetch` delivers it in draft mode, encoded by the client itself — the same
- * construction `tools/helpers/hasText.test.ts` uses, so this follows whatever the installed
- * `@sanity/client` emits rather than a hand-typed run of zero-width characters.
- */
-const draft = (value: string, path: string): string => {
-  const resultSourceMap: ContentSourceMap = {
-    documents: [{ _id: 'drafts.weddingSettings', _type: 'weddingSettings' }],
-    paths: [path],
-    mappings: { "$['value']": { type: 'value', source: { type: 'documentValue', document: 0, path: 0 } } }
-  };
-
-  return stegaEncodeSourceMap({ value }, resultSourceMap, { enabled: true, studioUrl: '/studio' }).value;
-};
 
 /** `MOCK` with some of its singleton's fields replaced — the shape every blank-state story needs. */
 const withSettings = (overrides: IHeroWeddingSettings): IHeroSection => ({
@@ -579,11 +564,11 @@ export const WithoutSettings: Story = {
 
 // The second partner, the venue name and the travel note, all blank — as a draft delivers blanks.
 const DRAFT_BLANKS: IHeroWeddingSettings = {
-  coupleNames: { partnerOne: 'Sam', partnerTwo: draft('', "$['coupleNames']['partnerTwo']") },
+  coupleNames: { partnerOne: 'Sam', partnerTwo: encodeStega('', "$['coupleNames']['partnerTwo']") },
   venue: {
-    name: draft('   ', "$['venue']['name']"),
+    name: encodeStega('   ', "$['venue']['name']"),
     address: '406 Jamberoo Mountain Rd\nJamberoo NSW 2533',
-    travelNote: draft('', "$['venue']['travelNote']")
+    travelNote: encodeStega('', "$['venue']['travelNote']")
   }
 };
 
