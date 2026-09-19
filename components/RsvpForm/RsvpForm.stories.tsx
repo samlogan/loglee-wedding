@@ -48,19 +48,21 @@ const callsOf = (action: RsvpAction) => (action as unknown as Mock<RsvpAction>).
  * The top padding is the rail's sticky offset. On the page the rail starts below the header and the
  * section's own spacing, clear of that offset; with nothing above it here, `position: sticky` would
  * push it down to the offset at rest and the rail would sit lower than the questions it heads.
+ *
+ * One decorator that reads `parameters.canvasWidth`, not a second one on the phone story: a story's
+ * decorators run *inside* the meta's, so a phone wrapper sat in the 1200px one and the canvas
+ * scrolled 800px sideways at a phone viewport.
  */
-const atWidth =
-  (width: string): Decorator =>
-  (Story) => (
-    <div style={{ padding: 'var(--spacing-3xl) var(--spacing-lg) var(--spacing-lg)' }}>
-      <div style={{ width }}>
-        <Story />
-      </div>
-    </div>
-  );
+const DESKTOP_WIDTH = '1200px';
+const MOBILE_WIDTH = '350px';
 
-const atDesktop = atWidth('1200px');
-const atMobile = atWidth('350px');
+const atWidth: Decorator = (Story, { parameters }) => (
+  <div style={{ padding: 'var(--spacing-3xl) var(--spacing-lg) var(--spacing-lg)' }}>
+    <div style={{ width: parameters.canvasWidth ?? DESKTOP_WIDTH }}>
+      <Story />
+    </div>
+  </div>
+);
 
 const meta = {
   title: 'Forms/RSVP Form',
@@ -76,7 +78,7 @@ const meta = {
     ...COPY,
     action: actionReturning({ status: 'success' })
   },
-  decorators: [atDesktop]
+  decorators: [atWidth]
 } satisfies Meta<typeof RsvpForm>;
 
 export default meta;
@@ -515,7 +517,7 @@ export const KeyboardOnly: Story = {
  * ages input still sharing a row.
  */
 export const Mobile: Story = {
-  decorators: [atMobile],
+  parameters: { canvasWidth: MOBILE_WIDTH },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 

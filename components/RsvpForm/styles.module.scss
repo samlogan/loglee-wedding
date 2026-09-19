@@ -4,9 +4,9 @@
  * ## One switch, and it is `px`
  *
  * Wide: a fixed-width rail — heading, intro, live summary — sticky beside the scrolling questions.
- * Narrow: one column, nothing sticky, and three things gone — the summary panel, the second half of
- * the intro, and the "(for nanny planning)" gloss on the ages label, exactly as the phone frame
- * draws it.
+ * Narrow: one column, nothing sticky, and four things gone — the summary panel, the second half of
+ * the intro, "requirements" from the dietary label and the "(for nanny planning)" gloss on the ages
+ * label, exactly as the phone frame draws it.
  *
  * Because the narrow branch *removes content*, the threshold is `px`, not `rem`. A `rem` threshold
  * in a container query moves with the root font size, so enlarging text alone would cross it and
@@ -28,6 +28,13 @@ $rsvp-inline-switch: 964px;
    * assumes.
    */
   .rsvp {
+    /*
+     * The one step the page is spaced on: between questions, and from the rail down to the first
+     * question once the rail stacks. The comp's 32px on the desktop frame and 28px on the phone,
+     * where `--spacing-xl` (24 → 32px) runs 4px short on every one of the eight gaps.
+     */
+    --rsvp-question-gap: #{fluid(28px, 32px)};
+
     container: rsvp / inline-size;
   }
 
@@ -35,7 +42,7 @@ $rsvp-inline-switch: 964px;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     // Rail to first question on the phone frame — the same step as between questions.
-    row-gap: var(--spacing-xl);
+    row-gap: var(--rsvp-question-gap);
 
     @container rsvp (width >= #{$rsvp-inline-switch}) {
       // The comp's 440px rail is a fixed width — the questions take whatever is left.
@@ -46,10 +53,15 @@ $rsvp-inline-switch: 964px;
     }
   }
 
+  /*
+   * The rail's step switches with the layout rather than scaling: 24px between heading, intro and
+   * summary beside the questions, and 12px (the phone frame's 13px) once it stacks above them and
+   * is only the heading and one sentence.
+   */
   .rail {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-sm);
     min-width: 0;
 
     /*
@@ -60,13 +72,20 @@ $rsvp-inline-switch: 964px;
     @container rsvp (width >= #{$rsvp-inline-switch}) {
       position: sticky;
       top: var(--spacing-3xl);
+      gap: var(--spacing-lg);
     }
   }
 
-  // `--display-md` is the comp's 132px at the wide end, with the display tier's 0.84 leading and
-  // -0.045em tracking — all of it `Text`'s. Only the colour is set here, so the element that sets it
-  // is also the one that paints on the theme's surface.
+  /*
+   * `--display-md` is the comp's 132px at the wide end, with the display tier's 0.84 leading and
+   * -0.045em tracking — all of it `Text`'s. Its narrow anchor is not this page's, though: 56px is
+   * sized for "WEEKEND", the longest of the page headers, and the phone frame sets this four-letter
+   * word at 76px (Figma node 1:883) — the size it gives "STAY". Re-pointed on the element, the way
+   * `ScheduleSection` re-points the same token. 76px "RSVP" is ~216px wide, inside a 320px screen.
+   */
   .heading {
+    --display-md: #{fluid(76px, 132px)};
+
     color: var(--fg-default);
   }
 
@@ -75,6 +94,9 @@ $rsvp-inline-switch: 964px;
    * Background left to the page, so it takes no colour of its own and needs none.
    */
   .summary {
+    // The comp's 20.4px row on 12px mono — 1.7, against the role's 1.3.
+    --mono-line-height: 1.7;
+
     display: none;
     padding: var(--spacing-lg) #{fluid(16px, 18px)} var(--spacing-md);
     border: var(--button-border-width) solid var(--stroke-cards);
@@ -94,22 +116,28 @@ $rsvp-inline-switch: 964px;
   .summaryTitle {
     --mono-letter-spacing-loud: var(--mono-letter-spacing);
 
-    // The same step the list below leaves between rows, so the title sits on the comp's even 20px pitch.
-    margin-bottom: var(--spacing-xxs);
     color: var(--fg-accent);
   }
 
   /*
    * Two columns sized by their content, so every value starts on the same character: "KIDS" is the
-   * widest term, and 1ch after it is where the comp's monospaced "FRI  IN" puts its value. The row
-   * gap makes up the comp's 20.4px row from the mono role's 1.3 leading.
+   * widest term, and 1ch after it is where the comp's monospaced "FRI  IN" puts its value. Untracked,
+   * as the comp sets these rows — tracking would push the value column a character's width right.
+   * The row pitch is the leading set on `.summary`, with no gap.
+   *
+   * The rows' face and size are set on the list as well, and only for `1ch`: it resolves against
+   * the element that declares it, and on the inherited body font it came out ~3.5px wider than one
+   * of the mono characters it stands for.
    */
   .summaryList {
+    --mono-letter-spacing: 0;
+
+    @include mono-font();
     display: grid;
     grid-template-columns: max-content 1fr;
     column-gap: 1ch;
-    row-gap: var(--spacing-xxs);
     margin: 0;
+    font-size: var(--body-xs);
 
     dd {
       margin: 0;
@@ -127,14 +155,10 @@ $rsvp-inline-switch: 964px;
   // ---------------------------------------------------------------------------
   // Questions
 
-  /*
-   * `--spacing-xl` is 24 → 32px across the fluid range: the comp's 32px between questions on the
-   * desktop frame, and within a few pixels of its 28px on the phone.
-   */
   .fields {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
+    gap: var(--rsvp-question-gap);
     min-width: 0;
   }
 
@@ -157,14 +181,14 @@ $rsvp-inline-switch: 964px;
 
   /*
    * Stepper and ages side by side, two up at every width. The stepper's track is the comp's 200px,
-   * 140px on the phone frame; ages takes the rest. Top-aligned, as the comp draws them, so the two
-   * labels share a line.
+   * 140px on the phone frame; ages takes the rest, 24px off it on the desktop frame and 16px on the
+   * phone. Top-aligned, as the comp draws them, so the two labels share a line.
    */
   .kids {
     display: grid;
     grid-template-columns: #{fluid(140px, 200px)} minmax(0, 1fr);
     align-items: start;
-    column-gap: var(--spacing-lg);
+    column-gap: #{fluid(16px, 24px)};
   }
 
   .kidsCount,
@@ -184,13 +208,21 @@ $rsvp-inline-switch: 964px;
   // ---------------------------------------------------------------------------
   // Submit
 
-  // The comp holds the button 8px further off the last question than the questions are off each other.
+  /*
+   * The desktop frame holds the button 8px further off the last question than the questions are off
+   * each other; the phone frame does not (Figma nodes 1:868, 1:964), so the extra step switches with
+   * the button's width below. No flex `gap`: the alert is always rendered, and an empty item still
+   * collects one, which put the button 16px further down again. The alert carries its own spacing
+   * instead, and only while it has something to say.
+   */
   .actions {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--spacing-md);
-    padding-top: var(--spacing-xs);
+
+    @container rsvp (width >= #{$rsvp-inline-switch}) {
+      padding-top: var(--spacing-xs);
+    }
   }
 
   /*
@@ -202,6 +234,7 @@ $rsvp-inline-switch: 964px;
     color: var(--fg-default);
 
     &:not(:empty) {
+      margin-block-end: var(--spacing-md);
       padding-inline-start: var(--spacing-md);
       border-inline-start: var(--button-focus-ring-width) solid var(--input-error-border);
     }

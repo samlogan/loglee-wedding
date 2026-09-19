@@ -1,7 +1,11 @@
 .container {
+  // The step between a field's label, its control and its error. Named so `FieldError` can take it
+  // back while it is empty — see the note there.
+  --field-gap: 8px;
+
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--field-gap);
   grid-column: 1 / span 2;
 
   &.align {

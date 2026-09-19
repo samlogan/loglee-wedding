@@ -7,7 +7,14 @@
      */
     --mono-letter-spacing-loud: 0.14em;
 
-    display: block;
+    /*
+     * Flex, not block, so the label is exactly as tall as its text. A block `<label>` keeps a line
+     * box of its own, struck from the *inherited* body font — 16px at `normal` leading, 20.4px — and
+     * the 11–12px mono run sat inside it, so every label stood ~5px taller than the comp's 16px while
+     * the legend-labelled groups, which set the mono role on the `<legend>` itself, did not. A flex
+     * container has no line box of its own; the `Text` run is its only item.
+     */
+    display: flex;
     // `--fg-accent` is pine/600 on the light theme — the comp's `#1e4632` — and signal/300 on dark.
     color: var(--fg-accent);
   }

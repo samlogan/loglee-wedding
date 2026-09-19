@@ -95,14 +95,13 @@
   }
 
   /*
-   * A grid rather than the wrapping flex row the comp is drawn with, and this is the deliberate
-   * departure from the mobile frame.
+   * A grid rather than the wrapping flex row the comp is drawn with.
    *
-   * Figma hugs each card to its own content there, which gives the three options three visibly
-   * different widths (169 / 166 / 215) stacked down the page — an artefact of auto-layout
-   * "hug contents", not a decision: the options are peers, and the width of one is just how long its
-   * title happens to be. `auto-fit` keeps them equal at every width, three across where 224px each
-   * fits (which is exactly the desktop frame's 696px column) and one full-width column below that.
+   * `auto-fit` keeps the cards equal side by side, three across where 224px each fits (which is
+   * exactly the desktop frame's 696px column). Below that it is one column, and there each card hugs
+   * its own content, as the phone frame draws them — three different widths (169 / 166 / 215)
+   * stacked down the page, not three full-width bars. That half is `.option`'s, below, because only
+   * a descendant of this container can ask it how wide it is.
    *
    * `min(224px, 100%)` rather than a bare `224px`: a grid track with a fixed minimum cannot shrink,
    * so `minmax(224px, 1fr)` overflows any container narrower than 224px instead of wrapping.
@@ -142,6 +141,16 @@
     display: flex;
     min-width: 0;
     cursor: pointer;
+
+    /*
+     * One card to a row: hug the content rather than stretch across the track. `fit-content`, so a
+     * title too long for the column still wraps inside it. The exact complement of the `.card` query
+     * below — both ask the same container the same question — so a card can never be hugging in the
+     * desktop form or stretched in the phone one.
+     */
+    @container (width < 460px) {
+      justify-self: start;
+    }
   }
 
   /*
@@ -205,10 +214,14 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    // A floor, not a measurement: the comp's phone card hugs its content, so its `space-between` has
-    // no slack to distribute and it gives no gap value. This keeps the indicator off the title when
-    // a long one does fill the row.
-    gap: var(--spacing-md);
+    /*
+     * The card hugs its content here (see `.option`), so this gap *is* the distance from the title
+     * to the indicator. The comp sets the marker straight after the title with no gap at all, which
+     * puts the dot against the last letter; `--spacing-xs` is the smallest step that keeps the two
+     * readable as separate marks. `space-between` only has slack to distribute once a long title
+     * fills the column.
+     */
+    gap: var(--spacing-xs);
     width: 100%;
     padding: #{fluid(16px, 18px)};
     /*
@@ -438,9 +451,17 @@
     background-color: currentColor;
   }
 
-  // Both words are always in the DOM and CSS picks which is painted, which is what keeps the swap
-  // working without the component knowing whether it is checked. See the `aria-hidden` note in
-  // `index.tsx` for why that costs nothing at the accessibility layer.
+  /*
+   * Both words are always in the DOM and CSS picks which is painted, which is what keeps the swap
+   * working without the component knowing whether it is checked. See the `aria-hidden` note in
+   * `index.tsx` for why that costs nothing at the accessibility layer.
+   *
+   * Swapped by `display`, so the indicator is only as wide as the word it shows. In the phone form,
+   * where the card hugs its content, that means a card narrows by one mono cell ("OUT" to "IN") when
+   * it is picked. Reserving the longer word was tried and measured: it left every selected card —
+   * the state the comp draws — with a visibly deeper right inset than left. The right edge is the
+   * only thing that moves; nothing around the card reflows.
+   */
   .stateSelected {
     display: none;
   }

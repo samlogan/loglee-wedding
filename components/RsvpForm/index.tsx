@@ -94,7 +94,7 @@ const toFieldErrors = (fieldErrors: RsvpFieldErrors): FieldErrors => {
  *
  * `formatOrdinal` takes the **zero-based** index, straight from `map`; see its contract.
  */
-const numbered = (index: number, title: string): ReactNode => (
+const numbered = (index: number, title: ReactNode): ReactNode => (
   <>
     <span aria-hidden="true">{formatOrdinal(index)} · </span>
     {title}
@@ -243,7 +243,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
    * the map below — so adding, removing or moving one renumbers everything after it, and the page
    * can never show two "04"s or skip one.
    */
-  const questions: { key: string; render: (label: (title: string) => ReactNode) => ReactNode }[] = [
+  const questions: { key: string; render: (label: (title: ReactNode) => ReactNode) => ReactNode }[] = [
     {
       key: 'name',
       render: (label) => (
@@ -283,7 +283,16 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
       key: 'dietary',
       render: (label) => (
         <Field.Text
-          label={label('Dietary requirements')}
+          /*
+           * "Dietary" alone on the phone frame (Figma node 1:921), like the ages gloss below. The space
+           * sits outside the span: testing-library computes a name per element and trims each one, so
+           * a leading space inside it named the field "Dietaryrequirements" in every story.
+           */
+          label={label(
+            <>
+              Dietary <span className={styles.wideOnly}>requirements</span>
+            </>
+          )}
           name={RSVP_FIELD.dietary}
           placeholder="Allergies, vego, vegan, none…"
         />
