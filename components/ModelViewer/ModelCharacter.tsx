@@ -3,17 +3,8 @@
 import { useAnimations, useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import { LoopOnce, LoopRepeat, PropertyBinding } from 'three';
-import type {
-  AnimationAction,
-  AnimationClip,
-  AnimationMixer,
-  Bone,
-  Mesh,
-  MeshStandardMaterial,
-  Object3D,
-  SkinnedMesh
-} from 'three';
+import { AnimationMixer, LoopOnce, LoopRepeat, PropertyBinding, Vector3 } from 'three';
+import type { AnimationAction, AnimationClip, Bone, Mesh, MeshStandardMaterial, Object3D, SkinnedMesh } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 
 import { matchModelClip, resolveModelClip } from '@/helpers/modelClips';
@@ -95,6 +86,82 @@ const crossFade = (next: AnimationAction, previous: AnimationAction | null) => {
   }
 };
 
+/** How many poses across a clip `clipFloor` samples. Enough to catch a crouch; one-off cost per model. */
+const FLOOR_SAMPLES = 24;
+
+const scratch = new Vector3();
+
+/** The height of the lowest bone in the object's current pose, in world units. */
+const lowestBoneY = (object: Object3D) => {
+  let lowest = Number.POSITIVE_INFINITY;
+  object.updateMatrixWorld(true);
+  object.traverse((node) => {
+    if ((node as Bone).isBone) {
+      lowest = Math.min(lowest, node.getWorldPosition(scratch).y);
+    }
+  });
+  return lowest;
+};
+
+/** The lowest the clip ever takes the skeleton — its contact with the floor. */
+const clipFloor = (mixer: AnimationMixer, sample: Object3D, clip: AnimationClip) => {
+  const action = mixer.clipAction(clip);
+  action.play();
+
+  let lowest = Number.POSITIVE_INFINITY;
+  for (let step = 0; step <= FLOOR_SAMPLES; step += 1) {
+    mixer.setTime((clip.duration * step) / FLOOR_SAMPLES);
+    lowest = Math.min(lowest, lowestBoneY(sample));
+  }
+
+  action.stop();
+  mixer.uncacheClip(clip);
+  return lowest;
+};
+
+/**
+ * Put each clip on the floor.
+ *
+ * The contact shadow is drawn at the model's origin, where its rest pose stands. Meshy exports each
+ * Mixamo clip with the hips at the height of the rig it was authored on, so a clip can hold the whole
+ * body several centimetres above that floor — the character hovers over its own shadow — or below
+ * it, the feet sunk through it. This measures that per clip, and `groundClips` shifts the clip's hips
+ * Y track by it, so the clip's *lowest* pose touches the floor exactly where the rest pose does.
+ *
+ * The lowest pose, not the first frame or the mean, so vertical motion survives: a jump still leaves
+ * the ground and a crouch still dips, they just do it from the floor. Measured against the rest pose
+ * rather than against zero, because the lowest *bone* is the toe joint, a few centimetres above the
+ * sole: comparing like with like keeps whatever sole the rest pose stands on.
+ *
+ * Measured on a private clone with its own mixer, sampled across each clip — never on the model being
+ * shown, whose pose that would disturb. The cost is paid once per model load.
+ */
+const floorOffsets = (animations: AnimationClip[], model: Object3D, trackName: string) => {
+  const sample = SkeletonUtils.clone(model);
+  const mixer = new AnimationMixer(sample);
+
+  const restFloor = lowestBoneY(sample);
+
+  // World units per unit of the root bone's local Y — its parent's scale, e.g. an armature at 0.01.
+  let root: Object3D | null = null;
+  sample.traverse((node) => {
+    if (!root && (node as Bone).isBone) {
+      root = node;
+    }
+  });
+  const scale = (root as Object3D | null)?.parent?.getWorldScale(new Vector3()).y || 1;
+
+  const offsets = new Map<AnimationClip, number>();
+  for (const clip of animations) {
+    if (clip.tracks.some((track) => track.name === trackName)) {
+      offsets.set(clip, (restFloor - clipFloor(mixer, sample, clip)) / scale);
+    }
+  }
+
+  mixer.stopAllAction();
+  return offsets;
+};
+
 /**
  * Hold the character on its mark.
  *
@@ -125,7 +192,7 @@ const crossFade = (next: AnimationAction, previous: AnimationAction | null) => {
  * `animations` array, so writing to those tracks would reach through to every other character on
  * the page — and, the second time this ran, to already-flattened data.
  */
-const groundClips = (animations: AnimationClip[], root: Object3D | null) => {
+const groundClips = (animations: AnimationClip[], root: Object3D | null, model: Object3D) => {
   if (!root) {
     return animations;
   }
@@ -143,6 +210,7 @@ const groundClips = (animations: AnimationClip[], root: Object3D | null) => {
    * walk-off in place with no way to tell from the outside.
    */
   const trackName = `${PropertyBinding.sanitizeNodeName(root.name)}.position`;
+  const offsets = floorOffsets(animations, model, trackName);
 
   return animations.map((clip) => {
     if (!clip.tracks.some((track) => track.name === trackName)) {
@@ -156,8 +224,10 @@ const groundClips = (animations: AnimationClip[], root: Object3D | null) => {
         continue;
       }
       // A `.position` track is always VEC3, so the stride is three and Y is the middle component.
+      const lift = offsets.get(clip) ?? 0;
       for (let i = 0; i < track.values.length; i += 3) {
         track.values[i] = 0;
+        track.values[i + 1] += Number.isFinite(lift) ? lift : 0;
         track.values[i + 2] = 0;
       }
     }
@@ -304,7 +374,7 @@ const ModelCharacter = (props: ModelCharacterProps) => {
   }, [model]);
 
   /** See `groundClips` — without this a travelling clip walks the character out of the arch. */
-  const grounded = useMemo(() => groundClips(animations, rootBone), [animations, rootBone]);
+  const grounded = useMemo(() => groundClips(animations, rootBone, model), [animations, rootBone, model]);
 
   const { actions, mixer, names } = useAnimations(grounded, model);
 

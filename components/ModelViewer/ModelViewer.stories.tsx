@@ -497,3 +497,20 @@ export const SelectPair: Story = {
     );
   }
 };
+
+/**
+ * `backdrop={false}` — no arch behind the character, as the RSVP rail uses it. The stage keeps its
+ * size; only the fill and the loading hatch go.
+ */
+export const WithoutBackdrop: Story = {
+  args: { backdrop: false },
+  play: async ({ canvasElement }) => {
+    const stage = canvasElement.querySelector('[class*="stage"]') as HTMLElement;
+    const placeholder = canvasElement.querySelector('[class*="placeholder"]') as HTMLElement;
+
+    await expect(getComputedStyle(stage).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    await expect(getComputedStyle(placeholder).opacity).toBe('0');
+    // Still named, whichever element is on show.
+    await expect(within(canvasElement).getByRole('img', { name: ALT })).toBeInTheDocument();
+  }
+};

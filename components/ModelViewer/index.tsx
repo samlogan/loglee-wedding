@@ -70,6 +70,13 @@ type ModelRender = 'placeholder' | 'canvas' | 'image';
 export interface ModelViewerProps {
   className?: string;
   /**
+   * The arch behind the character — the raised fill, and the hatched arch that stands in while the
+   * model loads. On by default: the player pages and the select screen are drawn around it. Off, the
+   * character stands on the page itself, with no shape behind it and nothing drawn while it loads —
+   * the RSVP rail. The fallback image loses the arch's rounded corners too.
+   */
+  backdrop?: boolean;
+  /**
    * The canvas's text alternative, and the accessible name of whatever is in the arch — the model,
    * the fallback image or the placeholder.
    *
@@ -200,6 +207,7 @@ const BLEED_STYLE = {
 const ModelViewer = (props: ModelViewerProps) => {
   const {
     alt,
+    backdrop = true,
     badge,
     className,
     clips,
@@ -380,7 +388,7 @@ const ModelViewer = (props: ModelViewerProps) => {
 
   return (
     <div
-      className={classNames(styles.viewer, className)}
+      className={classNames(styles.viewer, { [styles.noBackdrop]: !backdrop }, className)}
       data-model-clip={model.clip ?? undefined}
       data-model-loaded={render === 'canvas' ? String(model.loaded) : undefined}
       data-model-mode={resolved}
