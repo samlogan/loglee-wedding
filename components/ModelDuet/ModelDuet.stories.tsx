@@ -147,7 +147,7 @@ export const Animated: Story = {
         // True only once *both* characters have reported in — the pair-readiness rule, observed.
         await expect(block.dataset.modelLoaded).toBe('true');
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
 
     // Still exactly one name, now that the canvas rather than the placeholder is carrying it.
@@ -178,7 +178,7 @@ export const ReducedMotion: Story = {
         await expect(canvasElement.querySelector('canvas')).not.toBeNull();
         await expect(block.dataset.modelLoaded).toBe('true');
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
   }
 };
@@ -282,7 +282,7 @@ export const SunsetLighting: Story = {
         await expect(canvasElement.querySelector('canvas')).not.toBeNull();
         await expect(block.dataset.modelLoaded).toBe('true');
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
   }
 };

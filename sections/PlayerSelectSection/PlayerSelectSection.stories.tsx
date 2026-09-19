@@ -582,7 +582,7 @@ export const Loaded: Story = {
         await expect(viewer.dataset.modelLoaded).toBe('true');
         await expect(viewer.dataset.modelClip).toBe('Excited_Walk_M');
       },
-      { timeout: 20_000 }
+      { timeout: 25_000 }
     );
 
     // Nothing shifted when it arrived: both arches, both label rows, to the pixel.

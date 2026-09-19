@@ -130,6 +130,18 @@ export default defineConfig({
         ],
         test: {
           name: 'storybook',
+          /*
+           * 30s per story, against browser mode's 15s default. The 3D stories mount a `ModelViewer`
+           * or `ModelDuet` canvas, decode a 4 MB GLB and render it with headless Chromium's
+           * *software* rasteriser, so their cost scales with canvas pixels. The canvas now reaches
+           * past the arch (`components/ModelViewer/bleed.ts`, about 1.9× the pixels) and the
+           * select screen's arch grew from 230px to 360px wide. Each of those stories finishes in
+           * well under 15s run alone, but in a full run, sharing the browser, they measured 15–21s.
+           * A timeout is a hang detector, not a performance budget; the assertions are untouched.
+           * Those stories' own load waits are 25s, inside this, so a slow load fails on the
+           * assertion that names it rather than on an anonymous test timeout.
+           */
+          testTimeout: 30_000,
           browser: {
             enabled: true,
             provider: playwright(),
