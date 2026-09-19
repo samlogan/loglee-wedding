@@ -1,27 +1,13 @@
-import { stegaClean, stegaEncodeSourceMap } from '@sanity/client/stega';
-import type { ContentSourceMap } from '@sanity/client/stega';
+import { stegaClean } from '@sanity/client/stega';
 import { describe, expect, it } from 'vitest';
+
+import encodeStega from '@/tools/storybook/encodeStega';
 
 import coupleNames, { couplePartners } from './coupleNames';
 
+// The payload records which field a value came from, so each encoded name names its own.
 const PARTNER_ONE = "$['coupleNames']['partnerOne']";
 const PARTNER_TWO = "$['coupleNames']['partnerTwo']";
-
-/*
- * A name as `sanityFetch` delivers it in draft mode, encoded by the client itself rather than
- * hand-typed as a run of zero-width characters — the same construction `hasText.test.ts` uses, so
- * these follow whatever the installed `@sanity/client` emits. The payload records which field the
- * value came from, so each call names its own.
- */
-const encode = (value: string, path: string): string => {
-  const resultSourceMap: ContentSourceMap = {
-    documents: [{ _id: 'drafts.weddingSettings', _type: 'weddingSettings' }],
-    paths: [path],
-    mappings: { "$['name']": { type: 'value', source: { type: 'documentValue', document: 0, path: 0 } } }
-  };
-
-  return stegaEncodeSourceMap({ name: value }, resultSourceMap, { enabled: true, studioUrl: '/studio' }).name;
-};
 
 describe('coupleNames', () => {
   it('joins both partners with an ampersand, in order', () => {
@@ -70,17 +56,17 @@ describe('coupleNames', () => {
   });
 
   it('drops a blank name the stega encoder has made non-empty', () => {
-    const blank = encode('', PARTNER_TWO);
+    const blank = encodeStega('', PARTNER_TWO);
 
     // The trap is real first: the encoded blank survives the `.trim()` test the page used to use.
     expect(blank.trim()).not.toBe('');
 
     expect(coupleNames({ partnerOne: 'Sam', partnerTwo: blank })).toBe('Sam');
-    expect(coupleNames({ partnerOne: encode('   ', PARTNER_ONE), partnerTwo: blank })).toBe('Sam & Lauren');
+    expect(coupleNames({ partnerOne: encodeStega('   ', PARTNER_ONE), partnerTwo: blank })).toBe('Sam & Lauren');
   });
 
   it('keeps an encoded name encoded, so the overlay keeps its edit link', () => {
-    const encoded = encode('Lauren', PARTNER_TWO);
+    const encoded = encodeStega('Lauren', PARTNER_TWO);
     const [, second] = couplePartners({ partnerOne: 'Sam', partnerTwo: encoded });
 
     // Returned as rendered text, not cleaned: the payload is what Presentation reads to link it.

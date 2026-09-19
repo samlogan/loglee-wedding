@@ -1,6 +1,7 @@
-import { stegaClean, stegaEncodeSourceMap } from '@sanity/client/stega';
-import type { ContentSourceMap } from '@sanity/client/stega';
+import { stegaClean } from '@sanity/client/stega';
 import { describe, expect, it } from 'vitest';
+
+import encodeStega from '@/tools/storybook/encodeStega';
 
 import type { IButtonElement } from '../sanity/schema/elements/button';
 import type { ILinkElement } from '../sanity/schema/elements/link';
@@ -14,20 +15,8 @@ const RSVP_LINK = {
 
 const button = (label: string | null): IButtonElement => ({ label, link: RSVP_LINK }) as IButtonElement;
 
-/**
- * `rsvpLabel` as `sanityFetch` delivers it in draft mode — encoded by the installed client rather than
- * hand-typed, so this follows whatever `@sanity/client` emits. The same technique `hasText.test.ts`
- * uses, pointed at the field this helper reads.
- */
-const encode = (value: string): string => {
-  const resultSourceMap: ContentSourceMap = {
-    documents: [{ _id: 'drafts.weddingSettings', _type: 'weddingSettings' }],
-    paths: ["$['rsvpLabel']"],
-    mappings: { "$['rsvpLabel']": { type: 'value', source: { type: 'documentValue', document: 0, path: 0 } } }
-  };
-
-  return stegaEncodeSourceMap({ rsvpLabel: value }, resultSourceMap, { enabled: true, studioUrl: '/studio' }).rsvpLabel;
-};
+// The field this helper reads the reply-by line from, for the draft-mode cases below.
+const RSVP_LABEL = "$['rsvpLabel']";
 
 describe('resolveRsvpAction', () => {
   it('is undefined for the shapes the projections return when nothing is set', () => {
@@ -80,7 +69,7 @@ describe('resolveRsvpAction', () => {
   });
 
   it.each(['', '   '])('treats a reply-by line of %j as blank once stega has made it non-empty', (blank) => {
-    const encoded = encode(blank);
+    const encoded = encodeStega(blank, RSVP_LABEL);
 
     // The trap is real: the encoder does not skip a blank value, so the old `rsvpLabel || …` saw text.
     expect(encoded.trim()).not.toBe('');
@@ -93,7 +82,7 @@ describe('resolveRsvpAction', () => {
   });
 
   it('returns an encoded reply-by line as it arrived, so the overlay can still find its field', () => {
-    const encoded = encode('RSVP by 11 December');
+    const encoded = encodeStega('RSVP by 11 December', RSVP_LABEL);
 
     expect(encoded).not.toBe('RSVP by 11 December');
     expect(resolveRsvpAction({ addButton: true, button: button('RSVP'), rsvpLabel: encoded })?.longLabel).toBe(encoded);

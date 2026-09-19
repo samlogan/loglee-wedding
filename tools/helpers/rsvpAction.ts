@@ -3,7 +3,7 @@ import type { IButtonElement } from '@/tools/sanity/schema/elements/button';
 import type { ILinkElement } from '@/tools/sanity/schema/elements/link';
 import type { IHeaderObject } from '@/tools/sanity/schema/objects/header';
 
-import hasText from './hasText';
+import textOrUndefined from './textOrUndefined';
 
 /**
  * The three fields the action is built from, as the projections deliver them.
@@ -31,15 +31,6 @@ export interface RsvpAction {
   shortLabel: string;
 }
 
-/*
- * The string itself when `hasText` says it has any, `undefined` when it does not.
- *
- * The value is handed back rather than a boolean because `hasText` is not a type predicate, so it
- * cannot narrow `string | null | undefined` on its own — and the original is what has to be returned
- * anyway, still stega-encoded, so the overlay can find the field it came from.
- */
-const textOrUndefined = (value?: string | null): string | undefined => (value && hasText(value) ? value : undefined);
-
 /**
  * The RSVP action, worked out once.
  *
@@ -62,13 +53,13 @@ const textOrUndefined = (value?: string | null): string | undefined => (value &&
  * 3. **No label, no action.** Both labels come from the same two strings, so they are blank together
  *    or not at all — and a pill with no words in it is not drawn.
  *
- * ## Blank is tested after stega, and that is the reason this uses `hasText`
+ * ## Blank is tested after stega, and that is the reason this uses `textOrUndefined`
  *
  * In draft mode every plain string arrives with an invisible stega payload appended, blank ones
  * included, so the `rsvpLabel || button.label` this replaced took an emptied reply-by line for a real
- * one and drew an empty accent pill in the Presentation tool. `hasText` decides blankness on a
- * cleaned copy; the label returned is still the original, encoded string, so the overlay can still
- * find the field it came from.
+ * one and drew an empty accent pill in the Presentation tool. `textOrUndefined` decides blankness by
+ * `hasText`, on a cleaned copy; the label returned is still the original, encoded string, so the
+ * overlay can still find the field it came from.
  *
  * ## What this does not decide
  *
