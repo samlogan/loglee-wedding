@@ -37,8 +37,9 @@ interface ModelBoundaryState {
  *   (`if (error) throw error` in `Canvas`), so a `useGLTF` failure inside the canvas is catchable
  *   from the DOM tree. That is what lets a 404 on the GLB fall through to the player's fallback
  *   image rather than blanking the page.
- * - **inside the canvas, around the environment** — `useEnvironment` fetches its HDRI from a CDN,
- *   so a lighting asset can fail on its own. Caught there, the model keeps its plain lights.
+ * - **inside the canvas, around the environment** — the HDRI is a separate 1.7MB request (from this
+ *   site's own origin since MAM-1926), so a lighting asset can fail on its own. Caught there, the
+ *   model keeps its plain lights.
  */
 class ModelBoundary extends Component<ModelBoundaryProps, ModelBoundaryState> {
   state: ModelBoundaryState = { failed: false };

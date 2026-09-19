@@ -57,7 +57,10 @@ export interface ModelDuetProps {
   characters?: DuetPlacement[];
   /** Override the automatic decision. Shares `ModelViewer`'s semantics exactly. */
   mode?: ModelViewerMode;
-  /** drei's HDRI preset. `studio` is what the model harness settled on against these characters. */
+  /**
+   * The HDRI, from the self-hosted set in `ModelLighting` — never fetched from drei's CDN. `studio` is what
+   * the model harness settled on against these characters.
+   */
   environmentPreset?: ModelEnvironmentPreset;
   /** Shown whenever the 3D is unavailable. */
   fallbackImage?: SanityImageSimple | null;

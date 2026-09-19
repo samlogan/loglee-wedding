@@ -129,7 +129,10 @@ export interface ModelViewerProps {
   priority?: boolean;
   /** Override the automatic decision. See `ModelViewerMode`. */
   mode?: ModelViewerMode;
-  /** drei's HDRI preset. `studio` is what the model harness settled on against the real characters. */
+  /**
+   * The HDRI, from the self-hosted set in `ModelLighting` — never fetched from drei's CDN. `studio` is what
+   * the model harness settled on against the real characters.
+   */
   environmentPreset?: ModelEnvironmentPreset;
   /**
    * The panel chrome from the comp — the corner label (node 1:166), the chip over the stage (1:164)
