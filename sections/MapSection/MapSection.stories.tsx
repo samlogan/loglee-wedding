@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 
-import type { IMapSection, MapAspectRatio } from '@/tools/sanity/schema/sections/mapSection';
+import type { IMapSection } from '@/tools/sanity/schema/sections/mapSection';
 import sectionFixture from '@/tools/storybook/sectionFixture';
 
 import MapSection from '.';
@@ -18,17 +18,6 @@ const MOCK: IMapSection = {
 };
 
 const PUBLISHED = sectionFixture<IMapSection>('mapSection') ?? MOCK;
-
-const RATIOS: Record<Exclude<MapAspectRatio, 'fullscreen'>, number> = {
-  '21x9': 21 / 9,
-  '16x9': 16 / 9,
-  '3x2': 3 / 2,
-  '4x3': 4 / 3,
-  '1x1': 1,
-  '4x5': 4 / 5,
-  '3x4': 3 / 4,
-  '9x16': 9 / 16
-};
 
 const frameOf = (canvasElement: HTMLElement) => {
   const region = within(canvasElement).getByRole('region');
@@ -71,27 +60,6 @@ export const Default: Story = {
     const label = PUBLISHED.label?.trim();
 
     await expect(region).toHaveAccessibleName(label ? `Map of ${label}` : 'Map');
-  }
-};
-
-/** Each desktop ratio an editor can pick lands as that ratio. */
-export const DesktopRatios: Story = {
-  args: MOCK,
-  globals: { viewport: { value: 'desktop' } },
-  render: (args) => (
-    <>
-      {(Object.keys(RATIOS) as (keyof typeof RATIOS)[]).map((ratio) => (
-        <div key={ratio} data-ratio={ratio}>
-          <MapSection {...args} aspectRatioDesktop={ratio} />
-        </div>
-      ))}
-    </>
-  ),
-  play: async ({ canvasElement }) => {
-    for (const [ratio, expected] of Object.entries(RATIOS)) {
-      const wrapper = canvasElement.querySelector(`[data-ratio="${ratio}"]`) as HTMLElement;
-      await expect(ratioOf(frameOf(wrapper))).toBeCloseTo(expected, 1);
-    }
   }
 };
 

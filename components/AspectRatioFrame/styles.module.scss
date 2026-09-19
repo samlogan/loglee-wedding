@@ -1,11 +1,11 @@
 /*
  * One class per editor-selectable ratio, per viewport. Keys match the `value`s in
- * `tools/sanity/schema/sections/mapSection.ts` — add one there, add it here.
+ * `tools/sanity/schema/common/aspectRatioFields.ts` — add one there, add it here.
  *
  * The classes only set custom properties; `.frame` reads them. That keeps the desktop and mobile
  * choices independent — either can be any ratio, or `fullscreen` — without a class per combination.
  */
-$map-ratios: (
+$frame-ratios: (
   '21x9': '21 / 9',
   '16x9': '16 / 9',
   '3x2': '3 / 2',
@@ -18,39 +18,41 @@ $map-ratios: (
 
 @layer defaults {
   .frame {
+    position: relative;
+    overflow: hidden;
     width: 100%;
-    aspect-ratio: var(--map-ratio-desktop, 21 / 9);
-    height: var(--map-height-desktop, auto);
+    aspect-ratio: var(--frame-ratio-desktop, 21 / 9);
+    height: var(--frame-height-desktop, auto);
 
     @include media-down(tablet) {
-      aspect-ratio: var(--map-ratio-mobile, 4 / 5);
-      height: var(--map-height-mobile, auto);
+      aspect-ratio: var(--frame-ratio-mobile, 4 / 5);
+      height: var(--frame-height-mobile, auto);
     }
   }
 
   // Strings, so Sass emits `w / h` for `aspect-ratio` rather than dividing it.
-  @each $key, $ratio in $map-ratios {
+  @each $key, $ratio in $frame-ratios {
     .desktop_#{$key} {
-      --map-ratio-desktop: #{$ratio};
+      --frame-ratio-desktop: #{$ratio};
     }
 
     .mobile_#{$key} {
-      --map-ratio-mobile: #{$ratio};
+      --frame-ratio-mobile: #{$ratio};
     }
   }
 
   /*
    * `svh`, not `vh`: on a phone `vh` is the height with the browser's toolbars *retracted*, so a
-   * `100vh` map is taller than the screen it first appears on. `auto` for the ratio, because with
+   * `100vh` frame is taller than the screen it first appears on. `auto` for the ratio, because with
    * both a ratio and a height set the ratio would win the width back.
    */
   .desktop_fullscreen {
-    --map-ratio-desktop: auto;
-    --map-height-desktop: 100svh;
+    --frame-ratio-desktop: auto;
+    --frame-height-desktop: 100svh;
   }
 
   .mobile_fullscreen {
-    --map-ratio-mobile: auto;
-    --map-height-mobile: 100svh;
+    --frame-ratio-mobile: auto;
+    --frame-height-mobile: 100svh;
   }
 }
