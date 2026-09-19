@@ -410,9 +410,9 @@ export const DarkTheme: Story = {
       await expect(getComputedStyle(canvas.getByText("Fin's Bar")).color).toBe('rgb(243, 241, 234)');
       // The description had the same defect, from the same cause.
       await expect(getComputedStyle(canvas.getByText(/A dark, moody cocktail bar/)).color).toBe('rgb(243, 241, 234)');
-      // signal/300 — `--fg-accent` on dark, which is what the comp inks the label and the hours in.
-      await expect(getComputedStyle(canvas.getByText('Cocktails')).color).toBe('rgb(214, 255, 59)');
-      await expect(getComputedStyle(canvas.getByText('Open 12pm – late')).color).toBe('rgb(214, 255, 59)');
+      // signal/100 — `--fg-accent` on dark: the light plum tint that replaced the comp's lime there.
+      await expect(getComputedStyle(canvas.getByText('Cocktails')).color).toBe('rgb(242, 207, 227)');
+      await expect(getComputedStyle(canvas.getByText('Open 12pm – late')).color).toBe('rgb(242, 207, 227)');
       // pine/500 — `--stroke-divider` on dark. Moves with the theme because it is a token.
       await expect(getComputedStyle(footerOf(card)).borderTopColor).toBe('rgb(51, 101, 74)');
       // The chip takes its hairline; on the light card it does not.
