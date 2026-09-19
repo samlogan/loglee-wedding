@@ -27,6 +27,7 @@ import {
 } from './objects/blockContent';
 import divider from './objects/divider';
 import { header, navLink } from './objects/header';
+import mapCard from './objects/mapCard';
 import redirect from './objects/redirect';
 import { sectionFields, spacingOptions, themeOptions } from './objects/sectionFields';
 import seo from './objects/seo';
@@ -35,6 +36,7 @@ import { closingCtaSection } from './sections/closingCtaSection';
 import { faqSection } from './sections/faqSection';
 import { headerDisplaySection } from './sections/headerDisplaySection';
 import { heroSection } from './sections/heroSection';
+import { imageCarouselSection } from './sections/imageCarouselSection';
 import { mapSection } from './sections/mapSection';
 import { mediaCardGridSection } from './sections/mediaCardGridSection';
 import { mediaSection } from './sections/mediaSection';
@@ -66,6 +68,7 @@ const schema: SchemaTypeDefinition[] = [
   blockContentButtons,
   divider,
   header,
+  mapCard,
   navLink,
   playerTextStat,
   playerMeterStat,
@@ -94,6 +97,7 @@ const schema: SchemaTypeDefinition[] = [
   faqSection,
   headerDisplaySection,
   heroSection,
+  imageCarouselSection,
   mapSection,
   mediaCardGridSection,
   mediaSection,
