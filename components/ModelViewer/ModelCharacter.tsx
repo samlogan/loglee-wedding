@@ -4,7 +4,16 @@ import { useAnimations, useGLTF } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { LoopOnce, LoopRepeat, PropertyBinding } from 'three';
-import type { AnimationAction, AnimationClip, AnimationMixer, Bone, Object3D, SkinnedMesh } from 'three';
+import type {
+  AnimationAction,
+  AnimationClip,
+  AnimationMixer,
+  Bone,
+  Mesh,
+  MeshStandardMaterial,
+  Object3D,
+  SkinnedMesh
+} from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 
 import { matchModelClip, resolveModelClip } from '@/helpers/modelClips';
@@ -107,9 +116,10 @@ const crossFade = (next: AnimationAction, previous: AnimationAction | null) => {
  * shared mark means the character does not slide sideways when one clip hands over to the next.
  *
  * What it costs is the *horizontal* component of a clip's sway — at most 0.19m on the dance clips,
- * about 15% of the frame. Hips **rotation** and every limb are untouched, so a dance still reads as
- * a dance and a walk reads as walking on the spot, which is what the comp's "DANCE LOOP" means for
- * a fixed arch.
+ * about 15% of the frame. Every limb is untouched, so a dance still reads as a dance and a walk reads
+ * as walking on the spot, which is what the comp's "DANCE LOOP" means for a fixed arch. The hips'
+ * rotation is untouched too: a clip that spins turns the character's back to the camera, and the
+ * client is happy to see that when the choreography calls for it.
  *
  * Clips are cloned rather than edited in place. `useGLTF` hands every viewer the same cached
  * `animations` array, so writing to those tracks would reach through to every other character on
@@ -157,6 +167,51 @@ const groundClips = (animations: AnimationClip[], root: Object3D | null) => {
 };
 
 /**
+ * The roughness every character's surface is drawn at.
+ *
+ * Both GLBs carry one baked PBR material. Its metallic-roughness texture is effectively no metal
+ * (the blue channel averages 0.01), but it is glossy: roughness averages 0.55, and a fifth to a third
+ * of its texels sit below 0.5, mostly on the dark fabrics. Under the studio HDRI those texels mirror
+ * the environment, and black cloth that mirrors a softbox reads as leather or latex. That is the
+ * "way too metallic" look, though no metal is involved. A constant matte roughness fixes it where a
+ * lower environment intensity would not: that darkens the diffuse light along with the highlights.
+ * 0.85 leaves a soft sheen on skin and trainers without a mirror anywhere.
+ */
+const MATTE_ROUGHNESS = 0.85;
+
+/**
+ * Take the gloss off a cached GLB's materials, once.
+ *
+ * Applied to `useGLTF`'s shared `scene` rather than to each clone, because `SkeletonUtils.clone`
+ * shares materials with the original: every viewer of one file draws the same material, so it is
+ * changed in one place. The `userData` flag makes every later call a no-op, which is what makes
+ * running it where the scene is first read safe.
+ *
+ * `metalness` is zeroed as well as the map dropped. The texture already says "not metal", but glTF's
+ * default `metallicFactor` is 1, so any bright texel in the blue channel would render as metal.
+ */
+const matteMaterials = (root: Object3D) => {
+  root.traverse((object) => {
+    const mesh = object as Mesh;
+    if (!mesh.isMesh) {
+      return;
+    }
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const material of materials) {
+      const standard = material as MeshStandardMaterial;
+      if (standard.isMeshStandardMaterial && !standard.userData.matte) {
+        standard.metalness = 0;
+        standard.metalnessMap = null;
+        standard.roughness = MATTE_ROUGHNESS;
+        standard.roughnessMap = null;
+        standard.userData.matte = true;
+        standard.needsUpdate = true;
+      }
+    }
+  });
+};
+
+/**
  * One character in the scene.
  *
  * Everything here that looks like ceremony is load-bearing; the notes say which.
@@ -187,8 +242,15 @@ const ModelCharacter = (props: ModelCharacterProps) => {
    *
    * The home page renders two characters, and the player page may mount a second viewer beside the
    * first, so this is the normal case rather than a precaution.
+   *
+   * The matte pass runs on the cached original first, so the clone shares the corrected material.
+   * It mutates an object this component does not own, which is only acceptable because it is
+   * idempotent. See `matteMaterials`.
    */
-  const model = useMemo(() => SkeletonUtils.clone(scene), [scene]);
+  const model = useMemo(() => {
+    matteMaterials(scene);
+    return SkeletonUtils.clone(scene);
+  }, [scene]);
 
   /*
    * Release the clone's skeletons on the way out.

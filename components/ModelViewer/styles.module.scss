@@ -183,9 +183,26 @@
      * panel is not 520px wide.
      */
     border-radius: 50% 50% 8.5% 8.5% / 26.5% 26.5% 4.5% 4.5%;
-    /* Clips the canvas, the fallback image and the hatch to the arch. */
-    overflow: hidden;
+    /*
+     * No `overflow: hidden`, and the absence matters: the canvas reaches past the arch so a
+     * character's raised hand can leave the dome (see `./bleed`). What must stay inside the arch —
+     * the hatch and the fallback picture — takes the arch's shape itself, with `border-radius:
+     * inherit`. The arch's own `--bg-raised` still paints in the arch's shape, because `border-radius`
+     * clips a background without any help from `overflow`.
+     */
     background-color: var(--bg-raised);
+    /*
+     * Vertical swipes scroll the page, including ones that start on the character.
+     *
+     * With `orbit`, drei's `OrbitControls` writes `touch-action: none` inline onto its event element,
+     * which is this arch: the canvas passes its events here (see `eventSource` on `ModelScene`). That
+     * made the arch a patch of a phone screen that a vertical swipe could not scroll the page from.
+     * The orbit's polar range is under 30°, so a vertical drag barely moved the camera anyway. `pan-y`
+     * hands vertical gestures back to the browser and leaves horizontal drags, the half that turns the
+     * character, to the controls. `!important` because the declaration it overrides is an inline style
+     * the library sets after mount.
+     */
+    touch-action: pan-y !important;
   }
 
   /*
@@ -208,6 +225,8 @@
 
     position: absolute;
     inset: 0;
+    // The arch's shape. `.stage` no longer clips its children; see the note there.
+    border-radius: inherit;
     /*
      * The comp's empty-arch ground, opaque — so this element carries the whole of the empty state
      * and the arch's own `--bg-raised` is what is revealed when it goes, rather than something that
@@ -295,24 +314,34 @@
    * as a single named image — which is exactly right for a canvas, whose contents are not in the
    * accessibility tree to begin with.
    */
-  .canvasHolder,
-  .image {
+  /*
+   * The canvas reaches past the arch by `MODEL_BLEED`: that fraction of the arch's height above it,
+   * that fraction of its width either side, and nothing below, where the character stands on the
+   * floor. Percentages in `inset` resolve against the arch's height for top and bottom and its width
+   * for the sides, which is exactly the shape the camera is framed to (`CameraFrame` in
+   * `ModelScene`). The two numbers arrive as custom properties from `index.tsx`. The `0` fallbacks
+   * give an arch-sized canvas, not a broken one, if they are ever missing.
+   *
+   * `pointer-events: none`, because the margin must not take the pointer: on the select screen it
+   * crosses into the neighbouring card, and on the player page it can sit over the content above the
+   * panel. The arch is the canvas's event source instead, so hover, tap and the orbit drag all still
+   * work, but only over the arch.
+   */
+  .canvasHolder {
     position: absolute;
-    inset: 0;
+    inset: calc(var(--model-bleed-top, 0) * -100%) calc(var(--model-bleed-inline, 0) * -100%) 0;
+    pointer-events: none;
   }
 
   /*
-   * Vertical swipes scroll the page, including ones that start on the character.
-   *
-   * With `orbit`, drei's `OrbitControls` writes `touch-action: none` inline onto the canvas's event
-   * layer — R3F's outer `div`, this holder's only child — which made the arch a patch of a phone
-   * screen that a vertical swipe could not scroll the page from. The orbit's polar range is under 30°,
-   * so a vertical drag barely moved the camera anyway: `pan-y` hands vertical gestures back to the
-   * browser and leaves horizontal drags, the half that turns the character, to the controls.
-   * `!important` because the declaration it overrides is an inline style the library sets after mount.
+   * The fallback picture stays inside the arch. It is a flat image with a background of its own, so
+   * letting it escape would print a rectangle over the dome.
    */
-  .canvasHolder > div {
-    touch-action: pan-y !important;
+  .image {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
   }
 
   /*
@@ -365,8 +394,9 @@
    * a file name, and a file name is the one string here that has to be reproduced exactly.
    *
    * The cap is the half that could not move to `Tag`, and the measurement behind it is worth keeping.
-   * The chip sits inside `.stage`, which is `overflow: hidden` to clip the canvas to the arch, so an
-   * uncapped chip wider than the arch is silently cut off at the dome's edge: the comp's own
+   * The chip sits inside `.stage`, and an uncapped chip wider than the arch would run past the dome's
+   * edge. The arch used to clip it silently; since the canvas was allowed to escape, the arch no longer
+   * clips anything, so the overflow would be visible instead. The comp's own
    * `sam-dance.glb` is 99px inside a 200px arch and safe, but a plausible authored name
    * (`sam-dance-final-v3-compressed.glb`) measures 227px, and 269px with WCAG 1.4.12's text-spacing
    * overrides applied. `Tag`'s `overflow-wrap: anywhere` is what makes the cap bite — it participates
