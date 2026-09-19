@@ -8,6 +8,7 @@ export const pageSections = [
   { type: 'heroSection' },
   { type: 'mapSection' },
   { type: 'mediaCardGridSection' },
+  { type: 'mediaSection' },
   { type: 'mediaTagsSection' },
   { type: 'numberedGridSection' },
   { type: 'playerSelectSection' },

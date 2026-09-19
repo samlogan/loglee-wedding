@@ -7,6 +7,7 @@ import headerDisplaySectionProjection from '@/sections/HeaderDisplaySection/quer
 import heroSectionProjection from '@/sections/HeroSection/queries.groq';
 import mapSectionProjection from '@/sections/MapSection/queries.groq';
 import mediaCardGridSectionProjection from '@/sections/MediaCardGridSection/queries.groq';
+import mediaSectionProjection from '@/sections/MediaSection/queries.groq';
 import mediaTagsSectionProjection from '@/sections/MediaTagsSection/queries.groq';
 import numberedGridSectionProjection from '@/sections/NumberedGridSection/queries.groq';
 import playerSelectSectionProjection from '@/sections/PlayerSelectSection/queries.groq';
@@ -30,6 +31,7 @@ const sectionProjections = [
   heroSectionProjection,
   mapSectionProjection,
   mediaCardGridSectionProjection,
+  mediaSectionProjection,
   mediaTagsSectionProjection,
   numberedGridSectionProjection,
   playerSelectSectionProjection,
