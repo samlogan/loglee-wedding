@@ -425,6 +425,8 @@ export const WithByline: Story = {
     await expect(shown(heading)).toBe('Sam & Lauren');
     await expect(heading.nextElementSibling).toBe(byline);
     await expect(getComputedStyle(byline).fontFamily).toMatch(/caveat/i);
+    // Plum, #972a6a — the light theme's `--button-accent-bg`.
+    await expect(getComputedStyle(byline).color).toBe('rgb(151, 42, 106)');
     await expect(byline.scrollWidth).toBeLessThanOrEqual(byline.clientWidth);
   }
 };
