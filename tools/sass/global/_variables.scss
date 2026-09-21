@@ -6,6 +6,13 @@
   --shades-black: #000000;
   --shades-white: #ffffff;
 
+  /*
+   * The 3D characters' backdrop. A single swatch rather than a ramp because it has one job: the
+   * ground behind the models, a shade darker than the stone surfaces so Lauren's white gown
+   * separates from it. On stone/25 the gown all but disappeared.
+   */
+  --stage-ground: #e1dfd8;
+
   // Stone — warm neutral, the base
   --stone-25: #f8f7f2;
   --stone-50: #f3f1ea;
@@ -563,6 +570,8 @@
   --bg-default: var(--stone-50);
   --bg-accent: var(--stone-100);
   --bg-raised: var(--stone-25);
+  /* Behind the 3D characters — the arch, its loading state and the thank-you stage. */
+  --bg-stage: var(--stage-ground);
 
   /* Text */
   --fg-default: var(--stone-900);
@@ -663,6 +672,8 @@
   --bg-default: var(--pine-600);
   --bg-accent: var(--pine-700);
   --bg-raised: var(--pine-500);
+  /* The same ground on both themes: the characters sit on it the same way whatever surrounds it. */
+  --bg-stage: var(--stage-ground);
 
   /* Text */
   --fg-default: var(--stone-50);
