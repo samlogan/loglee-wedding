@@ -34,9 +34,9 @@ import {
  *     placement the measurement was taken at, and says so in the failure message.
  *
  * The thing worth being honest about: a cylinder bound would be the obvious test here, and it would
- * be **wrong**. Lauren sweeps ±0.587m and Sam ±0.514m, so treating each as a cylinder demands
- * 1.101m between the marks — and the shipped placement is 1.090m apart. A test asserting the bound
- * would fail on a scene that has a measured 0.425m of clearance, because the bound assumes both of
+ * be **wrong**. Lauren sweeps ±0.587m and Sam ±0.541m, so treating each as a cylinder demands
+ * 1.128m between the marks — and the shipped placement is 1.090m apart. A test asserting the bound
+ * would fail on a scene that has a measured 0.427m of clearance, because the bound assumes both of
  * them reach their furthest point, toward each other, at the same instant. They do not.
  */
 
@@ -108,7 +108,7 @@ describe('duet placement', () => {
   });
 
   it('clears the meshes at the tightest moment of both loops', () => {
-    // 0.425m bone-to-bone, of which roughly 0.16m is mesh rather than air. Re-run
+    // 0.427m bone-to-bone, of which roughly 0.16m is mesh rather than air. Re-run
     // `yarn duet:measure` if this needs changing; do not adjust the constant to match a new
     // placement without it.
     expect(DUET_MEASURED_CLEARANCE).toBeGreaterThan(DUET_CLEARANCE_FLOOR);
@@ -147,7 +147,7 @@ describe('duet framing', () => {
     /*
      * The one framing fact that is genuinely derivable without a renderer.
      *
-     * Measured at each dancer's mark rather than at the target. Sam's 2.026m jump is 0.91m further
+     * Measured at each dancer's mark rather than at the target. Sam's 2.064m jump is 0.91m further
      * from the camera than Lauren's feet, and the frame is taller there. Measuring his peak at the
      * front row's distance, as this test first did, understated the room by a fifth and would fail
      * the framing `yarn duet:measure` confirms.
