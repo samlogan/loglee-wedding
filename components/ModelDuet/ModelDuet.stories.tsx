@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { DUET_BACK, DUET_FRONT, DUET_MIN_ASPECT, DUET_NATURAL_ASPECT } from '@/helpers/duetPlacement';
+import { WALK_FRAMING, walkPair } from '@/helpers/walkPlacement';
 import mockImage from '@/tools/storybook/mockImage';
 
 import ModelDuet from '.';
@@ -277,6 +278,34 @@ export const SunsetLighting: Story = {
     const block = blockOf(canvasElement);
 
     await expect(block.dataset.modelRender).toBe('canvas');
+    await waitFor(
+      async () => {
+        await expect(canvasElement.querySelector('canvas')).not.toBeNull();
+        await expect(block.dataset.modelLoaded).toBe('true');
+      },
+      { timeout: 25_000 }
+    );
+  }
+};
+
+/**
+ * The RSVP rail's arrangement: both walking side by side on `Casual_Walk`, facing the camera, framed
+ * by `WALK_FRAMING` and with `backdrop={false}`, so the stage has no fill and the pair stands on the
+ * page. This is the story for both of those props — the default framing and backdrop are every other.
+ */
+export const WalkingPair: Story = {
+  args: {
+    alt: 'Sam and Lauren, as 3D characters, walking side by side',
+    backdrop: false,
+    characters: walkPair([{ src: '/sam.glb' }, { src: '/lauren.glb' }]),
+    framing: WALK_FRAMING,
+    mode: 'animated'
+  },
+  play: async ({ canvasElement }) => {
+    const block = blockOf(canvasElement);
+    const stage = stageOf(block);
+
+    await expect(getComputedStyle(stage).backgroundColor).toBe('rgba(0, 0, 0, 0)');
     await waitFor(
       async () => {
         await expect(canvasElement.querySelector('canvas')).not.toBeNull();

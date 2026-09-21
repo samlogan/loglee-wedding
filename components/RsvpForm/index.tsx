@@ -37,8 +37,8 @@ export interface RsvpFormProps {
   /** The rest of it. Wide layouts only — the phone frame keeps just `intro` (Figma node 1:884). */
   introDetail?: string;
   /**
-   * The players' models. The rail shows one at random, looping one of its animations at random —
-   * see `RsvpModel`. Nothing renders in its place when there are none.
+   * The players' models. The rail shows the first two walking side by side — see `RsvpModel`.
+   * Nothing renders in its place when there are none.
    */
   models?: RsvpModelOption[];
 }

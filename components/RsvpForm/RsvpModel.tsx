@@ -1,11 +1,9 @@
 'use client';
 
-import { useSyncExternalStore } from 'react';
-
-import ModelViewer from '@/components/ModelViewer';
+import ModelDuet from '@/components/ModelDuet';
 import classNames from '@/helpers/classNames';
 import type { ModelClipNames } from '@/helpers/modelClips';
-import pickModel from '@/helpers/pickModel';
+import { WALK_FRAMING, walkPair } from '@/helpers/walkPlacement';
 
 import styles from './styles.module.scss';
 
@@ -16,60 +14,48 @@ export interface RsvpModelOption {
   fallbackImage?: SanityImageSimple | null;
 }
 
-/*
- * The roll, held as an external store rather than state. The server has no opinion — its snapshot is
- * `null`, so it renders an empty stage and hydration matches — and the client rolls once when first
- * read. Unmounting clears it, so every visit to the page gets a fresh roll, while re-renders within
- * one visit keep the same character rather than swapping on every keystroke in the form.
- *
- * `useSyncExternalStore` rather than `useState` + `useEffect`, per the React Compiler conventions in
- * CLAUDE.md: no state is set in an effect.
- */
-let roll: number | undefined;
-const subscribe = () => () => {
-  roll = undefined;
-};
-const getRoll = () => {
-  roll ??= Math.random();
-  return roll;
-};
-const getServerRoll = () => null;
-
 export interface RsvpModelProps {
   className?: string;
   models: RsvpModelOption[];
 }
 
 /**
- * One of the players' 3D characters, chosen at random each visit, looping one of their animations —
- * also at random. The rail's companion to the questions beside it.
+ * The players' 3D characters walking side by side — the rail's companion to the questions beside it.
  *
- * The animation is any of the clip names authored on the player (idle, hover or feature), looped as
- * the rest clip. Everything else — the capability check, reduced motion, the fallback image — is
- * `ModelViewer`'s, unchanged.
+ * Both walk on `Casual_Walk`, facing the camera, at the same depth (see `@/helpers/walkPlacement`).
+ * The models come from the player documents, so a model swapped in Sanity shows here too. The rest —
+ * the capability check, reduced motion, the fallback image — is `ModelDuet`'s, unchanged.
+ *
+ * It used to be one player chosen at random per visit, looping one of their clips at random. A pair
+ * says "the two of us" in a way a single character cannot, and it drops the random roll, which was
+ * the only reason this component needed an external store.
  */
 const RsvpModel = (props: RsvpModelProps) => {
   const { className, models } = props;
+  const characters = walkPair(models);
 
-  const random = useSyncExternalStore(subscribe, getRoll, getServerRoll);
-  const pick = random === null ? undefined : pickModel(models, random);
-
-  if (models.length === 0) {
+  if (characters.length === 0) {
     return null;
   }
 
-  const name = pick?.model.name;
+  const names = models
+    .filter((model) => model.src)
+    .slice(0, 2)
+    .map((model) => model.name);
+  const alt =
+    names.length === 2
+      ? `${names[0]} and ${names[1]}, as 3D characters, walking side by side`
+      : `${names[0]}, as a 3D character, walking`;
 
   return (
-    <ModelViewer
-      alt={name ? `${name}, as a 3D character` : 'One of the couple, as a 3D character'}
-      // No arch: in the rail the character stands on the page, not in the select screen's shape.
+    <ModelDuet
+      alt={alt}
+      // No stage fill: in the rail the pair walks on the page, as the single character stood on it.
       backdrop={false}
+      characters={characters}
       className={classNames(styles.model, className)}
-      clips={pick?.clip ? { idle: pick.clip } : undefined}
-      fallbackImage={pick?.model.fallbackImage}
-      restClip="idle"
-      src={pick?.model.src ?? undefined}
+      fallbackImage={models.find((model) => model.fallbackImage?.asset?.url)?.fallbackImage}
+      framing={WALK_FRAMING}
     />
   );
 };

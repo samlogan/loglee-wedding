@@ -232,3 +232,22 @@ export const DUET_SHADOW = {
   position: [0, 0, 0] as [number, number, number],
   scale: 5
 };
+
+/**
+ * Everything about a two-character scene that is not the characters: where the camera stands, what
+ * it looks at, and the contact-shadow plane. `ModelDuet` takes one of these, so the same component
+ * can stage a different arrangement — the RSVP rail's walking pair (`walkPlacement.ts`) — without
+ * disturbing the thank-you scene's measured numbers above.
+ */
+export interface DuetFraming {
+  camera: { fov: number; position: readonly [number, number, number] };
+  target: [number, number, number];
+  shadow: { position: [number, number, number]; scale: number };
+}
+
+/** The thank-you scene's framing — the default `ModelDuet` stages. */
+export const DUET_FRAMING: DuetFraming = {
+  camera: DUET_CAMERA,
+  shadow: DUET_SHADOW,
+  target: DUET_TARGET
+};

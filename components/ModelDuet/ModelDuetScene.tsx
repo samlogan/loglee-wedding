@@ -9,8 +9,7 @@ import ModelBoundary from '@/components/ModelViewer/ModelBoundary';
 import ModelCharacter, { preloadCharacter } from '@/components/ModelViewer/ModelCharacter';
 import ModelLighting from '@/components/ModelViewer/ModelLighting';
 import type { ModelEnvironmentPreset } from '@/components/ModelViewer/ModelLighting';
-import { DUET_CAMERA, DUET_SHADOW, DUET_TARGET } from '@/helpers/duetPlacement';
-import type { DuetPlacement } from '@/helpers/duetPlacement';
+import type { DuetFraming, DuetPlacement } from '@/helpers/duetPlacement';
 
 /**
  * The device-pixel-ratio cap, and the renderer options.
@@ -35,12 +34,13 @@ const GL = { toneMapping: NeutralToneMapping, toneMappingExposure: 1 } as const;
  * camera to `OrbitControls`, which calls `lookAt` on every update; there are no controls on this
  * scene, so it always runs.
  */
-const CameraTarget = () => {
+const CameraTarget = ({ target }: { target: DuetFraming['target'] }) => {
   const camera = useThree((state) => state.camera);
+  const [x, y, z] = target;
 
   useLayoutEffect(() => {
-    camera.lookAt(DUET_TARGET[0], DUET_TARGET[1], DUET_TARGET[2]);
-  }, [camera]);
+    camera.lookAt(x, y, z);
+  }, [camera, x, y, z]);
 
   return null;
 };
@@ -92,6 +92,8 @@ export interface ModelDuetSceneProps {
   /** `false` under reduced motion — both are posed and the frame loop goes on demand. */
   animate: boolean;
   environmentPreset: ModelEnvironmentPreset;
+  /** Camera, look-at target and shadow plane — the thank-you scene's, or the RSVP rail's walk. */
+  framing: DuetFraming;
   /** Fired once per character as it lands in the scene, keyed by `src`. */
   onCharacterReady: (src: string) => void;
   /** The canvas or a model failed outright — the shell drops to the fallback image. */
@@ -103,12 +105,12 @@ export interface ModelDuetSceneProps {
  * Nothing above this file imports `three`, `@react-three/fiber` or `@react-three/drei`.
  */
 const ModelDuetScene = (props: ModelDuetSceneProps) => {
-  const { animate, characters, environmentPreset, onCharacterReady, onError } = props;
+  const { animate, characters, environmentPreset, framing, onCharacterReady, onError } = props;
 
   return (
     <ModelBoundary label="duet canvas" onError={onError}>
       <Canvas
-        camera={DUET_CAMERA}
+        camera={framing.camera}
         dpr={DPR}
         /*
          * `demand` under reduced motion: drawn when something asks for it and never on a timer.
@@ -154,7 +156,7 @@ const ModelDuetScene = (props: ModelDuetSceneProps) => {
             far={1.2}
             frames={animate ? Number.POSITIVE_INFINITY : 1}
             opacity={0.32}
-            position={DUET_SHADOW.position}
+            position={framing.shadow.position}
             /*
              * 512 over a 5m plane is coarser per metre than `ModelViewer`'s 512 over 4m, and it
              * stays 512 anyway. The shadow is a soft blurred pool under two pairs of feet at
@@ -163,11 +165,11 @@ const ModelDuetScene = (props: ModelDuetSceneProps) => {
              * carrying two skinned meshes on a phone.
              */
             resolution={512}
-            scale={DUET_SHADOW.scale}
+            scale={framing.shadow.scale}
           />
         </Suspense>
 
-        <CameraTarget />
+        <CameraTarget target={framing.target} />
       </Canvas>
     </ModelBoundary>
   );
