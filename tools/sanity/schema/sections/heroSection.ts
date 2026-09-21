@@ -31,19 +31,18 @@ type IHeroWeddingSettings = Projected<Pick<IWeddingSettingsDocument, 'startDate'
  * The home page's opening block: the couple's names stacked in oversized display type over a
  * date-and-venue meta row (nodes 1:63 desktop, 1:112 mobile).
  *
- * ## Nothing is authored here, on purpose
+ * ## One line authored here, the rest joined
  *
- * Every word the section shows already lives on `weddingSettings` — the names, the dates, the venue
- * and its travel note — and the footer, the header's reply-by line and the thank-you page read the
- * same document. A title field here would be a second copy of the couple's names in a place where
- * the two could disagree, so the section has no content fields at all and the projection joins the
- * singleton in instead (see `sections/HeroSection/queries.groq.ts`), the way `twoColumnListSection`
- * joins the contribution copy.
- *
- * What an editor controls on the section is only what is genuinely per-placement: its theme and its
- * spacing, through `sectionFields`.
+ * `byline` is the only copy typed on the section: the handwritten line under the names, "are getting
+ * married". Everything else — the names, the dates, the venue and its travel note — lives on
+ * `weddingSettings`, which the footer, the header's reply-by line and the thank-you page also read.
+ * A title field here would be a second copy of the couple's names in a place where the two could
+ * disagree, so the projection joins the singleton in instead (see
+ * `sections/HeroSection/queries.groq.ts`), the way `twoColumnListSection` joins the contribution copy.
  */
 interface IHeroSection {
+  /** The handwritten line under the names. Blank or absent renders nothing. */
+  byline?: string | null;
   /**
    * Joined from the singleton by the projection; `null` when the singleton has not been created.
    * The component renders every blank state, including this one.
@@ -96,7 +95,7 @@ const heroSection = defineType({
        * Studio opens on "All fields", so this description is the first thing they read.
        */
       description:
-        'Everything this section shows — the couple’s names, the dates, the venue, its street and travel note — comes from Wedding Settings. Edit it there; this section only sets the theme and spacing. The names are the page’s main heading, so place the hero once, as the first section.',
+        'The couple’s names, the dates, the venue, its street and travel note come from Wedding Settings — edit them there. Only the handwritten byline under the names is typed on this section. The names are the page’s main heading, so place the hero once, as the first section.',
       name: 'sectionPreview',
       title: 'Section Preview',
       type: 'image',
@@ -105,6 +104,14 @@ const heroSection = defineType({
       imageUrl: thumbnail.src,
       readOnly: true,
       group: 'internal'
+    },
+    {
+      description:
+        'The handwritten line under the couple’s names, e.g. “are getting married”. Shown exactly as typed. Leave blank to show nothing.',
+      group: 'data',
+      name: 'byline',
+      title: 'Byline',
+      type: 'string'
     },
     internalLabelField,
     {
@@ -123,18 +130,19 @@ const heroSection = defineType({
    * selected. With Data gone and no other default, the Studio opens on "All fields", where the
    * preview's description above is the first thing an editor reads.
    */
-  groups: defaultSectionGroups.filter((group) => group.name !== 'data'),
+  groups: defaultSectionGroups,
   icon: TbHearts,
   name: 'heroSection',
   preview: {
-    prepare(selection: { internalLabel?: string }) {
+    prepare(selection: { byline?: string; internalLabel?: string }) {
       return {
-        // Says where the words come from, since nothing in the section list could show them.
-        subtitle: selection?.internalLabel || 'Names, dates and venue from Wedding Settings',
+        // Says where the words come from, since the names are not on the section to show.
+        subtitle: selection?.internalLabel || selection?.byline || 'Names, dates and venue from Wedding Settings',
         title: 'Hero'
       };
     },
     select: {
+      byline: 'byline',
       internalLabel: 'internalLabel'
     }
   },

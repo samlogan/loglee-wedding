@@ -1,4 +1,9 @@
-import { Archivo as HeadingFont, Instrument_Sans as BodyFont, JetBrains_Mono as MonoFont } from 'next/font/google';
+import {
+  Archivo as HeadingFont,
+  Caveat as ScriptFont,
+  Instrument_Sans as BodyFont,
+  JetBrains_Mono as MonoFont
+} from 'next/font/google';
 import localFont from 'next/font/local';
 
 // NextJS Fonts
@@ -88,8 +93,22 @@ const monoFont = MonoFont({
   weight: ['400', '500', '700']
 });
 
+/*
+ * Handwriting, for one line: the home hero's byline under the couple's names ("are getting
+ * married"). Caveat because it stays legible at display size where finer scripts break up, and it
+ * sits well against Archivo's heavy caps. Two weights only — it is used once.
+ */
+const scriptFont = ScriptFont({
+  adjustFontFallback: false,
+  display: 'swap',
+  style: ['normal'],
+  subsets: ['latin'],
+  variable: '--script-font',
+  weight: ['500', '700']
+});
+
 // Reference for a font that is not on Google Fonts — drop the .woff into assets/fonts and
-// add its variable to the array below. All three roles above are Google Fonts, so this is unused.
+// add its variable to the array below. Every role above is a Google Font, so this is unused.
 // const localExample = localFont({
 //   src: '../assets/fonts/helvetica-now-text.woff',
 //   weight: '400',
@@ -98,6 +117,6 @@ const monoFont = MonoFont({
 //   variable: '--local-font'
 // });
 
-const fonts = [headingFont.variable, bodyFont.variable, monoFont.variable].join(' ');
+const fonts = [headingFont.variable, bodyFont.variable, monoFont.variable, scriptFont.variable].join(' ');
 
 export default fonts;

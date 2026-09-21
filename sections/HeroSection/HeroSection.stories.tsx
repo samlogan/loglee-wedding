@@ -413,6 +413,35 @@ export const EnlargedText: Story = {
 };
 
 /**
+ * The handwritten byline under the names. It is a paragraph after the heading, not part of it, so the
+ * `<h1>` still reads "Sam & Lauren"; and it is set in the script face rather than the heading one.
+ */
+export const WithByline: Story = {
+  args: { ...MOCK, byline: 'are getting married' },
+  play: async ({ canvasElement }) => {
+    const heading = within(canvasElement).getByRole('heading', { level: 1 });
+    const byline = within(canvasElement).getByText('are getting married');
+
+    await expect(shown(heading)).toBe('Sam & Lauren');
+    await expect(heading.nextElementSibling).toBe(byline);
+    await expect(getComputedStyle(byline).fontFamily).toMatch(/caveat/i);
+    await expect(byline.scrollWidth).toBeLessThanOrEqual(byline.clientWidth);
+  }
+};
+
+/**
+ * A byline of only whitespace renders nothing — no empty paragraph between the names and the meta row.
+ */
+export const BlankByline: Story = {
+  args: { ...MOCK, byline: '   ' },
+  play: async ({ canvasElement }) => {
+    const heading = within(canvasElement).getByRole('heading', { level: 1 });
+
+    await expect(heading.nextElementSibling?.tagName).not.toBe('P');
+  }
+};
+
+/**
  * One partner only — the second left blank. The AC: no dangling ampersand.
  */
 export const OnePartner: Story = {

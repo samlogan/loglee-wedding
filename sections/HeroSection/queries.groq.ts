@@ -1,7 +1,7 @@
 import { groq } from 'next-sanity';
 
 /**
- * The hero has no fields of its own to project: everything it shows is **joined from
+ * The hero's one field of its own is `byline`; everything else it shows is **joined from
  * `weddingSettings`**.
  *
  * ## Why a join, and why here
@@ -36,6 +36,7 @@ import { groq } from 'next-sanity';
  */
 const heroSectionProjection = groq`
   _type == 'heroSection' => {
+    byline,
     "weddingSettings": *[_type == 'weddingSettings' && _id == 'weddingSettings'][0]{
       coupleNames{
         partnerOne,

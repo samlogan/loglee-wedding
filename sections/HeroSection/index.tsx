@@ -64,16 +64,18 @@ const Separator = () => (
 );
 
 /**
- * The home page's opening block — the couple's names stacked in oversized display type, over a
- * two-sided meta row: dates and venue on the left, street and travel note on the right.
+ * The home page's opening block — the couple's names stacked in oversized display type, an optional
+ * handwritten byline under them, and a two-sided meta row: dates and venue on the left, street and
+ * travel note on the right.
  *
- * Everything shown is joined from `weddingSettings` by the projection; nothing is authored on the
- * section. Every field is optional there, so every combination of blanks is a state this renders:
+ * The byline is typed on the section; everything else is joined from `weddingSettings` by the
+ * projection. Every field is optional there, so every combination of blanks is a state this renders:
  * one partner, no dates, no venue, no address, no travel note, no singleton at all. None of them
  * leaves a `·` or an `&` with nothing on one side of it.
  */
 const HeroSection: FC<IHeroSection> = (props) => {
-  const { weddingSettings } = props;
+  const { byline, weddingSettings } = props;
+  const handwritten = textOf(byline);
   const { coupleNames, startDate, endDate, venue } = weddingSettings ?? {};
 
   /*
@@ -147,6 +149,19 @@ const HeroSection: FC<IHeroSection> = (props) => {
           </>
         )}
       </Text>
+
+      {/*
+       * The handwritten line under the names — "are getting married". A `<p>` rather than part of the
+       * `<h1>`, so the heading stays the names and the byline reads as the sentence continuing under
+       * it. `variant="heading" size="xl"` sets its size and leading; `.byline` swaps the family for
+       * Caveat (`--script-font`), which is the one thing `Text` has no variant for — a single line on
+       * a single page does not earn a sixth type role.
+       */}
+      {handwritten && (
+        <Text as="p" className={styles.byline} color="themeFgAccent" size="xl" variant="heading" weight="bold">
+          {handwritten}
+        </Text>
+      )}
 
       {(hasSummary || hasDirections) && (
         <div className={classNames(styles.meta, { [styles.meta_streetOnly]: !(hasSummary || travelNote) })}>
