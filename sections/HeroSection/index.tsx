@@ -155,10 +155,10 @@ const HeroSection: FC<IHeroSection> = (props) => {
        * `<h1>`, so the heading stays the names and the byline reads as the sentence continuing under
        * it. `variant="heading" size="xl"` sets its size and leading; `.byline` swaps the family for
        * Caveat (`--script-font`), which is the one thing `Text` has no variant for — a single line on
-       * a single page does not earn a sixth type role.
+       * a single page does not earn a sixth type role. Its plum colour is set in `.byline` too.
        */}
       {handwritten && (
-        <Text as="p" className={styles.byline} color="themeFgAccent" size="xl" variant="heading" weight="bold">
+        <Text as="p" className={styles.byline} size="xl" variant="heading" weight="bold">
           {handwritten}
         </Text>
       )}
