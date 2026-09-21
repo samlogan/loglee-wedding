@@ -1,13 +1,13 @@
 import { groq } from 'next-sanity';
 
 /**
- * The hero has no fields of its own to project: everything it shows is **joined from
- * `weddingSettings`**.
+ * The hero's one field of its own is `title`; everything else it shows is **joined from
+ * `weddingSettings`**, including the couple's names the heading falls back to when `title` is blank.
  *
  * ## Why a join, and why here
  *
  * The same three options `twoColumnListSection`'s projection weighs for the contribution copy, with
- * the same answer. A title field on the section would be a second copy of the couple's names that
+ * the same answer. Copying the dates or venue onto the section would give them a second home that
  * could disagree with the singleton the footer and the thank-you page read. An
  * `await sanityFetch(WEDDING_SETTINGS_QUERY)` inside the component would be a second round trip for
  * a document `components/Layout` already fetches, and in draft mode nothing dedupes it. A GROQ join
@@ -36,6 +36,7 @@ import { groq } from 'next-sanity';
  */
 const heroSectionProjection = groq`
   _type == 'heroSection' => {
+    title,
     "weddingSettings": *[_type == 'weddingSettings' && _id == 'weddingSettings'][0]{
       coupleNames{
         partnerOne,

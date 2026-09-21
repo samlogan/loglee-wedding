@@ -64,16 +64,17 @@ const Separator = () => (
 );
 
 /**
- * The home page's opening block — the couple's names stacked in oversized display type, over a
- * two-sided meta row: dates and venue on the left, street and travel note on the right.
+ * The home page's opening block — a display-type heading over a two-sided meta row: dates and venue
+ * on the left, street and travel note on the right. The heading is the section's typed `title`, or
+ * the couple's names stacked as drawn when it is blank.
  *
- * Everything shown is joined from `weddingSettings` by the projection; nothing is authored on the
- * section. Every field is optional there, so every combination of blanks is a state this renders:
- * one partner, no dates, no venue, no address, no travel note, no singleton at all. None of them
- * leaves a `·` or an `&` with nothing on one side of it.
+ * Everything else shown is joined from `weddingSettings` by the projection. Every field is
+ * optional there, so every combination of blanks is a state this renders: one partner, no dates,
+ * no venue, no address, no travel note, no singleton at all. None of them leaves a `·` or an `&` with nothing on one side of it.
  */
 const HeroSection: FC<IHeroSection> = (props) => {
-  const { weddingSettings } = props;
+  const { title, weddingSettings } = props;
+  const heading = textOf(title);
   const { coupleNames, startDate, endDate, venue } = weddingSettings ?? {};
 
   /*
@@ -118,11 +119,15 @@ const HeroSection: FC<IHeroSection> = (props) => {
       spacing={['sm', 'xs']}
     >
       {/*
-       * The names are the page's `<h1>` — the AC — and there is no editor choice to override: the
-       * section has no title field, so no `TitleInput` level selector to disagree with it. The schema
-       * warns an editor who places a second `<h1>`-rendering section, or puts this one below another.
+       * The heading is the page's `<h1>` — the AC — whichever form it takes, and there is no level for
+       * an editor to pick: `title` is a plain string, not a `TitleInput`. The schema warns an editor
+       * who places a second `<h1>`-rendering section, or puts this one below another.
        *
-       * One line per partner, the ampersand ending the first, as drawn ("SAM &" over "LAUREN"). Each
+       * **Typed title.** Set a step down, at `--display-md`, so a sentence such as "Sam & Lauren are
+       * getting married" fits in a few lines where `--display-lg` would run it down the page.
+       * `text-wrap: balance` (`.title`) evens the lines rather than leaving one word on the last.
+       *
+       * **Names, when the title is blank.** One line per partner, the ampersand ending the first, as drawn ("SAM &" over "LAUREN"). Each
        * line is a block span rather than a `<br>`, and the `{' '}` between them is load-bearing even
        * though it paints nothing (whitespace between two blocks generates no box): it is what makes
        * the heading's text, and so its accessible name, "Sam & Lauren" rather than "Sam &Lauren".
@@ -135,18 +140,24 @@ const HeroSection: FC<IHeroSection> = (props) => {
        * node 1:65's 176px. Leading and tracking are the display tier's own (0.84, -0.045em), measured
        * off this same node — nothing is overridden here.
        */}
-      <Text as="h1" size="lg" textTransform="uppercase" variant="display">
-        <span className={styles.name}>
-          {firstPartner}
-          {secondPartner && ' &'}
-        </span>
-        {secondPartner && (
-          <>
-            {' '}
-            <span className={styles.name}>{secondPartner}</span>
-          </>
-        )}
-      </Text>
+      {heading ? (
+        <Text as="h1" className={styles.title} size="md" textTransform="uppercase" variant="display">
+          {heading}
+        </Text>
+      ) : (
+        <Text as="h1" size="lg" textTransform="uppercase" variant="display">
+          <span className={styles.name}>
+            {firstPartner}
+            {secondPartner && ' &'}
+          </span>
+          {secondPartner && (
+            <>
+              {' '}
+              <span className={styles.name}>{secondPartner}</span>
+            </>
+          )}
+        </Text>
+      )}
 
       {(hasSummary || hasDirections) && (
         <div className={classNames(styles.meta, { [styles.meta_streetOnly]: !(hasSummary || travelNote) })}>

@@ -97,6 +97,11 @@ $hero-street-inline-switch: 400px;
     display: block;
   }
 
+  // The typed title: lines of even length rather than a lone word left on the last one.
+  .title {
+    text-wrap: balance;
+  }
+
   .meta {
     display: flex;
     /*

@@ -28,22 +28,21 @@ type IHeroWeddingSettings = Projected<Pick<IWeddingSettingsDocument, 'startDate'
 };
 
 /**
- * The home page's opening block: the couple's names stacked in oversized display type over a
- * date-and-venue meta row (nodes 1:63 desktop, 1:112 mobile).
+ * The home page's opening block: a display-type heading over a date-and-venue meta row (nodes 1:63
+ * desktop, 1:112 mobile).
  *
- * ## Nothing is authored here, on purpose
+ * ## One field authored here, the rest joined
  *
- * Every word the section shows already lives on `weddingSettings` — the names, the dates, the venue
- * and its travel note — and the footer, the header's reply-by line and the thank-you page read the
- * same document. A title field here would be a second copy of the couple's names in a place where
- * the two could disagree, so the section has no content fields at all and the projection joins the
- * singleton in instead (see `sections/HeroSection/queries.groq.ts`), the way `twoColumnListSection`
- * joins the contribution copy.
- *
- * What an editor controls on the section is only what is genuinely per-placement: its theme and its
- * spacing, through `sectionFields`.
+ * `title` is free text, so the heading can say more than the names — "Sam & Lauren are getting
+ * married". Left blank, the heading falls back to the couple's names from `weddingSettings`, stacked
+ * as the comp draws them. Everything else the section shows — the dates, the venue and its travel
+ * note — still lives only on `weddingSettings`, which the footer, the header's reply-by line and the
+ * thank-you page also read, and the projection joins it in (see
+ * `sections/HeroSection/queries.groq.ts`).
  */
 interface IHeroSection {
+  /** The heading as typed. Blank or absent shows the couple's names instead. */
+  title?: string | null;
   /**
    * Joined from the singleton by the projection; `null` when the singleton has not been created.
    * The component renders every blank state, including this one.
@@ -96,7 +95,7 @@ const heroSection = defineType({
        * Studio opens on "All fields", so this description is the first thing they read.
        */
       description:
-        'Everything this section shows — the couple’s names, the dates, the venue, its street and travel note — comes from Wedding Settings. Edit it there; this section only sets the theme and spacing. The names are the page’s main heading, so place the hero once, as the first section.',
+        'The title is typed on this section; the dates, the venue, its street and travel note come from Wedding Settings. The title is the page’s main heading, so place the hero once, as the first section.',
       name: 'sectionPreview',
       title: 'Section Preview',
       type: 'image',
@@ -105,6 +104,14 @@ const heroSection = defineType({
       imageUrl: thumbnail.src,
       readOnly: true,
       group: 'internal'
+    },
+    {
+      description:
+        'The big heading, e.g. “Sam & Lauren are getting married”. Type it in normal case; it is displayed in capitals. Leave blank to show the couple’s names from Wedding Settings.',
+      group: 'data',
+      name: 'title',
+      title: 'Title',
+      type: 'string'
     },
     internalLabelField,
     {
@@ -123,19 +130,19 @@ const heroSection = defineType({
    * selected. With Data gone and no other default, the Studio opens on "All fields", where the
    * preview's description above is the first thing an editor reads.
    */
-  groups: defaultSectionGroups.filter((group) => group.name !== 'data'),
+  groups: defaultSectionGroups,
   icon: TbHearts,
   name: 'heroSection',
   preview: {
-    prepare(selection: { internalLabel?: string }) {
+    prepare(selection: { internalLabel?: string; title?: string }) {
       return {
-        // Says where the words come from, since nothing in the section list could show them.
-        subtitle: selection?.internalLabel || 'Names, dates and venue from Wedding Settings',
-        title: 'Hero'
+        subtitle: selection?.internalLabel || 'Hero',
+        title: selection?.title || 'Couple’s names from Wedding Settings'
       };
     },
     select: {
-      internalLabel: 'internalLabel'
+      internalLabel: 'internalLabel',
+      title: 'title'
     }
   },
   title: 'Hero',

@@ -413,6 +413,32 @@ export const EnlargedText: Story = {
 };
 
 /**
+ * A typed title, which replaces the stacked names. Set a step smaller, at `--display-md`, so a whole
+ * sentence fits: the heading must read as typed and must not run wider than the section.
+ */
+export const WithTitle: Story = {
+  args: { ...MOCK, title: 'Sam & Lauren are getting married' },
+  play: async ({ canvasElement }) => {
+    const heading = within(canvasElement).getByRole('heading', { level: 1 });
+
+    await expect(heading).toHaveTextContent('Sam & Lauren are getting married');
+    await expect(heading.scrollWidth).toBeLessThanOrEqual(heading.clientWidth);
+  }
+};
+
+/**
+ * A title of only whitespace counts as blank: the heading falls back to the couple's names.
+ */
+export const BlankTitle: Story = {
+  args: { ...MOCK, title: '   ' },
+  play: async ({ canvasElement }) => {
+    const heading = within(canvasElement).getByRole('heading', { level: 1 });
+
+    await expect(shown(heading)).toBe('Sam & Lauren');
+  }
+};
+
+/**
  * One partner only — the second left blank. The AC: no dangling ampersand.
  */
 export const OnePartner: Story = {
