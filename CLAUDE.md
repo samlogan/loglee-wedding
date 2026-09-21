@@ -150,7 +150,7 @@ All in `/components`:
 - **Queries**: GROQ queries in `tools/sanity/lib/queries.groq`
 - **Fetch**: `sanityFetch` utility with caching and revalidation
 - **Draft Mode**: Supports preview via `/api/draft` (Studio Presentation tool manages exit)
-- **Revalidation**: On-demand via `/api/revalidate` webhook
+- **Revalidation**: On-demand via the `/api/revalidate/` webhook (trailing slash required). `sanityFetch` reads the live API, not the CDN, so a revalidation never re-caches stale content
 
 #### Sanity Schema Patterns
 

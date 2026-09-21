@@ -6,8 +6,8 @@ import { token } from './token';
 
 /**
  * Used to fetch data in Server Components, it has built in support for handling Draft Mode and perspectives.
- * When using the "published" perspective then time-based revalidation is used, set to match the time-to-live on Sanity's API CDN (60 seconds)
- * and will also fetch from the CDN.
+ * When using the "published" perspective the response is cached by Next.js under its tags and refreshed on demand by the
+ * `/api/revalidate/` webhook. It is fetched from the live API, not the CDN — see the note on `useCdn` below.
  * When using the "drafts" perspective then the data is fetched from the live API and isn't cached, it will also fetch draft content that isn't published yet.
  */
 export async function sanityFetch<QueryResponse>({
@@ -45,10 +45,19 @@ export async function sanityFetch<QueryResponse>({
   return client.fetch<QueryResponse>(query, params, {
     stega,
     perspective: 'published',
-    // The `published` perspective is available on the API CDN
-    useCdn: true,
+    /*
+     * The live API, not the CDN. Next's data cache is the cache here: a tagged response is kept until
+     * the webhook revalidates its tag, so Sanity is only asked again after an edit. That refetch runs
+     * the moment the webhook lands, and Sanity's API CDN can still hold the pre-edit result for a
+     * short while after a mutation — so through the CDN, Next could re-cache the stale content and
+     * keep serving it until the next edit. The live API is current as soon as the mutation commits.
+     *
+     * This replaces the `/api/revalidate/queue` route, which delayed the revalidation 60s via QStash
+     * to wait the CDN out. Sanity's Next.js guide recommends the same: CDN off for webhook-driven
+     * revalidation and anywhere guaranteed-fresh data is needed.
+     */
+    useCdn: false,
     // Only enable Stega in production if it's a Vercel Preview Deployment, as the Vercel Toolbar supports Visual Editing
-    // When using the `published` perspective we use time-based revalidation to match the time-to-live on Sanity's API CDN (60 seconds)
     next: { tags: tags }
   });
 }

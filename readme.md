@@ -66,8 +66,10 @@ Run `/project-setup` to replace all placeholders with your project's branding.
    - Create another token named **'Write Token'** with **'Editor'** permissions
    - Update `SANITY_WRITE_TOKEN` with the new token (used for content mutations and visual editing)
    - Under **Webhooks** (or via Sanity CLI):
-     - Create a webhook pointing to `{SITE_URL}/api/revalidate`
-     - Set a secret string and update `SANITY_WEBHOOK_SECRET` in your environment (this secures the on-demand revalidation endpoint)
+     - Create a webhook pointing to `{SITE_URL}/api/revalidate/` — with the trailing slash. Without it the site answers
+       `308`, and the redirected request loses its body, so nothing is revalidated
+     - Add an HTTP header `Authorization` with the value `Bearer {secret}`, and set the same `{secret}` as
+       `SANITY_WEBHOOK_SECRET` in your environment. The endpoint checks that header, not the webhook's own Secret field
 
 6. **Set Up MCP Integrations (Claude Code):**
    - Duplicate `.mcp.template.json` to `.mcp.json` at the project root
