@@ -7,7 +7,7 @@ import { matchModelClip, resolveModelClip } from './modelClips';
  * invented. Meshy names each clip after its source animation, which is why the names look like
  * this and why the schema pre-fills nothing.
  */
-const SAM = ['Running', 'Walking', 'Agree_Gesture', 'Excited_Walk_M', 'FunnyDancing_03', 'Gangnam_Groove', 'restpose'];
+const SAM = ['Running', 'Walking', 'Excited_Walk_M', 'Gangnam_Groove', 'restpose'];
 
 describe('matchModelClip', () => {
   it('matches a name verbatim', () => {
@@ -53,11 +53,11 @@ describe('matchModelClip', () => {
 });
 
 describe('resolveModelClip', () => {
-  const clips = { idle: 'Excited_Walk_M', hover: 'Agree_Gesture', feature: 'Gangnam_Groove' };
+  const clips = { idle: 'Excited_Walk_M', hover: 'Walking', feature: 'Gangnam_Groove' };
 
   it('resolves each role to its own clip when all three are authored and present', () => {
     expect(resolveModelClip('idle', clips, SAM)).toBe('Excited_Walk_M');
-    expect(resolveModelClip('hover', clips, SAM)).toBe('Agree_Gesture');
+    expect(resolveModelClip('hover', clips, SAM)).toBe('Walking');
     expect(resolveModelClip('feature', clips, SAM)).toBe('Gangnam_Groove');
   });
 

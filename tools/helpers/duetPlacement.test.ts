@@ -18,7 +18,7 @@ import {
  *
  * The expensive fact about this scene — the worst-case distance between the two dancing skeletons —
  * cannot be recomputed here. Establishing it means decoding two meshopt-compressed GLBs, walking
- * both rigs across every phase combination of a 6.25s loop and a 10.21s one, and comparing a few
+ * both rigs across every phase combination of a 7.21s loop and a 10.21s one, and comparing a few
  * million point pairs. That is a couple of seconds and two four-megabyte files, in a project whose
  * `unit` suite is gated on every `/commit` precisely because it runs in well under a second.
  *
@@ -34,9 +34,9 @@ import {
  *     placement the measurement was taken at, and says so in the failure message.
  *
  * The thing worth being honest about: a cylinder bound would be the obvious test here, and it would
- * be **wrong**. Lauren sweeps ±0.65m and Sam ±0.665m, so treating each as a cylinder demands
- * 1.315m between the marks — and the shipped placement is 1.21m apart. A test asserting the bound
- * would fail on a scene that has a measured 0.395m of clearance, because the bound assumes both of
+ * be **wrong**. Lauren sweeps ±0.587m and Sam ±0.514m, so treating each as a cylinder demands
+ * 1.101m between the marks — and the shipped placement is 1.090m apart. A test asserting the bound
+ * would fail on a scene that has a measured 0.425m of clearance, because the bound assumes both of
  * them reach their furthest point, toward each other, at the same instant. They do not.
  */
 
@@ -89,14 +89,14 @@ describe('duet placement', () => {
      * *these* coordinates, and nothing in the type system ties the two together.
      *
      * Compared component-wise with a tolerance rather than by deep equality, because the marks are
-     * built by adding the optical recentring to the half-lateral and `-0.4 + 0.1` is
-     * `-0.30000000000000004` in binary floating point. A deep-equality tripwire would have to spell
+     * built by adding the optical recentring to the half-lateral and `-0.3 + 0.1` is
+     * `-0.19999999999999998` in binary floating point. A deep-equality tripwire would have to spell
      * that out, and would then fail the moment anyone refactored the arithmetic into a different —
      * equally correct — order.
      */
     const measuredAt = {
-      back: { rotationY: 0.15, x: 0.5, z: -0.91 },
-      front: { rotationY: -0.15, x: -0.3, z: 0 }
+      back: { rotationY: 0.15, x: 0.4, z: -0.91 },
+      front: { rotationY: -0.15, x: -0.2, z: 0 }
     };
 
     expect(DUET_FRONT.position[0]).toBeCloseTo(measuredAt.front.x, 6);
@@ -108,7 +108,7 @@ describe('duet placement', () => {
   });
 
   it('clears the meshes at the tightest moment of both loops', () => {
-    // 0.395m bone-to-bone, of which roughly 0.16m is mesh rather than air. Re-run
+    // 0.425m bone-to-bone, of which roughly 0.16m is mesh rather than air. Re-run
     // `yarn duet:measure` if this needs changing; do not adjust the constant to match a new
     // placement without it.
     expect(DUET_MEASURED_CLEARANCE).toBeGreaterThan(DUET_CLEARANCE_FLOOR);
@@ -147,7 +147,7 @@ describe('duet framing', () => {
     /*
      * The one framing fact that is genuinely derivable without a renderer.
      *
-     * Measured at each dancer's mark rather than at the target. Sam's 2.247m jump is 0.91m further
+     * Measured at each dancer's mark rather than at the target. Sam's 2.026m jump is 0.91m further
      * from the camera than Lauren's feet, and the frame is taller there. Measuring his peak at the
      * front row's distance, as this test first did, understated the room by a fifth and would fail
      * the framing `yarn duet:measure` confirms.

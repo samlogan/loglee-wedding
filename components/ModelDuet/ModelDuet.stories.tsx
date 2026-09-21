@@ -13,8 +13,8 @@ import ModelDuet from '.';
  */
 const ALT = 'Sam and Lauren, as 3D characters, dancing together';
 
-/** Near-square, because the stage is 0.92:1 — `mockImage` ranks the pool by how close the shape is. */
-const FALLBACK = mockImage({ altText: ALT, height: 696, seed: 'model-duet', width: 640 });
+/** Portrait, because the stage is 0.84:1 — `mockImage` ranks the pool by how close the shape is. */
+const FALLBACK = mockImage({ altText: ALT, height: 762, seed: 'model-duet', width: 640 });
 
 /**
  * `Foundations`, beside `Foundations/Model Viewer`, and for the same reason that one gives.
@@ -75,7 +75,7 @@ const stageOf = (block: HTMLElement) => block.querySelector(':scope > div') as H
  * passes an explicit `mode`. An explicit mode overrides *policy*; it cannot conjure a renderer.
  *
  * What is **not** asserted here is the geometry. Whether the two of them pass through each other is
- * a fact about a 6.25s loop against a 10.21s one, and no single rendered frame can settle it —
+ * a fact about a 7.21s loop against a 10.21s one, and no single rendered frame can settle it —
  * `tools/helpers/duetPlacement.test.ts` holds the invariants and `yarn duet:measure` recomputes the
  * clearance from the files. What the browser *can* settle, and does below, is layout: that the
  * stage keeps a shape the scene fits in, at a real viewport, with a real layout engine.
@@ -237,7 +237,7 @@ export const Loading: Story = {
  * This is the one thing on this page a real layout engine is needed for, and it is why the story
  * asserts a *measured* ratio rather than reading the declared `aspect-ratio` back out of the
  * stylesheet. `max-height: 80svh` and `max-width` can both override the ratio silently, and a
- * stage that quietly went taller than `DUET_MIN_ASPECT` (0.829:1) would crop a hand at the one moment the two loops
+ * stage that quietly went taller than `DUET_MIN_ASPECT` (0.773:1) would crop a hand at the one moment the two loops
  * peak together — which is to say, not on load, and not in a screenshot.
  */
 export const Narrow: Story = {
