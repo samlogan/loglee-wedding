@@ -97,6 +97,21 @@ $hero-street-inline-switch: 400px;
     display: block;
   }
 
+  /*
+   * The handwritten byline. Caveat replaces the heading family; the heading tier's tracking and
+   * capitals are for Archivo and would space a script out letter by letter, so both are reset.
+   * The small negative margin tucks it up under the names' baseline, the way a line written after
+   * the fact sits closer than set type would, and the slight tilt is the hand.
+   */
+  .byline {
+    margin-block-start: -0.1em;
+    font-family: var(--script-font), cursive;
+    letter-spacing: 0;
+    text-transform: none;
+    rotate: -2deg;
+    transform-origin: left center;
+  }
+
   .meta {
     display: flex;
     /*
