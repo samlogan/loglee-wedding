@@ -7,8 +7,13 @@
  *   panel stroke  #1e4632  pine/600   → `--fg-accent`       exact
  *   chrome ink    #1e4632  pine/600   → `--fg-accent`       exact
  *   chip fill     #f3f1ea  stone/50   → `--bg-default`      exact
- *   empty arch    #e8e5dc  stone/200  → `--bg-accent`       reads 5 points light; see below
- *   hatch stripe  #dcd9cf  stone/300  → `--fg-subtle` at 34%   composites to #dbd9d0
+ *   arch          #e1dfd8  stage-ground → `--bg-stage`      replaces the comp's stone, see below
+ *   hatch stripe  —                     → `--fg-default` at 8%, a darker shade of the ground
+ *
+ * The comp's loaded arch was the near-white stone/25. A darker ground replaced it at the client's
+ * request so Lauren's white gown separates from it — on stone/25 it all but disappeared. The arch
+ * and its empty state are now the one colour, so the loading hatch is what tells them apart. The notes below on the stone pair are the history of
+ * the split between the arch and its placeholder, which still stands.
  *
  * `--fg-accent` is pine/600 on the light theme — the `#1e4632` the comp sets the stroke and all
  * three chrome runs in — and **signal/300 on the dark one**, so the frame and the labels both go
@@ -190,7 +195,7 @@
      * inherit`. The arch's own `--bg-raised` still paints in the arch's shape, because `border-radius`
      * clips a background without any help from `overflow`.
      */
-    background-color: var(--bg-raised);
+    background-color: var(--bg-stage);
     /*
      * Vertical swipes scroll the page, including ones that start on the character.
      *
@@ -221,7 +226,7 @@
      * `opacity` is the fade-out and it has to leave the ground at full strength.
      * 34% is the measured match against the comp's stone/300 stripe; see the top of this file.
      */
-    --viewer-hatch-ink: color-mix(in srgb, var(--fg-subtle) 34%, transparent);
+    --viewer-hatch-ink: color-mix(in srgb, var(--fg-default) 8%, transparent);
 
     position: absolute;
     inset: 0;
@@ -232,7 +237,7 @@
      * and the arch's own `--bg-raised` is what is revealed when it goes, rather than something that
      * has to show through it. See the note at the top of this file on why the two are split.
      */
-    background-color: var(--bg-accent);
+    background-color: var(--bg-stage);
     overflow: hidden;
     opacity: 1;
     transition: opacity 400ms ease;

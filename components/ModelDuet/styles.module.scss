@@ -65,7 +65,8 @@
     border-radius: var(--radius-md);
     /* Clips the canvas, the fallback image and the hatch to the rounded box. */
     overflow: hidden;
-    background-color: var(--bg-raised);
+    /* `--bg-stage` rather than a stone surface: Lauren's white gown all but vanished against stone/25. */
+    background-color: var(--bg-stage);
   }
 
   /*
@@ -84,11 +85,11 @@
      * `opacity` is the fade-out and the breathe, and the ground has to stay at full strength
      * underneath both.
      */
-    --duet-hatch-ink: color-mix(in srgb, var(--fg-subtle) 34%, transparent);
+    --duet-hatch-ink: color-mix(in srgb, var(--fg-default) 8%, transparent);
 
     position: absolute;
     inset: 0;
-    background-color: var(--bg-accent);
+    background-color: var(--bg-stage);
     /*
      * Both hard stops sit on the same position, so there is no interpolation into `transparent`
      * and none of the grey-out that premultiplied alpha produces across a soft gradient.
