@@ -245,9 +245,11 @@ const groundClips = (animations: AnimationClip[], root: Object3D | null, model: 
  * the environment, and black cloth that mirrors a softbox reads as leather or latex. That is the
  * "way too metallic" look, though no metal is involved. A constant matte roughness fixes it where a
  * lower environment intensity would not: that darkens the diffuse light along with the highlights.
- * 0.85 leaves a soft sheen on skin and trainers without a mirror anywhere.
+ * 0.95, raised from 0.85 when the client asked for a little less shine: it keeps only the faintest
+ * sheen. The bright flecks on Sam's jacket that still read as metallic are painted into the
+ * base-colour texture by the export, not reflections, so no material setting reaches them.
  */
-const MATTE_ROUGHNESS = 0.85;
+const MATTE_ROUGHNESS = 0.95;
 
 /**
  * Take the gloss off a cached GLB's materials, once.
