@@ -53,7 +53,7 @@ const ROSTER: PlayerShowcaseRosterEntry[] = [
 
 /** The clip names as they actually appear inside each GLB — see `components/ModelViewer`. */
 const SAM: PlayerShowcasePlayer = {
-  clips: { feature: 'Gangnam_Groove', hover: 'Agree_Gesture', idle: 'restpose' },
+  clips: { feature: 'Gangnam_Groove', hover: 'Excited_Walk_M', idle: 'restpose' },
   eyebrow: 'P1 · Groom',
   level: 'Lvl 33',
   model: { url: '/sam.glb' },
@@ -65,7 +65,7 @@ const SAM: PlayerShowcasePlayer = {
 };
 
 const LAUREN: PlayerShowcasePlayer = {
-  clips: { feature: 'Crystal_Beads', idle: 'restpose' },
+  clips: { feature: 'Boom_Dance', idle: 'Casual_Walk' },
   model: { url: '/lauren.glb' },
   modelBadge: 'lauren.glb',
   modelLabel: '3D canvas · dance',

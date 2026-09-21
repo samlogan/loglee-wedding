@@ -69,15 +69,14 @@ const atViewport = (value: 'comp390' | 'desktop' | 'mobile1') => ({ viewport: { 
  * documents in the committed fixtures, so these stand in for the join.
  *
  * The GLBs are the real ones in `public/`, served by Storybook's `staticDirs`. The clip names are
- * real too, read out of each file — `Agree_Gesture` and `Excited_Walk_M` from `sam.glb`,
- * `Cardio_Dance` and `Breakdance_1990` from `lauren.glb` — but *which* clip is idle and which is
- * hover is the content work MAM-1900 owns; the published players carry placeholders today.
+ * real too, read out of each file, and set the way the published players set them: Sam idles on
+ * `Walking` and hovers `Excited_Walk_M`, Lauren idles on `Casual_Walk` and hovers `Boom_Dance`.
  *
  * No fallback image on either, matching the dataset.
  */
 const SAM: IPlayerSelectSectionPlayer = {
   _id: 'player-sam',
-  clips: { hover: 'Agree_Gesture', idle: 'Excited_Walk_M' },
+  clips: { hover: 'Excited_Walk_M', idle: 'Walking' },
   fallbackImage: null,
   model: { asset: { url: '/sam.glb' } },
   name: 'Sam',
@@ -86,7 +85,7 @@ const SAM: IPlayerSelectSectionPlayer = {
 
 const LAUREN: IPlayerSelectSectionPlayer = {
   _id: 'player-lauren',
-  clips: { hover: 'Breakdance_1990', idle: 'Cardio_Dance' },
+  clips: { hover: 'Boom_Dance', idle: 'Casual_Walk' },
   fallbackImage: null,
   model: { asset: { url: '/lauren.glb' } },
   name: 'Lauren',
@@ -552,7 +551,7 @@ export const DarkTheme: Story = {
  * (see the note on `modelMode`). Lauren has no GLB here, so only one 4MB character is decoded on the
  * CPU — the slow part of any canvas story — and her card doubles as the placeholder beside a loaded one.
  *
- * The hover clip is `Running` rather than `Agree_Gesture` purely for its length: 0.71s against 13.08s,
+ * The hover clip is `Running` rather than `Excited_Walk_M` purely for its length: 0.71s against 11s,
  * the same substitution `ModelViewer.stories.tsx` makes, and the same code path.
  */
 export const Loaded: Story = {

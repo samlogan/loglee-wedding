@@ -18,7 +18,7 @@ const SRC = '/sam.glb';
  * and why `player.clips` pre-fills nothing — the names differ per character, so there is no shared
  * list worth defaulting.
  */
-const CLIPS = { idle: 'Excited_Walk_M', hover: 'Agree_Gesture', feature: 'Gangnam_Groove' };
+const CLIPS = { idle: 'Walking', hover: 'Excited_Walk_M', feature: 'Gangnam_Groove' };
 
 const ALT = 'Sam, as a 3D character, dancing on the spot';
 
@@ -341,9 +341,9 @@ export const MissingClip: Story = {
  * crossfades back. Both directions are asserted here, which is the whole of "plays once, returns to
  * idle" — a one-shot that never returns looks identical for its first second.
  *
- * **The hover clip is `Running` rather than the plausible `Agree_Gesture`, and only because of its
- * length.** `Agree_Gesture` runs 13.08s in this file; a story that waits for it to finish would add
- * fourteen seconds to every `yarn test`. `Running` is 0.71s and exercises exactly the same code
+ * **The hover clip is `Running` rather than the published `Excited_Walk_M`, and only because of its
+ * length.** `Excited_Walk_M` runs 11s in this file; a story that waits for it to finish would add
+ * twelve seconds to every `yarn test`. `Running` is 0.71s and exercises exactly the same code
  * path. The choreography is MAM-1901's decision; the mechanism is this story's.
  *
  * Note the trigger is the arch, not the model — pointer events are taken on the DOM element rather

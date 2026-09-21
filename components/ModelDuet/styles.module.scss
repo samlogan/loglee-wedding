@@ -3,13 +3,13 @@
  *
  * ## The shape, and why it is capped in both directions
  *
- * `aspect-ratio` is 0.92, which is `DUET_NATURAL_ASPECT` in `duetPlacement.ts`: the ratio at which the pair
+ * `aspect-ratio` is 0.84, which is `DUET_NATURAL_ASPECT` in `duetPlacement.ts`: the ratio at which the pair
  * exactly fills the frame in both axes. That file has the measurements and the table; the one thing
  * worth repeating here, because it is the opposite of the intuition a portrait layout encourages,
  * is which direction is dangerous. A three.js `fov` is vertical, so the visible world *height* is
  * fixed whatever shape this box takes and vertical fit is never in question. Width is the only
  * thing this stylesheet can take away, so **wider is safe and taller is not**, with the floor at
- * 0.83 — below which a hand leaves the frame at the one moment both loops peak together.
+ * 0.77 — below which a hand leaves the frame at the one moment both loops peak together.
  *
  * The ratio alone is not enough, because it has no idea how big the column is. Unbounded, a 1280px
  * content column would make this about 1390px tall — a scene you have to scroll to see. So it is
@@ -52,8 +52,8 @@
     --duet-hatch-step: 2.6cqw;
 
     position: relative;
-    /* See the file header: 0.92 is the natural ratio, floor 0.83, and wider is the safe direction. */
-    aspect-ratio: 0.92;
+    /* See the file header: 0.84 is the natural ratio, floor 0.77, and wider is the safe direction. */
+    aspect-ratio: 0.84;
     width: 100%;
     max-width: 640px;
     /*

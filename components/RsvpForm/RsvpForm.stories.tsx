@@ -69,7 +69,7 @@ const atWidth: Decorator = (Story, { parameters }) => (
 /** The two players' models, as the page fetches them — the committed GLBs in `public/`. */
 const MODELS = [
   {
-    clips: { feature: 'Gangnam_Groove', hover: 'Agree_Gesture', idle: 'Excited_Walk_M' },
+    clips: { feature: 'Gangnam_Groove', hover: 'Excited_Walk_M', idle: 'Walking' },
     name: 'Sam',
     src: '/sam.glb'
   },
