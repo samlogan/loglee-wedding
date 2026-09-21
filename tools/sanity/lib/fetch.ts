@@ -4,6 +4,9 @@ import { draftMode } from 'next/headers';
 import { client } from './client';
 import { token } from './token';
 
+/** The cache tag every published Sanity read carries. Expiring it refreshes all Sanity content at once. */
+export const SANITY_CACHE_TAG = 'sanity';
+
 /**
  * Used to fetch data in Server Components, it has built in support for handling Draft Mode and perspectives.
  * When using the "published" perspective the response is cached by Next.js under its tags and refreshed on demand by the
@@ -58,6 +61,12 @@ export async function sanityFetch<QueryResponse>({
      */
     useCdn: false,
     // Only enable Stega in production if it's a Vercel Preview Deployment, as the Vercel Toolbar supports Visual Editing
-    next: { tags: tags }
+    /*
+     * `SANITY_CACHE_TAG` on every published read, on top of the caller's own. It is the handle the
+     * revalidate webhook pulls: one tag that reaches every cached Sanity response, including the
+     * layout's header, socials and wedding-settings reads, which were fetched untagged and so could
+     * only be reached through `revalidatePath` — which did not reliably expire them.
+     */
+    next: { tags: [SANITY_CACHE_TAG, ...tags] }
   });
 }
