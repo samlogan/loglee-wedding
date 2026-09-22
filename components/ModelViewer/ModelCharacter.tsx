@@ -1,12 +1,14 @@
 'use client';
 
 import { useAnimations, useGLTF } from '@react-three/drei';
-import { useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { AnimationMixer, LoopOnce, LoopRepeat, PropertyBinding, Vector3 } from 'three';
 import type { AnimationAction, AnimationClip, Bone, Mesh, MeshStandardMaterial, Object3D, SkinnedMesh } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 
+import { findClipExit } from '@/helpers/clipExit';
+import type { Pose } from '@/helpers/clipExit';
 import { matchModelClip, resolveModelClip } from '@/helpers/modelClips';
 import type { ModelClipNames, ModelRestRole } from '@/helpers/modelClips';
 
@@ -79,11 +81,45 @@ const ORIGIN: [number, number, number] = [0, 0, 0];
  * `warp` is on, so the outgoing clip's playback rate is bent towards the incoming one over the
  * fade. Without it two clips of different length visibly fight for the same skeleton.
  */
-const crossFade = (next: AnimationAction, previous: AnimationAction | null) => {
+const crossFade = (next: AnimationAction, previous: AnimationAction | null, duration = FADE) => {
   next.reset().play();
   if (previous && previous !== next) {
-    next.crossFadeFrom(previous, FADE, true);
+    next.crossFadeFrom(previous, duration, true);
   }
+};
+
+/**
+ * The crossfade out of the hover one-shot, at its exit point. Longer than `FADE`, because this one
+ * blends two moving clips into each other, and the extra time is what makes the dance read as
+ * settling into the walk rather than switching to it.
+ */
+const EXIT_FADE = 0.6;
+
+/**
+ * The bones a pose is compared on — the ones whose rotation reads as a stance: spine, neck, head,
+ * shoulders, arms and legs. Hands, fingers and feet are left out, because their many small bones
+ * would outvote the body in an average; the hips are left out because `groundClips` pins them.
+ */
+const POSE_BONE = /(Spine|Neck|Head|Shoulder|Arm|Leg)[^.]*\.quaternion$/;
+
+/**
+ * Read an `AnimationClip` as a function from time to pose, over the `POSE_BONE` bones.
+ *
+ * Built on each track's own linear interpolant, which is how the mixer plays these tracks. The
+ * interpolant returns a shared buffer, so each value is copied out before the next evaluation.
+ */
+const poseSampler = (clip: AnimationClip) => {
+  const tracks = clip.tracks
+    .filter((track) => POSE_BONE.test(track.name))
+    .map((track) => ({
+      bone: track.name.replace(/\.quaternion$/, ''),
+      // On a `QuaternionKeyframeTrack` this is three's `QuaternionLinearInterpolant` — a slerp — at
+      // runtime, though the types declare the base `LinearInterpolant`.
+      interpolant: track.InterpolantFactoryMethodLinear(new Float32Array(track.getValueSize()))
+    }));
+
+  return (time: number): Pose =>
+    Object.fromEntries(tracks.map(({ bone, interpolant }) => [bone, [...interpolant.evaluate(time)]]));
 };
 
 /** How many poses across a clip `clipFloor` samples. Enough to catch a crouch; one-off cost per model. */
@@ -391,6 +427,30 @@ const ModelCharacter = (props: ModelCharacterProps) => {
    */
   const hover = matchModelClip(clips?.hover, names);
 
+  /*
+   * Where the hover one-shot hands back to the rest loop, and which step of the loop it picks up at.
+   *
+   * Played to its last frame, a Meshy dance often stops mid-move, and the crossfade out of it read as
+   * the character snapping out of the dance — Lauren's `Boom_Dance` ends about 27° (averaged over the
+   * body's bones) from any pose in her `Casual_Walk`. `findClipExit` finds the moment in the last 40%
+   * of the dance that passes closest to the walk (for her, 6.4s of 7.2s, at about 21°) and the walk's
+   * matching step, and the frame check below hands over there. Worked out once per model and clip
+   * pair, from the clips themselves, so any model gets it without per-clip numbers.
+   */
+  const exit = useMemo(() => {
+    const hoverClip = hover ? grounded.find((clip) => clip.name === hover) : undefined;
+    const restClip = rest ? grounded.find((clip) => clip.name === rest) : undefined;
+    if (!hoverClip || !restClip || hoverClip === restClip) {
+      return null;
+    }
+    return findClipExit({
+      duration: hoverClip.duration,
+      restDuration: restClip.duration,
+      restSample: poseSampler(restClip),
+      sample: poseSampler(hoverClip)
+    });
+  }, [grounded, hover, rest]);
+
   /** The action currently holding the skeleton, so a fade always has something to fade *from*. */
   const current = useRef<AnimationAction | null>(null);
 
@@ -505,6 +565,31 @@ const ModelCharacter = (props: ModelCharacterProps) => {
     target.addEventListener('finished', onFinished);
     return () => target.removeEventListener('finished', onFinished);
   }, [actions, animate, mixer, onClip, rest]);
+
+  /*
+   * Hand the hover one-shot back to the rest loop at its exit point, into the loop's matching step.
+   *
+   * Checked every frame against the action's own clock rather than on a timer, so it follows the
+   * mixer through tab throttling and frame drops. Once handed over, `current` is the rest action, so
+   * this stops matching and the `finished` handler above ignores the one-shot's end. When there is no
+   * exit (no rest clip, or a clip with no bones in common), the `finished` handler still returns the
+   * character at the clip's end, as before.
+   */
+  useFrame(() => {
+    if (!exit || !animate || !hover || !rest) {
+      return;
+    }
+    const hoverAction = actions[hover];
+    const restAction = actions[rest];
+    if (!hoverAction || !restAction || current.current !== hoverAction || hoverAction.time < exit.at) {
+      return;
+    }
+    restAction.setLoop(LoopRepeat, Number.POSITIVE_INFINITY);
+    crossFade(restAction, hoverAction, EXIT_FADE);
+    restAction.time = exit.restAt;
+    current.current = restAction;
+    onClip?.(rest);
+  });
 
   return (
     <group position={position} rotation-y={rotationY}>
