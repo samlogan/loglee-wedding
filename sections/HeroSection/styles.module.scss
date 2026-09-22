@@ -102,9 +102,14 @@ $hero-street-inline-switch: 400px;
    * capitals are for Archivo and would space a script out letter by letter, so both are reset.
    * The small negative margin tucks it up under the names' baseline, the way a line written after
    * the fact sits closer than set type would, and the slight tilt is the hand.
+   *
+   * Plum, #972a6a — `--button-accent-bg` rather than `--signal-300` itself, because that token is
+   * the theme-aware accent: plum on light, and the light signal/100 tint on dark, where plum on pine
+   * would be 1.44:1. `Text`'s colour prop has no plum option, so it is set here.
    */
   .byline {
     margin-block-start: -0.1em;
+    color: var(--button-accent-bg);
     font-family: var(--script-font), cursive;
     letter-spacing: 0;
     text-transform: none;
