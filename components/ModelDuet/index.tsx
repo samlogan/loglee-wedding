@@ -9,8 +9,8 @@ import type { ModelEnvironmentPreset } from '@/components/ModelViewer/ModelLight
 import useModelCapability, { hasRenderer, prefersReducedMotion } from '@/components/ModelViewer/useModelCapability';
 import type { ModelCapability } from '@/components/ModelViewer/useModelCapability';
 import classNames from '@/helpers/classNames';
-import { DUET_BACK, DUET_FRONT } from '@/helpers/duetPlacement';
-import type { DuetPlacement } from '@/helpers/duetPlacement';
+import { DUET_BACK, DUET_FRAMING, DUET_FRONT } from '@/helpers/duetPlacement';
+import type { DuetFraming, DuetPlacement } from '@/helpers/duetPlacement';
 
 import { preloadDuet } from './preload';
 
@@ -72,6 +72,16 @@ export interface ModelDuetProps {
    * exception, and it is chosen for precisely the devices least able to absorb a lazy load.
    */
   priority?: boolean;
+  /**
+   * Camera, look-at target and shadow plane. Defaults to the thank-you scene's measured framing
+   * (`DUET_FRAMING`); the RSVP rail passes `WALK_FRAMING` for its side-by-side walk.
+   */
+  framing?: DuetFraming;
+  /**
+   * `false` drops the stage's fill, rounded corners and loading hatch, so the pair stands on the
+   * page itself — as `ModelViewer`'s prop of the same name does for one character.
+   */
+  backdrop?: boolean;
 }
 
 /**
@@ -117,10 +127,12 @@ export interface ModelDuetProps {
 const ModelDuet = (props: ModelDuetProps) => {
   const {
     alt,
+    backdrop = true,
     characters = DEFAULT_CHARACTERS,
     className,
     environmentPreset = DEFAULT_PRESET,
     fallbackImage,
+    framing = DUET_FRAMING,
     mode = 'auto',
     priority = false
   } = props;
@@ -264,7 +276,7 @@ const ModelDuet = (props: ModelDuetProps) => {
 
   return (
     <div
-      className={classNames(styles.duet, className)}
+      className={classNames(styles.duet, { [styles.noBackdrop]: !backdrop }, className)}
       data-model-loaded={render === 'canvas' ? String(loaded) : undefined}
       data-model-mode={resolved}
       data-model-render={render}
@@ -294,6 +306,7 @@ const ModelDuet = (props: ModelDuetProps) => {
               animate={resolved === 'animated'}
               characters={characters}
               environmentPreset={environmentPreset}
+              framing={framing}
               onCharacterReady={handleCharacterReady}
               onError={handleError}
             />

@@ -23,7 +23,7 @@ import { submitRsvp } from './actions';
  * width the rail and the questions were drawn against.
  */
 const RsvpPage = async () => {
-  // The players' models, for the character in the rail — chosen at random in the browser, per visit.
+  // The players' models, for the pair walking side by side in the rail.
   const models = await sanityFetch<RsvpModelOption[] | null>({
     params: { routes: [...PLAYER_SLUGS] },
     query: RSVP_MODELS_QUERY,

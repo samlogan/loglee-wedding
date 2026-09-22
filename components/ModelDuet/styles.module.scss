@@ -183,4 +183,22 @@
       background-image: none;
     }
   }
+
+  /*
+   * `backdrop={false}` — no stage fill behind the pair, for the RSVP rail, where they walk on the page
+   * itself. The stage keeps its size, so the framing is unchanged; the fill, the rounded clip and the
+   * loading hatch go. The hatch is made transparent rather than removed, because while nothing else is
+   * on the stage it carries the accessible name. Two classes, so this beats `.stage` and `.placeholder`.
+   */
+  .noBackdrop {
+    .stage {
+      border-radius: 0;
+      background-color: transparent;
+    }
+
+    .placeholder {
+      opacity: 0;
+      animation: none;
+    }
+  }
 }

@@ -108,7 +108,7 @@ const plusOneSwitch = (canvas: ReturnType<typeof within>) =>
 const submitButton = (canvas: ReturnType<typeof within>) => canvas.getByRole('button', { name: /send rsvp|saved/i });
 
 /** The character in the rail, found by the name `ModelViewer` gives whatever is in the arch. */
-const railModel = (canvas: ReturnType<typeof within>) => canvas.queryByRole('img', { name: /as a 3D character/ });
+const railModel = (canvas: ReturnType<typeof within>) => canvas.queryByRole('img', { name: /as (a )?3D characters?/ });
 
 /**
  * The element that describes a control, which must also be a live region — that is what makes the
@@ -172,7 +172,9 @@ export const RailModel: Story = {
     const rail = canvas.getByRole('heading', { level: 1 }).parentElement as HTMLElement;
     await expect(getComputedStyle(rail).position).toBe('sticky');
 
-    await waitFor(() => expect(railModel(canvas)).toHaveAccessibleName(/^(Sam|Lauren), as a 3D character$/));
+    await waitFor(() =>
+      expect(railModel(canvas)).toHaveAccessibleName('Sam and Lauren, as 3D characters, walking side by side')
+    );
     await expect(rail.contains(railModel(canvas))).toBe(true);
   }
 };
