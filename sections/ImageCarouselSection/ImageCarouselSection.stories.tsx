@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { MAX_NUDGE } from '@/helpers/carouselRatios';
+import { MAX_SLIDES } from '@/helpers/pickSlides';
 import type { IImageCarouselSection } from '@/tools/sanity/schema/sections/imageCarouselSection';
 import mockImage from '@/tools/storybook/mockImage';
 import sectionFixture from '@/tools/storybook/sectionFixture';
@@ -93,16 +95,31 @@ export const MixedShapes: Story = {
       await expect(Math.abs(boxes[index].height - next.height)).toBeGreaterThan(1);
     }
 
-    // Close to 3:2 — the neighbouring steps on the ladder, all landscape, none a portrait.
+    // Close to 3:2 — nudged at most MAX_NUDGE either way, all landscape, none a portrait.
     for (const box of boxes) {
-      await expect(box.width / box.height).toBeGreaterThanOrEqual(4 / 3 - 0.01);
-      await expect(box.width / box.height).toBeLessThanOrEqual(16 / 9 + 0.01);
+      await expect(box.width / box.height).toBeGreaterThanOrEqual(1.5 * Math.exp(-MAX_NUDGE) - 0.01);
+      await expect(box.width / box.height).toBeLessThanOrEqual(1.5 * Math.exp(MAX_NUDGE) + 0.01);
     }
 
     // Five photographs, each exposed once.
     const visible = slides.filter((slide) => slide.getAttribute('aria-hidden') !== 'true');
     await expect(visible).toHaveLength(SHAPES.length);
     await expect(within(canvasElement).getAllByRole('img')).toHaveLength(SHAPES.length);
+  }
+};
+
+/**
+ * The published list — fifty photographs — shows twelve at most, each read once, and a random twelve:
+ * the story runs in a browser, where the track has rolled its seed, so which twelve varies per load.
+ */
+export const AtMostTwelve: Story = {
+  args: PUBLISHED,
+  globals: { viewport: { value: 'desktop' } },
+  play: async ({ canvasElement }) => {
+    const published = PUBLISHED.images?.filter((image) => image?.asset?.url).length ?? 0;
+    const visible = slidesOf(canvasElement).filter((slide) => slide.getAttribute('aria-hidden') !== 'true');
+
+    await expect(visible).toHaveLength(Math.min(published, MAX_SLIDES));
   }
 };
 
@@ -116,8 +133,16 @@ export const LandscapeWider: Story = {
   },
   globals: { viewport: { value: 'desktop' } },
   play: async ({ canvasElement }) => {
-    const [portrait, landscape] = slidesOf(canvasElement).map((slide) => slide.getBoundingClientRect());
+    // Found by shape, not position: the track shuffles its photographs on every visit.
+    const boxes = slidesOf(canvasElement).map((slide) => slide.getBoundingClientRect());
+    const portrait = boxes.find((box) => box.width < box.height);
+    const landscape = boxes.find((box) => box.width > box.height);
 
+    await expect(portrait).toBeDefined();
+    await expect(landscape).toBeDefined();
+    if (!(portrait && landscape)) {
+      return;
+    }
     await expect(landscape.width).toBeGreaterThan(portrait.width * 1.2);
     await expect(landscape.height).toBeLessThan(portrait.height);
   }
