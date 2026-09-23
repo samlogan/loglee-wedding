@@ -28,6 +28,26 @@ interface ImageSanityProps {
   hotspot?: SanityImageHotspot;
 }
 
+/**
+ * Where `object-fit: cover` should centre its crop: the editor's hotspot, as a CSS `object-position`.
+ *
+ * The hotspot is stored as a point in the *original* image, but the image served is the editor's
+ * crop of it (`rect=` in the URL), so the point is re-expressed inside that rect. `undefined` when
+ * there is no hotspot, which leaves the stylesheet's `50% 50%` in place.
+ */
+const hotspotPosition = (hotspot?: SanityImageHotspot, crop?: SanityImageCrop): string | undefined => {
+  if (hotspot?.x === undefined || hotspot.y === undefined) {
+    return undefined;
+  }
+  const { bottom = 0, left = 0, right = 0, top = 0 } = crop ?? {};
+  const inside = (point: number, start: number, end: number) => {
+    const span = 1 - start - end;
+    const fraction = span > 0 ? (point - start) / span : 0.5;
+    return `${(Math.min(1, Math.max(0, fraction)) * 100).toFixed(2)}%`;
+  };
+  return `${inside(hotspot.x, left, right)} ${inside(hotspot.y, top, bottom)}`;
+};
+
 const ImageSanity: FC<ImageSanityProps> = (props) => {
   const {
     asset,
@@ -67,15 +87,13 @@ const ImageSanity: FC<ImageSanityProps> = (props) => {
       builder = builder.width(Math.round(Math.min(options.width, 2400))); // Cap at 2400px max
     }
 
-    // Add height constraints based on expected display size.
-    // croppedImageDimensions.height is fractional for cropped images, so it
-    // must be rounded — an un-rounded `h=598.47…` makes the CDN return 400,
-    // which triggers onError and falls back to the placeholder image.
-    const imageHeight = options.croppedImageDimensions?.height;
-    if (imageHeight) {
-      builder = builder.height(Math.round(Math.min(imageHeight, 1600))); // Cap at 1600px max
-    }
-
+    /*
+     * Width only — never a height. The CDN scales the (editor-cropped) image to this width and keeps
+     * its shape. This used to add `h = min(croppedHeight, 1600)` to every srcset entry, so a 384w
+     * entry of a 1536×2048 photo asked for 384×1600: the CDN answered by cutting a 0.24:1 sliver out
+     * of the middle (`rect=522,0,492,2048`), and `object-fit: cover` then cropped that again. Every
+     * Sanity image lost most of its width — two thirds of each carousel photo.
+     */
     return builder;
   };
 
@@ -113,6 +131,8 @@ const ImageSanity: FC<ImageSanityProps> = (props) => {
       alt={alt}
       fill={fill}
       onError={onError}
+      // The crop `object-fit: cover` makes, centred on the editor's hotspot rather than the middle.
+      style={{ objectPosition: hotspotPosition(hotspot, crop) }}
       {...imageProps}
     />
   );

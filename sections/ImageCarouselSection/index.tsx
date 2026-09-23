@@ -44,7 +44,7 @@ const naturalRatioOf = (image: CarouselImage): number | undefined => {
  * slide grows *wider* — `ratio ** 0.7` widths, so 3:2 spans 1.33 — and, because its width grows a
  * little slower than its shape, a little shorter too. Height therefore falls steadily from the
  * tallest portrait to the widest landscape: two slides of different shapes are never the same
- * height, which is what lets `carouselRatios` guarantee neighbours differ in height as well as shape.
+ * height, which is why `carouselRatios` keeping neighbours' shapes apart keeps their heights apart too.
  */
 const slideStyle = (ratio: number) =>
   ({ '--slide-span': ratio > 1 ? ratio ** 0.7 : 1, aspectRatio: ratio }) as CSSProperties;
@@ -62,12 +62,12 @@ const slideStyle = (ratio: number) =>
  *
  * ## Close to the photograph, different from its neighbours
  *
- * Each slide takes the shape nearest its photograph's own from a fine ladder, but never one either of
- * the two slides before it has — `tools/helpers/carouselRatios`. So a run of photos shot the same way
- * still steps through slightly different shapes and heights, and a portrait stays a portrait. The
- * photograph is cropped to its slide with `object-fit: cover`; the difference from its own shape is
- * a step on the ladder at most. The shape is set on the slide, so the strip is laid out at its final
- * size on the server render and nothing shifts as the photographs arrive.
+ * Each slide takes its photograph's own shape, nudged only when that is within about 6% of either of
+ * the two slides before it — then by the smallest amount that clears both (`tools/helpers/carouselRatios`).
+ * So most photographs are shown whole, and a run shot the same way still steps through slightly
+ * different shapes and heights. What a nudge costs is cropped by `object-fit: cover`, around the
+ * editor's hotspot — a few percent, not a detail. The shape is set on the slide, so the strip is laid
+ * out at its final size on the server render and nothing shifts as the photographs arrive.
  *
  * ## Motion
  *
