@@ -52,7 +52,7 @@ export const AMOUNT_MARK = 'amountToken';
  *
  * `Partial<>` because a GROQ projection returns a shaped object with `null` leaves for every field
  * an editor has left blank, while the document interface declares `showAmount` required — the same
- * reason `components/Layout` types `weddingSettings` as `Partial<>`. `paymentDetails` is
+ * reason `components/Layout` types `weddingSettings` as `Partial<>`. The payment details are
  * deliberately not in the pick: it is shown only after an RSVP has been submitted and must never
  * reach this section.
  *

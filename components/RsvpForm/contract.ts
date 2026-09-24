@@ -42,7 +42,8 @@ export const RSVP_FIELD = {
   plusOneBringing: 'plusOne.bringing',
   plusOneDietary: 'plusOne.dietary',
   plusOneName: 'plusOne.name',
-  songRequest: 'songRequest'
+  songRequest: 'songRequest',
+  specialRequirements: 'specialRequirements'
 } as const;
 
 export type RsvpFieldName = (typeof RSVP_FIELD)[keyof typeof RSVP_FIELD];

@@ -10,9 +10,11 @@ import Field from '@/components/Field';
 import Form from '@/components/Form';
 import { preloadDuet } from '@/components/ModelDuet/preload';
 import Text from '@/components/Text';
+import TextBlock from '@/components/TextBlock';
 import classNames from '@/helpers/classNames';
 import { DUET_BACK, DUET_FRONT } from '@/helpers/duetPlacement';
 import formatOrdinal from '@/helpers/formatOrdinal';
+import type { StayPrice } from '@/helpers/guests';
 
 import { RSVP_FIELD, RSVP_INITIAL_STATE, RSVP_KIDS_MAX } from './contract';
 import type { RsvpAction, RsvpFieldErrors, RsvpFormState } from './contract';
@@ -41,6 +43,18 @@ export interface RsvpFormProps {
    * Nothing renders in its place when there are none.
    */
   models?: RsvpModelOption[];
+  /** The signed-in guest, from the guest sheet: prefills the form and shows their stay. */
+  guest?: RsvpGuest;
+  /** The note under the heading, from Wedding Settings — the reply-by date. */
+  note?: SanityTextBlock[];
+}
+
+/** What the form knows about the guest filling it in. Every field optional: a row can be sparse. */
+export interface RsvpGuest {
+  name?: string;
+  email?: string;
+  /** Their room and what it comes to. Absent when the sheet does not give a stay, nights and price. */
+  stay?: StayPrice;
 }
 
 /** What react-hook-form holds — one key per name in `RSVP_FIELD`, nested where the name is dotted. */
@@ -53,6 +67,7 @@ export interface RsvpFormValues {
   name: string;
   plusOne: { bringing: boolean; dietary?: string; name?: string };
   songRequest: string;
+  specialRequirements: string;
 }
 
 const DEFAULT_VALUES: RsvpFormValues = {
@@ -62,8 +77,13 @@ const DEFAULT_VALUES: RsvpFormValues = {
   kidsCount: 0,
   name: '',
   plusOne: { bringing: false, dietary: '', name: '' },
-  songRequest: ''
+  songRequest: '',
+  specialRequirements: ''
 };
+
+/** "$300", as a guest reads a price — whole dollars, the currency the contribution is set in. */
+const formatAud = (amount: number) =>
+  new Intl.NumberFormat('en-AU', { currency: 'AUD', maximumFractionDigits: 0, style: 'currency' }).format(amount);
 
 const DEFAULT_COPY = {
   heading: 'RSVP',
@@ -156,7 +176,9 @@ const RsvpForm = (props: RsvpFormProps) => {
     heading = DEFAULT_COPY.heading,
     intro = DEFAULT_COPY.intro,
     introDetail = DEFAULT_COPY.introDetail,
-    models
+    guest,
+    models,
+    note
   } = props;
 
   const [state, formAction, isPending] = useActionState(action, RSVP_INITIAL_STATE);
@@ -179,7 +201,7 @@ const RsvpForm = (props: RsvpFormProps) => {
       className={classNames(styles.form, className)}
       // Spread, because `Form` types its defaults as `Record<string, unknown>` and an interface carries
       // no index signature; the copy is also what react-hook-form is free to mutate.
-      defaultValues={{ ...DEFAULT_VALUES }}
+      defaultValues={{ ...DEFAULT_VALUES, email: guest?.email ?? '', name: guest?.name ?? '' }}
       errors={serverErrors}
       layout="normal"
       onSubmit={(values) => setSentValues(JSON.stringify(values))}
@@ -192,7 +214,9 @@ const RsvpForm = (props: RsvpFormProps) => {
         introDetail={introDetail}
         isPending={isPending}
         models={models}
+        note={note}
         sentValues={sentValues}
+        stay={guest?.stay}
         state={state}
       />
     </Form>
@@ -205,13 +229,15 @@ interface RsvpFormBodyProps {
   introDetail?: string;
   isPending: boolean;
   models?: RsvpModelOption[];
+  note?: SanityTextBlock[];
   sentValues: string | null;
+  stay?: StayPrice;
   state: RsvpFormState;
 }
 
 /** Everything inside the react-hook-form context — which is why it is a component of its own. */
 const RsvpFormBody = (props: RsvpFormBodyProps) => {
-  const { heading, intro, introDetail, isPending, models, sentValues, state } = props;
+  const { heading, intro, introDetail, isPending, models, note, sentValues, stay, state } = props;
 
   const { control, resetField } = useFormContext<RsvpFormValues>();
   const values = useWatch({ control });
@@ -385,6 +411,16 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
       )
     },
     {
+      key: 'specialRequirements',
+      render: (label) => (
+        <Field.TextArea
+          label={label('Special requirements')}
+          name={RSVP_FIELD.specialRequirements}
+          placeholder="Anything we should know? e.g. a cot for the baby"
+        />
+      )
+    },
+    {
       key: 'songRequest',
       render: (label) => (
         <Field.Text
@@ -401,6 +437,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
       <div className={styles.layout}>
         <div className={styles.rail}>
           <Text as="h1" className={styles.heading} size="md" text={heading} variant="display" />
+          {note && note.length > 0 && <TextBlock blocks={note} className={styles.note} />}
           <Text as="p" size="lg">
             {intro}
             {introDetail && <span className={styles.wideOnly}> {introDetail}</span>}
@@ -409,6 +446,28 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
         </div>
 
         <div className={styles.fields}>
+          {stay && (
+            <section aria-labelledby="rsvp-stay" className={styles.stay}>
+              <Text
+                as="h2"
+                className={styles.stayLabel}
+                id="rsvp-stay"
+                size="2xs"
+                text="Your stay"
+                textTransform="uppercase"
+                variant="mono"
+              />
+              <Text as="p" size="lg" weight="medium">
+                {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
+              </Text>
+              <Text as="p" className={styles.stayPrice}>
+                {formatAud(stay.perNight)} per room, per night · <strong>{formatAud(stay.total)}</strong> in total
+              </Text>
+              <Text as="p" className={styles.stayNote} size="sm">
+                Payment details come with your confirmation, once you've replied.
+              </Text>
+            </section>
+          )}
           {questions.map(({ key, render }, index) => (
             <div className={styles.question} key={key}>
               {render((title) => numbered(index, title))}

@@ -3,9 +3,12 @@ import type { Metadata } from 'next';
 import ModelDuet from '@/components/ModelDuet';
 import Section from '@/components/Section';
 import Text from '@/components/Text';
+import TextBlock from '@/components/TextBlock';
 import coupleNames from '@/helpers/coupleNames';
+import { stayPriceOf } from '@/helpers/guests';
+import { currentGuest } from '@/tools/guests/session';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
-import { WEDDING_SETTINGS_QUERY } from '@/tools/sanity/lib/queries.groq';
+import { PAYMENT_DETAILS_QUERY, WEDDING_SETTINGS_QUERY } from '@/tools/sanity/lib/queries.groq';
 import type { IWeddingSettingsDocument } from '@/tools/sanity/schema/documents/weddingSettings';
 
 import styles from './styles.module.scss';
@@ -43,10 +46,32 @@ import styles from './styles.module.scss';
  */
 
 const ThankYouPage = async () => {
-  const settings = await sanityFetch<Partial<IWeddingSettingsDocument> | null>({
-    query: WEDDING_SETTINGS_QUERY,
-    tags: ['weddingSettings']
-  });
+  const [settings, payment, guest] = await Promise.all([
+    sanityFetch<Partial<IWeddingSettingsDocument> | null>({
+      query: WEDDING_SETTINGS_QUERY,
+      tags: ['weddingSettings']
+    }),
+    sanityFetch<{
+      paymentDetailsAustralia?: SanityTextBlock[];
+      paymentDetailsInternational?: SanityTextBlock[];
+    } | null>({
+      query: PAYMENT_DETAILS_QUERY,
+      tags: ['weddingSettings']
+    }),
+    currentGuest().catch(() => undefined)
+  ]);
+
+  /*
+   * How the guest pays their room contribution: the Australian account for guests whose Nationality
+   * in the sheet is blank or Australian, Wise for everyone else (`paymentRegionOf`). Shown only here,
+   * after they have replied, and only to a signed-in guest — never in a page-builder section.
+   */
+  const stay = guest && stayPriceOf(guest);
+  const paymentDetails =
+    guest && (guest.payment === 'au' ? payment?.paymentDetailsAustralia : payment?.paymentDetailsInternational);
+  const total =
+    stay &&
+    new Intl.NumberFormat('en-AU', { currency: 'AUD', maximumFractionDigits: 0, style: 'currency' }).format(stay.total);
 
   /*
    * "Sam & Lauren", one partner alone with no dangling ampersand, or the fallback names when neither
@@ -97,6 +122,25 @@ const ThankYouPage = async () => {
           className={styles.scene}
         />
 
+        {Boolean(total || paymentDetails?.length) && (
+          <section aria-labelledby="thank-you-payment" className={styles.payment}>
+            <Text
+              as="h2"
+              className={styles.paymentLabel}
+              id="thank-you-payment"
+              size="2xs"
+              text="Your room contribution"
+              textTransform="uppercase"
+              variant="mono"
+            />
+            {stay && total && (
+              <Text as="p" size="lg" weight="medium">
+                {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'} · {total}
+              </Text>
+            )}
+            {paymentDetails && paymentDetails.length > 0 && <TextBlock blocks={paymentDetails} />}
+          </section>
+        )}
         <Text
           alignment="center"
           as="p"

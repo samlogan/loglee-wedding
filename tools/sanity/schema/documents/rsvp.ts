@@ -21,6 +21,10 @@ interface IRsvpDocument {
     dietary?: string;
   };
   songRequest?: string;
+  /** Anything the guest needs — a cot, a ground-floor room. */
+  specialRequirements?: string;
+  /** The guest sheet's ID for whoever sent this, when they were signed in. */
+  guestId?: string;
   submittedAt?: string;
   /** No longer asked — present only on replies sent before the form dropped the question. */
   roomPreference?: string;
@@ -106,6 +110,20 @@ const rsvp = defineType({
       group: 'response',
       name: `songRequest`,
       title: `Song Request`,
+      type: `string`
+    },
+    {
+      description: 'Anything this guest needs for the weekend — a cot, a ground-floor room.',
+      group: 'response',
+      name: `specialRequirements`,
+      title: `Special Requirements`,
+      type: `text`
+    },
+    {
+      description: 'The guest sheet ID of whoever sent this reply, when they were signed in with one.',
+      group: 'response',
+      name: `guestId`,
+      title: `Guest ID`,
       type: `string`
     },
     {

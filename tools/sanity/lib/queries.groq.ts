@@ -1,5 +1,6 @@
 import { groq } from 'next-sanity';
 
+import blockContentProjection from '../projections/common/blockContent.groq';
 import buttonProjection from '../projections/common/button.groq';
 import imageProjection from '../projections/common/image.groq';
 import linkProjection from '../projections/common/link.groq';
@@ -154,5 +155,26 @@ export const RSVP_MODELS_QUERY = groq`
     clips,
     "src": model.asset->url,
     fallbackImage${imageProjection}
+  }
+`;
+
+/**
+ * The RSVP page's own slice of Wedding Settings: the note under the heading. Kept out of
+ * `WEDDING_SETTINGS_QUERY`, which the layout runs on every page.
+ */
+export const RSVP_PAGE_QUERY = groq`
+  *[_type == "weddingSettings" && _id == "weddingSettings"][0]{
+    rsvpNote[]${blockContentProjection}
+  }
+`;
+
+/**
+ * The payment details, for the thank-you page — both versions; the page shows the one for the signed-in
+ * guest. Only ever fetched on a page behind the guest gate, and never in the layout's query.
+ */
+export const PAYMENT_DETAILS_QUERY = groq`
+  *[_type == "weddingSettings" && _id == "weddingSettings"][0].contribution{
+    paymentDetailsAustralia[]${blockContentProjection},
+    paymentDetailsInternational[]${blockContentProjection}
   }
 `;
