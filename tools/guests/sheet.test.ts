@@ -151,6 +151,16 @@ describe('markReplied', () => {
     expect(write?.body).toMatchObject({ data: [{ range: 'J2', values: [['Replied 3 Oct · + Sunday night']] }] });
   });
 
+  it('notes a guest who is not staying at the venue', async () => {
+    const calls = stubSheet([HEADER, ['SAM-1000', 'Sam']]);
+    const { findGuest, markReplied } = await load();
+    const sam = await requireGuest(findGuest, 'SAM-1000');
+    await markReplied(sam, new Date('2026-10-03T00:00:00Z'), { extraNight: false, staying: false });
+
+    const write = calls.findLast((call) => call.path === 'values:batchUpdate');
+    expect(write?.body).toMatchObject({ data: [{ range: 'J2', values: [['Replied 3 Oct · Not staying']] }] });
+  });
+
   it('never throws — the reply is already saved, so a sheet error must not reach the guest', async () => {
     stubSheet([HEADER, ['SAM-1000', 'Sam']]);
     const { findGuest, markReplied } = await load();

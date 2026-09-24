@@ -17,7 +17,7 @@ vi.mock('@/tools/sanity/lib/writeClient', () => ({
   default: { fetch: vi.fn(async () => state.extraNight) }
 }));
 
-const { replyExtrasFor, takesExtraNight } = await import('./replyExtras');
+const { replyExtrasFor, savedStayOf } = await import('./replyExtras');
 
 const block = (text: string) =>
   ({
@@ -72,13 +72,23 @@ describe('replyExtrasFor', () => {
   });
 });
 
-describe('takesExtraNight', () => {
-  it('is true only when the saved reply takes the Sunday night', async () => {
-    state.extraNight = true;
-    expect(await takesExtraNight('SAM-1')).toBe(true);
-    state.extraNight = false;
-    expect(await takesExtraNight('SAM-1')).toBe(false);
+describe('savedStayOf', () => {
+  it('reads whether the saved reply is staying, and takes the Sunday night', async () => {
+    state.extraNight = { extraNight: true, staying: true };
+    expect(await savedStayOf('SAM-1')).toEqual({ extraNight: true, staying: true });
+    state.extraNight = { extraNight: false, staying: false };
+    expect(await savedStayOf('SAM-1')).toEqual({ extraNight: false, staying: false });
+  });
+
+  it('takes no Sunday night for a guest who is not staying, whatever is stored', async () => {
+    state.extraNight = { extraNight: true, staying: false };
+    expect(await savedStayOf('SAM-1')).toEqual({ extraNight: false, staying: false });
+  });
+
+  it('is staying when the reply predates the question, or there is no reply', async () => {
+    state.extraNight = { extraNight: true };
+    expect(await savedStayOf('SAM-1')).toEqual({ extraNight: true, staying: true });
     state.extraNight = null;
-    expect(await takesExtraNight('SAM-1')).toBe(false);
+    expect(await savedStayOf('SAM-1')).toEqual({ extraNight: false, staying: true });
   });
 });

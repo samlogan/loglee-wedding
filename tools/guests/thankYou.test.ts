@@ -6,7 +6,7 @@ vi.mock('./loops', () => ({ hasThankYouEmail: vi.fn(() => true), sendThankYouEma
 vi.mock('./replyExtras', () => ({ replyExtrasFor: vi.fn(async () => ({})) }));
 vi.mock('./sheet', () => ({ guestHomeLinkFor: (id: string) => `https://samandlauren.wedding/g/${id}/?to=/` }));
 
-const { sendThankYou } = await import('./thankYou');
+const { sendThankYou, thankYouVariablesFor } = await import('./thankYou');
 const loops = await import('./loops');
 const extras = await import('./replyExtras');
 
@@ -54,6 +54,11 @@ describe('sendThankYou', () => {
     expect(sent()?.dataVariables.intro).toEqual([{ text: 'Thanks, legend.' }]);
   });
 
+  it('says nothing about a stay or paying when the guest is not staying', async () => {
+    await sendThankYou(SAM, { ...REPLY, extraNight: true, staying: false }, AT);
+    expect(sent()?.dataVariables).toMatchObject({ payment: [], stay: [], stayTotal: [] });
+  });
+
   it('prices the Sunday night in when the guest took it', async () => {
     await sendThankYou(SAM, { ...REPLY, extraNight: true }, AT);
     expect(sent()?.dataVariables.stay).toEqual([{ summary: 'King Room · 3 nights, Sunday included' }]);
@@ -80,6 +85,16 @@ describe('sendThankYou', () => {
       travel: [{ text: 'Bring an adaptor.' }],
       travelHeading: [{ text: 'Travelling from the UK' }]
     });
+  });
+
+  it('builds the same email for a Studio test, with the Sunday night when asked', async () => {
+    const variables = await thankYouVariablesFor(SAM, { extraNight: true });
+    expect(variables).toMatchObject({
+      firstName: 'Sam',
+      stay: [{ summary: 'King Room · 3 nights, Sunday included' }],
+      stayTotal: [{ total: '$450' }]
+    });
+    expect((await thankYouVariablesFor(SAM)).stayTotal).toEqual([{ total: '$300' }]);
   });
 
   it('sends nothing when the thank-you email is not set up', async () => {

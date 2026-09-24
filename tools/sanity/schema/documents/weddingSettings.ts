@@ -31,10 +31,8 @@ interface IWeddingSettingsDocument {
   /** The note under the RSVP heading, e.g. the reply-by date and why it matters. */
   rsvpNote?: SanityTextBlock[];
   contribution: {
-    showAmount: boolean;
-    amountPerNight?: number;
-    copyWithAmount?: SanityTextBlock[];
-    copyWithoutAmount?: SanityTextBlock[];
+    /** The accommodation wording on the Stay page. Prices are per guest, from the guest sheet. */
+    copy?: SanityTextBlock[];
   };
   /** The RSVP form's words — see `RsvpFormCopy`. Every one falls back to the form's own when blank. */
   rsvpForm?: RsvpFormCopy;
@@ -54,6 +52,7 @@ interface RsvpFormCopy {
   intro?: string;
   introDetail?: string;
   stayNote?: string;
+  stayingLabel?: string;
   extraNightLabel?: string;
   extraNightDescription?: string;
   placeholders?: Partial<Record<RsvpPlaceholder, string>>;
@@ -242,6 +241,13 @@ const weddingSettings = defineType({
         },
         {
           description:
+            'The last question, on by default, e.g. “Want to stay with us at The Lodge?”. Switched off, the guest sees no stay, price or payment details.',
+          name: 'stayingLabel',
+          title: 'Staying — Label',
+          type: 'string'
+        },
+        {
+          description:
             'The switch that adds the Sunday night to a guest’s stay, e.g. “Spend the Sunday evening with us”.',
           name: 'extraNightLabel',
           title: 'Sunday Night — Label',
@@ -305,64 +311,13 @@ const weddingSettings = defineType({
       type: 'object'
     },
     {
-      description: 'The accommodation contribution ask. The payment details are under Nationalities & payment.',
+      description:
+        'The accommodation wording on the Stay page. Each guest’s own price is on their RSVP, from the guest sheet; the payment details are under Nationalities & payment.',
       fields: [
         {
-          description: 'Turn this on to name a figure on the site. Leave it off for the softer, amount-free wording.',
-          initialValue: false,
-          name: `showAmount`,
-          title: `Name An Amount`,
-          type: `boolean`
-        },
-        {
-          description: 'Contribution per room, per night, in AUD. Rendered as a highlighted token inside the copy.',
-          hidden: ({ parent }) => !parent?.showAmount,
-          name: `amountPerNight`,
-          title: `Amount Per Night`,
-          type: `number`,
-          validation: (Rule) => Rule.min(0)
-        },
-        /*
-         * `blockContentSimple`, not `Standard` — matching the guard `twoColumnListSection.content`
-         * already carries and for exactly the same reason, which the joined field slipped past
-         * because it is typed on a different document.
-         *
-         * `Standard` offers H1–H6, and `TextBlock` renders an `h1` style as a real `<h1>` at
-         * `--heading-lg`. One click of it here puts a second `<h1>` on `/stay` — after the section's
-         * own `<h2>`, inside a ~540px column — on a page that already has one from
-         * `headerDisplaySection`. That is an h2→h1 order break (WCAG 1.3.1) authored from a settings
-         * document, three files away from the section it breaks.
-         *
-         * Nothing is lost: both fields hold one sentence, `Simple` keeps strong/em/underline and
-         * link annotations, and `TwoColumnListSection` is their only renderer.
-         */
-        {
-          description:
-            'Shown when an amount is named. Write "{amount}" where the figure belongs — it is swapped in mid-sentence as a highlighted token.',
-          hidden: ({ parent }) => !parent?.showAmount,
-          name: `copyWithAmount`,
-          title: `Copy (With Amount)`,
-          type: `blockContentSimple`
-        },
-        /*
-         * **Never hidden**, and that is a fix rather than an omission.
-         *
-         * This field carried `hidden: ({ parent }) => parent?.showAmount` — hiding itself in exactly
-         * the state where it is most likely to be what publishes. `resolveAmountCopy` falls back to
-         * it from three separate branches while `showAmount` is on: the with-amount copy is blank,
-         * the figure is unset, or the figure is unusable (negative, `NaN`). In every one of those an
-         * editor with the toggle on has this sentence on the live site and no control in the Studio
-         * that shows it to them — and the toggle is the field they would flip *back* to find it,
-         * which is the one action that makes the problem look fixed.
-         *
-         * It is not conditional on anything, so it takes no predicate at all. The description does
-         * the work the predicate was doing badly: it says when the field is used.
-         */
-        {
-          description:
-            'Shown when no amount is named, so the sentence still reads on its own. Also the fallback whenever an amount is named but not usable — the figure left blank, or the copy above left empty — so keep it filled in even with the toggle on.',
-          name: `copyWithoutAmount`,
-          title: `Copy (Without Amount)`,
+          description: 'Shown beside the heading of the Stay page’s rooms panel.',
+          name: `copy`,
+          title: `Stay Page Copy`,
           type: `blockContentSimple`
         }
       ],

@@ -2,7 +2,6 @@ import { TbLayoutColumns } from 'react-icons/tb';
 import { defineType } from 'sanity';
 
 import thumbnail from '../../../../sections/TwoColumnListSection/thumbnail.png';
-import type { ContributionFields } from '../../../helpers/amountToken';
 import ReadOnlyImageInput from '../../components/ReadOnlyImageInput';
 import stripTitleTags from '../../helpers/stripTitleTags';
 import defaultSectionGroups from '../common/defaultSectionGroups';
@@ -26,8 +25,8 @@ import internalLabelField from '../common/internalLabelField';
  *
  * ## `richText` has no authored copy, on purpose
  *
- * `weddingSettings.contribution` already ships four fields for this sentence — a toggle, a figure,
- * and two copies of the wording — and this section is their only renderer. Giving the variant its
+ * `weddingSettings.contribution.copy` already holds this wording, and this section is its only
+ * renderer. Giving the variant its
  * own rich-text field would duplicate content an editor already maintains, in a place where the two
  * could disagree about what the wedding is asking for. The copy is joined in by the projection
  * instead (see `sections/TwoColumnListSection/queries.groq.ts`), so the section receives it as props
@@ -45,10 +44,8 @@ interface ITwoColumnListSection {
    * `richText` variant — a GROQ conditional projection does not fire on a `list` section, so the key
    * is genuinely absent there rather than null.
    *
-   * Typed from `tools/helpers/amountToken` rather than restated, so the field list this section
-   * reads and the field list the helper resolves cannot drift apart.
    */
-  contribution?: ContributionFields | null;
+  contribution?: { copy?: SanityTextBlock[] | null } | null;
 }
 
 const twoColumnListSection = defineType({

@@ -1,4 +1,4 @@
-import { formatAmount } from './amountToken';
+import formatAmount from './formatAmount';
 import { isFreeStay } from './guests';
 import type { StayPrice } from './guests';
 
@@ -34,6 +34,11 @@ export interface ThankYouEmailInput {
   intro?: unknown;
   /** Their stay and total, the Sunday night included when they took it. */
   stay?: StayPrice;
+  /**
+   * Whether they are staying at the venue — `false` when they switched it off on the form, and then
+   * the email says nothing about a stay or paying for one.
+   */
+  staying?: boolean;
   /** The payment details for their region, from Sanity. */
   payment?: SanityTextBlock[] | null;
   /** The travel note for their nationality, from Sanity — none for most guests. */
@@ -77,10 +82,12 @@ const heading = (text: string | null | undefined, under: Item[]): Item[] =>
   under.length > 0 && text?.trim() ? [{ text: text.trim() }] : [];
 
 export const thankYouVariables = (input: ThankYouEmailInput): ThankYouEmailVariables => {
-  const { firstName, homeLink, stay } = input;
-  // A stay the couple are covering: the stay is shown, and nothing about paying for it.
+  const { firstName, homeLink, staying = true } = input;
+  const stay = staying ? input.stay : undefined;
+  // A stay the couple are covering: the stay is shown, and nothing about paying for it. Not staying
+  // at all: neither.
   const free = isFreeStay(stay);
-  const payment = free ? [] : items(paragraphsOf(input.payment));
+  const payment = free || !staying ? [] : items(paragraphsOf(input.payment));
   const travel = items(paragraphsOf(input.travel?.content));
   const intro = (Array.isArray(input.intro) ? input.intro : [])
     .filter((paragraph): paragraph is string => typeof paragraph === 'string')

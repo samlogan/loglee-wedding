@@ -8,13 +8,15 @@ import {
 } from '@/helpers/guestEmails';
 import type { GuestEmailKind, Replies } from '@/helpers/guestEmails';
 import type { Guest } from '@/helpers/guests';
+import { normaliseGuestId } from '@/helpers/guests';
 import { INVITATION_EMAIL_QUERY } from '@/tools/sanity/lib/queries.groq';
 import writeClient from '@/tools/sanity/lib/writeClient';
 import type { IGuestEmailSend } from '@/tools/sanity/schema/documents/guestEmailSend';
 
 import { hasGoogleCredentials } from './googleAuth';
-import { ensureContactProperties, hasLoopsKey, sendGuestEmail } from './loops';
+import { ensureContactProperties, hasLoopsKey, hasThankYouEmail, sendGuestEmail, sendThankYouEmail } from './loops';
 import { markSent, readGuests, sentColumn } from './sheet';
+import { thankYouVariablesFor } from './thankYou';
 
 /**
  * Guests per webhook call. Each one is an email and a sheet write; ten fits comfortably inside a
@@ -29,6 +31,20 @@ const STALE_MS = 5 * 60 * 1000;
 const nameOf = (guest: Guest) => [guest.firstName, guest.lastName].filter(Boolean).join(' ');
 
 const keyOf = (value: string) => value.replaceAll(/[^\w-]/g, '').slice(0, 60) || 'x';
+
+/** The guest a test is filled in with: the one asked for by ID, or the first in the sheet. */
+const testGuestOf = (guests: Guest[], guestId?: string): Guest => {
+  const wanted = guestId?.trim() ? normaliseGuestId(guestId) : undefined;
+  const sample = wanted ? guests.find((guest) => guest.id === wanted) : guests[0];
+  if (!sample) {
+    throw new Error(
+      wanted
+        ? `No guest with the ID ${wanted} in the guest sheet.`
+        : 'The guest sheet has no guests to fill the test with.'
+    );
+  }
+  return sample;
+};
 
 const repliesOf = async (): Promise<Replies> => {
   const rows = writeClient
@@ -84,7 +100,6 @@ export const processEmailSend = async (id: string) => {
     return;
   }
 
-  const kind: GuestEmailKind = send.kind;
   const finish = (fields: Partial<IGuestEmailSend>) =>
     writeClient
       ?.patch(id)
@@ -95,15 +110,39 @@ export const processEmailSend = async (id: string) => {
     if (!hasLoopsKey() || !hasGoogleCredentials()) {
       throw new Error('The Loops key or the guest sheet credentials are not set on this site.');
     }
-    await ensureContactProperties();
     const guests = await readGuests({ fresh: true });
+
+    // The thank-you goes to guests on its own, as each RSVP is saved; from here it is only ever a test.
+    if (send.kind === 'thankYou') {
+      if (!send.testEmail) {
+        await finish({
+          status: 'failed',
+          summary: 'Not sent: the thank-you email can only be sent as a test. Guests get it when they RSVP.'
+        });
+        return;
+      }
+      if (!hasThankYouEmail()) {
+        throw new Error('LOOPS_THANK_YOU_ID is not set on this site.');
+      }
+      const sample = testGuestOf(guests, send.testGuestId);
+      await sendThankYouEmail({
+        dataVariables: await thankYouVariablesFor(sample, { extraNight: send.testExtraNight }),
+        idempotencyKey: `test-thank-you-${keyOf(id)}`,
+        to: send.testEmail
+      });
+      await finish({
+        status: 'done',
+        summary: `Test sent to ${send.testEmail}, filled in with ${nameOf(sample)}’s details. No guest was emailed.`
+      });
+      return;
+    }
+
+    const kind: GuestEmailKind = send.kind;
+    await ensureContactProperties();
     const properties = await emailPropertiesFor(kind);
 
     if (send.testEmail) {
-      const sample = guests[0];
-      if (!sample) {
-        throw new Error('The guest sheet has no guests to fill the test with.');
-      }
+      const sample = testGuestOf(guests, send.testGuestId);
       await sendGuestEmail(kind, sample, {
         idempotencyKey: `test-${kind}-${keyOf(id)}`,
         properties,

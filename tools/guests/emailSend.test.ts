@@ -50,7 +50,16 @@ vi.mock('./googleAuth', () => ({ hasGoogleCredentials: vi.fn(() => true) }));
 vi.mock('./loops', () => ({
   ensureContactProperties: vi.fn(async () => undefined),
   hasLoopsKey: vi.fn(() => true),
-  sendGuestEmail: vi.fn(async () => undefined)
+  hasThankYouEmail: vi.fn(() => true),
+  sendGuestEmail: vi.fn(async () => undefined),
+  sendThankYouEmail: vi.fn(async () => undefined)
+}));
+
+vi.mock('./thankYou', () => ({
+  thankYouVariablesFor: vi.fn(async (guest: Guest, options?: { extraNight?: boolean }) => ({
+    extraNight: options?.extraNight ?? false,
+    guestId: guest.id
+  }))
 }));
 
 vi.mock('./sheet', () => ({
@@ -107,6 +116,7 @@ beforeEach(() => {
   state.intro = undefined;
   vi.mocked(auth.hasGoogleCredentials).mockReturnValue(true);
   vi.mocked(loops.hasLoopsKey).mockReturnValue(true);
+  vi.mocked(loops.hasThankYouEmail).mockReturnValue(true);
 });
 
 describe('what it will not touch', () => {
@@ -166,6 +176,65 @@ describe('a test send', () => {
     expect(sheet.markSent).not.toHaveBeenCalled();
     expect(lastWrite()).toMatchObject({ status: 'done' });
     expect(String(lastWrite().summary)).toContain('No guest was emailed');
+  });
+});
+
+describe('a test as a chosen guest', () => {
+  it('is filled in with the guest whose ID is given, however it is typed', async () => {
+    state.document = send({ confirm: undefined, testEmail: 'me@example.com', testGuestId: ' lauren-2 ' });
+    vi.mocked(sheet.readGuests).mockResolvedValue([guest('SAM-1'), guest('LAUREN-2')]);
+    await processEmailSend('send-1');
+    expect(emailed()).toEqual([{ id: 'LAUREN-2', to: 'me@example.com' }]);
+  });
+
+  it('fails, emailing nobody, when no guest has that ID', async () => {
+    state.document = send({ confirm: undefined, testEmail: 'me@example.com', testGuestId: 'NOBODY-9' });
+    vi.mocked(sheet.readGuests).mockResolvedValue([guest('SAM-1')]);
+    await processEmailSend('send-1');
+    expect(loops.sendGuestEmail).not.toHaveBeenCalled();
+    expect(lastWrite()).toMatchObject({ status: 'failed' });
+  });
+});
+
+describe('a thank-you test', () => {
+  const thankYouSent = () => vi.mocked(loops.sendThankYouEmail).mock.calls.map(([options]) => options);
+
+  it('goes to the test address with the chosen guest’s details, Sunday night and all', async () => {
+    state.document = send({
+      confirm: undefined,
+      kind: 'thankYou',
+      testEmail: 'me@example.com',
+      testExtraNight: true,
+      testGuestId: 'LAUREN-2'
+    });
+    vi.mocked(sheet.readGuests).mockResolvedValue([guest('SAM-1'), guest('LAUREN-2')]);
+    await processEmailSend('send-1');
+
+    expect(thankYouSent()).toEqual([
+      expect.objectContaining({ dataVariables: { extraNight: true, guestId: 'LAUREN-2' }, to: 'me@example.com' })
+    ]);
+    expect(loops.sendGuestEmail).not.toHaveBeenCalled();
+    expect(sheet.markSent).not.toHaveBeenCalled();
+    expect(lastWrite()).toMatchObject({ status: 'done' });
+  });
+
+  it('is never sent to the guest list', async () => {
+    state.document = send({ confirm: 'SEND INVITATIONS', kind: 'thankYou' });
+    vi.mocked(sheet.readGuests).mockResolvedValue([guest('SAM-1')]);
+    await processEmailSend('send-1');
+
+    expect(loops.sendThankYouEmail).not.toHaveBeenCalled();
+    expect(lastWrite()).toMatchObject({ status: 'failed' });
+  });
+
+  it('fails with a message when the site has no thank-you email set up', async () => {
+    state.document = send({ confirm: undefined, kind: 'thankYou', testEmail: 'me@example.com' });
+    vi.mocked(loops.hasThankYouEmail).mockReturnValue(false);
+    vi.mocked(sheet.readGuests).mockResolvedValue([guest('SAM-1')]);
+    await processEmailSend('send-1');
+
+    expect(loops.sendThankYouEmail).not.toHaveBeenCalled();
+    expect(lastWrite()).toMatchObject({ status: 'failed' });
   });
 });
 

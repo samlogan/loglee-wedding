@@ -142,7 +142,7 @@ const storeRsvp = async (formData: FormData): Promise<RsvpFormState> => {
       : writeClient.create(document));
 
     if (guest) {
-      await markReplied(guest, now, { extraNight: reply.extraNight });
+      await markReplied(guest, now, { extraNight: reply.extraNight, staying: reply.staying });
       await sendThankYou(guest, reply, now);
     }
     return SAVED;

@@ -9,6 +9,31 @@ import { replyExtrasFor } from './replyExtras';
 import { guestHomeLinkFor } from './sheet';
 
 /**
+ * What one guest's thank-you email says: their stay (with the Sunday night when `extraNight`), the
+ * payment details for their region, their travel note and the intro, from Sanity. Shared by the real
+ * send and the Studio's test send, so a test shows exactly what that guest would get.
+ */
+export const thankYouVariablesFor = async (
+  guest: Guest,
+  {
+    extraNight = false,
+    firstName,
+    staying = true
+  }: { extraNight?: boolean; firstName?: string; staying?: boolean } = {}
+) => {
+  const extras = await replyExtrasFor(guest);
+  return thankYouVariables({
+    firstName: guest.firstName || firstName || '',
+    homeLink: guestHomeLinkFor(guest.id),
+    intro: extras.emailIntro,
+    payment: extras.payment,
+    stay: stayPriceOf(guest, { extraNight }),
+    staying,
+    travel: extras.travel
+  });
+};
+
+/**
  * Email a guest their thank-you once their reply is saved: their stay and total (the Sunday night
  * included when they took it), how to pay, and their travel note. To the address on the reply, which
  * the form prefills from the sheet.
@@ -22,15 +47,11 @@ export const sendThankYou = async (guest: Guest, reply: RsvpReply, submittedAt: 
     return;
   }
   try {
-    const extras = await replyExtrasFor(guest);
     await sendThankYouEmail({
-      dataVariables: thankYouVariables({
-        firstName: guest.firstName || reply.name.split(' ')[0],
-        homeLink: guestHomeLinkFor(guest.id),
-        intro: extras.emailIntro,
-        payment: extras.payment,
-        stay: stayPriceOf(guest, { extraNight: reply.extraNight }),
-        travel: extras.travel
+      dataVariables: await thankYouVariablesFor(guest, {
+        extraNight: reply.extraNight,
+        firstName: reply.name.split(' ')[0],
+        staying: reply.staying
       }),
       idempotencyKey: `thank-you-${guest.id}-${submittedAt.getTime()}`,
       to: reply.email
