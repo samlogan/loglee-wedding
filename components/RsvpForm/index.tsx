@@ -464,7 +464,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
                 {formatAud(stay.perNight)} per room, per night · <strong>{formatAud(stay.total)}</strong> in total
               </Text>
               <Text as="p" className={styles.stayNote} size="sm">
-                Payment details come with your confirmation, once you've replied.
+                You'll see how to pay as soon as you've replied.
               </Text>
             </section>
           )}

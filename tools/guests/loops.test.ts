@@ -2,7 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Guest } from '@/helpers/guests';
 
-vi.mock('./sheet', () => ({ guestLinkFor: (id: string) => `https://samandlauren.wedding/g/${id}/` }));
+vi.mock('./sheet', () => ({
+  guestHomeLinkFor: (id: string) => `https://samandlauren.wedding/g/${id}/?to=/`,
+  guestLinkFor: (id: string) => `https://samandlauren.wedding/g/${id}/`
+}));
 
 const { ensureContactProperties, hasLoopsKey, sendGuestEmail } = await import('./loops');
 
@@ -65,7 +68,7 @@ describe('ensureContactProperties', () => {
     const created = spy.mock.calls
       .filter(([, init]) => (init as RequestInit)?.method === 'POST')
       .map((call) => bodyOf(call).name);
-    expect(created).toEqual(['stayOption', 'nights', 'contributionTotal']);
+    expect(created).toEqual(['homeLink', 'stayOption', 'nights', 'contributionTotal']);
   });
 });
 
@@ -86,6 +89,7 @@ describe('sendGuestEmail', () => {
       eventName: 'send_invitation',
       firstName: 'Sam',
       guestId: 'SAM-4821',
+      homeLink: 'https://samandlauren.wedding/g/SAM-4821/?to=/',
       lastName: 'Logan',
       nights: 2,
       rsvpLink: 'https://samandlauren.wedding/g/SAM-4821/',

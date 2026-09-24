@@ -3,14 +3,18 @@ import type { NextRequest } from 'next/server';
 
 import { guestSessionSecret, signIn } from '@/tools/guests/session';
 import { findGuest } from '@/tools/guests/sheet';
+import safePath from '@/tools/helpers/safePath';
 
 /**
  * A guest's personal link, `/g/SAM-4821/`, as sent in their invitation. Signs them in and takes them
- * straight to the RSVP form. An ID that is not in the sheet goes to the entry page instead, which
+ * straight to the RSVP form — or wherever `?to=` says, e.g. `/g/SAM-4821/?to=/` for the homepage. An ID that is not in the sheet goes to the entry page instead, which
  * asks for it and says when it is wrong.
  */
-export const GET = async (_request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const GET = async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
+  // Where to land: `?to=/` for the homepage, as the email's header and site link use. The RSVP form
+  // by default. Checked, so a crafted link cannot bounce a guest off the site.
+  const destination = safePath(request.nextUrl.searchParams.get('to'), '/rsvp/');
   const guest = guestSessionSecret() ? await findGuest(decodeURIComponent(id)).catch(() => undefined) : undefined;
 
   /*
@@ -22,8 +26,8 @@ export const GET = async (_request: NextRequest, { params }: { params: Promise<{
   const to = (pathname: string) => new NextResponse(null, { headers: { location: pathname }, status: 307 });
 
   if (!guest) {
-    return to('/enter/');
+    return to(`/enter/?next=${encodeURIComponent(destination)}`);
   }
   await signIn(guest);
-  return to('/rsvp/');
+  return to(destination);
 };

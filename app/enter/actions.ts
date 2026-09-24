@@ -8,16 +8,13 @@ import type { GuestEntryState } from '@/components/GuestEntry/contract';
 import { COUPLE_ID, guestSessionSecret, isCouplePassword, signIn } from '@/tools/guests/session';
 import { findGuest } from '@/tools/guests/sheet';
 import createRateLimiter from '@/tools/helpers/rateLimiter';
+import safePath from '@/tools/helpers/safePath';
 
 /*
  * Guest IDs are a name and four digits, so they are guessable with enough tries. Ten attempts per
  * connection per ten minutes is plenty for a guest mistyping theirs, and far too few to walk 9,000.
  */
 const limiter = createRateLimiter({ limit: 10, windowMs: 10 * 60 * 1000 });
-
-/** Only a path on this site — never `//elsewhere.com` or an absolute URL. */
-const safeNext = (value: FormDataEntryValue | null) =>
-  typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') ? value : '/';
 
 export const enterSite = async (_previous: GuestEntryState, formData: FormData): Promise<GuestEntryState> => {
   if (!guestSessionSecret()) {
@@ -37,7 +34,7 @@ export const enterSite = async (_previous: GuestEntryState, formData: FormData):
   // The couple's own way in — a password, not a row in the guest sheet.
   if (typeof id === 'string' && isCouplePassword(id)) {
     await signIn({ id: COUPLE_ID });
-    redirect(safeNext(formData.get('next')));
+    redirect(safePath(formData.get('next')));
   }
 
   let guest;
@@ -55,5 +52,5 @@ export const enterSite = async (_previous: GuestEntryState, formData: FormData):
   }
 
   await signIn(guest);
-  redirect(safeNext(formData.get('next')));
+  redirect(safePath(formData.get('next')));
 };

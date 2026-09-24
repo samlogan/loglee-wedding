@@ -70,6 +70,11 @@ describe('guestLinkFor', () => {
     const { guestLinkFor } = await load();
     expect(guestLinkFor('SAM-4821')).toBe('https://samandlauren.wedding/g/SAM-4821/');
   });
+
+  it('has a homepage version, which signs in the same way and lands on /', async () => {
+    const { guestHomeLinkFor } = await load();
+    expect(guestHomeLinkFor('SAM-4821')).toBe('https://samandlauren.wedding/g/SAM-4821/?to=/');
+  });
 });
 
 describe('readGuests', () => {

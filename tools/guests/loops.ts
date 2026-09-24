@@ -4,7 +4,7 @@ import type { GuestEmailKind } from '@/helpers/guestEmails';
 import { stayPriceOf } from '@/helpers/guests';
 import type { Guest } from '@/helpers/guests';
 
-import { guestLinkFor } from './sheet';
+import { guestHomeLinkFor, guestLinkFor } from './sheet';
 
 /**
  * Loops, the email service. The site never sends email itself: it sends Loops an *event* per guest
@@ -13,7 +13,7 @@ import { guestLinkFor } from './sheet';
  * and clicks show in Loops.
  *
  * The guest's details travel as contact properties, so an email can use `{contact.firstName}`,
- * `{contact.rsvpLink}`, `{contact.guestId}`, `{contact.stayOption}`, `{contact.nights}` and
+ * `{contact.rsvpLink}`, `{contact.homeLink}` (the same sign-in, landing on the homepage), `{contact.guestId}`, `{contact.stayOption}`, `{contact.nights}` and
  * `{contact.contributionTotal}`.
  */
 const API = 'https://app.loops.so/api/v1';
@@ -41,6 +41,7 @@ const loops = async <T>(path: string, init?: RequestInit): Promise<T> => {
 const CONTACT_PROPERTIES: { name: string; type: 'string' | 'number' }[] = [
   { name: 'guestId', type: 'string' },
   { name: 'rsvpLink', type: 'string' },
+  { name: 'homeLink', type: 'string' },
   { name: 'stayOption', type: 'string' },
   { name: 'nights', type: 'number' },
   { name: 'contributionTotal', type: 'number' }
@@ -60,6 +61,7 @@ const contactPropertiesOf = (guest: Guest) => {
     firstName: guest.firstName,
     guestId: guest.id,
     lastName: guest.lastName,
+    homeLink: guestHomeLinkFor(guest.id),
     rsvpLink: guestLinkFor(guest.id),
     ...(stay ? { contributionTotal: stay.total, nights: stay.nights, stayOption: stay.stay } : {})
   };
