@@ -57,19 +57,18 @@ const ThankYouPage = async () => {
   ]);
 
   /*
-   * How the guest pays their room contribution — the Australian account for guests whose Nationality
-   * in the sheet is blank or Australian, Wise for everyone else (`paymentRegionOf`) — and the travel
-   * note for their nationality, both from Nationalities & payment in the Studio. The total includes
-   * the Sunday night when their saved reply takes it. Shown only here and in the thank-you email,
-   * after they have replied, and only to a signed-in guest — never in a page-builder section.
+   * The guest's stay and total — the Sunday night included when their saved reply takes it — and the
+   * travel note for their nationality, from Nationalities & payment in the Studio. Only to a
+   * signed-in guest who has replied, never in a page-builder section.
+   *
+   * The bank details are **not** shown here: they go in the thank-you email only (`sendThankYou`).
    */
   const noExtras: ReplyExtras = {};
   const [extras, saved] = guest
     ? await Promise.all([replyExtrasFor(guest).catch(() => noExtras), savedStayOf(guest.id)])
     : [noExtras, { extraNight: false, staying: true }];
   const { travel } = extras;
-  // Not staying at the venue: no stay, no total and no payment details — only the travel note.
-  const paymentDetails = saved.staying ? extras.payment : undefined;
+  // Not staying at the venue: no stay and no total — only the travel note.
   const stay = guest && saved.staying ? stayPriceOf(guest, { extraNight: saved.extraNight }) : undefined;
   // A stay the couple are covering: the stay is shown, and nothing about paying for it.
   const free = isFreeStay(stay);
@@ -100,7 +99,14 @@ const ThankYouPage = async () => {
           weight="regular"
         />
 
-        <Text alignment="center" as="h1" size="xl" spacing={['xs', 'sm']} text="Thank you" variant="display" />
+        {/*
+         * The page headers' display size, in capitals, stacked a word to a line like the hero's names.
+         * Stacked on purpose rather than left to wrap: on a phone both words fit on one line, and the
+         * display tracking closes the space between them up until it reads as one word.
+         */}
+        <Text alignment="center" as="h1" size="md" spacing={['xs', 'sm']} textTransform="uppercase" variant="display">
+          <span className={styles.headingLine}>Thank</span> <span className={styles.headingLine}>you</span>
+        </Text>
 
         <Text
           alignment="center"
@@ -144,7 +150,7 @@ const ThankYouPage = async () => {
             </Text>
           </section>
         )}
-        {!free && Boolean(total || paymentDetails?.length) && (
+        {stay && total && (
           <section aria-labelledby="thank-you-payment" className={styles.payment}>
             <Text
               as="h2"
@@ -155,13 +161,11 @@ const ThankYouPage = async () => {
               textTransform="uppercase"
               variant="mono"
             />
-            {stay && total && (
-              <Text as="p" size="lg" weight="medium">
-                {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
-                {stay.extraNight && ', Sunday included'} · {total}
-              </Text>
-            )}
-            {paymentDetails && paymentDetails.length > 0 && <TextBlock blocks={paymentDetails} />}
+            <Text as="p" size="lg" weight="medium">
+              {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
+              {stay.extraNight && ', Sunday included'} · {total}
+            </Text>
+            <Text as="p" className={styles.paymentNote} size="sm" text="How to pay is in your thank-you email." />
           </section>
         )}
         {travel && (
