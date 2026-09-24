@@ -3,12 +3,17 @@ import type { Metadata } from 'next';
 import CSSLayerDefinitions from '@/components/AaCSSLayerDefinitions';
 import GuestEntry from '@/components/GuestEntry';
 import Section from '@/components/Section';
-import coupleNames from '@/helpers/coupleNames';
+import { couplePartners } from '@/helpers/coupleNames';
+import formatDateRange from '@/helpers/formatDateRange';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
-import { WEDDING_SETTINGS_QUERY } from '@/tools/sanity/lib/queries.groq';
+import { ENTRY_PAGE_QUERY } from '@/tools/sanity/lib/queries.groq';
 import type { IWeddingSettingsDocument } from '@/tools/sanity/schema/documents/weddingSettings';
 
 import { enterSite } from './actions';
+
+type EntrySettings = Partial<Pick<IWeddingSettingsDocument, 'coupleNames' | 'startDate' | 'endDate' | 'entryImage'>> & {
+  venueName?: string | null;
+};
 
 /**
  * The entry page every other page sends a guest to until they have entered their guest ID (see
@@ -18,15 +23,24 @@ import { enterSite } from './actions';
 const EnterPage = async ({ searchParams }: { searchParams: Promise<{ next?: string }> }) => {
   const [{ next }, settings] = await Promise.all([
     searchParams,
-    sanityFetch<Partial<IWeddingSettingsDocument> | null>({ query: WEDDING_SETTINGS_QUERY, tags: ['weddingSettings'] })
+    sanityFetch<EntrySettings | null>({ query: ENTRY_PAGE_QUERY, tags: ['weddingSettings'] })
   ]);
 
   return (
     <>
       <CSSLayerDefinitions />
       <main>
-        <Section containerWidth="sm" name="enter" spacing="xl" theme="light">
-          <GuestEntry action={enterSite} names={coupleNames(settings?.coupleNames)} next={next} />
+        <Section containerWidth="sm" name="enter" spacing="lg" theme="light">
+          <GuestEntry
+            action={enterSite}
+            date={formatDateRange(settings?.startDate, settings?.endDate, { style: 'numeric' })}
+            image={settings?.entryImage}
+            next={next}
+            partners={couplePartners(settings?.coupleNames)}
+            summary={[formatDateRange(settings?.startDate, settings?.endDate), settings?.venueName]
+              .filter(Boolean)
+              .join(' · ')}
+          />
         </Section>
       </main>
     </>

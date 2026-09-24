@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import mockImage from '@/tools/storybook/mockImage';
+
 import GuestEntry from '.';
 import type { GuestEntryAction } from './contract';
 
@@ -16,7 +18,10 @@ const meta = {
   tags: ['autodocs'],
   args: {
     action: answering(),
-    names: 'Sam & Lauren'
+    date: '12–14.02.27',
+    image: mockImage({ altText: 'Sam and Lauren', height: 1172, seed: 'guest-entry', width: 2038 }),
+    partners: ['Sam', 'Lauren'],
+    summary: '12–14 Feb 2027 · The Lodge Jamberoo'
   }
 } satisfies Meta<typeof GuestEntry>;
 
@@ -24,11 +29,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The page every guest sees until they have entered their ID. */
+/** The page every guest sees until they have entered their ID, drawn like the invitation email. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('heading', { level: 1 })).toHaveTextContent('Sam & Lauren');
+    await expect(canvas.getByText('are getting married')).toBeInTheDocument();
+    await expect(canvas.getByText('12–14 Feb 2027 · The Lodge Jamberoo')).toBeInTheDocument();
     await expect(canvas.getByLabelText(/guest id/i)).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: 'Enter' })).toBeInTheDocument();
   }
@@ -52,5 +59,14 @@ export const WithNext: Story = {
   play: async ({ canvasElement }) => {
     const hidden = canvasElement.querySelector<HTMLInputElement>('input[name="next"]');
     await expect(hidden?.value).toBe('/weekend/');
+  }
+};
+
+/** Without a photo in Wedding Settings, the card follows the names directly. */
+export const WithoutPhoto: Story = {
+  args: { image: null },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector('img')).toBeNull();
+    await expect(within(canvasElement).getByLabelText(/guest id/i)).toBeInTheDocument();
   }
 };
