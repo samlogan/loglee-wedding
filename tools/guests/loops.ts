@@ -18,7 +18,8 @@ import { guestLinkFor } from './sheet';
  */
 const API = 'https://app.loops.so/api/v1';
 
-const apiKey = () => process.env.LOOP_API_KEY ?? process.env.LOOPS_API_KEY;
+// `||`, not `??`: `.env.template` ships `LOOP_API_KEY=""`, and an empty string must not hide the other name.
+const apiKey = () => process.env.LOOP_API_KEY || process.env.LOOPS_API_KEY;
 
 export const hasLoopsKey = () => Boolean(apiKey());
 
