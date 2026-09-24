@@ -16,8 +16,15 @@ import structure from '../structure';
 import theme from './theme';
 
 // Singletons are pinned in the desk structure against a fixed document ID, so they must not be
-// creatable a second time from the global "Create new" menu.
-const singletonTypes = new Set(['headerDocument', 'settings', 'socialMediaDocument', 'weddingSettings']);
+// creatable a second time from the global "Create new" menu. `nationalityNote` is three fixed
+// documents rather than one, for the same reason: a fourth could never be shown to anyone.
+const singletonTypes = new Set([
+  'headerDocument',
+  'nationalityNote',
+  'settings',
+  'socialMediaDocument',
+  'weddingSettings'
+]);
 
 // Written only by the RSVP server action and read-only in the Studio, so creating one by hand would
 // produce an empty document nobody can then fill in. Document-level readOnly does not hide the

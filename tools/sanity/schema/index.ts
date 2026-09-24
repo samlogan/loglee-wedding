@@ -2,6 +2,7 @@ import type { SchemaTypeDefinition } from 'sanity';
 
 import headerDocument from './documents/headerDocument';
 // Documents
+import nationalityNote from './documents/nationalityNote';
 import page from './documents/page';
 import { player, playerMeterStat, playerTextStat } from './documents/player';
 import route from './documents/route';
@@ -51,6 +52,7 @@ import { twoColumnListSection } from './sections/twoColumnListSection';
 const schema: SchemaTypeDefinition[] = [
   // Documents
   headerDocument,
+  nationalityNote,
   page,
   player,
   route,
