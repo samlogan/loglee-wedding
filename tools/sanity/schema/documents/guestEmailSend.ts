@@ -2,6 +2,8 @@ import { TbMailForward } from 'react-icons/tb';
 import { defineType } from 'sanity';
 import type { ConditionalPropertyCallbackContext } from 'sanity';
 
+import { isSendConfirmed, sendConfirmationPhrase } from '../../../helpers/guestEmails';
+
 /**
  * One send of the invitation or the reminder, to the guest list — or a test to one address.
  *
@@ -21,6 +23,8 @@ interface IGuestEmailSend {
   _type: 'guestEmailSend';
   kind?: 'invitation' | 'reminder';
   testEmail?: string;
+  /** The typed confirmation a send to the guest list needs — see `sendConfirmationPhrase`. */
+  confirm?: string;
   status?: 'requested' | 'sending' | 'done' | 'failed';
   lockedAt?: string;
   sent?: string[];
@@ -56,6 +60,26 @@ const guestEmailSend = defineType({
       readOnly: lockedOnceStarted,
       title: 'Test Address',
       type: 'email'
+    },
+    {
+      description:
+        'A send to the guest list emails real guests. Type SEND INVITATIONS (or SEND REMINDERS) to confirm — it cannot be published without it. Not needed for a test.',
+      hidden: ({ document }) => Boolean(document?.testEmail || document?.status),
+      name: 'confirm',
+      readOnly: lockedOnceStarted,
+      title: 'Confirm Sending to Guests',
+      type: 'string',
+      validation: (Rule) =>
+        Rule.custom((value, { document }) => {
+          if (document?.testEmail || document?.status) {
+            return true;
+          }
+          const kind = document?.kind === 'reminder' ? 'reminder' : 'invitation';
+          return (
+            isSendConfirmed(kind, value as string | undefined) ||
+            `Type “${sendConfirmationPhrase(kind)}” to send to guests`
+          );
+        })
     },
     {
       description: 'Written by the site.',

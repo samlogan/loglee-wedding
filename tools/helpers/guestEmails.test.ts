@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { eligibleFor, hasReplied } from './guestEmails';
+import { eligibleFor, hasReplied, isSendConfirmed, sendConfirmationPhrase } from './guestEmails';
 import type { Replies } from './guestEmails';
 import type { Guest } from './guests';
 
@@ -121,5 +121,26 @@ describe('hasReplied', () => {
     expect(hasReplied(guest({ id: 'A-1' }), { emails: new Set(), guestIds: new Set(['A-1']) })).toBe(true);
     expect(hasReplied(guest({ email: 'X@y.com' }), { emails: new Set(['x@y.com']), guestIds: new Set() })).toBe(true);
     expect(hasReplied(guest({}), NO_REPLIES)).toBe(false);
+  });
+});
+
+describe('send confirmation', () => {
+  it('asks for a phrase naming what will be sent', () => {
+    expect(sendConfirmationPhrase('invitation')).toBe('SEND INVITATIONS');
+    expect(sendConfirmationPhrase('reminder')).toBe('SEND REMINDERS');
+  });
+
+  it('accepts the phrase in any case and spacing', () => {
+    expect(isSendConfirmed('invitation', 'send invitations')).toBe(true);
+    expect(isSendConfirmed('invitation', '  Send   Invitations ')).toBe(true);
+    expect(isSendConfirmed('reminder', 'SEND REMINDERS')).toBe(true);
+  });
+
+  it('refuses a blank, a wrong or the other kind’s phrase', () => {
+    expect(isSendConfirmed('invitation', '')).toBe(false);
+    expect(isSendConfirmed('invitation', undefined)).toBe(false);
+    expect(isSendConfirmed('invitation', 'send')).toBe(false);
+    expect(isSendConfirmed('invitation', 'SEND REMINDERS')).toBe(false);
+    expect(isSendConfirmed('reminder', 'SEND INVITATIONS')).toBe(false);
   });
 });

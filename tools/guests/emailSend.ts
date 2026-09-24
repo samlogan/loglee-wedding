@@ -1,5 +1,5 @@
 import 'server-only';
-import { SKIP_REASON_LABEL, eligibleFor } from '@/helpers/guestEmails';
+import { SKIP_REASON_LABEL, eligibleFor, isSendConfirmed, sendConfirmationPhrase } from '@/helpers/guestEmails';
 import type { GuestEmailKind, Replies } from '@/helpers/guestEmails';
 import type { Guest } from '@/helpers/guests';
 import writeClient from '@/tools/sanity/lib/writeClient';
@@ -92,6 +92,16 @@ export const processEmailSend = async (id: string) => {
       await finish({
         status: 'done',
         summary: `Test sent to ${send.testEmail}, filled in with ${nameOf(sample)}’s details. No guest was emailed.`
+      });
+      return;
+    }
+
+    // The Studio will not publish a guest-list send without its typed confirmation; check again here,
+    // so one that reached the site some other way — an API write, a schema change — emails nobody.
+    if (!isSendConfirmed(kind, send.confirm)) {
+      await finish({
+        status: 'failed',
+        summary: `Not sent: a send to the guest list needs “${sendConfirmationPhrase(kind)}” typed to confirm. No guest was emailed.`
       });
       return;
     }

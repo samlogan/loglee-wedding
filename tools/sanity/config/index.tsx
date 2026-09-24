@@ -11,6 +11,7 @@ import { presentationTool } from 'sanity/presentation';
 import { structureTool } from 'sanity/structure';
 
 import PreviewAction from '../actions/PreviewAction';
+import withSendConfirmation from '../actions/SendConfirmationAction';
 import schemas from '../schema';
 import structure from '../structure';
 import theme from './theme';
@@ -39,7 +40,11 @@ export default defineConfig({
   basePath: '/studio',
   dataset: SANITY_STUDIO_PROJECT_DATASET || '',
   document: {
-    actions: [PreviewAction],
+    actions: (prev, { schemaType }) =>
+      schemaType === 'guestEmailSend'
+        ? // Publishing a guest email sends it — see SendConfirmationAction.
+          prev.map((action) => (action.action === 'publish' ? withSendConfirmation(action) : action))
+        : [...prev, PreviewAction],
     newDocumentOptions: (prev) =>
       prev.filter(
         (template) => !(singletonTypes.has(template.templateId) || serverWrittenTypes.has(template.templateId))

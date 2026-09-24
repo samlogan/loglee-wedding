@@ -99,3 +99,16 @@ export const eligibleFor = (kind: GuestEmailKind, guests: readonly Guest[], repl
   }
   return { send, skipped };
 };
+
+/**
+ * What has to be typed before a send to the guest list can go — "SEND INVITATIONS" or
+ * "SEND REMINDERS". Checked in the Studio (the send cannot be published without it) and again by the
+ * site before it emails anyone, so a send that reached the site some other way is refused too. A test
+ * send, to one address, needs no phrase.
+ */
+export const sendConfirmationPhrase = (kind: GuestEmailKind) =>
+  kind === 'invitation' ? 'SEND INVITATIONS' : 'SEND REMINDERS';
+
+/** Whether a typed confirmation matches, ignoring case and extra spaces. */
+export const isSendConfirmed = (kind: GuestEmailKind, typed?: string | null) =>
+  (typed ?? '').trim().replaceAll(/\s+/g, ' ').toUpperCase() === sendConfirmationPhrase(kind);
