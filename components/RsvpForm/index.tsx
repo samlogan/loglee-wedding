@@ -51,6 +51,8 @@ export interface RsvpFormProps {
   note?: SanityTextBlock[];
   /** Under the guest's stay and price — how and when they pay. */
   stayNote?: string;
+  /** The switch asking whether the guest is staying at the venue at all. On by default. */
+  stayingLabel?: string;
   /** The switch that adds the Sunday night to the guest's stay, and the line under it. */
   extraNightLabel?: string;
   extraNightDescription?: string;
@@ -78,6 +80,7 @@ export interface RsvpFormValues {
   plusOne: { bringing: boolean; dietary?: string; name?: string };
   songRequest: string;
   specialRequirements: string;
+  staying: boolean;
 }
 
 const DEFAULT_VALUES: RsvpFormValues = {
@@ -89,7 +92,8 @@ const DEFAULT_VALUES: RsvpFormValues = {
   name: '',
   plusOne: { bringing: false, dietary: '', name: '' },
   songRequest: '',
-  specialRequirements: ''
+  specialRequirements: '',
+  staying: true
 };
 
 /** "$300", as a guest reads a price — whole dollars, the currency the contribution is set in. */
@@ -101,6 +105,7 @@ const formatAud = (amount: number) =>
  * what shows while a field there is blank.
  */
 const DEFAULT_COPY = {
+  stayingLabel: 'Want to stay with us at The Lodge?',
   extraNightDescription: 'Add an extra night to your stay and recover in style by the pool.',
   extraNightLabel: 'Spend the Sunday evening with us',
   heading: 'RSVP',
@@ -215,6 +220,7 @@ const RsvpForm = (props: RsvpFormProps) => {
     intro = DEFAULT_COPY.intro,
     introDetail = DEFAULT_COPY.introDetail,
     stayNote = DEFAULT_COPY.stayNote,
+    stayingLabel = DEFAULT_COPY.stayingLabel,
     extraNightLabel = DEFAULT_COPY.extraNightLabel,
     extraNightDescription = DEFAULT_COPY.extraNightDescription,
     guest,
@@ -263,6 +269,7 @@ const RsvpForm = (props: RsvpFormProps) => {
         sentValues={sentValues}
         state={state}
         stay={guest?.stay}
+        stayingLabel={stayingLabel}
         stayNote={stayNote}
       />
     </Form>
@@ -282,6 +289,7 @@ interface RsvpFormBodyProps {
   sentValues: string | null;
   stay?: StayPrice;
   stayNote: string;
+  stayingLabel: string;
   state: RsvpFormState;
 }
 
@@ -299,14 +307,26 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
     placeholders,
     sentValues,
     state,
-    stayNote
+    stayNote,
+    stayingLabel
   } = props;
 
   const { control, resetField } = useFormContext<RsvpFormValues>();
   const values = useWatch({ control });
 
   const bringing = Boolean(values.plusOne?.bringing);
+  const staying = values.staying !== false;
   const stay = props.stay && withExtraNight(props.stay, Boolean(values.extraNight));
+
+  /*
+   * Not staying at the venue clears the Sunday night along with hiding it — the same reason, and the
+   * same event-handler shape, as `onPlusOneChange` below.
+   */
+  const onStayingChange = ({ checked }: { checked: boolean }) => {
+    if (!checked) {
+      resetField(RSVP_FIELD.extraNight, { defaultValue: false });
+    }
+  };
 
   /*
    * "Spend the Sunday evening with us". In the stay card when the guest has one, beside the price it
@@ -485,14 +505,6 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
         </div>
       )
     },
-    ...(stay
-      ? []
-      : [
-          {
-            key: 'extraNight',
-            render: (label: (title: ReactNode) => ReactNode) => extraNightSwitch(label(extraNightLabel))
-          }
-        ]),
     {
       key: 'specialRequirements',
       render: (label) => (
@@ -512,6 +524,58 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
           placeholder={placeholders.songRequest}
         />
       )
+    },
+    /*
+     * Last, directly above the button: whether they are staying at the venue — on by default — and,
+     * while they are, their stay and what it comes to, with the Sunday night. Switched off, the stay,
+     * the price and everything about paying go, here and after they reply.
+     */
+    {
+      key: 'staying',
+      render: (label) => (
+        <div className={styles.group}>
+          <Field.Toggle
+            checkedText="Yes"
+            label={label(stayingLabel)}
+            name={RSVP_FIELD.staying}
+            onChange={onStayingChange}
+            uncheckedText="No"
+          />
+          {staying &&
+            (stay ? (
+              <section aria-labelledby="rsvp-stay" className={styles.stay}>
+                <Text
+                  as="h2"
+                  className={styles.stayLabel}
+                  id="rsvp-stay"
+                  size="2xs"
+                  text="Your stay"
+                  textTransform="uppercase"
+                  variant="mono"
+                />
+                <Text as="p" size="lg" weight="medium">
+                  {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
+                  {stay.extraNight && ', Sunday included'}
+                </Text>
+                {/*
+                 * Polite and atomic, so switching the Sunday night on or off is heard as the new total.
+                 * A stay the couple are covering shows nothing about paying — no price, no payment note.
+                 */}
+                {!isFreeStay(stay) && (
+                  <div aria-atomic="true" aria-live="polite">
+                    <Text as="p" className={styles.stayPrice}>
+                      {formatAud(stay.perNight)} per room, per night · <strong>{formatAud(stay.total)}</strong> in total
+                    </Text>
+                  </div>
+                )}
+                {extraNightSwitch(extraNightLabel)}
+                {!isFreeStay(stay) && <Text as="p" className={styles.stayNote} size="sm" text={stayNote} />}
+              </section>
+            ) : (
+              extraNightSwitch(extraNightLabel)
+            ))}
+        </div>
+      )
     }
   ];
 
@@ -529,36 +593,6 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
         </div>
 
         <div className={styles.fields}>
-          {stay && (
-            <section aria-labelledby="rsvp-stay" className={styles.stay}>
-              <Text
-                as="h2"
-                className={styles.stayLabel}
-                id="rsvp-stay"
-                size="2xs"
-                text="Your stay"
-                textTransform="uppercase"
-                variant="mono"
-              />
-              <Text as="p" size="lg" weight="medium">
-                {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
-                {stay.extraNight && ', Sunday included'}
-              </Text>
-              {/*
-               * Polite and atomic, so switching the Sunday night on or off is heard as the new total.
-               * A stay the couple are covering shows nothing about paying — no price, no payment note.
-               */}
-              {!isFreeStay(stay) && (
-                <div aria-atomic="true" aria-live="polite">
-                  <Text as="p" className={styles.stayPrice}>
-                    {formatAud(stay.perNight)} per room, per night · <strong>{formatAud(stay.total)}</strong> in total
-                  </Text>
-                </div>
-              )}
-              {extraNightSwitch(extraNightLabel)}
-              {!isFreeStay(stay) && <Text as="p" className={styles.stayNote} size="sm" text={stayNote} />}
-            </section>
-          )}
           {questions.map(({ key, render }, index) => (
             <div className={styles.question} key={key}>
               {render((title) => numbered(index, title))}

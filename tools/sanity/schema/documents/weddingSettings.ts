@@ -52,6 +52,7 @@ interface RsvpFormCopy {
   intro?: string;
   introDetail?: string;
   stayNote?: string;
+  stayingLabel?: string;
   extraNightLabel?: string;
   extraNightDescription?: string;
   placeholders?: Partial<Record<RsvpPlaceholder, string>>;
@@ -236,6 +237,13 @@ const weddingSettings = defineType({
           description: 'Under the guest’s stay and price, e.g. how and when they pay.',
           name: 'stayNote',
           title: 'Stay Note',
+          type: 'string'
+        },
+        {
+          description:
+            'The last question, on by default, e.g. “Want to stay with us at The Lodge?”. Switched off, the guest sees no stay, price or payment details.',
+          name: 'stayingLabel',
+          title: 'Staying — Label',
           type: 'string'
         },
         {

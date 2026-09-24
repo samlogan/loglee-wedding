@@ -54,6 +54,11 @@ describe('sendThankYou', () => {
     expect(sent()?.dataVariables.intro).toEqual([{ text: 'Thanks, legend.' }]);
   });
 
+  it('says nothing about a stay or paying when the guest is not staying', async () => {
+    await sendThankYou(SAM, { ...REPLY, extraNight: true, staying: false }, AT);
+    expect(sent()?.dataVariables).toMatchObject({ payment: [], stay: [], stayTotal: [] });
+  });
+
   it('prices the Sunday night in when the guest took it', async () => {
     await sendThankYou(SAM, { ...REPLY, extraNight: true }, AT);
     expect(sent()?.dataVariables.stay).toEqual([{ summary: 'King Room · 3 nights, Sunday included' }]);
@@ -86,9 +91,10 @@ describe('sendThankYou', () => {
     const variables = await thankYouVariablesFor(SAM, { extraNight: true });
     expect(variables).toMatchObject({
       firstName: 'Sam',
-      stay: [{ summary: 'King Room · 3 nights, Sunday included', total: '$450' }]
+      stay: [{ summary: 'King Room · 3 nights, Sunday included' }],
+      stayTotal: [{ total: '$450' }]
     });
-    expect((await thankYouVariablesFor(SAM)).stay).toEqual([{ summary: 'King Room · 2 nights', total: '$300' }]);
+    expect((await thankYouVariablesFor(SAM)).stayTotal).toEqual([{ total: '$300' }]);
   });
 
   it('sends nothing when the thank-you email is not set up', async () => {

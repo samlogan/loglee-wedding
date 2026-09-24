@@ -31,7 +31,7 @@ const form = (entries: Entries) => {
 };
 
 // The least a valid reply can be: what the form sends before anything optional is touched.
-const MINIMAL: Entries = { email: 'sam@example.com', kidsCount: '0', name: 'Sam Logan' };
+const MINIMAL: Entries = { email: 'sam@example.com', kidsCount: '0', name: 'Sam Logan', staying: 'on' };
 
 const parse = (entries: Entries) => parseRsvpSubmission(form({ ...MINIMAL, ...entries }));
 
@@ -79,7 +79,8 @@ describe('parseRsvpSubmission', () => {
       name: 'Sam Logan',
       plusOne: { bringing: true, dietary: 'No shellfish', name: 'Alex Lee' },
       songRequest: 'September',
-      specialRequirements: 'A cot, please'
+      specialRequirements: 'A cot, please',
+      staying: true
     });
   });
 
@@ -90,7 +91,8 @@ describe('parseRsvpSubmission', () => {
       extraNight: false,
       kidsCount: 0,
       name: 'Sam Logan',
-      plusOne: { bringing: false }
+      plusOne: { bringing: false },
+      staying: true
     });
     // Blank optional answers are left off the document rather than stored as empty strings.
     expect(Object.values(reply)).not.toContain('');
@@ -323,6 +325,27 @@ describe('isRepeatTooSoon', () => {
   });
 });
 
+describe('staying at the venue', () => {
+  it('is a checkbox, ticked by default — staying when it is sent, not when it is absent', () => {
+    expect(replyOf({}).staying).toBe(true);
+    expect(parseRsvpSubmission(form({ email: 'sam@example.com', kidsCount: '0', name: 'Sam' }))).toMatchObject({
+      reply: { staying: false }
+    });
+  });
+
+  it('drops the Sunday night for a guest who is not staying', () => {
+    const reply = parseRsvpSubmission(
+      form({ email: 'sam@example.com', extraNight: 'on', kidsCount: '0', name: 'Sam' })
+    );
+    expect(reply).toMatchObject({ reply: { extraNight: false, staying: false } });
+  });
+
+  it('treats a stored reply from before the question as staying', () => {
+    const { staying: _, ...before } = replyOf({});
+    expect(isSameRsvpReply(before, replyOf({}))).toBe(true);
+  });
+});
+
 describe('the Sunday night', () => {
   it('is a checkbox — taken when it is sent, not taken when it is absent', () => {
     expect(replyOf({ extraNight: 'on' }).extraNight).toBe(true);
@@ -366,7 +389,8 @@ describe('isSameRsvpReply', () => {
     ['a plus one added', { plusOne: { bringing: true, name: 'Jo' } }],
     ['the plus one dropped', { plusOne: { bringing: false } }],
     ['a different count', { kidsCount: 1 }],
-    ['the Sunday night added', { extraNight: true }]
+    ['the Sunday night added', { extraNight: true }],
+    ['no longer staying', { staying: false }]
   ])('does not match after %s', (_, change) => {
     expect(isSameRsvpReply({ ...reply, ...change }, reply)).toBe(false);
   });

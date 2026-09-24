@@ -6,7 +6,7 @@ import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import coupleNames from '@/helpers/coupleNames';
 import { isFreeStay, stayPriceOf } from '@/helpers/guests';
-import { replyExtrasFor, takesExtraNight } from '@/tools/guests/replyExtras';
+import { replyExtrasFor, savedStayOf } from '@/tools/guests/replyExtras';
 import type { ReplyExtras } from '@/tools/guests/replyExtras';
 import { currentGuest } from '@/tools/guests/session';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
@@ -64,10 +64,13 @@ const ThankYouPage = async () => {
    * after they have replied, and only to a signed-in guest — never in a page-builder section.
    */
   const noExtras: ReplyExtras = {};
-  const [{ payment: paymentDetails, travel }, extraNight] = guest
-    ? await Promise.all([replyExtrasFor(guest).catch(() => noExtras), takesExtraNight(guest.id)])
-    : [noExtras, false];
-  const stay = guest && stayPriceOf(guest, { extraNight });
+  const [extras, saved] = guest
+    ? await Promise.all([replyExtrasFor(guest).catch(() => noExtras), savedStayOf(guest.id)])
+    : [noExtras, { extraNight: false, staying: true }];
+  const { travel } = extras;
+  // Not staying at the venue: no stay, no total and no payment details — only the travel note.
+  const paymentDetails = saved.staying ? extras.payment : undefined;
+  const stay = guest && saved.staying ? stayPriceOf(guest, { extraNight: saved.extraNight }) : undefined;
   // A stay the couple are covering: the stay is shown, and nothing about paying for it.
   const free = isFreeStay(stay);
   const total =

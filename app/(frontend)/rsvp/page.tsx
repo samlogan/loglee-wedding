@@ -72,6 +72,7 @@ const RsvpPage = async () => {
         note={page?.rsvpNote ?? undefined}
         placeholders={placeholders}
         stayNote={filled(copy?.stayNote)}
+        stayingLabel={filled(copy?.stayingLabel)}
       />
     </Section>
   );

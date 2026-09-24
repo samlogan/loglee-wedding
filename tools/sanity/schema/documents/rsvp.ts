@@ -28,6 +28,8 @@ interface IRsvpDocument {
   submittedAt?: string;
   /** No longer asked — present only on replies sent before the form dropped the question. */
   roomPreference?: string;
+  /** Staying at the venue. Absent on replies sent before the form asked, which were all staying. */
+  staying?: boolean;
   /** Staying the Sunday night too — one more night on their stay, at the same price. */
   extraNight?: boolean;
   kidsCount?: number;
@@ -143,6 +145,15 @@ const rsvp = defineType({
       name: `roomPreference`,
       title: `Room Preference`,
       type: `string`
+    },
+    {
+      description:
+        'Staying with us at the venue. Off means they are making their own arrangements — no room, nothing to pay.',
+      group: 'stay',
+      initialValue: true,
+      name: `staying`,
+      title: `Staying At The Lodge`,
+      type: `boolean`
     },
     {
       description: 'Staying the Sunday night too — one more night on their stay, at the same nightly contribution.',

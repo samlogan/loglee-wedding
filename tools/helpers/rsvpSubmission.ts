@@ -171,8 +171,10 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
     fieldErrors[RSVP_FIELD.kidsCount] = `Enter a number from 0 to ${RSVP_KIDS_MAX}`;
   }
 
-  // Another native checkbox — the Sunday night, one more night on the guest's stay.
-  const extraNight = entries.get(RSVP_FIELD.extraNight) !== null;
+  // Two more native checkboxes: staying at the venue (ticked by default), and — only while they are —
+  // the Sunday night, one more night on their stay.
+  const staying = entries.get(RSVP_FIELD.staying) !== null;
+  const extraNight = staying && entries.get(RSVP_FIELD.extraNight) !== null;
 
   const dietary = text(RSVP_FIELD.dietary) || undefined;
   const kidsAges = text(RSVP_FIELD.kidsAges) || undefined;
@@ -194,7 +196,8 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
       name,
       plusOne,
       songRequest,
-      specialRequirements
+      specialRequirements,
+      staying
     }
   };
 };
@@ -240,7 +243,9 @@ const replyKey = (reply: Partial<RsvpReply>) =>
     reply.kidsAges,
     reply.songRequest,
     reply.specialRequirements,
-    reply.extraNight ?? false
+    reply.extraNight ?? false,
+    // Replies from before the question was asked were all staying.
+    reply.staying ?? true
   ]);
 
 /** Whether a stored document already holds exactly this reply. */

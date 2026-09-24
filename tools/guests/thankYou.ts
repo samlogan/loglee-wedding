@@ -15,7 +15,11 @@ import { guestHomeLinkFor } from './sheet';
  */
 export const thankYouVariablesFor = async (
   guest: Guest,
-  { extraNight = false, firstName }: { extraNight?: boolean; firstName?: string } = {}
+  {
+    extraNight = false,
+    firstName,
+    staying = true
+  }: { extraNight?: boolean; firstName?: string; staying?: boolean } = {}
 ) => {
   const extras = await replyExtrasFor(guest);
   return thankYouVariables({
@@ -24,6 +28,7 @@ export const thankYouVariablesFor = async (
     intro: extras.emailIntro,
     payment: extras.payment,
     stay: stayPriceOf(guest, { extraNight }),
+    staying,
     travel: extras.travel
   });
 };
@@ -45,7 +50,8 @@ export const sendThankYou = async (guest: Guest, reply: RsvpReply, submittedAt: 
     await sendThankYouEmail({
       dataVariables: await thankYouVariablesFor(guest, {
         extraNight: reply.extraNight,
-        firstName: reply.name.split(' ')[0]
+        firstName: reply.name.split(' ')[0],
+        staying: reply.staying
       }),
       idempotencyKey: `thank-you-${guest.id}-${submittedAt.getTime()}`,
       to: reply.email

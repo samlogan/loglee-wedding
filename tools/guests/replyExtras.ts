@@ -41,15 +41,20 @@ export const replyExtrasFor = async (guest: Pick<Guest, 'nationality' | 'payment
 };
 
 /**
- * Whether the guest's saved reply takes the Sunday night — read from their `rsvp` document, which
- * only the server can: replies are private (`RSVP_ID_PREFIX`). `false` when there is no reply, or
- * the dataset cannot be read.
+ * What the guest's saved reply says about their stay — whether they are staying at the venue, and
+ * whether they take the Sunday night — read from their `rsvp` document, which only the server can:
+ * replies are private (`RSVP_ID_PREFIX`).
+ *
+ * Staying unless the reply says otherwise: replies sent before the form asked were all staying, and
+ * with no reply, or no dataset, the stay the sheet gives is the best answer there is.
  */
-export const takesExtraNight = async (guestId: string): Promise<boolean> => {
-  const extraNight = await writeClient
-    ?.fetch<boolean | null>('*[_type == "rsvp" && guestId == $guestId] | order(submittedAt desc)[0].extraNight', {
-      guestId
-    })
+export const savedStayOf = async (guestId: string): Promise<{ staying: boolean; extraNight: boolean }> => {
+  const saved = await writeClient
+    ?.fetch<{ staying?: boolean | null; extraNight?: boolean | null } | null>(
+      '*[_type == "rsvp" && guestId == $guestId] | order(submittedAt desc)[0]{ staying, extraNight }',
+      { guestId }
+    )
     .catch(() => null);
-  return extraNight === true;
+  const staying = saved?.staying !== false;
+  return { extraNight: staying && saved?.extraNight === true, staying };
 };
