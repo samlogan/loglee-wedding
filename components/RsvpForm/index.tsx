@@ -588,10 +588,16 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
         <div className={styles.rail}>
           <Text as="h1" className={styles.heading} size="md" text={heading} variant="display" />
           {note && note.length > 0 && <TextBlock blocks={note} className={styles.note} />}
-          <Text as="p" size="lg">
-            {intro}
-            {introDetail && <span className={styles.wideOnly}> {introDetail}</span>}
-          </Text>
+          {/*
+           * Either half can be cleared in Wedding Settings. With no first sentence, the rest stands on
+           * its own and shows at every width; with neither, there is no paragraph at all.
+           */}
+          {(intro || introDetail) && (
+            <Text as="p" size="lg">
+              {intro}
+              {introDetail && (intro ? <span className={styles.wideOnly}> {introDetail}</span> : introDetail)}
+            </Text>
+          )}
           {models && models.length > 0 && <RsvpModel models={models} />}
         </div>
 
