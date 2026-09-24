@@ -56,7 +56,7 @@
     padding: 0.1875em;
     border: var(--button-border-width) solid var(--track-border-color, var(--button-secondary-bg));
     border-radius: var(--radius-full);
-    background-color: transparent;
+    background-color: var(--bg-raised);
     transition:
       background-color 0.2s ease,
       border-color 0.2s ease;
