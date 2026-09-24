@@ -292,6 +292,30 @@ export const FreeStay: Story = {
   }
 };
 
+/**
+ * The optional lines cleared in Wedding Settings — the rest of the intro, the stay note and the
+ * Sunday night's description. An empty string hides each one rather than bringing the form's own back.
+ */
+export const OptionalCopyCleared: Story = {
+  args: {
+    extraNightDescription: '',
+    guest: { email: 'sam@example.com', name: 'Sam Logan', stay: SAM_STAY },
+    introDetail: '',
+    stayNote: ''
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const stay = canvas.getByRole('region', { name: /your stay/i });
+
+    await expect(canvas.getByText(COPY.intro, { exact: false })).toBeInTheDocument();
+    await expect(canvas.queryByText(/what you eat/)).toBeNull();
+    await expect(stay).not.toHaveTextContent(/recover in style/);
+    await expect(stay).not.toHaveTextContent(/how to pay/);
+    // The price is still there — only the notes went.
+    await expect(stay).toHaveTextContent('$300 in total');
+  }
+};
+
 /** The words from Wedding Settings → RSVP → RSVP Form, replacing the form's own. */
 export const EditedCopy: Story = {
   args: {

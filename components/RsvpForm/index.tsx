@@ -39,6 +39,7 @@ export interface RsvpFormProps {
   /** The first sentence of the intro. Shown at every width. */
   intro?: string;
   /** The rest of it. Wide layouts only — the phone frame keeps just `intro` (Figma node 1:884). */
+  /** An empty string shows none — the same for `stayNote` and `extraNightDescription`. */
   introDetail?: string;
   /**
    * The players' models. The rail shows the first two walking side by side — see `RsvpModel`.
@@ -335,7 +336,9 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
   const extraNightSwitch = (label: ReactNode) => (
     <div className={styles.extraNight}>
       <Field.Toggle checkedText="Yes" label={label} name={RSVP_FIELD.extraNight} uncheckedText="No" />
-      <Text as="p" className={styles.extraNightDescription} size="sm" text={extraNightDescription} />
+      {extraNightDescription && (
+        <Text as="p" className={styles.extraNightDescription} size="sm" text={extraNightDescription} />
+      )}
     </div>
   );
   const isSaved = state.status === 'success' && !isPending && sentValues === JSON.stringify(values);
@@ -569,7 +572,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
                   </div>
                 )}
                 {extraNightSwitch(extraNightLabel)}
-                {!isFreeStay(stay) && <Text as="p" className={styles.stayNote} size="sm" text={stayNote} />}
+                {!isFreeStay(stay) && stayNote && <Text as="p" className={styles.stayNote} size="sm" text={stayNote} />}
               </section>
             ) : (
               extraNightSwitch(extraNightLabel)
