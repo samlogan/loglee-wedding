@@ -6,7 +6,7 @@ vi.mock('./loops', () => ({ hasThankYouEmail: vi.fn(() => true), sendThankYouEma
 vi.mock('./replyExtras', () => ({ replyExtrasFor: vi.fn(async () => ({})) }));
 vi.mock('./sheet', () => ({ guestHomeLinkFor: (id: string) => `https://samandlauren.wedding/g/${id}/?to=/` }));
 
-const { sendThankYou } = await import('./thankYou');
+const { sendThankYou, thankYouVariablesFor } = await import('./thankYou');
 const loops = await import('./loops');
 const extras = await import('./replyExtras');
 
@@ -80,6 +80,15 @@ describe('sendThankYou', () => {
       travel: [{ text: 'Bring an adaptor.' }],
       travelHeading: [{ text: 'Travelling from the UK' }]
     });
+  });
+
+  it('builds the same email for a Studio test, with the Sunday night when asked', async () => {
+    const variables = await thankYouVariablesFor(SAM, { extraNight: true });
+    expect(variables).toMatchObject({
+      firstName: 'Sam',
+      stay: [{ summary: 'King Room · 3 nights, Sunday included', total: '$450' }]
+    });
+    expect((await thankYouVariablesFor(SAM)).stay).toEqual([{ summary: 'King Room · 2 nights', total: '$300' }]);
   });
 
   it('sends nothing when the thank-you email is not set up', async () => {
