@@ -77,4 +77,13 @@
   .paymentLabel {
     color: var(--fg-accent);
   }
+
+  .headingLine {
+    display: block;
+  }
+
+  // Where the bank details went: the thank-you email, not this page.
+  .paymentNote {
+    color: var(--fg-muted);
+  }
 }
