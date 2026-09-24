@@ -67,10 +67,7 @@ const twoColumnListSectionProjection = groq`
     },
     variant == 'richText' => {
       "contribution": *[_type == 'weddingSettings' && _id == 'weddingSettings'][0].contribution{
-        showAmount,
-        amountPerNight,
-        copyWithAmount[]${blockContentProjection},
-        copyWithoutAmount[]${blockContentProjection}
+        copy[]${blockContentProjection}
       }
     }
   },

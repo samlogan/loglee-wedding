@@ -1,4 +1,4 @@
-import { formatAmount } from './amountToken';
+import formatAmount from './formatAmount';
 import { isFreeStay } from './guests';
 import type { StayPrice } from './guests';
 

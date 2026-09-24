@@ -74,87 +74,13 @@ p + .divider {
  * but made correct, so enabling the decorator is a one-line schema change and not a WCAG 1.4.3
  * failure on every dark section.
  *
- * `--fg-default` on a mix of the accent is the same mechanism `.amountToken` below uses and the same
- * reason: both ends of the pairing come from the surface, so the mark follows the theme instead of
- * asserting one. 60% keeps the highlight obvious while leaving the ink legible — 6.31:1 on the dark
+ * `--fg-default` on a mix of the accent: both ends of the pairing come from the surface, so the mark
+ * follows the theme instead of asserting one. 60% keeps the highlight obvious while leaving the ink legible — 6.31:1 on the dark
  * panel and 5.93:1 on the light one.
  */
 .markerFont {
   background-color: color-mix(in srgb, var(--fg-accent) 60%, var(--bg-default));
   color: var(--fg-default);
-}
-
-/*
- * The highlighted inline token — the `{amount}` chip in the contribution copy (Figma nodes 1:674
- * desktop, 1:742 mobile).
- *
- * ## Inline, and everything here follows from that
- *
- * `display: inline` is the requirement, not a default left in place: the chip sits mid-sentence and
- * the sentence has to wrap *around* it. The mobile comp is the proof — node 1:742 sits at x=467 with
- * " per room, per" continuing beside it at x=549 and the rest of the paragraph wrapping to the next
- * line. An `inline-block` would survive that particular line but takes its own unbreakable box out
- * of the flow, and a block-level treatment breaks the mobile layout outright.
- *
- * So: no `display`, no `margin-block`, and every size in `em`. Vertical padding on an inline box
- * does not grow the line box, which is what keeps the paragraph's leading unchanged whether or not
- * an editor named a figure — a chip that pushed its own line 4px taller would make the copy reflow
- * the moment the toggle was flipped.
- *
- * `white-space: nowrap` because "$1" at the end of one line and "20" at the start of the next is not
- * a price. Note what that does to the line beneath it: a `nowrap` inline box never fragments at a
- * *line* break — it is placed whole or it overflows — so `box-decoration-break: clone` is not the
- * ordinary-case insurance an earlier version of this note claimed. It is kept for the one break
- * `nowrap` does not govern, a fragmentainer break under `@media print` or in a multi-column
- * ancestor, where a split chip would otherwise draw one open-ended box.
- *
- * ## The colours are the sentence's own
- *
- * Figma fills the chip with stone/50 at 15% and sets the figure in stone/50 — and on that panel
- * stone/50 *is* the text colour, so the fill is `currentColor` at 15% and the label needs no colour
- * of its own. That is what makes this reusable rather than section-specific: on a light section the
- * same rule gives ink-on-ink, with no `[data-theme]` branch and nothing for a theme to get wrong.
- * Measured on the drawn pairing (stone/50 over pine/600) by compositing the resolved
- * `getComputedStyle` values in the browser rather than by hand: the blend is #3e604e and the
- * label reads 6.25:1 against it — WCAG 1.4.3 AA for normal text, with the surrounding paragraph
- * at 9.40:1.
- *
- * `0.875em` is the design's ratio rather than a step on the type scale: the chip is 15px inside a
- * 17px paragraph on desktop and 13px inside 15px on mobile (0.88 and 0.87). Expressed against the
- * parent so it tracks whatever the paragraph resolved to, which no `--body-*` token can do — the
- * nearest, `--body-sm`, would be 14px inside an 18px line and read noticeably small. Mono is a
- * larger x-height at the same size, which is why the figure still matches the sentence optically.
- *
- * `--radius-sm` is 4px against the drawn 3px. One pixel, and the chip is 24px tall, so it is the
- * token rather than a hand-written value.
- */
-.amountToken {
-  /*
-   * `<Text variant="mono" weight="medium">` supplies the family; both of the role's other two
-   * declarations are turned off here, because this run is measured against the *sentence* it sits in
-   * rather than against the type scale.
-   *
-   * The leading is the *paragraph's*, so the chip sits on the line box it is spliced into — a chip
-   * carrying the role's own 1.3 would shorten that line and shift the copy around it. `normal` on
-   * the tracking for the same reason: the figure reads as part of the sentence, not as a tag.
-   *
-   * `var(--body-line-height)` and not the literal `inherit`, which was the first attempt and is a
-   * trap worth recording: on a *custom* property `inherit` is honoured as a CSS-wide keyword, so
-   * `--mono-line-height: inherit` resolves to the parent's `--mono-line-height` — the role's 1.3 —
-   * rather than to the parent's `line-height`. Measured: it rendered the chip at 19.34px against the
-   * 23.06px the paragraph sets. Reading the paragraph's own token instead also tracks a section that
-   * re-points it, which `TwoColumnListSection`'s rich-text body does (1.55).
-   */
-  --mono-line-height: var(--body-line-height);
-  --mono-letter-spacing: normal;
-
-  background-color: color-mix(in srgb, currentColor 15%, transparent);
-  border-radius: var(--radius-sm);
-  box-decoration-break: clone;
-  font-size: 0.875em;
-  padding: 0.125em 0.4em;
-  white-space: nowrap;
-  -webkit-box-decoration-break: clone;
 }
 
 .divider {

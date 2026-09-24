@@ -1,7 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { expect, within } from 'storybook/test';
 
-import { AMOUNT_PLACEHOLDER } from '@/helpers/amountToken';
 import hasBlockContent from '@/helpers/hasBlockContent';
 import stripTitleTags from '@/helpers/stripTitleTags';
 import type { ITwoColumnListSection } from '@/tools/sanity/schema/sections/twoColumnListSection';
@@ -105,11 +104,8 @@ const LIST_MOCK: ITwoColumnListSection = {
 const fixture = sectionFixture<ITwoColumnListSection>('twoColumnListSection');
 const listData: ITwoColumnListSection = fixture?.variant === 'list' ? fixture : LIST_MOCK;
 
-/** Stay's contribution sentence (node 1:673), reassembled from the three text nodes Figma splits it across. */
-const CONTRIBUTION_WITH_AMOUNT = `We’ve booked and paid for the rooms upfront so no one has to worry about logistics. If you’re able to, we’d be grateful for a contribution of ${AMOUNT_PLACEHOLDER} per room, per night. We’ll share the details with your RSVP, and if that’s tricky for any reason, just let us know.`;
-
-/** The same sentence with the figure taken out — what `showAmount: false` publishes. */
-const CONTRIBUTION_WITHOUT_AMOUNT =
+/** Stay's accommodation sentence (node 1:673), without a figure — each guest's price is on their RSVP. */
+const CONTRIBUTION_COPY =
   'We’ve booked and paid for the rooms upfront so no one has to worry about logistics. If you’re able to, we’d be grateful for a contribution towards your room. We’ll share the details with your RSVP, and if that’s tricky for any reason, just let us know.';
 
 /**
@@ -118,22 +114,13 @@ const CONTRIBUTION_WITHOUT_AMOUNT =
  * `contribution` is joined in by the projection from `weddingSettings`, not authored on the section,
  * so the mock stands in for the singleton rather than for a section field.
  *
- * Mock and **not** fixture-backed, unlike `listData` above, and deliberately so. Every `richText`
- * story below asserts a specific branch of `resolveAmountCopy` — the toggle off, the figure missing,
- * the placeholder repeated, the placeholder never written — by overriding `contribution` into that
- * state. Those are logic assertions and need a controlled input; against the couple's live copy they
- * would be asserting whatever sentence is published this week. The `{amount}` contract is pinned
- * here and in `tools/helpers/amountToken.test.ts`; the CMS's own wording is not this file's subject.
+ * Mock and **not** fixture-backed, unlike `listData` above: the stories below assert on the words,
+ * and against the couple's live copy they would be asserting whatever sentence is published this week.
  */
 const richTextData: ITwoColumnListSection = {
   variant: 'richText',
   title: '<h2>The rooms are sorted.</h2>',
-  contribution: {
-    showAmount: true,
-    amountPerNight: 120,
-    copyWithAmount: [mockBlock('normal', CONTRIBUTION_WITH_AMOUNT)],
-    copyWithoutAmount: [mockBlock('normal', CONTRIBUTION_WITHOUT_AMOUNT)]
-  }
+  contribution: { copy: [mockBlock('normal', CONTRIBUTION_COPY)] }
 };
 
 /** The section element itself — the full-bleed band, which carries the band's theme and paints it. */
@@ -565,24 +552,15 @@ export const RichTextWithAsideEyebrow: Story = {
     // It labels the copy *beneath* it — same column, drawn above — and the copy still renders.
     await expect(label.parentElement?.contains(paragraph)).toBe(true);
     await expect(label.getBoundingClientRect().bottom).toBeLessThanOrEqual(paragraph.getBoundingClientRect().top);
-    await expect(paragraph).toHaveTextContent('a contribution of $120 per room, per night');
+    await expect(paragraph).toHaveTextContent('a contribution towards your room');
   }
 };
 
 /**
- * The `richText` variant with a figure named — Stay's band as drawn (node 1:669).
- *
- * This is the story that pins the `{amount}` contract end to end: `weddingSettings.contribution`
- * arrives as props, `resolveAmountCopy` picks `copyWithAmount` and substitutes the figure as a
- * marked Portable Text run, and `TextBlock` renders that mark as the chip.
- *
- * The three assertions on the chip are the ticket's constraint, not decoration. It has to be
- * **inline** so the sentence wraps around it — Figma's mobile frame has the copy continuing beside
- * it on the same line and wrapping below (node 1:742) — and a block-level treatment would break that
- * layout. And it has to be *highlighted*, which is the background: `currentColor` at 15%, which on
- * this panel is the drawn stone/50-at-15% over pine/600.
+ * The `richText` variant — Stay's band as drawn (node 1:669): the accommodation wording from Wedding
+ * Settings → Contribution, and no list.
  */
-export const RichTextWithAmount: Story = {
+export const RichText: Story = {
   args: richTextData,
   decorators: [atWidth('80rem')],
   parameters: { design: { type: 'figma', url: `${FIGMA}1-669` } },
@@ -590,160 +568,29 @@ export const RichTextWithAmount: Story = {
     const canvas = within(canvasElement);
     const paragraph = canvasElement.querySelector('[data-theme] p') as HTMLElement;
 
-    // The figure is formatted and sits mid-sentence, not appended.
-    await expect(paragraph).toHaveTextContent('a contribution of $120 per room, per night');
-    // The placeholder never reaches the page.
-    await expect(paragraph.textContent).not.toContain(AMOUNT_PLACEHOLDER);
+    await expect(paragraph).toHaveTextContent('a contribution towards your room');
     // No list on this variant — one section, two right-hand treatments.
     await expect(canvas.queryByRole('list')).not.toBeInTheDocument();
-
-    const chip = [...paragraph.querySelectorAll('span')].find((span) => span.textContent === '$120') as HTMLElement;
-
-    await expect(chip).toBeInTheDocument();
-    // Inline, so the sentence wraps around it rather than breaking over it.
-    await expect(getComputedStyle(chip).display).toBe('inline');
-    // Highlighted: a real fill rather than the transparent default.
-    await expect(getComputedStyle(chip).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
   }
 };
 
-/**
- * The `richText` variant on a phone (node 1:737).
- *
- * The chip is the reason this story exists rather than being folded into `Mobile`: at this width the
- * sentence wraps, and the assertion is that it wraps *around* the chip — the chip's own box stays
- * inside the paragraph and the paragraph is taller than one line.
- */
+/** The `richText` variant on a phone (node 1:737): the copy wraps inside the measure. */
 export const RichTextMobile: Story = {
   args: richTextData,
   decorators: [atWidth('23.4375rem')],
   parameters: { design: { type: 'figma', url: `${FIGMA}1-737` } },
   play: async ({ canvasElement }) => {
     const paragraph = canvasElement.querySelector('[data-theme] p') as HTMLElement;
-    const chip = [...paragraph.querySelectorAll('span')].find((span) => span.textContent === '$120') as HTMLElement;
-
-    const paragraphBox = paragraph.getBoundingClientRect();
-    const chipBox = chip.getBoundingClientRect();
-
-    // The copy is multi-line here, which is the condition the chip has to survive.
-    await expect(paragraphBox.height).toBeGreaterThan(chipBox.height * 2);
-    // The chip is a fragment of a line rather than a block: it never spans the measure, and it stays
-    // inside it.
-    await expect(chipBox.width).toBeLessThan(paragraphBox.width);
-    await expect(chipBox.right).toBeLessThanOrEqual(paragraphBox.right + 0.5);
-  }
-};
-
-/**
- * The toggle off — `showAmount: false`, which is the field's `initialValue` and so the default state
- * of a fresh document.
- *
- * The second copy field exists precisely so the sentence still reads with no figure in it. Nothing
- * is hidden with a span; a different sentence is published.
- */
-export const RichTextWithoutAmount: Story = {
-  args: {
-    ...richTextData,
-    contribution: { ...richTextData.contribution, showAmount: false }
-  },
-  decorators: [atWidth('80rem')],
-  parameters: { design: { type: 'figma', url: `${FIGMA}1-669` } },
-  play: async ({ canvasElement }) => {
-    const paragraph = canvasElement.querySelector('[data-theme] p') as HTMLElement;
+    const panel = panelOf(canvasElement).getBoundingClientRect();
+    const box = paragraph.getBoundingClientRect();
 
     await expect(paragraph).toHaveTextContent('a contribution towards your room');
-    await expect(paragraph.textContent).not.toContain('$');
-    await expect(paragraph.textContent).not.toContain(AMOUNT_PLACEHOLDER);
+    await expect(box.right).toBeLessThanOrEqual(panel.right + 0.5);
   }
 };
 
 /**
- * The toggle on but the figure left blank.
- *
- * The degenerate case the ticket asks about. Publishing `copyWithAmount` would put "…a contribution
- * of {amount} per room" on the page, so the amount-free sentence wins instead — the same answer as
- * the toggle being off, reached by a different route. `tools/helpers/amountToken.test.ts` pins the
- * neighbouring cases this cannot show: a negative figure, `NaN`, and the deliberate zero that a
- * truthiness test would get wrong.
- */
-export const RichTextMissingAmount: Story = {
-  args: {
-    ...richTextData,
-    contribution: { ...richTextData.contribution, amountPerNight: undefined, showAmount: true }
-  },
-  decorators: [atWidth('80rem')],
-  parameters: { design: { type: 'figma', url: `${FIGMA}1-669` } },
-  play: async ({ canvasElement }) => {
-    const paragraph = canvasElement.querySelector('[data-theme] p') as HTMLElement;
-
-    await expect(paragraph).toHaveTextContent('a contribution towards your room');
-    await expect(paragraph.textContent).not.toContain(AMOUNT_PLACEHOLDER);
-  }
-};
-
-/**
- * Copy that names the figure twice.
- *
- * Every occurrence is replaced, not just the first. Replacing only the first would leave a literal
- * "{amount}" on the published page the moment an editor repeats it, which is the one outcome of the
- * three that is visibly broken rather than merely unexpected.
- */
-export const RichTextAmountTwice: Story = {
-  args: {
-    ...richTextData,
-    contribution: {
-      ...richTextData.contribution,
-      copyWithAmount: [
-        mockBlock(
-          'normal',
-          `It is ${AMOUNT_PLACEHOLDER} per room, per night — so two nights is ${AMOUNT_PLACEHOLDER} twice over, and we will share the details with your RSVP.`
-        )
-      ]
-    }
-  },
-  decorators: [atWidth('80rem')],
-  parameters: { design: { type: 'figma', url: `${FIGMA}1-669` } },
-  play: async ({ canvasElement }) => {
-    const paragraph = canvasElement.querySelector('[data-theme] p') as HTMLElement;
-    const chips = [...paragraph.querySelectorAll('span')].filter((span) => span.textContent === '$120');
-
-    await expect(chips).toHaveLength(2);
-    await expect(paragraph.textContent).not.toContain(AMOUNT_PLACEHOLDER);
-  }
-};
-
-/**
- * Copy that names no figure at all, with one set.
- *
- * The field is where an editor says *where* the figure goes, so copy that never places a placeholder
- * renders exactly as written. The alternative — appending the amount somewhere — puts a number in a
- * sentence nobody wrote it into.
- */
-export const RichTextAmountNeverPlaced: Story = {
-  args: {
-    ...richTextData,
-    contribution: {
-      ...richTextData.contribution,
-      copyWithAmount: [
-        mockBlock(
-          'normal',
-          'We’ve booked and paid for the rooms upfront. If you’re able to, we’d be grateful for a contribution — we’ll share the details with your RSVP.'
-        )
-      ]
-    }
-  },
-  decorators: [atWidth('80rem')],
-  parameters: { design: { type: 'figma', url: `${FIGMA}1-669` } },
-  play: async ({ canvasElement }) => {
-    const paragraph = canvasElement.querySelector('[data-theme] p') as HTMLElement;
-
-    await expect(paragraph).toHaveTextContent('we’d be grateful for a contribution');
-    await expect(paragraph.textContent).not.toContain('$');
-  }
-};
-
-/**
- * A `richText` section whose `weddingSettings` copy is blank in both fields.
+ * A `richText` section whose `weddingSettings` copy is blank.
  *
  * The contribution group is optional on the singleton, so this is the state of a site nobody has
  * filled that page in for yet. The panel renders its statement alone rather than a half-empty split.
