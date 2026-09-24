@@ -236,6 +236,30 @@ export const SundayNight: Story = {
   }
 };
 
+/**
+ * A stay the couple are covering — a contribution of 0 in the sheet. The stay and the Sunday night
+ * are shown; nothing about paying is, even with the Sunday night added.
+ */
+export const FreeStay: Story = {
+  args: {
+    guest: {
+      email: 'sam@example.com',
+      name: 'Sam Logan',
+      stay: { extraNight: false, nights: 2, perNight: 0, stay: 'Twin Double', total: 0 }
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const stay = canvas.getByRole('region', { name: /your stay/i });
+
+    await expect(stay).toHaveTextContent('Twin Double · 2 nights');
+    await userEvent.click(within(stay).getByRole('switch', { name: /spend the sunday evening with us/i }));
+    await expect(stay).toHaveTextContent('Twin Double · 3 nights, Sunday included');
+    await expect(stay).not.toHaveTextContent('$');
+    await expect(stay).not.toHaveTextContent(/how to pay/i);
+  }
+};
+
 /** The words from Wedding Settings → RSVP → RSVP Form, replacing the form's own. */
 export const EditedCopy: Story = {
   args: {

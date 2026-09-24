@@ -126,6 +126,13 @@ export const stayPriceOf = (
   return { extraNight, nights, perNight, stay: stay.trim(), total: nights * perNight };
 };
 
+/**
+ * Whether there is anything to pay for this stay. A stay the couple are covering — a contribution of
+ * 0 in the sheet — has none, and the guest is shown nothing about paying: no price, no payment
+ * details. No stay at all is not a free one; it is unknown, and is left to the payment details alone.
+ */
+export const isFreeStay = (stay?: Pick<StayPrice, 'total'>): boolean => stay?.total === 0;
+
 /** The sheet's columns, found by how each header starts — so reordering or relabelling the rest is safe. */
 export const GUEST_COLUMNS = {
   email: 'email',

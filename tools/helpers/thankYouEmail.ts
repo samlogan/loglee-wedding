@@ -1,4 +1,5 @@
 import { formatAmount } from './amountToken';
+import { isFreeStay } from './guests';
 import type { StayPrice } from './guests';
 
 /*=============================================>>>>>
@@ -43,7 +44,9 @@ export interface ThankYouEmailVariables {
   firstName: string;
   homeLink: string;
   intro: Item[];
-  stay: { summary: string; total: string }[];
+  stay: { summary: string }[];
+  /** The total, when there is one to pay — none for a stay the couple are covering. */
+  stayTotal: { total: string }[];
   paymentHeading: Item[];
   payment: Item[];
   travelHeading: Item[];
@@ -75,7 +78,9 @@ const heading = (text: string | null | undefined, under: Item[]): Item[] =>
 
 export const thankYouVariables = (input: ThankYouEmailInput): ThankYouEmailVariables => {
   const { firstName, homeLink, stay } = input;
-  const payment = items(paragraphsOf(input.payment));
+  // A stay the couple are covering: the stay is shown, and nothing about paying for it.
+  const free = isFreeStay(stay);
+  const payment = free ? [] : items(paragraphsOf(input.payment));
   const travel = items(paragraphsOf(input.travel?.content));
   const intro = (Array.isArray(input.intro) ? input.intro : [])
     .filter((paragraph): paragraph is string => typeof paragraph === 'string')
@@ -91,11 +96,11 @@ export const thankYouVariables = (input: ThankYouEmailInput): ThankYouEmailVaria
     stay: stay
       ? [
           {
-            summary: `${stay.stay} · ${stay.nights} ${stay.nights === 1 ? 'night' : 'nights'}${stay.extraNight ? ', Sunday included' : ''}`,
-            total: formatAmount(stay.total)
+            summary: `${stay.stay} · ${stay.nights} ${stay.nights === 1 ? 'night' : 'nights'}${stay.extraNight ? ', Sunday included' : ''}`
           }
         ]
       : [],
+    stayTotal: stay && !free ? [{ total: formatAmount(stay.total) }] : [],
     travel,
     travelHeading: heading(input.travel?.title || 'Travel tips', travel)
   };
