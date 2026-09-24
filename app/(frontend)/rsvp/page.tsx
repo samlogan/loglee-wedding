@@ -29,6 +29,15 @@ import { submitRsvp } from './actions';
 /** A field's text, or `undefined` when it is blank — so the form's own words stand in. */
 const filled = (value?: string | null) => value?.trim() || undefined;
 
+/**
+ * For a line the form can do without — the rest of the intro, the stay note, the Sunday night's
+ * description — blank means *none*: an editor who clears it wants it gone, and Sanity cannot tell a
+ * cleared field from one never filled in. Only when the RSVP Form fields have never been saved at all
+ * does the form keep its own words.
+ */
+const optional = (copy: RsvpFormCopy | null | undefined, value?: string | null) =>
+  copy ? (value?.trim() ?? '') : undefined;
+
 const RsvpPage = async () => {
   const [models, page, signedIn] = await Promise.all([
     // The players' models, for the pair walking side by side in the rail.
@@ -62,16 +71,16 @@ const RsvpPage = async () => {
     <Section containerWidth="lg" name="rsvp" spacing={['sm', 'md']} theme="light">
       <RsvpForm
         action={submitRsvp}
-        extraNightDescription={filled(copy?.extraNightDescription)}
+        extraNightDescription={optional(copy, copy?.extraNightDescription)}
         extraNightLabel={filled(copy?.extraNightLabel)}
         guest={guest}
         heading={filled(copy?.heading)}
         intro={filled(copy?.intro)}
-        introDetail={filled(copy?.introDetail)}
+        introDetail={optional(copy, copy?.introDetail)}
         models={models ?? []}
         note={page?.rsvpNote ?? undefined}
         placeholders={placeholders}
-        stayNote={filled(copy?.stayNote)}
+        stayNote={optional(copy, copy?.stayNote)}
         stayingLabel={filled(copy?.stayingLabel)}
       />
     </Section>
