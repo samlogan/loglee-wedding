@@ -12,6 +12,36 @@ export const GUEST_EMAIL_EVENT: Record<GuestEmailKind, string> = {
   reminder: 'send_reminder'
 };
 
+/**
+ * The invitation's opening paragraphs when Wedding Settings → Emails has none — the words the email
+ * was written with.
+ */
+export const INVITATION_INTRO_DEFAULT = [
+  'We’re getting married, and we’d love you to be there. Join us for a whole weekend at The Lodge Jamberoo, in the hills south of Sydney.',
+  'Everyone stays on site and we’ve booked the rooms, so all you need to do is tell us you’re coming.'
+];
+
+/** How many paragraphs the invitation template has room for, one contact property each. */
+export const INVITATION_INTRO_PARAGRAPHS = 3;
+
+/**
+ * The invitation's intro as the contact properties its template reads: `inviteIntro1` to
+ * `inviteIntro3`, blank past the last paragraph. Paragraphs past the third are joined onto it rather
+ * than dropped. Anything that is not text is ignored, and an intro with no text at all is the default.
+ */
+export const invitationIntroProperties = (intro: unknown): Record<string, string> => {
+  const written = Array.isArray(intro)
+    ? intro.filter((paragraph): paragraph is string => typeof paragraph === 'string').map((p) => p.trim())
+    : [];
+  const paragraphs = written.filter(Boolean);
+  const chosen = paragraphs.length > 0 ? paragraphs : INVITATION_INTRO_DEFAULT;
+  const last = INVITATION_INTRO_PARAGRAPHS - 1;
+  const fitted = [...chosen.slice(0, last), chosen.slice(last).join(' ')];
+  return Object.fromEntries(
+    Array.from({ length: INVITATION_INTRO_PARAGRAPHS }, (_, index) => [`inviteIntro${index + 1}`, fitted[index] ?? ''])
+  );
+};
+
 export type SkipReason =
   | 'no-email'
   | 'already-invited'

@@ -83,6 +83,7 @@ describe('numberCell', () => {
 describe('stayPriceOf', () => {
   it('multiplies the nightly contribution by the nights', () => {
     expect(stayPriceOf({ nights: 2, perNight: 150, stay: 'King Room' })).toEqual({
+      extraNight: false,
       nights: 2,
       perNight: 150,
       stay: 'King Room',
@@ -94,6 +95,20 @@ describe('stayPriceOf', () => {
     expect(stayPriceOf({ nights: 2, perNight: 150, stay: '' })).toBeUndefined();
     expect(stayPriceOf({ nights: undefined, perNight: 150, stay: 'King Room' })).toBeUndefined();
     expect(stayPriceOf({ nights: 2, perNight: undefined, stay: 'King Room' })).toBeUndefined();
+  });
+
+  it('adds the Sunday night at the same nightly price when the guest takes it', () => {
+    expect(stayPriceOf({ nights: 2, perNight: 150, stay: 'King Room' }, { extraNight: true })).toEqual({
+      extraNight: true,
+      nights: 3,
+      perNight: 150,
+      stay: 'King Room',
+      total: 450
+    });
+  });
+
+  it('adds no night to a stay the sheet does not give', () => {
+    expect(stayPriceOf({ nights: undefined, perNight: 150, stay: 'King Room' }, { extraNight: true })).toBeUndefined();
   });
 
   it('shows a free stay as a stay, not as missing', () => {

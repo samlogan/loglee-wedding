@@ -1,7 +1,14 @@
 import 'server-only';
-import { SKIP_REASON_LABEL, eligibleFor, isSendConfirmed, sendConfirmationPhrase } from '@/helpers/guestEmails';
+import {
+  SKIP_REASON_LABEL,
+  eligibleFor,
+  invitationIntroProperties,
+  isSendConfirmed,
+  sendConfirmationPhrase
+} from '@/helpers/guestEmails';
 import type { GuestEmailKind, Replies } from '@/helpers/guestEmails';
 import type { Guest } from '@/helpers/guests';
+import { INVITATION_EMAIL_QUERY } from '@/tools/sanity/lib/queries.groq';
 import writeClient from '@/tools/sanity/lib/writeClient';
 import type { IGuestEmailSend } from '@/tools/sanity/schema/documents/guestEmailSend';
 
@@ -32,6 +39,14 @@ const repliesOf = async (): Promise<Replies> => {
     guestIds: new Set(rows.flatMap((row) => (row.guestId ? [row.guestId] : [])))
   };
 };
+
+/**
+ * The contact properties an email of this kind carries on top of the guest's own: for an invitation,
+ * its intro from Wedding Settings → Emails, read straight from the dataset so a send just after an
+ * edit goes out with the edit.
+ */
+const emailPropertiesFor = async (kind: GuestEmailKind): Promise<Record<string, string> | undefined> =>
+  kind === 'invitation' ? invitationIntroProperties(await writeClient?.fetch(INVITATION_EMAIL_QUERY)) : undefined;
 
 /**
  * Take the next batch of a published guest email send. Called by the Sanity webhook for every
@@ -82,13 +97,18 @@ export const processEmailSend = async (id: string) => {
     }
     await ensureContactProperties();
     const guests = await readGuests({ fresh: true });
+    const properties = await emailPropertiesFor(kind);
 
     if (send.testEmail) {
       const sample = guests[0];
       if (!sample) {
         throw new Error('The guest sheet has no guests to fill the test with.');
       }
-      await sendGuestEmail(kind, sample, { idempotencyKey: `test-${kind}-${keyOf(id)}`, to: send.testEmail });
+      await sendGuestEmail(kind, sample, {
+        idempotencyKey: `test-${kind}-${keyOf(id)}`,
+        properties,
+        to: send.testEmail
+      });
       await finish({
         status: 'done',
         summary: `Test sent to ${send.testEmail}, filled in with ${nameOf(sample)}’s details. No guest was emailed.`
@@ -122,7 +142,7 @@ export const processEmailSend = async (id: string) => {
         // per send for a reminder, since a later reminder is allowed.
         const idempotencyKey =
           kind === 'invitation' ? `invitation-${keyOf(guest.id)}` : `reminder-${keyOf(guest.id)}-${keyOf(id)}`;
-        await sendGuestEmail(kind, guest, { idempotencyKey });
+        await sendGuestEmail(kind, guest, { idempotencyKey, properties });
         sentNow.push(guest.id);
         await markSent(guest, column, label, new Date());
       } catch (error) {

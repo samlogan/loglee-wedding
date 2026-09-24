@@ -12,13 +12,14 @@ import type { IGuestEmailSend } from '@/tools/sanity/schema/documents/guestEmail
 const state = vi.hoisted(() => ({
   commits: [] as { id: string; ifRevisionId?: string; set: Record<string, unknown> }[],
   document: undefined as unknown,
+  intro: undefined as unknown,
   lockConflict: false,
   replies: [] as { guestId?: string; email?: string }[]
 }));
 
 vi.mock('@/tools/sanity/lib/writeClient', () => ({
   default: {
-    fetch: vi.fn(async () => state.replies),
+    fetch: vi.fn(async (query: string) => (query.includes('invitationEmail') ? state.intro : state.replies)),
     getDocument: vi.fn(async () => state.document),
     patch: (id: string) => {
       const entry: { id: string; ifRevisionId?: string; set: Record<string, unknown> } = { id, set: {} };
@@ -103,6 +104,7 @@ beforeEach(() => {
   state.lockConflict = false;
   state.replies = [];
   state.document = undefined;
+  state.intro = undefined;
   vi.mocked(auth.hasGoogleCredentials).mockReturnValue(true);
   vi.mocked(loops.hasLoopsKey).mockReturnValue(true);
 });
@@ -200,6 +202,18 @@ describe('an invitation', () => {
     expect(vi.mocked(sheet.markSent).mock.calls.map(([marked]) => marked.id)).toEqual(['SAM-1', 'ALEX-3']);
     expect(lastWrite()).toMatchObject({ sent: ['SAM-1', 'ALEX-3'], status: 'done' });
     expect(lastWrite().skipped).toEqual([expect.objectContaining({ guestId: 'LAUREN-2', reason: 'Already invited' })]);
+  });
+
+  it('carries the intro from Wedding Settings, for the template to show', async () => {
+    state.document = send({});
+    state.intro = ['Come to our wedding.'];
+    vi.mocked(sheet.readGuests).mockResolvedValue([guest('SAM-1')]);
+    await processEmailSend('send-1');
+    expect(vi.mocked(loops.sendGuestEmail).mock.calls[0][2].properties).toEqual({
+      inviteIntro1: 'Come to our wedding.',
+      inviteIntro2: '',
+      inviteIntro3: ''
+    });
   });
 
   it('carries a per-guest idempotency key, so no two sends can invite anyone twice', async () => {

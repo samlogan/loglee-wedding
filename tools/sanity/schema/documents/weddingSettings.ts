@@ -1,5 +1,5 @@
 import { FiDatabase } from 'react-icons/fi';
-import { TbCoin, TbHeart, TbMailHeart, TbMapPin } from 'react-icons/tb';
+import { TbCoin, TbHeart, TbMail, TbMailHeart, TbMapPin } from 'react-icons/tb';
 import { defineType } from 'sanity';
 
 import type { MapLocation } from '../../../helpers/mapLocation';
@@ -35,12 +35,39 @@ interface IWeddingSettingsDocument {
     amountPerNight?: number;
     copyWithAmount?: SanityTextBlock[];
     copyWithoutAmount?: SanityTextBlock[];
-    /** Bank transfer to the Australian account — for guests whose Nationality is blank or Australian. */
-    paymentDetailsAustralia?: SanityTextBlock[];
-    /** Wise — for everyone else. */
-    paymentDetailsInternational?: SanityTextBlock[];
+  };
+  /** The RSVP form's words — see `RsvpFormCopy`. Every one falls back to the form's own when blank. */
+  rsvpForm?: RsvpFormCopy;
+  invitationEmail?: {
+    /** The invitation's opening paragraphs, under "Hi {firstName},". Up to three. */
+    intro?: string[];
   };
 }
+
+/** The editable words on the RSVP form. */
+interface RsvpFormCopy {
+  heading?: string;
+  intro?: string;
+  introDetail?: string;
+  stayNote?: string;
+  extraNightLabel?: string;
+  extraNightDescription?: string;
+  placeholders?: Partial<Record<RsvpPlaceholder, string>>;
+}
+
+/** The form's free-text answers, each with a placeholder an editor can change. */
+const RSVP_PLACEHOLDERS = [
+  { name: 'name', title: 'Name' },
+  { name: 'email', title: 'Email' },
+  { name: 'dietary', title: 'Dietary requirements' },
+  { name: 'plusOneName', title: 'Plus one name' },
+  { name: 'plusOneDietary', title: 'Plus one dietary requirements' },
+  { name: 'kidsAges', title: 'Kids’ ages' },
+  { name: 'specialRequirements', title: 'Special requirements' },
+  { name: 'songRequest', title: 'Song request' }
+] as const;
+
+type RsvpPlaceholder = (typeof RSVP_PLACEHOLDERS)[number]['name'];
 
 const weddingSettings = defineType({
   fields: [
@@ -187,7 +214,77 @@ const weddingSettings = defineType({
       type: `blockContentSimple`
     },
     {
-      description: 'The accommodation contribution ask, and the payment details guests see once they have replied.',
+      description: 'The words on the RSVP form. Leave any blank to use the form’s own.',
+      fields: [
+        { description: 'The big heading, e.g. “RSVP”.', name: 'heading', title: 'Heading', type: 'string' },
+        {
+          description: 'The first sentence beside the form, shown at every width.',
+          name: 'intro',
+          title: 'Intro',
+          type: 'string'
+        },
+        {
+          description: 'The rest of the intro. Shown on wider screens only — phones keep just the first sentence.',
+          name: 'introDetail',
+          rows: 2,
+          title: 'Intro (continued)',
+          type: 'text'
+        },
+        {
+          description: 'Under the guest’s stay and price, e.g. how and when they pay.',
+          name: 'stayNote',
+          title: 'Stay Note',
+          type: 'string'
+        },
+        {
+          description:
+            'The switch that adds the Sunday night to a guest’s stay, e.g. “Spend the Sunday evening with us”.',
+          name: 'extraNightLabel',
+          title: 'Sunday Night — Label',
+          type: 'string'
+        },
+        {
+          description: 'Under that switch, e.g. “Add an extra night to your stay and recover in style by the pool.”',
+          name: 'extraNightDescription',
+          rows: 2,
+          title: 'Sunday Night — Description',
+          type: 'text'
+        },
+        {
+          description: 'The grey hint text inside each empty answer.',
+          fields: RSVP_PLACEHOLDERS.map(({ name, title }) => ({ name, title, type: 'string' })),
+          name: 'placeholders',
+          options: { collapsible: true, collapsed: true },
+          title: 'Placeholders',
+          type: 'object'
+        }
+      ],
+      group: 'rsvp',
+      name: 'rsvpForm',
+      options: { collapsible: false },
+      title: 'RSVP Form',
+      type: 'object'
+    },
+    {
+      fields: [
+        {
+          description:
+            'The opening paragraphs, under “Hi {first name},”. One item per paragraph, up to three. Goes out with each invitation the site sends — a test send shows it.',
+          name: 'intro',
+          of: [{ rows: 3, type: 'text' }],
+          title: 'Intro',
+          type: 'array',
+          validation: (Rule) => Rule.max(3)
+        }
+      ],
+      group: 'emails',
+      name: 'invitationEmail',
+      options: { collapsible: false },
+      title: 'Invitation Email',
+      type: 'object'
+    },
+    {
+      description: 'The accommodation contribution ask. The payment details are under Nationalities & payment.',
       fields: [
         {
           description: 'Turn this on to name a figure on the site. Leave it off for the softer, amount-free wording.',
@@ -216,9 +313,7 @@ const weddingSettings = defineType({
          * document, three files away from the section it breaks.
          *
          * Nothing is lost: both fields hold one sentence, `Simple` keeps strong/em/underline and
-         * link annotations, and `TwoColumnListSection` is their only renderer. The two payment fields
-         * below stay `Standard` — different surface, different renderer, and a list of bank
-         * details is a fair use of one.
+         * link annotations, and `TwoColumnListSection` is their only renderer.
          */
         {
           description:
@@ -248,19 +343,6 @@ const weddingSettings = defineType({
           name: `copyWithoutAmount`,
           title: `Copy (Without Amount)`,
           type: `blockContentSimple`
-        },
-        {
-          description:
-            'Bank transfer details for the Australian account. Shown after they RSVP to guests whose Nationality in the guest sheet is blank or Australian.',
-          name: `paymentDetailsAustralia`,
-          title: `Payment Details — Australian Guests`,
-          type: `blockContentStandard`
-        },
-        {
-          description: 'Wise details. Shown after they RSVP to every other guest.',
-          name: `paymentDetailsInternational`,
-          title: `Payment Details — International Guests (Wise)`,
-          type: `blockContentStandard`
         }
       ],
       group: 'contribution',
@@ -293,6 +375,11 @@ const weddingSettings = defineType({
       icon: TbCoin,
       name: 'contribution',
       title: 'Contribution'
+    },
+    {
+      icon: TbMail,
+      name: 'emails',
+      title: 'Emails'
     }
   ],
   icon: TbHeart,
@@ -317,4 +404,4 @@ const weddingSettings = defineType({
 });
 
 export default weddingSettings;
-export type { IWeddingSettingsDocument };
+export type { IWeddingSettingsDocument, RsvpFormCopy, RsvpPlaceholder };

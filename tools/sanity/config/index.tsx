@@ -22,6 +22,7 @@ import theme from './theme';
 const singletonTypes = new Set([
   'headerDocument',
   'nationalityNote',
+  'paymentDetails',
   'settings',
   'socialMediaDocument',
   'weddingSettings'

@@ -66,6 +66,9 @@ const atWidth: Decorator = (Story, { parameters }) => (
   </div>
 );
 
+/** A signed-in guest's stay, as `stayPriceOf` gives it from the sheet — without the Sunday night. */
+const SAM_STAY = { extraNight: false, nights: 2, perNight: 150, stay: 'King Room', total: 300 };
+
 /** The two players' models, as the page fetches them — the committed GLBs in `public/`. */
 const MODELS = [
   {
@@ -143,11 +146,12 @@ export const Empty: Story = {
     // No game-layer copy anywhere — the comp's "PLAYER NAME", "LOADOUT", "PRESS START" and its ▸.
     await expect(canvasElement.textContent).not.toMatch(/player|loadout|press start|[▶▸]/i);
 
-    // The ordinals, in document order, are 01–07 and hidden from assistive technology.
+    // The ordinals, in document order, are 01–08 and hidden from assistive technology. With no stay
+    // card to sit in, the Sunday night is one of the numbered questions.
     const ordinals = [...canvasElement.querySelectorAll('span[aria-hidden="true"]')]
       .map((span) => span.textContent ?? '')
       .filter((text) => /^\d{2} · $/.test(text));
-    await expect(ordinals).toEqual(['01 · ', '02 · ', '03 · ', '04 · ', '05 · ', '06 · ', '07 · ']);
+    await expect(ordinals).toEqual(['01 · ', '02 · ', '03 · ', '04 · ', '05 · ', '06 · ', '07 · ', '08 · ']);
     await expect(nameInput(canvas)).toHaveAccessibleName(/^name/i);
 
     // Neither dropped question is asked any more.
@@ -170,7 +174,7 @@ export const SignedInGuest: Story = {
     guest: {
       email: 'sam@example.com',
       name: 'Sam Logan',
-      stay: { nights: 2, perNight: 150, stay: 'King Room', total: 300 }
+      stay: SAM_STAY
     },
     note: [
       {
@@ -205,6 +209,55 @@ export const GuestWithoutStay: Story = {
     const canvas = within(canvasElement);
     await expect(nameInput(canvas)).toHaveValue('Lauren Lee');
     await expect(canvas.queryByRole('region', { name: /your stay/i })).toBeNull();
+    // Still asked, as a numbered question of its own.
+    await expect(canvas.getByRole('switch', { name: /spend the sunday evening with us/i })).toBeInTheDocument();
+  }
+};
+
+/**
+ * "Spend the Sunday evening with us", in the stay card: switching it on adds a night at the same
+ * price, and the total follows. It submits as `extraNight`.
+ */
+export const SundayNight: Story = {
+  args: { guest: { email: 'sam@example.com', name: 'Sam Logan', stay: SAM_STAY } },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const stay = canvas.getByRole('region', { name: /your stay/i });
+    const sunday = within(stay).getByRole('switch', { name: /spend the sunday evening with us/i });
+
+    await expect(stay).toHaveTextContent('Add an extra night to your stay and recover in style by the pool.');
+    await userEvent.click(sunday);
+    await expect(stay).toHaveTextContent('King Room · 3 nights, Sunday included');
+    await expect(stay).toHaveTextContent('$450 in total');
+
+    await userEvent.click(submitButton(canvas));
+    await waitFor(() => expect(callsOf(args.action)).toHaveLength(1), ROUND_TRIP);
+    await expect(callsOf(args.action)[0][1].get('extraNight')).toBe('on');
+  }
+};
+
+/** The words from Wedding Settings → RSVP → RSVP Form, replacing the form's own. */
+export const EditedCopy: Story = {
+  args: {
+    extraNightDescription: 'Stay on for a lazy Monday breakfast.',
+    extraNightLabel: 'Stay Sunday night too',
+    guest: { email: 'sam@example.com', name: 'Sam Logan', stay: SAM_STAY },
+    placeholders: { songRequest: 'Something by ABBA' },
+    stayNote: 'Bank details arrive by email once you reply.'
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const stay = canvas.getByRole('region', { name: /your stay/i });
+
+    await expect(within(stay).getByRole('switch', { name: /stay sunday night too/i })).toBeInTheDocument();
+    await expect(stay).toHaveTextContent('Stay on for a lazy Monday breakfast.');
+    await expect(stay).toHaveTextContent('Bank details arrive by email once you reply.');
+    await expect(canvas.getByRole('textbox', { name: /^song request/i })).toHaveAttribute(
+      'placeholder',
+      'Something by ABBA'
+    );
+    // A placeholder left out keeps the form's own.
+    await expect(nameInput(canvas)).toHaveAttribute('placeholder', 'Full name');
   }
 };
 
@@ -271,6 +324,8 @@ export const Filled: Story = {
     await expect(formData.get('kidsCount')).toBe('2');
     await expect(formData.get('kidsAges')).toBe('2 and 5');
     await expect(formData.get('songRequest')).toBe('September');
+    // The Sunday night was left off, so its checkbox sends nothing.
+    await expect(formData.has('extraNight')).toBe(false);
     // The honeypot is present in the form and was left alone, so it submits nothing.
     await expect(formData.has('_gotcha')).toBe(false);
   }
@@ -544,6 +599,9 @@ export const KeyboardOnly: Story = {
     await expect(canvas.getByRole('textbox', { name: /^ages/i })).toHaveFocus();
     await userEvent.keyboard('3 and 6');
     await userEvent.tab();
+    await expect(canvas.getByRole('switch', { name: /spend the sunday evening with us/i })).toHaveFocus();
+    await userEvent.keyboard('[Space]');
+    await userEvent.tab();
     await expect(canvas.getByRole('textbox', { name: /^special requirements/i })).toHaveFocus();
     await userEvent.keyboard('A cot');
     await userEvent.tab();
@@ -558,6 +616,7 @@ export const KeyboardOnly: Story = {
     const [, formData] = callsOf(args.action)[0];
     await expect(formData.get('kidsCount')).toBe('2');
     await expect(formData.get('plusOne.name')).toBe('Charles Babbage');
+    await expect(formData.get('extraNight')).toBe('on');
     await expect(await canvas.findByRole('button', { name: 'Saved' }, ROUND_TRIP)).toHaveFocus();
   }
 };

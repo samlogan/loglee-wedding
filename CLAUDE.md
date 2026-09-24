@@ -568,7 +568,15 @@ of ten, each batch's progress write firing the webhook for the next. `eligibleFo
 (`tools/helpers/guestEmails.ts`) decides who: an invitation never goes to a guest whose Invite sent
 cell is filled, a reminder never to one who has replied (sheet status, or a Sanity reply by guest ID
 or email) or was never invited. Each guest's Invite sent / Reminder sent cell is written as their
-email goes. `SANITY_WRITE_TOKEN` is production-only on Netlify, so only the live site can send.
+email goes. `SANITY_WRITE_TOKEN` is production-only on Netlify, so only the live site can send. The
+invitation's opening paragraphs come from Wedding Settings → Emails, sent as contact properties.
+
+**After a guest replies** they can add the Sunday night (one more night at their nightly price, in the
+stay card), and are emailed a thank-you (`tools/guests/thankYou.ts`, a Loops transactional email
+built by `yarn emails:build`) with their stay and total, the payment details for their region and the
+travel note for their nationality — the same things the thank-you page shows. Both come from
+**Nationalities & payment** in the Studio. The RSVP form's words and placeholders are in Wedding
+Settings → RSVP.
 
 ### Environment Variables
 
@@ -580,7 +588,7 @@ Required in `.env.development` (see `.env.template` for full list):
 - `SANITY_API_READ_TOKEN`
 - `SANITY_WEBHOOK_SECRET`
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GUEST_SHEET_ID` — the service account that reads and writes the guest sheet (`tools/guests/sheet.ts`)
-- `LOOP_API_KEY` — Loops, which sends the invitation and reminder emails
+- `LOOP_API_KEY` — Loops, which sends the invitation, reminder and thank-you emails
 - `COUPLE_PASSWORD` — typed on the entry page instead of a guest ID, lets the couple in (signed in as `COUPLE`, no prefill)
 - `GUEST_SESSION_SECRET` — signs the guest cookie. **Unset means nobody can enter the site**, so set it on every Netlify deploy context
 
@@ -588,6 +596,7 @@ Required in `.env.development` (see `.env.template` for full list):
 
 Optional:
 
+- `LOOPS_THANK_YOU_ID` — the Loops transactional email sent when a guest's RSVP is saved. Unset, no thank-you email is sent
 - `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` — Cloud map ID. Unset (the default) uses the repo's JSON style; set, the Cloud console's style replaces it
 - `NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID` — GTM container ID
 - `LINEAR_TEAM_ID` / `LINEAR_PROJECT_ID` — Linear integration for slash commands

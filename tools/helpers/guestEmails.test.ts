@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { eligibleFor, hasReplied, isSendConfirmed, sendConfirmationPhrase } from './guestEmails';
+import {
+  INVITATION_INTRO_DEFAULT,
+  eligibleFor,
+  hasReplied,
+  invitationIntroProperties,
+  isSendConfirmed,
+  sendConfirmationPhrase
+} from './guestEmails';
 import type { Replies } from './guestEmails';
 import type { Guest } from './guests';
 
@@ -142,5 +149,37 @@ describe('send confirmation', () => {
     expect(isSendConfirmed('invitation', 'send')).toBe(false);
     expect(isSendConfirmed('invitation', 'SEND REMINDERS')).toBe(false);
     expect(isSendConfirmed('reminder', 'SEND INVITATIONS')).toBe(false);
+  });
+});
+
+describe('invitationIntroProperties', () => {
+  it('gives each paragraph its own property, blank past the last', () => {
+    expect(invitationIntroProperties(['One.', 'Two.'])).toEqual({
+      inviteIntro1: 'One.',
+      inviteIntro2: 'Two.',
+      inviteIntro3: ''
+    });
+  });
+
+  it('joins paragraphs past the third onto it rather than dropping them', () => {
+    expect(invitationIntroProperties(['1', '2', '3', '4']).inviteIntro3).toBe('3 4');
+  });
+
+  it('skips blank paragraphs, and anything that is not text', () => {
+    expect(invitationIntroProperties(['  ', 'One.', 7, null])).toEqual({
+      inviteIntro1: 'One.',
+      inviteIntro2: '',
+      inviteIntro3: ''
+    });
+  });
+
+  it('falls back to the words the invitation was written with when there are none', () => {
+    for (const nothing of [undefined, null, [], ['   ']]) {
+      expect(invitationIntroProperties(nothing)).toEqual({
+        inviteIntro1: INVITATION_INTRO_DEFAULT[0],
+        inviteIntro2: INVITATION_INTRO_DEFAULT[1],
+        inviteIntro3: ''
+      });
+    }
   });
 });

@@ -159,24 +159,36 @@ export const RSVP_MODELS_QUERY = groq`
 `;
 
 /**
- * The RSVP page's own slice of Wedding Settings: the note under the heading. Kept out of
- * `WEDDING_SETTINGS_QUERY`, which the layout runs on every page.
+ * The RSVP page's own slice of Wedding Settings: the note under the heading and the form's words.
+ * Kept out of `WEDDING_SETTINGS_QUERY`, which the layout runs on every page.
  */
 export const RSVP_PAGE_QUERY = groq`
   *[_type == "weddingSettings" && _id == "weddingSettings"][0]{
-    rsvpNote[]${blockContentProjection}
+    rsvpNote[]${blockContentProjection},
+    rsvpForm
   }
 `;
 
 /**
- * The payment details, for the thank-you page — both versions; the page shows the one for the signed-in
- * guest. Only ever fetched on a page behind the guest gate, and never in the layout's query.
+ * What a guest sees once they have replied, on the thank-you page and in the thank-you email: both
+ * versions of the payment details — the page picks the guest's — and the travel note for their
+ * nationality, `$noteId` (`nationalityNoteId`), or `""` for none. Only ever fetched behind the guest
+ * gate or on the server, and never in the layout's query.
  */
-export const PAYMENT_DETAILS_QUERY = groq`
-  *[_type == "weddingSettings" && _id == "weddingSettings"][0].contribution{
-    paymentDetailsAustralia[]${blockContentProjection},
-    paymentDetailsInternational[]${blockContentProjection}
+export const GUEST_REPLY_EXTRAS_QUERY = groq`{
+  "payment": *[_type == "paymentDetails" && _id == "paymentDetails"][0]{
+    australia[]${blockContentProjection},
+    international[]${blockContentProjection}
+  },
+  "travel": *[_type == "nationalityNote" && _id == $noteId][0]{
+    title,
+    content[]${blockContentProjection}
   }
+}`;
+
+/** The invitation email's opening paragraphs, sent to Loops with each invitation. */
+export const INVITATION_EMAIL_QUERY = groq`
+  *[_type == "weddingSettings" && _id == "weddingSettings"][0].invitationEmail.intro
 `;
 
 /**
