@@ -11,12 +11,13 @@
  * ## Why coded, not Loops's visual editor
  *
  * To match the site: its colours, its three typefaces, the pine mono eyebrows, the plum rounded
- * button, the raised card on the stone page. The one part that cannot be live text is the header —
- * Gmail and Outlook ignore web fonts, so the site's Archivo capitals and handwritten Caveat byline are
- * an image (`header.html`, rendered to `img/header.png` by this script).
+ * button, the raised card on the stone page. The parts that cannot be live text are
+ * the display and handwritten type — Gmail and Outlook ignore web fonts, so the site's Archivo
+ * capitals and handwritten Caveat byline are images (`header.html`, rendered to `img/header.png` and `img/signoff.png` by this script) — the
+ * handwritten sign-off too, after a real inbox showed it in Bradley Hand.
  *
- * The body falls back from the site's fonts (Instrument Sans, JetBrains Mono, Caveat) to Helvetica /
- * Arial, Courier and a cursive, so Gmail and Outlook get the same layout in system type.
+ * The body falls back from the site's fonts (Instrument Sans, JetBrains Mono) to Helvetica /
+ * Arial and Courier, so Gmail and Outlook get the same layout in system type.
  *
  * ## Placeholders
  *
@@ -45,9 +46,11 @@ const C = {
 
 const SANS = "'Instrument Sans', Helvetica, Arial, sans-serif";
 const MONO = "'JetBrains Mono', 'SFMono-Regular', Menlo, 'Courier New', monospace";
-const HAND = "Caveat, 'Bradley Hand', 'Segoe Script', cursive";
 
 const SITE = 'https://samandlauren.wedding';
+
+/** The sign-off image's width at email size, set by `renderArtwork` before any email is laid out. */
+let SIGNOFF_WIDTH = 240;
 
 /** Sample values for the preview only — Loops fills the real ones. */
 const SAMPLE = { firstName: 'Sam', guestId: 'SAM-6137', rsvpLink: `${SITE}/g/SAM-6137/`, unsubscribe_link: '#' };
@@ -97,8 +100,7 @@ const layout = ({ title, preheader, body, withPhoto = false }) => `<mjml>
     <mj-preview>${preheader}</mj-preview>
     <mj-font name="Instrument Sans" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&amp;display=swap" />
     <mj-font name="JetBrains Mono" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&amp;display=swap" />
-    <mj-font name="Caveat" href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&amp;display=swap" />
-    <mj-attributes>
+        <mj-attributes>
       <mj-all font-family="${SANS}" />
       <mj-text font-size="17px" line-height="1.55" color="${C.text}" />
       <mj-section padding="0" />
@@ -107,7 +109,12 @@ const layout = ({ title, preheader, body, withPhoto = false }) => `<mjml>
     <mj-style inline="inline">
       a { color: ${C.accent}; }
     </mj-style>
+    <mj-style>
+      /* Apple Mail turns dates, addresses and numbers into links; keep them as the text around them. */
+      a[x-apple-data-detectors] { color: inherit !important; font: inherit !important; text-decoration: none !important; }
+    </mj-style>
     <mj-raw>
+      <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no" />
       <meta name="color-scheme" content="light only" />
       <meta name="supported-color-schemes" content="light" />
     </mj-raw>
@@ -123,7 +130,7 @@ ${withPhoto ? photo : ''}
       <mj-section background-color="${C.card}" border="1px solid ${C.stroke}" border-radius="8px" padding="36px 30px 26px">
         <mj-column>
 ${body}
-          <mj-text font-family="${HAND}" font-size="30px" font-weight="700" line-height="1.1" color="${C.button}" padding="20px 0 0">With love, Sam &amp; Lauren</mj-text>
+          <mj-image src="img/signoff.png" alt="With love, Sam &amp; Lauren" width="${SIGNOFF_WIDTH}px" align="left" padding="18px 0 0" />
         </mj-column>
       </mj-section>
     </mj-wrapper>
@@ -131,8 +138,8 @@ ${body}
     <mj-section padding="24px 20px 36px">
       <mj-column>
         <mj-text align="center" font-family="${MONO}" font-size="11px" letter-spacing="1.1px" line-height="1.8" color="${C.muted}" padding="0">
-          12–14 FEB 2027 · THE LODGE JAMBEROO<br />
-          <a href="${SITE}" style="color:${C.muted};">SAMANDLAUREN.WEDDING</a> · <a href="{unsubscribe_link}" style="color:${C.muted};">UNSUBSCRIBE</a>
+          <span style="white-space:nowrap;">12–14&#8288; FEB&#8288; 2027</span> · THE LODGE JAMBEROO<br />
+          <a href="${SITE}" style="color:${C.muted};white-space:nowrap;">SAMANDLAUREN.WEDDING</a> · <a href="{unsubscribe_link}" style="color:${C.muted};">UNSUBSCRIBE</a>
         </mj-text>
       </mj-column>
     </mj-section>
@@ -143,7 +150,7 @@ ${body}
 const button = (label) =>
   `<mj-button href="{rsvpLink}" align="left" background-color="${C.button}" color="#ffffff" font-size="17px" font-weight="600" border-radius="8px" inner-padding="16px 30px" padding="0 0 18px">${label} →</mj-button>`;
 
-const guestIdNote = `<mj-text font-size="14px" line-height="1.5" color="${C.muted}" padding="0">The button signs you straight in. On another device, go to <a href="${SITE}">samandlauren.wedding</a> and enter your guest ID: <span style="font-family:${MONO};font-size:13px;color:${C.text};letter-spacing:0.5px;">{guestId}</span></mj-text>`;
+const guestIdNote = `<mj-text font-size="14px" line-height="1.5" color="${C.muted}" padding="0">The button signs you straight in. On another device, go to <a href="${SITE}" style="white-space:nowrap;">samandlauren.wedding</a> and enter your guest ID: <span style="font-family:${MONO};font-size:13px;color:${C.text};letter-spacing:0.5px;">{guestId}</span></mj-text>`;
 
 const WHEN = 'Friday 12 – Sunday 14 February 2027';
 const WHERE =
@@ -191,20 +198,33 @@ const EMAILS = {
   }
 };
 
-const renderHeader = async () => {
+/**
+ * Render the artwork in `header.html` — the header and the sign-off — to PNG. Returns the sign-off's
+ * width in CSS pixels at email size (half its 2x render), which its `<mj-image>` is set to.
+ */
+const renderArtwork = async () => {
   const { chromium } = await import('playwright');
   const browser = await chromium.launch();
-  const page = await browser.newPage({ deviceScaleFactor: 1, viewport: { height: 800, width: 1200 } });
+  const page = await browser.newPage({ deviceScaleFactor: 1, viewport: { height: 1000, width: 1200 } });
   await page.goto(`file://${path.join(here, 'header.html')}`);
   await page.evaluate(() => document.fonts.ready);
   await (await page.$('.header')).screenshot({ path: path.join(here, 'img', 'header.png') });
+  // Transparent, so the edges blend into the card rather than showing a box of a near-match colour.
+  await page.evaluate(() => {
+    document.documentElement.style.background = 'transparent';
+    document.body.style.background = 'transparent';
+  });
+  const signoff = await page.$('.signoff');
+  await signoff.screenshot({ omitBackground: true, path: path.join(here, 'img', 'signoff.png') });
+  const { width } = await signoff.boundingBox();
   await browser.close();
+  return Math.round(width / 2);
 };
 
 const mjml = (file) =>
   execFileSync('npx', ['--yes', 'mjml@4', file, '--stdout', '--config.validationLevel=strict'], { encoding: 'utf8' });
 
-await renderHeader();
+SIGNOFF_WIDTH = await renderArtwork();
 rmSync(dist, { force: true, recursive: true });
 
 for (const [name, email] of Object.entries(EMAILS)) {
@@ -212,6 +232,7 @@ for (const [name, email] of Object.entries(EMAILS)) {
   mkdirSync(path.join(folder, 'img'), { recursive: true });
   writeFileSync(path.join(folder, 'index.mjml'), layout(email));
   copyFileSync(path.join(here, 'img', 'header.png'), path.join(folder, 'img', 'header.png'));
+  copyFileSync(path.join(here, 'img', 'signoff.png'), path.join(folder, 'img', 'signoff.png'));
   if (email.withPhoto) {
     copyFileSync(path.join(here, 'img', 'photo.jpg'), path.join(folder, 'img', 'photo.jpg'));
   }
