@@ -25,7 +25,7 @@
  * across the four frames — fill, not rendered colour: seven of the fourteen sit in a frame Figma
  * marks `opacity-80` or `opacity-70`, and the two classes that own them mix `--fg-default` down to
  * match. See `.eyebrow` and `.ordinal`; reading the fill alone is how they first shipped at full
- * strength. The amount chip in `components/TextBlock` mixes from `currentColor`, so it follows too.
+ * strength.
  *
  * ## The one breakpoint is a container query
  *
@@ -229,7 +229,7 @@ $two-column-list-body-measure: 27.5rem;
    * `color-mix` against `transparent` rather than `opacity`, so the mute composites against whatever
    * is actually behind the label without opening a stacking context, and rather than
    * `--fg-muted` (`--pine-100`) because that is a *green* tint on a green panel where the drawn
-   * colour is the warm stone ink dimmed. `ModelViewer`'s hatch and `TextBlock`'s amount chip mix the
+   * colour is the warm stone ink dimmed. `ModelViewer`'s hatch mixes the
    * same way.
    *
    * It survives the panel's inversion, which is the test a fixed hex would fail: 6.67:1 on the dark
@@ -412,9 +412,7 @@ $two-column-list-body-measure: 27.5rem;
   /*
    * The contribution paragraph's type, re-pointed on the `<p>` itself.
    *
-   * On the paragraph and not the wrapper, so it reaches the paragraph and its inline children — the
-   * `{amount}` chip sizes itself at `0.875em` of whatever this resolves to, which is how it keeps the
-   * design's 15-in-17 and 13-in-15 ratios at every width without a token of its own.
+   * On the paragraph and not the wrapper, so it reaches the paragraph and its inline children.
    *
    * `fluid(15px, 17px)` and `1.55` are both exact on both frames (26.35 on 17px at 1:673, 23.25 on
    * 15px at 1:741). `--body-lg` is `fluid(16px, 18px)` — a pixel over at both ends — and

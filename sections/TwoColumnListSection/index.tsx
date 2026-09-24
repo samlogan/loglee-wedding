@@ -4,7 +4,6 @@ import Section from '@/components/Section';
 import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import TextTitle from '@/components/TextTitle';
-import resolveAmountCopy from '@/helpers/amountToken';
 import classNames from '@/helpers/classNames';
 import formatOrdinal from '@/helpers/formatOrdinal';
 import hasBlockContent from '@/helpers/hasBlockContent';
@@ -34,9 +33,7 @@ const TwoColumnListSection: FC<ITwoColumnListSection> = (props) => {
    * That needs the text to be unique, and `items` carries `Rule.unique()` — but a Sanity validation
    * rule is **publish-time**, and Presentation renders drafts. So a draft mid-edit really can hold
    * two identical lines, and `key={item}` hands React duplicate keys for them: a console error and
-   * undefined reconciliation, in the one environment an editor is watching. This file already makes
-   * exactly that argument in the other direction — `tools/helpers/amountToken.ts` refuses to trust
-   * `Rule.min(0)` on `amountPerNight` for the same reason — and the two should agree.
+   * undefined reconciliation, in the one environment an editor is watching.
    *
    * So the duplicate is disambiguated by how many times it has been seen. The rule stays: it is
    * still what keeps a *published* list stable across a reorder.
@@ -53,12 +50,10 @@ const TwoColumnListSection: FC<ITwoColumnListSection> = (props) => {
   const listItems = keyedTextItems(items);
 
   /*
-   * The whole `{amount}` contract, in one call. `resolveAmountCopy` picks between the two copy
-   * fields and substitutes the figure as a marked inline run; see `tools/helpers/amountToken.ts` for
-   * the four cases it decides between and why. It is called only on the variant that has a
-   * `contribution` to resolve — on a `list` section the projection does not even return the key.
+   * The Stay page's accommodation wording, from Wedding Settings → Contribution. Only the `richText`
+   * variant has it — on a `list` section the projection does not even return the key.
    */
-  const copy = variant === 'richText' ? resolveAmountCopy(contribution) : undefined;
+  const copy = variant === 'richText' ? (contribution?.copy ?? undefined) : undefined;
 
   const hasList = variant === 'list' && listItems.length > 0;
   const hasCopy = variant === 'richText' && hasBlockContent(copy);
@@ -114,7 +109,7 @@ const TwoColumnListSection: FC<ITwoColumnListSection> = (props) => {
    * panel's own `data-theme`. It is now Planner's full-bleed band (node 1:426): `Section` paints
    * `--bg-default` across the whole viewport, so giving it the band's theme is the whole change, and
    * the `[data-theme]` block in `_variables.scss` re-points beneath it — `--bg-default`,
-   * `--fg-default`, the `currentColor` the amount chip mixes from. Nothing in `styles.module.scss`
+   * `--fg-default`. Nothing in `styles.module.scss`
    * names a colour. The content stays on the page's grid inside `Section`'s `Container`.
    *
    * The band is the *inverse* of the chosen theme rather than fixed at dark, so the Studio's
