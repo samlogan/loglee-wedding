@@ -105,13 +105,15 @@
         box-shadow 0.2s ease;
 
       /*
-       * `--fg-muted` rather than the comp's `#757575`. That grey is 4.2:1 on the off-white page and
-       * stone/500 — the nearest ramp step, and what `--input-fg` points at — is 3.2:1; placeholder
-       * text is still text, and `--fg-muted` is the theme's AA-safe secondary ink (5.6:1).
-       * `opacity: 1` because Firefox dims placeholders by default.
+       * `--fg-muted` eased 15% towards the page, so a hint reads as lighter than an answer — the
+       * couple found the full muted ink too close to typed text. About 3.9:1 on the light page
+       * (stone/500, the next ramp step, is 3.2:1): under AA's 4.5:1 for body text, accepted because a
+       * placeholder is only a hint here — every field has a visible label that carries its meaning.
+       * Mixed from theme tokens, so it follows a dark section too. `opacity: 1` because Firefox dims
+       * placeholders by default.
        */
       &::placeholder {
-        color: var(--fg-muted);
+        color: color-mix(in srgb, var(--fg-muted) 85%, var(--bg-default));
         opacity: 1;
       }
 
