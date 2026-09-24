@@ -47,6 +47,12 @@ describe('thankYouVariables', () => {
     expect(variables).toMatchObject({ payment: [], paymentHeading: [], stay: [], stayTotal: [] });
   });
 
+  it('says "AUD" after the total when asked to, for a guest outside Australia', () => {
+    const stay = { extraNight: false, nights: 2, perNight: 150, stay: 'King Room', total: 300 };
+    expect(thankYouVariables({ ...BASE, stay, withCurrency: true }).stayTotal).toEqual([{ total: '$300 AUD' }]);
+    expect(thankYouVariables({ ...BASE, stay }).stayTotal).toEqual([{ total: '$300' }]);
+  });
+
   it('says nothing about paying for a stay the couple are covering', () => {
     const stay = { extraNight: false, nights: 2, perNight: 0, stay: 'Twin Double', total: 0 };
     const variables = thankYouVariables({ ...BASE, payment: [block('Wise: sam@example.com')], stay });

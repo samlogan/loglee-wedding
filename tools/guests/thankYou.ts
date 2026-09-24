@@ -1,4 +1,5 @@
 import 'server-only';
+import { showsCurrency } from '@/helpers/formatAmount';
 import type { Guest } from '@/helpers/guests';
 import { stayPriceOf } from '@/helpers/guests';
 import { thankYouVariables } from '@/helpers/thankYouEmail';
@@ -29,7 +30,8 @@ export const thankYouVariablesFor = async (
     payment: extras.payment,
     stay: stayPriceOf(guest, { extraNight }),
     staying,
-    travel: extras.travel
+    travel: extras.travel,
+    withCurrency: showsCurrency(guest)
   });
 };
 

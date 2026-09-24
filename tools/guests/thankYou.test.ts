@@ -44,7 +44,7 @@ describe('sendThankYou', () => {
       firstName: 'Sam',
       homeLink: 'https://samandlauren.wedding/g/SAM-4821/?to=/',
       stay: [{ summary: 'King Room · 2 nights' }],
-      stayTotal: [{ total: '$300' }]
+      stayTotal: [{ total: '$300 AUD' }]
     });
   });
 
@@ -59,10 +59,19 @@ describe('sendThankYou', () => {
     expect(sent()?.dataVariables).toMatchObject({ payment: [], stay: [], stayTotal: [] });
   });
 
+  it('names the currency for a guest outside Australia, and not for an Australian', async () => {
+    await sendThankYou(SAM, REPLY, AT);
+    expect(sent()?.dataVariables.stayTotal).toEqual([{ total: '$300 AUD' }]);
+
+    vi.mocked(loops.sendThankYouEmail).mockClear();
+    await sendThankYou({ ...SAM, nationality: 'Australian', payment: 'au' }, REPLY, AT);
+    expect(sent()?.dataVariables.stayTotal).toEqual([{ total: '$300' }]);
+  });
+
   it('prices the Sunday night in when the guest took it', async () => {
     await sendThankYou(SAM, { ...REPLY, extraNight: true }, AT);
     expect(sent()?.dataVariables.stay).toEqual([{ summary: 'King Room · 3 nights, Sunday included' }]);
-    expect(sent()?.dataVariables.stayTotal).toEqual([{ total: '$450' }]);
+    expect(sent()?.dataVariables.stayTotal).toEqual([{ total: '$450 AUD' }]);
   });
 
   it('carries the payment details and travel note for this guest', async () => {
@@ -92,9 +101,9 @@ describe('sendThankYou', () => {
     expect(variables).toMatchObject({
       firstName: 'Sam',
       stay: [{ summary: 'King Room · 3 nights, Sunday included' }],
-      stayTotal: [{ total: '$450' }]
+      stayTotal: [{ total: '$450 AUD' }]
     });
-    expect((await thankYouVariablesFor(SAM)).stayTotal).toEqual([{ total: '$300' }]);
+    expect((await thankYouVariablesFor(SAM)).stayTotal).toEqual([{ total: '$300 AUD' }]);
   });
 
   it('sends nothing when the thank-you email is not set up', async () => {

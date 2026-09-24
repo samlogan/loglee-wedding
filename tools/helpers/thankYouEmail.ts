@@ -34,6 +34,8 @@ export interface ThankYouEmailInput {
   intro?: unknown;
   /** Their stay and total, the Sunday night included when they took it. */
   stay?: StayPrice;
+  /** Say "AUD" after the total — for a guest outside Australia (`showsCurrency`). */
+  withCurrency?: boolean;
   /**
    * Whether they are staying at the venue — `false` when they switched it off on the form, and then
    * the email says nothing about a stay or paying for one.
@@ -107,7 +109,7 @@ export const thankYouVariables = (input: ThankYouEmailInput): ThankYouEmailVaria
           }
         ]
       : [],
-    stayTotal: stay && !free ? [{ total: formatAmount(stay.total) }] : [],
+    stayTotal: stay && !free ? [{ total: formatAmount(stay.total, { withCurrency: input.withCurrency }) }] : [],
     travel,
     travelHeading: heading(input.travel?.title || 'Travel tips', travel)
   };

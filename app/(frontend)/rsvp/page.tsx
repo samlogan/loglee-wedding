@@ -4,6 +4,7 @@ import RsvpForm from '@/components/RsvpForm';
 import type { RsvpGuest } from '@/components/RsvpForm';
 import type { RsvpModelOption } from '@/components/RsvpForm/RsvpModel';
 import Section from '@/components/Section';
+import { showsCurrency } from '@/helpers/formatAmount';
 import { stayPriceOf } from '@/helpers/guests';
 import { PLAYER_SLUGS } from '@/templates/PlayerTemplate';
 import { currentGuest } from '@/tools/guests/session';
@@ -58,7 +59,8 @@ const RsvpPage = async () => {
   const guest: RsvpGuest | undefined = signedIn && {
     email: signedIn.email,
     name: [signedIn.firstName, signedIn.lastName].filter(Boolean).join(' '),
-    stay: stayPriceOf(signedIn)
+    stay: stayPriceOf(signedIn),
+    withCurrency: showsCurrency(signedIn)
   };
 
   // The form's words from Wedding Settings. A blank field is left out, so the form keeps its own.

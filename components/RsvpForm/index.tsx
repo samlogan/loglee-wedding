@@ -13,6 +13,7 @@ import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import classNames from '@/helpers/classNames';
 import { DUET_BACK, DUET_FRONT } from '@/helpers/duetPlacement';
+import formatAmount from '@/helpers/formatAmount';
 import formatOrdinal from '@/helpers/formatOrdinal';
 import { isFreeStay } from '@/helpers/guests';
 import type { StayPrice } from '@/helpers/guests';
@@ -67,6 +68,8 @@ export interface RsvpGuest {
   email?: string;
   /** Their room and what it comes to. Absent when the sheet does not give a stay, nights and price. */
   stay?: StayPrice;
+  /** Say "AUD" after every price — for a guest outside Australia (`showsCurrency`). */
+  withCurrency?: boolean;
 }
 
 /** What react-hook-form holds — one key per name in `RSVP_FIELD`, nested where the name is dotted. */
@@ -96,10 +99,6 @@ const DEFAULT_VALUES: RsvpFormValues = {
   specialRequirements: '',
   staying: true
 };
-
-/** "$300", as a guest reads a price — whole dollars, the currency the contribution is set in. */
-const formatAud = (amount: number) =>
-  new Intl.NumberFormat('en-AU', { currency: 'AUD', maximumFractionDigits: 0, style: 'currency' }).format(amount);
 
 /*
  * The form's own words. Every one can be replaced from Wedding Settings → RSVP → RSVP Form; these are
@@ -270,6 +269,7 @@ const RsvpForm = (props: RsvpFormProps) => {
         sentValues={sentValues}
         state={state}
         stay={guest?.stay}
+        withCurrency={guest?.withCurrency}
         stayingLabel={stayingLabel}
         stayNote={stayNote}
       />
@@ -290,6 +290,7 @@ interface RsvpFormBodyProps {
   sentValues: string | null;
   stay?: StayPrice;
   stayNote: string;
+  withCurrency?: boolean;
   stayingLabel: string;
   state: RsvpFormState;
 }
@@ -318,6 +319,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
   const bringing = Boolean(values.plusOne?.bringing);
   const staying = values.staying !== false;
   const stay = props.stay && withExtraNight(props.stay, Boolean(values.extraNight));
+  const price = (amount: number) => formatAmount(amount, { withCurrency: props.withCurrency });
 
   /*
    * Not staying at the venue clears the Sunday night along with hiding it — the same reason, and the
@@ -567,7 +569,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
                 {!isFreeStay(stay) && (
                   <div aria-atomic="true" aria-live="polite">
                     <Text as="p" className={styles.stayPrice}>
-                      {formatAud(stay.perNight)} per room, per night · <strong>{formatAud(stay.total)}</strong> in total
+                      {price(stay.perNight)} per room, per night · <strong>{price(stay.total)}</strong> in total
                     </Text>
                   </div>
                 )}
