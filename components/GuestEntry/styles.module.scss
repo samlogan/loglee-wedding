@@ -1,0 +1,40 @@
+/*
+ * The entry page: centred, the couple's names over one field. Kept deliberately bare — it is the
+ * first thing a guest sees, and the only job is to get them in.
+ */
+@layer defaults {
+  .entry {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    max-inline-size: var(--container-xs);
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .eyebrow {
+    color: var(--fg-accent);
+  }
+
+  .intro {
+    color: var(--fg-muted);
+  }
+
+  .form {
+    width: 100%;
+    margin-block-start: var(--spacing-lg);
+    text-align: start;
+  }
+
+  // Holds its height so the button does not jump when a message appears.
+  .alert {
+    min-block-size: 1.5em;
+    margin-block: var(--spacing-xs);
+    color: var(--system-error-500);
+  }
+
+  .submit {
+    width: 100%;
+  }
+}

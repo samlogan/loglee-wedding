@@ -545,6 +545,20 @@ Uses `@use 'sass:map'` module syntax (not global built-ins like `map-get()`). Us
 - **SCSS**: Auto-imports `resources.scss` globally, all styles in `@layer defaults`
 - **React Compiler conventions**: avoid setState in effects, use lazy initializers/useRef/useSyncExternalStore. **Not enforced by the linter** — `.oxlintrc.json` extends only ultracite's `core` and `next` configs, whose plugin lists are `[eslint, typescript, unicorn, oxc, import, jsdoc, node, promise]` and `[nextjs]`. No `react` plugin is enabled, and oxlint ships no React Compiler rules at all, so `yarn lint` cannot see a setState-in-effect or a stale dependency array. Uphold it by review, and note that an `// eslint-disable-next-line react-hooks/*` comment suppresses nothing here. Enabling the `react` plugin wholesale is not a drop-in: measured on a sibling project it surfaces ~2,600 errors, most of them `react-in-jsx-scope`, which is obsolete under the React 19 JSX transform.
 
+### Guests and the site gate
+
+The site is for invited guests only. `proxy.ts` (Next 16's middleware) sends any page request without
+a signed `guest` cookie to `/enter/`, which asks for a guest ID. A guest's personal link, `/g/<ID>/`,
+signs them in and opens the RSVP form. `/api/*`, `/studio`, `/_next/*`, files with an extension and
+draft mode (the visual editor) pass through.
+
+Guests live in a Google Sheet, read by a service account (`tools/guests/`). A row with a first name and
+no ID is given one (`SAM-4821`) and a personal link on the next read. The signed-in guest prefills the
+RSVP form, sees their stay and price (`stayPriceOf`), and after replying sees the payment details for
+their region on the thank-you page — the Australian account when Nationality is blank or Australian,
+Wise otherwise (`paymentRegionOf`). Their row's RSVP status is updated when they reply. The pure logic
+is in `tools/helpers/guests.ts` and `guestSession.ts`, with unit tests.
+
 ### Environment Variables
 
 Required in `.env.development` (see `.env.template` for full list):
@@ -554,6 +568,8 @@ Required in `.env.development` (see `.env.template` for full list):
 - `NEXT_PUBLIC_SANITY_PROJECT_ID`
 - `SANITY_API_READ_TOKEN`
 - `SANITY_WEBHOOK_SECRET`
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GUEST_SHEET_ID` — the service account that reads and writes the guest sheet (`tools/guests/sheet.ts`)
+- `GUEST_SESSION_SECRET` — signs the guest cookie. **Unset means nobody can enter the site**, so set it on every Netlify deploy context
 
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` — browser key for `components/Map` and the Studio's `geopoint` picker (`@sanity/google-maps-input`). Needs billing plus the Maps JavaScript, Places and Static Maps APIs
 

@@ -228,4 +228,40 @@ $rsvp-inline-switch: 964px;
     clip-path: inset(50%);
     white-space: nowrap;
   }
+
+  // ---------------------------------------------------------------------------
+  // Guest: the reply-by note under the heading, and their stay above the questions
+
+  // The note from Wedding Settings — the reply-by date — directly under the heading, in the accent.
+  .note {
+    margin-block: var(--spacing-xs) var(--spacing-md);
+    color: var(--fg-accent);
+    font-weight: 500;
+  }
+
+  /*
+   * The guest's room and what it comes to, from their row in the guest sheet. A card rather than a
+   * question: nothing to answer, only something to know before answering.
+   */
+  .stay {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xxs);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--stroke-cards);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-raised);
+  }
+
+  .stayLabel {
+    color: var(--fg-accent);
+  }
+
+  .stayPrice strong {
+    font-weight: 700;
+  }
+
+  .stayNote {
+    color: var(--fg-muted);
+  }
 }

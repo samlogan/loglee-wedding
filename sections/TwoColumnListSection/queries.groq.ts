@@ -47,7 +47,7 @@ import blockContentProjection from '@/tools/sanity/projections/common/blockConte
  * `_id == 'weddingSettings'` pins the singleton the same way `WEDDING_SETTINGS_QUERY` does, so the
  * drafts perspective resolves `drafts.weddingSettings` onto it in Presentation.
  *
- * `paymentDetails` is **not** projected. It is the bank details, shown only to a guest who has
+ * The payment details are **not** projected. They are the bank details, shown only to a guest who has
  * already submitted an RSVP; pulling it into a page-builder section would publish it to anyone who
  * loads `/stay`.
  *

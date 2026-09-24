@@ -4,6 +4,8 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import type { RsvpFormState } from '@/components/RsvpForm/contract';
+import { currentGuest } from '@/tools/guests/session';
+import { markReplied } from '@/tools/guests/sheet';
 import createRateLimiter from '@/tools/helpers/rateLimiter';
 import {
   isHoneypotFilled,
@@ -126,7 +128,9 @@ const storeRsvp = async (formData: FormData): Promise<RsvpFormState> => {
       return isSameRsvpReply(stored, reply) ? SAVED : notSaved(MESSAGE.tooSoon);
     }
 
-    const document = toRsvpDocument(reply, now);
+    // Whose reply this is, from the guest cookie. A sheet error must not stop a reply being saved.
+    const guest = await currentGuest().catch(() => undefined);
+    const document = toRsvpDocument(reply, now, guest?.id);
 
     await (stored
       ? writeClient
@@ -136,6 +140,9 @@ const storeRsvp = async (formData: FormData): Promise<RsvpFormState> => {
           .commit()
       : writeClient.create(document));
 
+    if (guest) {
+      await markReplied(guest, now);
+    }
     return SAVED;
   } catch (error) {
     if (isConflict(error)) {

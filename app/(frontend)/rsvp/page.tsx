@@ -1,11 +1,14 @@
 import type { Metadata } from 'next';
 
 import RsvpForm from '@/components/RsvpForm';
+import type { RsvpGuest } from '@/components/RsvpForm';
 import type { RsvpModelOption } from '@/components/RsvpForm/RsvpModel';
 import Section from '@/components/Section';
+import { stayPriceOf } from '@/helpers/guests';
 import { PLAYER_SLUGS } from '@/templates/PlayerTemplate';
+import { currentGuest } from '@/tools/guests/session';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
-import { RSVP_MODELS_QUERY } from '@/tools/sanity/lib/queries.groq';
+import { RSVP_MODELS_QUERY, RSVP_PAGE_QUERY } from '@/tools/sanity/lib/queries.groq';
 
 import { submitRsvp } from './actions';
 
@@ -23,16 +26,28 @@ import { submitRsvp } from './actions';
  * width the rail and the questions were drawn against.
  */
 const RsvpPage = async () => {
-  // The players' models, for the pair walking side by side in the rail.
-  const models = await sanityFetch<RsvpModelOption[] | null>({
-    params: { routes: [...PLAYER_SLUGS] },
-    query: RSVP_MODELS_QUERY,
-    tags: ['player']
-  });
+  const [models, page, signedIn] = await Promise.all([
+    // The players' models, for the pair walking side by side in the rail.
+    sanityFetch<RsvpModelOption[] | null>({
+      params: { routes: [...PLAYER_SLUGS] },
+      query: RSVP_MODELS_QUERY,
+      tags: ['player']
+    }),
+    sanityFetch<{ rsvpNote?: SanityTextBlock[] | null } | null>({ query: RSVP_PAGE_QUERY, tags: ['weddingSettings'] }),
+    // The guest from their cookie — prefills the form and shows their stay. The sheet being down
+    // should cost the personal touches, not the form.
+    currentGuest().catch(() => undefined)
+  ]);
+
+  const guest: RsvpGuest | undefined = signedIn && {
+    email: signedIn.email,
+    name: [signedIn.firstName, signedIn.lastName].filter(Boolean).join(' '),
+    stay: stayPriceOf(signedIn)
+  };
 
   return (
     <Section containerWidth="lg" name="rsvp" spacing={['sm', 'md']} theme="light">
-      <RsvpForm action={submitRsvp} models={models ?? []} />
+      <RsvpForm action={submitRsvp} guest={guest} models={models ?? []} note={page?.rsvpNote ?? undefined} />
     </Section>
   );
 };

@@ -66,7 +66,8 @@ describe('parseRsvpSubmission', () => {
         'plusOne.bringing': 'on',
         'plusOne.dietary': 'No shellfish',
         'plusOne.name': 'Alex Lee',
-        songRequest: 'September'
+        songRequest: 'September',
+        specialRequirements: 'A cot, please'
       })
     ).toEqual({
       dietary: 'Vegetarian',
@@ -75,7 +76,8 @@ describe('parseRsvpSubmission', () => {
       kidsCount: 2,
       name: 'Sam Logan',
       plusOne: { bringing: true, dietary: 'No shellfish', name: 'Alex Lee' },
-      songRequest: 'September'
+      songRequest: 'September',
+      specialRequirements: 'A cot, please'
     });
   });
 
@@ -262,6 +264,31 @@ describe('toRsvpDocument', () => {
       _type: 'rsvp',
       submittedAt: '2026-09-19T08:30:00.000Z'
     });
+  });
+});
+
+describe('toRsvpDocument with a guest', () => {
+  it('keeps the signed-in guest ID beside the reply', () => {
+    const reply = replyOf({});
+    expect(toRsvpDocument(reply, new Date('2026-09-19T08:30:00.000Z'), 'SAM-4821').guestId).toBe('SAM-4821');
+  });
+
+  it('adds no guest ID field when nobody is signed in', () => {
+    expect(toRsvpDocument(replyOf({}), new Date())).not.toHaveProperty('guestId');
+  });
+});
+
+describe('special requirements', () => {
+  it('are optional, trimmed, and capped like the other long answers', () => {
+    expect(replyOf({ specialRequirements: '  Ground floor room  ' }).specialRequirements).toBe('Ground floor room');
+    expect(replyOf({ specialRequirements: '   ' }).specialRequirements).toBeUndefined();
+    expect(errorsOf({ specialRequirements: 'x'.repeat(1001) })).toHaveProperty(RSVP_FIELD.specialRequirements);
+  });
+
+  it('count towards whether two replies are the same', () => {
+    const reply = replyOf({ specialRequirements: 'A cot' });
+    expect(isSameRsvpReply(reply, replyOf({ specialRequirements: 'A cot' }))).toBe(true);
+    expect(isSameRsvpReply(reply, replyOf({ specialRequirements: 'Two cots' }))).toBe(false);
   });
 });
 

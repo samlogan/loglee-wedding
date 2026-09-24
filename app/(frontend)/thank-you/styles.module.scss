@@ -51,4 +51,25 @@
      */
     margin-block-start: calc(var(--spacing-xl) * -0.5);
   }
+
+  /*
+   * The guest's contribution and how to pay it — their total from the guest sheet and the bank or Wise
+   * details for their region. Left-aligned inside the centred page: account numbers are read, not scanned.
+   */
+  .payment {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    width: 100%;
+    margin-block: var(--spacing-xl) var(--spacing-md);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--stroke-cards);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-raised);
+    text-align: start;
+  }
+
+  .paymentLabel {
+    color: var(--fg-accent);
+  }
 }

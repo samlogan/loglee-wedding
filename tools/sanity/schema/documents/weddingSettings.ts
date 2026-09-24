@@ -26,12 +26,17 @@ interface IWeddingSettingsDocument {
   };
   rsvpDeadline?: string;
   rsvpLabel?: string;
+  /** The note under the RSVP heading, e.g. the reply-by date and why it matters. */
+  rsvpNote?: SanityTextBlock[];
   contribution: {
     showAmount: boolean;
     amountPerNight?: number;
     copyWithAmount?: SanityTextBlock[];
     copyWithoutAmount?: SanityTextBlock[];
-    paymentDetails?: SanityTextBlock[];
+    /** Bank transfer to the Australian account — for guests whose Nationality is blank or Australian. */
+    paymentDetailsAustralia?: SanityTextBlock[];
+    /** Wise — for everyone else. */
+    paymentDetailsInternational?: SanityTextBlock[];
   };
 }
 
@@ -164,6 +169,13 @@ const weddingSettings = defineType({
       type: `string`
     },
     {
+      description: 'Shown under the RSVP heading on the RSVP page, e.g. "Please RSVP by 30 November…".',
+      group: 'rsvp',
+      name: `rsvpNote`,
+      title: `RSVP Note`,
+      type: `blockContentSimple`
+    },
+    {
       description: 'The accommodation contribution ask, and the payment details guests see once they have replied.',
       fields: [
         {
@@ -193,8 +205,8 @@ const weddingSettings = defineType({
          * document, three files away from the section it breaks.
          *
          * Nothing is lost: both fields hold one sentence, `Simple` keeps strong/em/underline and
-         * link annotations, and `TwoColumnListSection` is their only renderer. `paymentDetails`
-         * below stays `Standard` — different surface, different renderer, and a list of bank
+         * link annotations, and `TwoColumnListSection` is their only renderer. The two payment fields
+         * below stay `Standard` — different surface, different renderer, and a list of bank
          * details is a fair use of one.
          */
         {
@@ -227,9 +239,16 @@ const weddingSettings = defineType({
           type: `blockContentSimple`
         },
         {
-          description: 'Bank or payment details. Only shown to guests after they have submitted an RSVP.',
-          name: `paymentDetails`,
-          title: `Payment Details`,
+          description:
+            'Bank transfer details for the Australian account. Shown after they RSVP to guests whose Nationality in the guest sheet is blank or Australian.',
+          name: `paymentDetailsAustralia`,
+          title: `Payment Details — Australian Guests`,
+          type: `blockContentStandard`
+        },
+        {
+          description: 'Wise details. Shown after they RSVP to every other guest.',
+          name: `paymentDetailsInternational`,
+          title: `Payment Details — International Guests (Wise)`,
           type: `blockContentStandard`
         }
       ],

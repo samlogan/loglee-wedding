@@ -143,11 +143,11 @@ export const Empty: Story = {
     // No game-layer copy anywhere — the comp's "PLAYER NAME", "LOADOUT", "PRESS START" and its ▸.
     await expect(canvasElement.textContent).not.toMatch(/player|loadout|press start|[▶▸]/i);
 
-    // The ordinals, in document order, are 01–06 and hidden from assistive technology.
+    // The ordinals, in document order, are 01–07 and hidden from assistive technology.
     const ordinals = [...canvasElement.querySelectorAll('span[aria-hidden="true"]')]
       .map((span) => span.textContent ?? '')
       .filter((text) => /^\d{2} · $/.test(text));
-    await expect(ordinals).toEqual(['01 · ', '02 · ', '03 · ', '04 · ', '05 · ', '06 · ']);
+    await expect(ordinals).toEqual(['01 · ', '02 · ', '03 · ', '04 · ', '05 · ', '06 · ', '07 · ']);
     await expect(nameInput(canvas)).toHaveAccessibleName(/^name/i);
 
     // Neither dropped question is asked any more.
@@ -157,6 +157,54 @@ export const Empty: Story = {
     // Present and named from first paint; drawn once the character loads, with nothing behind it until then.
     await expect(railModel(canvas)).toBeInTheDocument();
     await expect(submitButton(canvas)).toHaveAccessibleName('Send RSVP');
+  }
+};
+
+/**
+ * A signed-in guest, from their row in the guest sheet: name and email are filled in (and still
+ * editable), and their stay and what it comes to sit above the questions. The reply-by note from
+ * Wedding Settings sits under the heading.
+ */
+export const SignedInGuest: Story = {
+  args: {
+    guest: {
+      email: 'sam@example.com',
+      name: 'Sam Logan',
+      stay: { nights: 2, perNight: 150, stay: 'King Room', total: 300 }
+    },
+    note: [
+      {
+        _key: 'note',
+        _type: 'block',
+        children: [{ _key: 'note-span', _type: 'span', marks: [], text: 'Please RSVP by 30 November.' }],
+        markDefs: [],
+        style: 'normal'
+      }
+    ]
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(nameInput(canvas)).toHaveValue('Sam Logan');
+    await expect(emailInput(canvas)).toHaveValue('sam@example.com');
+
+    const stay = canvas.getByRole('region', { name: /your stay/i });
+    await expect(stay).toHaveTextContent('King Room · 2 nights');
+    await expect(stay).toHaveTextContent('$150 per room, per night');
+    await expect(stay).toHaveTextContent('$300 in total');
+
+    await expect(canvas.getByText('Please RSVP by 30 November.')).toBeInTheDocument();
+    await expect(canvas.getByRole('textbox', { name: /special requirements/i })).toBeInTheDocument();
+  }
+};
+
+/** A guest whose row gives no stay: the form prefills, and shows no price at all. */
+export const GuestWithoutStay: Story = {
+  args: { guest: { email: 'lauren@example.com', name: 'Lauren Lee' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(nameInput(canvas)).toHaveValue('Lauren Lee');
+    await expect(canvas.queryByRole('region', { name: /your stay/i })).toBeNull();
   }
 };
 
@@ -495,6 +543,9 @@ export const KeyboardOnly: Story = {
     await userEvent.tab();
     await expect(canvas.getByRole('textbox', { name: /^ages/i })).toHaveFocus();
     await userEvent.keyboard('3 and 6');
+    await userEvent.tab();
+    await expect(canvas.getByRole('textbox', { name: /^special requirements/i })).toHaveFocus();
+    await userEvent.keyboard('A cot');
     await userEvent.tab();
     await expect(canvas.getByRole('textbox', { name: /^song request/i })).toHaveFocus();
     await userEvent.keyboard('Dancing Queen');

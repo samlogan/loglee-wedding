@@ -66,7 +66,8 @@ export const RSVP_TEXT_MAX_LENGTH = {
   [RSVP_FIELD.name]: 200,
   [RSVP_FIELD.plusOneDietary]: 1000,
   [RSVP_FIELD.plusOneName]: 200,
-  [RSVP_FIELD.songRequest]: 300
+  [RSVP_FIELD.songRequest]: 300,
+  [RSVP_FIELD.specialRequirements]: 1000
 } as const;
 
 type RsvpTextField = keyof typeof RSVP_TEXT_MAX_LENGTH;
@@ -173,6 +174,7 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
   const dietary = text(RSVP_FIELD.dietary) || undefined;
   const kidsAges = text(RSVP_FIELD.kidsAges) || undefined;
   const songRequest = text(RSVP_FIELD.songRequest) || undefined;
+  const specialRequirements = text(RSVP_FIELD.specialRequirements) || undefined;
 
   if (Object.keys(fieldErrors).length > 0) {
     return { fieldErrors, ok: false };
@@ -187,7 +189,8 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
       kidsCount,
       name,
       plusOne,
-      songRequest
+      songRequest,
+      specialRequirements
     }
   };
 };
@@ -196,8 +199,13 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
  * The document to write. `submittedAt` is the server's clock, never the client's — the parser drops
  * any entry of that name — so the Studio's timestamp is when the reply actually arrived.
  */
-export const toRsvpDocument = (reply: RsvpReply, submittedAt: Date) => ({
+/**
+ * The reply as a Sanity document. `guestId` is the signed-in guest from the guest sheet, when there
+ * is one — kept beside the reply, not asked for, so the Studio can tell whose reply it is.
+ */
+export const toRsvpDocument = (reply: RsvpReply, submittedAt: Date, guestId?: string) => ({
   ...reply,
+  ...(guestId ? { guestId } : {}),
   _id: rsvpDocumentId(reply.email),
   _type: 'rsvp' as const,
   submittedAt: submittedAt.toISOString()
@@ -226,7 +234,8 @@ const replyKey = (reply: Partial<RsvpReply>) =>
     reply.plusOne?.dietary,
     reply.kidsCount,
     reply.kidsAges,
-    reply.songRequest
+    reply.songRequest,
+    reply.specialRequirements
   ]);
 
 /** Whether a stored document already holds exactly this reply. */
