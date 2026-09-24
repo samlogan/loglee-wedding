@@ -1,6 +1,9 @@
 import 'server-only';
 import { columnLetter, guestColumnsOf, guestsFromRows, normaliseGuestId } from '@/helpers/guests';
 import type { Guest } from '@/helpers/guests';
+import { siteColumnRequests } from '@/helpers/guestSheetLayout';
+import { replyCellsOf, replyColumnsIn } from '@/helpers/rsvpSheet';
+import type { RsvpReply } from '@/tools/helpers/rsvpSubmission';
 
 import googleAccessToken, { hasGoogleCredentials } from './googleAuth';
 
@@ -28,8 +31,9 @@ export const guestHomeLinkFor = (id: string) => `${guestLinkFor(id)}?to=/`;
 
 let memo: { at: number; guests: Guest[] } | undefined;
 
+// A `values/…` path hangs off the spreadsheet; `?fields=…` and `:batchUpdate` are the spreadsheet itself.
 const sheetUrl = (path: string) =>
-  `https://sheets.googleapis.com/v4/spreadsheets/${process.env.GUEST_SHEET_ID}/${path}`;
+  `https://sheets.googleapis.com/v4/spreadsheets/${process.env.GUEST_SHEET_ID}${/^[:?]/.test(path) ? '' : '/'}${path}`;
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const token = await googleAccessToken();
@@ -102,30 +106,38 @@ export const findGuest = async (id?: string | null): Promise<Guest | undefined> 
 };
 
 /**
- * Mark a guest's row as replied, with the date. Best effort: the reply is already saved in Sanity,
- * so a failure here is logged and never reaches the guest.
+ * Record a guest's reply in their row: "Replied 3 Oct" in RSVP status — noting a guest who is not
+ * staying, or who takes the Sunday night — and every answer from the form in its own "Reply:"
+ * column (`REPLY_COLUMNS`), added at the end — greyed as the site's — the first time it is needed.
+ * One write for all of the row's cells, so a row is never left half updated.
+ *
+ * A later reply from the same guest overwrites the earlier answers, as it replaces their reply in
+ * Sanity. Best effort: the reply is already saved in Sanity, so a failure here is logged and never
+ * reaches the guest.
  */
-export const markReplied = async (
-  guest: Guest,
-  at: Date,
-  { extraNight = false, staying = true }: { extraNight?: boolean; staying?: boolean } = {}
-) => {
+export const markReplied = async (guest: Guest, reply: RsvpReply, at: Date) => {
   try {
     const { values = [] } = await request<{ values?: string[][] }>('values/1:1');
-    const column = guestColumnsOf(values[0] ?? []).rsvpStatus;
-    if (column < 0) {
-      return;
-    }
+    const header = values[0] ?? [];
+    const status = guestColumnsOf(header).rsvpStatus;
+    const { add, indexes } = replyColumnsIn(header);
+
     const day = at.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' });
     let note = '';
-    if (!staying) {
+    if (reply.staying === false) {
       note = ' · Not staying';
-    } else if (extraNight) {
+    } else if (reply.extraNight) {
       note = ' · + Sunday night';
     }
-    await writeCells([{ range: `${columnLetter(column)}${guest.row}`, value: `Replied ${day}${note}` }]);
+
+    const answers = replyCellsOf(reply);
+    await addSiteColumns(add);
+    await writeCells([
+      ...(status >= 0 ? [{ range: `${columnLetter(status)}${guest.row}`, value: `Replied ${day}${note}` }] : []),
+      ...indexes.map((index, position) => ({ range: `${columnLetter(index)}${guest.row}`, value: answers[position] }))
+    ]);
   } catch (error) {
-    console.error('[Guest sheet] Could not mark the reply in the sheet.', error);
+    console.error('[Guest sheet] Could not record the reply in the sheet.', error);
   }
 };
 
@@ -134,6 +146,37 @@ const SENT_COLUMN_HEADERS = {
   inviteSent: 'Invite sent (filled by the site)',
   reminderSent: 'Reminder sent (filled by the site)'
 } as const;
+
+/**
+ * Add columns for the site to fill at the end of the sheet: widen it when it is too narrow, grey the
+ * new columns as the site's (`siteColumnRequests`) and write their headers. The couple's columns come
+ * first and are never touched.
+ */
+const addSiteColumns = async (columns: { index: number; header: string }[]) => {
+  if (columns.length === 0) {
+    return;
+  }
+  const { sheets = [] } = await request<{
+    sheets?: { properties: { sheetId: number; gridProperties?: { columnCount?: number } } }[];
+  }>('?fields=sheets.properties(sheetId,gridProperties.columnCount)');
+  const properties = sheets[0]?.properties;
+  if (properties) {
+    const width = properties.gridProperties?.columnCount ?? 0;
+    const needed = Math.max(...columns.map((column) => column.index)) + 1;
+    await request(':batchUpdate', {
+      body: JSON.stringify({
+        requests: [
+          ...(needed > width
+            ? [{ appendDimension: { dimension: 'COLUMNS', length: needed - width, sheetId: properties.sheetId } }]
+            : []),
+          ...columns.flatMap((column) => siteColumnRequests(properties.sheetId, column.index))
+        ]
+      }),
+      method: 'POST'
+    });
+  }
+  await writeCells(columns.map((column) => ({ range: `${columnLetter(column.index)}1`, value: column.header })));
+};
 
 /**
  * The 0-based index of the column recording an email of this kind, adding the column to the end of
@@ -146,7 +189,7 @@ export const sentColumn = async (column: keyof typeof SENT_COLUMN_HEADERS): Prom
   if (index >= 0) {
     return index;
   }
-  await writeCells([{ range: `${columnLetter(header.length)}1`, value: SENT_COLUMN_HEADERS[column] }]);
+  await addSiteColumns([{ header: SENT_COLUMN_HEADERS[column], index: header.length }]);
   return header.length;
 };
 
