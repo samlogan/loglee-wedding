@@ -261,8 +261,8 @@ const EMAILS = {
         ['Where', WHERE],
         ['RSVP by', '30 November 2026']
       ]),
-      // The homepage, signed in — the weekend, then the RSVP from the site's own header.
-      button('See the weekend', '{homeLink}'),
+      // "RSVP now", landing on the homepage signed in — the weekend first, then the RSVP from its header.
+      button('RSVP now', '{homeLink}'),
       guestIdNote
     ].join('\n          ')
   },
