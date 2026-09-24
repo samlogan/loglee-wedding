@@ -36,9 +36,18 @@ describe('paragraphsOf', () => {
 describe('thankYouVariables', () => {
   it('gives the stay one line and the total, with the Sunday night named when taken', () => {
     const stay = { extraNight: true, nights: 3, perNight: 150, stay: 'King Room', total: 450 };
-    expect(thankYouVariables({ ...BASE, stay }).stay).toEqual([
-      { summary: 'King Room · 3 nights, Sunday included', total: '$450' }
-    ]);
+    const variables = thankYouVariables({ ...BASE, stay });
+    expect(variables.stay).toEqual([{ summary: 'King Room · 3 nights, Sunday included' }]);
+    expect(variables.stayTotal).toEqual([{ total: '$450' }]);
+  });
+
+  it('says nothing about paying for a stay the couple are covering', () => {
+    const stay = { extraNight: false, nights: 2, perNight: 0, stay: 'Twin Double', total: 0 };
+    const variables = thankYouVariables({ ...BASE, payment: [block('Wise: sam@example.com')], stay });
+    expect(variables.stay).toEqual([{ summary: 'Twin Double · 2 nights' }]);
+    expect(variables.stayTotal).toEqual([]);
+    expect(variables.payment).toEqual([]);
+    expect(variables.paymentHeading).toEqual([]);
   });
 
   it('leaves out every part the guest has nothing for — heading and all', () => {
@@ -48,6 +57,7 @@ describe('thankYouVariables', () => {
       payment: [],
       paymentHeading: [],
       stay: [],
+      stayTotal: [],
       travel: [],
       travelHeading: []
     });

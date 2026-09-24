@@ -5,7 +5,7 @@ import Section from '@/components/Section';
 import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import coupleNames from '@/helpers/coupleNames';
-import { stayPriceOf } from '@/helpers/guests';
+import { isFreeStay, stayPriceOf } from '@/helpers/guests';
 import { replyExtrasFor, takesExtraNight } from '@/tools/guests/replyExtras';
 import type { ReplyExtras } from '@/tools/guests/replyExtras';
 import { currentGuest } from '@/tools/guests/session';
@@ -68,8 +68,11 @@ const ThankYouPage = async () => {
     ? await Promise.all([replyExtrasFor(guest).catch(() => noExtras), takesExtraNight(guest.id)])
     : [noExtras, false];
   const stay = guest && stayPriceOf(guest, { extraNight });
+  // A stay the couple are covering: the stay is shown, and nothing about paying for it.
+  const free = isFreeStay(stay);
   const total =
     stay &&
+    !free &&
     new Intl.NumberFormat('en-AU', { currency: 'AUD', maximumFractionDigits: 0, style: 'currency' }).format(stay.total);
 
   /*
@@ -121,7 +124,24 @@ const ThankYouPage = async () => {
           className={styles.scene}
         />
 
-        {Boolean(total || paymentDetails?.length) && (
+        {stay && free && (
+          <section aria-labelledby="thank-you-stay" className={styles.payment}>
+            <Text
+              as="h2"
+              className={styles.paymentLabel}
+              id="thank-you-stay"
+              size="2xs"
+              text="Your stay"
+              textTransform="uppercase"
+              variant="mono"
+            />
+            <Text as="p" size="lg" weight="medium">
+              {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
+              {stay.extraNight && ', Sunday included'}
+            </Text>
+          </section>
+        )}
+        {!free && Boolean(total || paymentDetails?.length) && (
           <section aria-labelledby="thank-you-payment" className={styles.payment}>
             <Text
               as="h2"
@@ -155,13 +175,14 @@ const ThankYouPage = async () => {
             <TextBlock blocks={travel.content} />
           </section>
         )}
+        {/* Handwritten in the plum, as the emails sign off and the home hero's byline is set. */}
         <Text
           alignment="center"
           as="p"
           className={styles.signoff}
-          color="themeFgMuted"
-          size="sm"
+          size="md"
           text={`With love, ${names}`}
+          variant="heading"
         />
       </div>
     </Section>

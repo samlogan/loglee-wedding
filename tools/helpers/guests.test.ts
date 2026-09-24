@@ -8,6 +8,7 @@ import {
   normaliseGuestId,
   numberCell,
   paymentRegionOf,
+  isFreeStay,
   stayPriceOf
 } from './guests';
 
@@ -113,6 +114,18 @@ describe('stayPriceOf', () => {
 
   it('shows a free stay as a stay, not as missing', () => {
     expect(stayPriceOf({ nights: 2, perNight: 0, stay: 'Twin Double' })?.total).toBe(0);
+  });
+});
+
+describe('isFreeStay', () => {
+  it('is a stay with nothing to pay', () => {
+    expect(isFreeStay(stayPriceOf({ nights: 2, perNight: 0, stay: 'Twin Double' }))).toBe(true);
+    expect(isFreeStay(stayPriceOf({ nights: 2, perNight: 0, stay: 'Twin' }, { extraNight: true }))).toBe(true);
+  });
+
+  it('is not a paid stay, nor a stay the sheet does not give', () => {
+    expect(isFreeStay(stayPriceOf({ nights: 2, perNight: 150, stay: 'King Room' }))).toBe(false);
+    expect(isFreeStay(undefined)).toBe(false);
   });
 });
 

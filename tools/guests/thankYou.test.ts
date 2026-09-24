@@ -43,7 +43,8 @@ describe('sendThankYou', () => {
     expect(sent()?.dataVariables).toMatchObject({
       firstName: 'Sam',
       homeLink: 'https://samandlauren.wedding/g/SAM-4821/?to=/',
-      stay: [{ summary: 'King Room · 2 nights', total: '$300' }]
+      stay: [{ summary: 'King Room · 2 nights' }],
+      stayTotal: [{ total: '$300' }]
     });
   });
 
@@ -55,7 +56,8 @@ describe('sendThankYou', () => {
 
   it('prices the Sunday night in when the guest took it', async () => {
     await sendThankYou(SAM, { ...REPLY, extraNight: true }, AT);
-    expect(sent()?.dataVariables.stay).toEqual([{ summary: 'King Room · 3 nights, Sunday included', total: '$450' }]);
+    expect(sent()?.dataVariables.stay).toEqual([{ summary: 'King Room · 3 nights, Sunday included' }]);
+    expect(sent()?.dataVariables.stayTotal).toEqual([{ total: '$450' }]);
   });
 
   it('carries the payment details and travel note for this guest', async () => {

@@ -14,6 +14,7 @@ import TextBlock from '@/components/TextBlock';
 import classNames from '@/helpers/classNames';
 import { DUET_BACK, DUET_FRONT } from '@/helpers/duetPlacement';
 import formatOrdinal from '@/helpers/formatOrdinal';
+import { isFreeStay } from '@/helpers/guests';
 import type { StayPrice } from '@/helpers/guests';
 import type { RsvpPlaceholder } from '@/tools/sanity/schema/documents/weddingSettings';
 
@@ -543,14 +544,19 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
                 {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
                 {stay.extraNight && ', Sunday included'}
               </Text>
-              {/* Polite and atomic, so switching the Sunday night on or off is heard as the new total. */}
-              <div aria-atomic="true" aria-live="polite">
-                <Text as="p" className={styles.stayPrice}>
-                  {formatAud(stay.perNight)} per room, per night · <strong>{formatAud(stay.total)}</strong> in total
-                </Text>
-              </div>
+              {/*
+               * Polite and atomic, so switching the Sunday night on or off is heard as the new total.
+               * A stay the couple are covering shows nothing about paying — no price, no payment note.
+               */}
+              {!isFreeStay(stay) && (
+                <div aria-atomic="true" aria-live="polite">
+                  <Text as="p" className={styles.stayPrice}>
+                    {formatAud(stay.perNight)} per room, per night · <strong>{formatAud(stay.total)}</strong> in total
+                  </Text>
+                </div>
+              )}
               {extraNightSwitch(extraNightLabel)}
-              <Text as="p" className={styles.stayNote} size="sm" text={stayNote} />
+              {!isFreeStay(stay) && <Text as="p" className={styles.stayNote} size="sm" text={stayNote} />}
             </section>
           )}
           {questions.map(({ key, render }, index) => (

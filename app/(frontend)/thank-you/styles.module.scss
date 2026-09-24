@@ -43,13 +43,18 @@
     margin-block: var(--spacing-xl);
   }
 
+  /*
+   * The sign-off, in the handwriting the emails sign off in — Caveat (`--script-font`) in the plum,
+   * tilted like the home hero's byline. Clear of the cards above it: it closes the page rather than
+   * captioning the last card.
+   */
   .signoff {
-    /*
-     * Tighter to the scene than the scene is to the copy above it, so the sign-off reads as
-     * belonging to the picture rather than starting a new thought. `.scene`'s own bottom margin
-     * supplies the rest.
-     */
-    margin-block-start: calc(var(--spacing-xl) * -0.5);
+    margin-block-start: var(--spacing-xl);
+    color: var(--button-accent-bg);
+    font-family: var(--script-font), cursive;
+    letter-spacing: 0;
+    text-transform: none;
+    rotate: -2deg;
   }
 
   /*

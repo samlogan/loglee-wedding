@@ -82,7 +82,8 @@ const SAMPLE_THANK_YOU = {
     { text: 'Use your guest ID, SAM-6137, as the reference.' }
   ],
   paymentHeading: [{ text: 'How to pay' }],
-  stay: [{ summary: 'King Room · 3 nights, Sunday included', total: '$450' }],
+  stay: [{ summary: 'King Room · 3 nights, Sunday included' }],
+  stayTotal: [{ total: '$450' }],
   travel: [
     { text: 'You’ll need an ETA to visit Australia — apply on the Australian ETA app a few weeks ahead.' },
     { text: 'Sydney is 11 hours ahead of London in February.' }
@@ -294,8 +295,11 @@ const EMAILS = {
       eachOf('intro', 'padding="0 0 16px"'),
       `<loops-array variable="stay" variable-type="DATA_VARIABLE">
             ${eyebrow('Your stay').replace('padding="0 0 14px"', 'padding="12px 0 14px"')}
-            <mj-text font-weight="600" padding="0 0 4px">{DATA_VARIABLE:stay[].summary}</mj-text>
-            <mj-text padding="0 0 16px">Your room contribution: <strong>{DATA_VARIABLE:stay[].total}</strong></mj-text>
+            <mj-text font-weight="600" padding="0 0 16px">{DATA_VARIABLE:stay[].summary}</mj-text>
+          </loops-array>`,
+      // Its own array, empty for a stay the couple are covering — so a free stay shows no price.
+      `<loops-array variable="stayTotal" variable-type="DATA_VARIABLE">
+            <mj-text padding="0 0 16px">Your room contribution: <strong>{DATA_VARIABLE:stayTotal[].total}</strong></mj-text>
           </loops-array>`,
       eyebrowOf('paymentHeading'),
       eachOf('payment', 'padding="0 0 12px"'),
