@@ -13,11 +13,14 @@ import writeClient from '@/tools/sanity/lib/writeClient';
 export interface ReplyExtras {
   payment?: SanityTextBlock[];
   travel?: { title?: string; content: SanityTextBlock[] };
+  /** The thank-you email's opening paragraphs, from Wedding Settings → Emails. */
+  emailIntro?: string[];
 }
 
 interface ReplyExtrasResult {
   payment?: { australia?: SanityTextBlock[] | null; international?: SanityTextBlock[] | null } | null;
   travel?: { title?: string | null; content?: SanityTextBlock[] | null } | null;
+  emailIntro?: string[] | null;
 }
 
 export const replyExtrasFor = async (guest: Pick<Guest, 'nationality' | 'payment'>): Promise<ReplyExtras> => {
@@ -31,6 +34,7 @@ export const replyExtrasFor = async (guest: Pick<Guest, 'nationality' | 'payment
   const payment = guest.payment === 'au' ? result?.payment?.australia : result?.payment?.international;
   const travel = result?.travel;
   return {
+    emailIntro: result?.emailIntro ?? undefined,
     payment: payment?.length ? payment : undefined,
     travel: travel?.content?.length ? { content: travel.content, title: travel.title ?? undefined } : undefined
   };

@@ -20,10 +20,17 @@ interface Item {
   text: string;
 }
 
+/** The email's opening paragraphs when Wedding Settings → Emails → Thank-you Email has none. */
+export const THANK_YOU_INTRO_DEFAULT = [
+  'Your reply is in, and we can’t wait to celebrate with you. Here’s what you need for the weekend.'
+];
+
 export interface ThankYouEmailInput {
   firstName: string;
   /** Their personal link, landing on the homepage. */
   homeLink: string;
+  /** The opening paragraphs, from Sanity. Blank ones are dropped; none at all is the default. */
+  intro?: unknown;
   /** Their stay and total, the Sunday night included when they took it. */
   stay?: StayPrice;
   /** The payment details for their region, from Sanity. */
@@ -35,6 +42,7 @@ export interface ThankYouEmailInput {
 export interface ThankYouEmailVariables {
   firstName: string;
   homeLink: string;
+  intro: Item[];
   stay: { summary: string; total: string }[];
   paymentHeading: Item[];
   payment: Item[];
@@ -69,10 +77,15 @@ export const thankYouVariables = (input: ThankYouEmailInput): ThankYouEmailVaria
   const { firstName, homeLink, stay } = input;
   const payment = items(paragraphsOf(input.payment));
   const travel = items(paragraphsOf(input.travel?.content));
+  const intro = (Array.isArray(input.intro) ? input.intro : [])
+    .filter((paragraph): paragraph is string => typeof paragraph === 'string')
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 
   return {
     firstName,
     homeLink,
+    intro: items(intro.length > 0 ? intro : THANK_YOU_INTRO_DEFAULT),
     payment,
     paymentHeading: heading('How to pay', payment),
     stay: stay
