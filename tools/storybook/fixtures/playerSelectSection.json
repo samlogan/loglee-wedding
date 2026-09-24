@@ -6,13 +6,13 @@
     {
       "_id": "player-lauren",
       "clips": {
-        "hover": "Cardio_Dance",
-        "idle": "Walking"
+        "hover": "Boom_Dance",
+        "idle": "Casual_Walk"
       },
       "fallbackImage": null,
       "model": {
         "asset": {
-          "url": "https://cdn.sanity.io/files/tftcitbh/production/68a86a3c38def53df56f9c582121bc1af63f1ae1.glb"
+          "url": "https://cdn.sanity.io/files/tftcitbh/production/d22f5c40e902f7db191b6fec1c8b7309c97c672c.glb"
         }
       },
       "name": "Lauren",
@@ -24,13 +24,13 @@
     {
       "_id": "player-sam",
       "clips": {
-        "hover": "Agree_Gesture",
-        "idle": "Walking"
+        "hover": "Excited_Walk_M",
+        "idle": "Casual_Walk"
       },
       "fallbackImage": null,
       "model": {
         "asset": {
-          "url": "https://cdn.sanity.io/files/tftcitbh/production/68197743f6eabb948e9649d8664bdc5517dc411b.glb"
+          "url": "https://cdn.sanity.io/files/tftcitbh/production/26e5c0caad71c5da09f6edd7de904d773047b096.glb"
         }
       },
       "name": "Sam",

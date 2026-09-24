@@ -58,25 +58,39 @@
       "question": "When and where is it?"
     },
     {
-      "_key": "rsvp",
+      "_key": "check-in",
       "answer": [
         {
-          "_key": "rsvpa0",
+          "_key": "check-ina0",
           "_type": "block",
           "children": [
             {
-              "_key": "rsvpa0s",
+              "_key": "check-ina0s",
               "_type": "span",
               "marks": [],
-              "text": "Please RSVP by 11 December 2026 on the RSVP page. It also asks for dietary requirements, your kids’ ages and a song request, so it is the one place to tell us everything."
+              "text": "Check in begins after 3pm on Friday, then join us for dinner that evening. We finish with a recovery breakfast at Lulu’s on Sunday before check-out at 10am."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "check-ina1",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "check-ina1s",
+              "_type": "span",
+              "marks": [],
+              "text": "For those who want to keep the party going poolside on Sunday, there is the option to book another night. "
             }
           ],
           "markDefs": [],
           "style": "normal"
         }
       ],
-      "note": "RSVP by 11 December",
-      "question": "When do I need to RSVP by?"
+      "note": "3pm Friday · 10am Sunday",
+      "question": "When do I arrive and leave?"
     },
     {
       "_key": "stay",
@@ -124,7 +138,49 @@
               "_key": "contributiona0s",
               "_type": "span",
               "marks": [],
-              "text": "We’ve taken care of the rooms so everyone can stay together. If you’d like to contribute towards yours, we’ll send the details with your RSVP confirmation."
+              "text": "We’ve reserved all the rooms so everyone can stay onsite together. We’ll confirm the room type once we’ve received your RSVP confirmation, and ask that guests pay us directly based on their room type, dates, and occupancy.\n\nAustralian guests: Bank transfer"
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "34f58d374d85",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "a4d66a94a769",
+              "_type": "span",
+              "marks": [],
+              "text": "BSB: 633 123 Account Number: 205 984 669"
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "9d36f8c9df00",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "0d8a6c3b4dc8",
+              "_type": "span",
+              "marks": [],
+              "text": "International guests: Wire to our Wise Account"
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "d40932923ff2",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "f89259cec862",
+              "_type": "span",
+              "marks": [],
+              "text": "Routing ### Account ###"
             }
           ],
           "markDefs": [],
@@ -159,7 +215,7 @@
               "_key": "getting-therea1s",
               "_type": "span",
               "marks": [],
-              "text": "If we arrange any shared transport, we’ll post the details here."
+              "text": "We are planning to arrange a shuttle bus from Sydney. Details to follow."
             }
           ],
           "markDefs": [],
@@ -167,42 +223,7 @@
         }
       ],
       "note": null,
-      "question": "How do I get there?"
-    },
-    {
-      "_key": "check-in",
-      "answer": [
-        {
-          "_key": "check-ina0",
-          "_type": "block",
-          "children": [
-            {
-              "_key": "check-ina0s",
-              "_type": "span",
-              "marks": [],
-              "text": "Arrive and check in on Friday, then join us for dinner that evening. We finish with a recovery breakfast at Lulu’s on Sunday before check-out."
-            }
-          ],
-          "markDefs": [],
-          "style": "normal"
-        },
-        {
-          "_key": "check-ina1",
-          "_type": "block",
-          "children": [
-            {
-              "_key": "check-ina1s",
-              "_type": "span",
-              "marks": [],
-              "text": "Exact check-in and check-out times are still to be confirmed."
-            }
-          ],
-          "markDefs": [],
-          "style": "normal"
-        }
-      ],
-      "note": "Times TBC",
-      "question": "When do I arrive and leave?"
+      "question": "How do I get there? What if I don't drive?"
     },
     {
       "_key": "kids",
@@ -215,7 +236,7 @@
               "_key": "kidsa0s",
               "_type": "span",
               "marks": [],
-              "text": "Yes. Add their ages to your RSVP so we can plan for them."
+              "text": "Yes. We are planning to hire a nanny. Add their ages to your RSVP so we can plan for them. Let us know if you would like them to be a part of the ceremony and reception dinner, or if you would prefer they are with the nanny."
             }
           ],
           "markDefs": [],
@@ -224,41 +245,6 @@
       ],
       "note": null,
       "question": "Are kids welcome?"
-    },
-    {
-      "_key": "k74",
-      "answer": [
-        {
-          "_key": "k75",
-          "_type": "block",
-          "children": [
-            {
-              "_key": "k76",
-              "_type": "span",
-              "marks": [],
-              "text": "Yes — we're providing nannies for young children across the weekend."
-            }
-          ],
-          "markDefs": [],
-          "style": "normal"
-        },
-        {
-          "_key": "k77",
-          "_type": "block",
-          "children": [
-            {
-              "_key": "k78",
-              "_type": "span",
-              "marks": [],
-              "text": "Times, the age range they cover and where they'll be based are still to be confirmed. We'll update this page and let families know directly once we have the details."
-            }
-          ],
-          "markDefs": [],
-          "style": "normal"
-        }
-      ],
-      "note": "Times and ages TBC",
-      "question": "Is there childcare?"
     },
     {
       "_key": "dress-code",
@@ -271,14 +257,14 @@
               "_key": "dress-codea0s",
               "_type": "span",
               "marks": [],
-              "text": "We’ll confirm the dress code for each event before invitations go out. The ceremony is outdoors, at the Tree Cathedral by the river."
+              "text": "The ceremony will take place outdoors on the wedding lawn. Dress attire should be cocktail, but think outdoor garden party. It’s summer in Sydney so vibrant jewel tones and florals are encouraged!"
             }
           ],
           "markDefs": [],
           "style": "normal"
         }
       ],
-      "note": "Dress code TBC",
+      "note": "Dress code ",
       "question": "What should I wear?"
     },
     {
@@ -292,7 +278,7 @@
               "_key": "between-eventsa0s",
               "_type": "span",
               "marks": [],
-              "text": "The pool, Swedish sauna, outdoor hot tub, gym, games room, tennis court and yard games are free for all guests. The pool has service from midday."
+              "text": "The pool, Swedish sauna, outdoor hot tub, gym, games room, bikes, tennis court and yard games are free for all guests. The pool has service from midday."
             }
           ],
           "markDefs": [],
@@ -315,6 +301,104 @@
       ],
       "note": null,
       "question": "What is there to do between events?"
+    },
+    {
+      "_key": "k74",
+      "answer": [
+        {
+          "_key": "k75",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "k76",
+              "_type": "span",
+              "marks": [],
+              "text": "For those travelling, your presence is the greatest gift of all. We know Australia is a million miles away, and appreciate you spending the entire weekend with us. "
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "4892767fd144",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "a505f85a1c47",
+              "_type": "span",
+              "marks": [],
+              "text": "If you would like to contribute towards our honeymoon fund, you can send money via bank transfer. Alternatively, we will have a wishing well for cards and cash.\n\nAustralian guests: Bank transfer"
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "34f58d374d85",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "a4d66a94a769",
+              "_type": "span",
+              "marks": [],
+              "text": "BSB: 633 123 Account Number: 205 984 669"
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "9d36f8c9df00",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "0d8a6c3b4dc8",
+              "_type": "span",
+              "marks": [],
+              "text": "International guests: Wire to our Wise Account"
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        },
+        {
+          "_key": "d40932923ff2",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "f89259cec862",
+              "_type": "span",
+              "marks": [],
+              "text": "Routing ### Account ###"
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": "Registry",
+      "question": "Do you have a registry?"
+    },
+    {
+      "_key": "rsvp",
+      "answer": [
+        {
+          "_key": "rsvpa0",
+          "_type": "block",
+          "children": [
+            {
+              "_key": "rsvpa0s",
+              "_type": "span",
+              "marks": [],
+              "text": "Please RSVP by 30 November 2026 on the RSVP page. It also asks for dietary requirements, your kids’ ages and a song request, so it is the one place to tell us everything."
+            }
+          ],
+          "markDefs": [],
+          "style": "normal"
+        }
+      ],
+      "note": "RSVP by 30 November",
+      "question": "When do I need to RSVP by?"
     }
   ],
   "map": {

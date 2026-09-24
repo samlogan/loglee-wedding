@@ -41,7 +41,7 @@
             }
           ],
           "location": "The Lodge",
-          "time": "TBC",
+          "time": "3:00pm",
           "title": "Arrivals and check-in"
         },
         {
@@ -55,16 +55,16 @@
                   "_key": "k10",
                   "_type": "span",
                   "marks": [],
-                  "text": "Options include the Champagne Garden, the wedding terrace or Fin's Bar."
+                  "text": "Join us for oven fired pizza cooked al fresco in the Champagne Garden."
                 }
               ],
               "markDefs": [],
               "style": "normal"
             }
           ],
-          "location": "TBC",
-          "time": "TBC",
-          "title": "Arrival dinner"
+          "location": "Champagne garden",
+          "time": "6:00pm",
+          "title": "Welcome dinner"
         }
       ],
       "eyebrow": "Day 01",
@@ -101,15 +101,15 @@
                   "_key": "k16",
                   "_type": "span",
                   "marks": [],
-                  "text": "The outdoor ceremony space by the river."
+                  "text": "Watch us say I do."
                 }
               ],
               "markDefs": [],
               "style": "normal"
             }
           ],
-          "location": "Tree Cathedral",
-          "time": "TBC",
+          "location": "Wedding Lawn",
+          "time": "2:00pm",
           "title": "Ceremony"
         },
         {
@@ -123,15 +123,15 @@
                   "_key": "k19",
                   "_type": "span",
                   "marks": [],
-                  "text": "Around the firepits and yard games."
+                  "text": "Enjoy drinks and canapes on the wedding terrace"
                 }
               ],
               "markDefs": [],
               "style": "normal"
             }
           ],
-          "location": "Firepits",
-          "time": "TBC",
+          "location": "Wedding terrace",
+          "time": "3:00pm",
           "title": "Cocktail hour"
         },
         {
@@ -145,7 +145,7 @@
                   "_key": "42dbfc2c4fcb",
                   "_type": "span",
                   "marks": [],
-                  "text": "Dinner, speeches and dancing into the night."
+                  "text": "Dinner, drinks, and dancing until we get shut down."
                 }
               ],
               "markDefs": [],
@@ -153,7 +153,7 @@
             }
           ],
           "location": "Wedding Hall",
-          "time": "TBC",
+          "time": "5:00-11:30pm",
           "title": "Reception"
         }
       ],
@@ -191,15 +191,15 @@
                   "_key": "b683036efb9d",
                   "_type": "span",
                   "marks": [],
-                  "text": "Coffee, a big breakfast and the stories from last night."
+                  "text": "Coffee, breakfast, and the stories from last night. For those staying an extra night, we will continue the party chilling poolside."
                 }
               ],
               "markDefs": [],
               "style": "normal"
             }
           ],
-          "location": "Lulu's",
-          "time": "TBC",
+          "location": "Lulu's / Poolside",
+          "time": "8:30am",
           "title": "Recovery breakfast"
         },
         {
@@ -221,7 +221,7 @@
             }
           ],
           "location": "The Lodge",
-          "time": "TBC",
+          "time": "10:00am",
           "title": "Check-out"
         }
       ],
