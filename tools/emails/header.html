@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <!--
-  The email header, rendered to img/header.png by `yarn emails:build`. An image, not live text,
+  The email's display and handwritten type, rendered by `yarn emails:build`: the header to
+      img/header.png and the sign-off to img/signoff.png. An image, not live text,
   because Gmail and Outlook ignore web fonts: the site's heavy Archivo capitals and the handwritten
   Caveat byline would fall back to a system font there. Same type, sizes and colours as the home
   hero (sections/HeroSection), at 2x for a 600px email.
@@ -59,6 +60,15 @@
         transform: rotate(-2deg);
         transform-origin: left center;
       }
+      /* The sign-off at the foot of the card, at 2x for a 30px line. Rendered transparent, so it sits on the card. */
+      .signoff {
+        display: inline-block;
+        padding: 8px 12px 16px 4px;
+        font:
+          700 60px/1.1 'Caveat',
+          cursive;
+        color: #972a6a;
+      }
     </style>
   </head>
   <body>
@@ -67,5 +77,7 @@
       <h1 class="names"><span>Sam &amp;</span><span>Lauren</span></h1>
       <div class="byline">are getting married</div>
     </div>
+    <!-- The card's sign-off, rendered to img/signoff.png. An image for the same reason as the header. -->
+    <div class="signoff">With love, Sam &amp; Lauren</div>
   </body>
 </html>
