@@ -70,7 +70,28 @@ ${rows
   .join('\n')}
         </mj-table>`;
 
-const layout = ({ title, preheader, body }) => `<mjml>
+/**
+ * The proposal photo, above the card in the invitation. From the Sanity asset, as a 1120px JPEG — the
+ * original is a 3.2 MB PNG, far too heavy for an inbox — twice the 560px it shows at, for retina.
+ * Kept in the repo (`img/photo.jpg`) so the build does not depend on the network.
+ */
+const PHOTO = {
+  alt: 'Sam proposing to Lauren under a green garden arch by the water',
+  source:
+    'https://cdn.sanity.io/images/tftcitbh/production/3a01e4a145e85516c9e54974b8aa9c02f191178d-2038x1172.png?w=1120&fm=jpg&q=78'
+};
+
+const photo = `
+    <mj-wrapper padding="0 20px 16px">
+      <mj-section padding="0">
+        <mj-column>
+          <mj-image src="img/photo.jpg" alt="${PHOTO.alt}" width="560px" border-radius="8px" padding="0" />
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+`;
+
+const layout = ({ title, preheader, body, withPhoto = false }) => `<mjml>
   <mj-head>
     <mj-title>${title}</mj-title>
     <mj-preview>${preheader}</mj-preview>
@@ -97,7 +118,7 @@ const layout = ({ title, preheader, body }) => `<mjml>
         <mj-image src="img/header.png" alt="Sam &amp; Lauren are getting married" width="600px" padding="0" href="${SITE}" />
       </mj-column>
     </mj-section>
-
+${withPhoto ? photo : ''}
     <mj-wrapper padding="0 20px">
       <mj-section background-color="${C.card}" border="1px solid ${C.stroke}" border-radius="8px" padding="36px 30px 26px">
         <mj-column>
@@ -133,6 +154,7 @@ const EMAILS = {
     subject: 'Sam & Lauren are getting married',
     title: 'You’re invited — Sam & Lauren',
     preheader: 'Join us at The Lodge Jamberoo, 12–14 February 2027. RSVP by 30 November.',
+    withPhoto: true,
     body: [
       eyebrow('You’re invited'),
       `<mj-text font-size="28px" font-weight="600" line-height="1.2" padding="0 0 18px">Hi {firstName},</mj-text>`,
@@ -190,13 +212,16 @@ for (const [name, email] of Object.entries(EMAILS)) {
   mkdirSync(path.join(folder, 'img'), { recursive: true });
   writeFileSync(path.join(folder, 'index.mjml'), layout(email));
   copyFileSync(path.join(here, 'img', 'header.png'), path.join(folder, 'img', 'header.png'));
+  if (email.withPhoto) {
+    copyFileSync(path.join(here, 'img', 'photo.jpg'), path.join(folder, 'img', 'photo.jpg'));
+  }
 
   // The preview: compiled, with sample values and the local header, to open straight in a browser.
   let html = mjml(path.join(folder, 'index.mjml'));
   for (const [key, value] of Object.entries(SAMPLE)) {
     html = html.replaceAll(`{${key}}`, value);
   }
-  writeFileSync(path.join(dist, `${name}.preview.html`), html.replaceAll('img/header.png', `${name}/img/header.png`));
+  writeFileSync(path.join(dist, `${name}.preview.html`), html.replaceAll('"img/', `"${name}/img/`));
 
   execFileSync('zip', ['-qr', path.join(dist, `${name}.zip`), 'index.mjml', 'img'], { cwd: folder });
   console.log(`${name.padEnd(11)} → tools/emails/dist/${name}.zip   subject: “${email.subject}”`);
