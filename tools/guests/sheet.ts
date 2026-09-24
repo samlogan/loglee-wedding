@@ -23,6 +23,9 @@ const GUEST_LINK_ORIGIN = 'https://samandlauren.wedding';
 
 export const guestLinkFor = (id: string) => `${GUEST_LINK_ORIGIN}/g/${encodeURIComponent(id)}/`;
 
+/** The same personal link, landing on the homepage rather than the RSVP form. */
+export const guestHomeLinkFor = (id: string) => `${guestLinkFor(id)}?to=/`;
+
 let memo: { at: number; guests: Guest[] } | undefined;
 
 const sheetUrl = (path: string) =>
