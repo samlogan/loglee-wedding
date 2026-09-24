@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 import { GUEST_ID_FIELD } from '@/components/GuestEntry/contract';
 import type { GuestEntryState } from '@/components/GuestEntry/contract';
-import { guestSessionSecret, signIn } from '@/tools/guests/session';
+import { COUPLE_ID, guestSessionSecret, isCouplePassword, signIn } from '@/tools/guests/session';
 import { findGuest } from '@/tools/guests/sheet';
 import createRateLimiter from '@/tools/helpers/rateLimiter';
 
@@ -33,6 +33,13 @@ export const enterSite = async (_previous: GuestEntryState, formData: FormData):
   }
 
   const id = formData.get(GUEST_ID_FIELD);
+
+  // The couple's own way in — a password, not a row in the guest sheet.
+  if (typeof id === 'string' && isCouplePassword(id)) {
+    await signIn({ id: COUPLE_ID });
+    redirect(safeNext(formData.get('next')));
+  }
+
   let guest;
   try {
     guest = await findGuest(typeof id === 'string' ? id : '');

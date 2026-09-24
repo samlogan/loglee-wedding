@@ -9,8 +9,23 @@ import { findGuest } from './sheet';
 /** The secret the guest cookie is signed with. Unset means nobody can sign in — the site stays shut. */
 export const guestSessionSecret = () => process.env.GUEST_SESSION_SECRET;
 
-/** Remember a guest on this browser. Call from a server action or route handler only. */
-export const signIn = async (guest: Guest) => {
+/**
+ * The ID the couple's password signs in as. Not a row in the sheet, so the site treats it as someone
+ * who has entered but has nothing to prefill — no stay card, no payment details.
+ */
+export const COUPLE_ID = 'COUPLE';
+
+/**
+ * Whether a typed value is the couple's password (`COUPLE_PASSWORD`), however it was cased or spaced.
+ * `false` whenever the variable is unset, so a blank password can never open the site.
+ */
+export const isCouplePassword = (value: string) => {
+  const password = process.env.COUPLE_PASSWORD?.trim().toLowerCase();
+  return Boolean(password) && value.trim().toLowerCase() === password;
+};
+
+/** Remember a guest (or the couple) on this browser. Call from a server action or route handler only. */
+export const signIn = async (guest: Pick<Guest, 'id'>) => {
   const secret = guestSessionSecret();
   if (!secret) {
     throw new Error('GUEST_SESSION_SECRET is not set');

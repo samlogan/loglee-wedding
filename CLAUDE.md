@@ -569,6 +569,7 @@ Required in `.env.development` (see `.env.template` for full list):
 - `SANITY_API_READ_TOKEN`
 - `SANITY_WEBHOOK_SECRET`
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GUEST_SHEET_ID` — the service account that reads and writes the guest sheet (`tools/guests/sheet.ts`)
+- `COUPLE_PASSWORD` — typed on the entry page instead of a guest ID, lets the couple in (signed in as `COUPLE`, no prefill)
 - `GUEST_SESSION_SECRET` — signs the guest cookie. **Unset means nobody can enter the site**, so set it on every Netlify deploy context
 
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` — browser key for `components/Map` and the Studio's `geopoint` picker (`@sanity/google-maps-input`). Needs billing plus the Maps JavaScript, Places and Static Maps APIs
