@@ -37,27 +37,20 @@
         },
         "url": "https://cdn.sanity.io/images/tftcitbh/production/45f6da0ec8c5fcd3926d7f7a8d085966d651767e-1536x2048.jpg"
       },
-      "crop": null,
-      "hotspot": null
-    },
-    {
-      "_key": "be3b055a-b9b",
-      "altText": null,
-      "aspectRatio": null,
-      "asset": {
-        "_id": "image-56dc25eb6dc525d4831039b7178be1b6e53781f6-1536x2048-jpg",
-        "altText": null,
-        "metadata": {
-          "dimensions": {
-            "height": 2048,
-            "width": 1536
-          },
-          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGwAAAgIDAQAAAAAAAAAAAAAAAAYEBQECAwf/xAAjEAACAQMEAgMBAAAAAAAAAAABAgMABREEEiExBkETIjJS/8QAGAEAAwEBAAAAAAAAAAAAAAAAAgQFAQP/xAAfEQABAwQDAQAAAAAAAAAAAAABAAIRAwQSIRMUUaH/2gAMAwEAAhEDEQA/AEfxSf5oZNoxIEO4k4OB7rpbL2WuqLEu3L4LYzx7NUVv10S3NYtHuBliYB8djFY8es1xuGGgmEe7kDOCea4Ua+EPOoWGlmIXqLXbVlj8GlcoOiR3RSfLLeIJGigZnRDjcfdFA6/uSSeT6g6tIahaeIWmGW5Q6wxbNLFFtIP9Y5NNHjtm0k0TSGEwMScMrHgZ7qq8YQR2mPZxv5bns03W76xOo4AHVTbhzhoFOObiJ9UtdHFEqp9XwP1juio7uwwAxAAoqdCUlf/Z"
-        },
-        "url": "https://cdn.sanity.io/images/tftcitbh/production/56dc25eb6dc525d4831039b7178be1b6e53781f6-1536x2048.jpg"
+      "crop": {
+        "_type": "sanity.imageCrop",
+        "bottom": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0
       },
-      "crop": null,
-      "hotspot": null
+      "hotspot": {
+        "_type": "sanity.imageHotspot",
+        "height": 1,
+        "width": 1,
+        "x": 0.5,
+        "y": 0.5
+      }
     },
     {
       "_key": "4bd58079-f45",
@@ -94,65 +87,20 @@
         },
         "url": "https://cdn.sanity.io/images/tftcitbh/production/aa046048490c471dc1eaef72d9887688e9eae67f-1536x2048.jpg"
       },
-      "crop": null,
-      "hotspot": null
-    },
-    {
-      "_key": "2488c9e6-dbb",
-      "altText": null,
-      "aspectRatio": null,
-      "asset": {
-        "_id": "image-81b14fd442c1770c82b2e5cc10a52a726368d7c0-1536x2048-jpg",
-        "altText": null,
-        "metadata": {
-          "dimensions": {
-            "height": 2048,
-            "width": 1536
-          },
-          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAUGBwgD/8QAIxAAAgIBAgcBAQAAAAAAAAAAAQIDBAAFEQYSEyExQVEjgf/EABcBAQEBAQAAAAAAAAAAAAAAAAIAAQP/xAAbEQACAgMBAAAAAAAAAAAAAAAAAQIREzFRQf/aAAwDAQACEQMRAD8AviyeRXYegTkMs8aU4LPQsmFH5gDu+3n5jyxq9TUadtKFlGmEZ/h2zLVnTpbGusNQmZ0Fgcx37jv4ydjgk9s1A0yMQyndSNxhiPT/AMqUCIxKKgA387YYbMopzga7r1lKq3YJpHvhgZI/J2+/MXQaVqrcR265hZzG5dvex9DLvjRKHDV2WmqwyIVVWUdwD8ztoFeLorJ0152G5bbucUbprpVGMr4IdOt31pQrLAFdVAIOGSe8qifso8fMMOKXTpkh6j//2Q=="
-        },
-        "url": "https://cdn.sanity.io/images/tftcitbh/production/81b14fd442c1770c82b2e5cc10a52a726368d7c0-1536x2048.jpg"
+      "crop": {
+        "_type": "sanity.imageCrop",
+        "bottom": 0,
+        "left": 0,
+        "right": 0.034953965902820135,
+        "top": 0
       },
-      "crop": null,
-      "hotspot": null
-    },
-    {
-      "_key": "25dd7041-914",
-      "altText": null,
-      "aspectRatio": null,
-      "asset": {
-        "_id": "image-3a7fd7b39c3f38c10da8797aae334e78606ea077-1536x2048-jpg",
-        "altText": null,
-        "metadata": {
-          "dimensions": {
-            "height": 2048,
-            "width": 1536
-          },
-          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAgMBAQAAAAAAAAAAAAAAAAcEBQYCA//EACcQAAEDBAEDAwUAAAAAAAAAAAECAwQABQYRIRITMQcUcUFCcsHR/8QAFgEBAQEAAAAAAAAAAAAAAAAABAMF/8QAHhEBAAIBBAMAAAAAAAAAAAAAAQADAhESEyEEFEH/2gAMAwEAAhEDEQA/AG1NMJ1mG8p5DLshIUlBPNR5VqUOSCT8Vgp9596i2OsBQDQDZJGgrR+leuXZVcl3FESE+uMppoOfkf5Sq7nHv5D5+OZho9s1a7YsHlOvmiuceyyBebRHlTH0NyNdDiQfuHmir+0wrQSO/Jt6FFhwNJLXhGhxSlvEgzcpnz1vJaYYHbSCfIq5x9xch+6PPqLjgdIClckCk3lcp8X+4JDqgku6IB4qF93I8YaRtFXHiWPcbGPx4cm3h2OdoUsk9PjdFUHpw84nGwAs67qv1RWfluFNY/HYgpP/2Q=="
-        },
-        "url": "https://cdn.sanity.io/images/tftcitbh/production/3a7fd7b39c3f38c10da8797aae334e78606ea077-1536x2048.jpg"
-      },
-      "crop": null,
-      "hotspot": null
-    },
-    {
-      "_key": "a16f4c11-ee1",
-      "altText": null,
-      "aspectRatio": null,
-      "asset": {
-        "_id": "image-4fff8f3777a051df73e9505f4f54dd3224d61ad6-1536x2048-jpg",
-        "altText": null,
-        "metadata": {
-          "dimensions": {
-            "height": 2048,
-            "width": 1536
-          },
-          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAQDBQcG/8QAJRAAAgEDBAIBBQAAAAAAAAAAAQIDAAQFBhESITFBIgcTMkKB/8QAGAEAAwEBAAAAAAAAAAAAAAAAAgUGAAH/xAAhEQABAwQBBQAAAAAAAAAAAAABAAIDBBESIQUyM0FRkf/aAAwDAQACEQMRAD8ArrDNzQCN7S7E4Tsqf2FW0WrAZUS7h4FvQrNcfg1xcDLd5GRLofILH4AqwlMlzp+6l5xtJFuwnLEMm3raghqZINMdpcNG2cZEeFrFpLbXcIlimUKetie6KzjB4nKXGKt548girIvPYg+6Kbt5KW2wEodSxA9Slz92cdcwQTWBe6l2+2CO238UvqjBPal7OUBFu4w80SH8WrptWxpPl9L3EqhpjOqlz5I3pfXzsfqM6EngIV6qcHcawKqjAZCT60jS0OWssJbQRxwXMSDZHkYKwX0CKKVaJZ2ZpORIPEfIjYfyiidK0EjazabIXsPi/9k="
-        },
-        "url": "https://cdn.sanity.io/images/tftcitbh/production/4fff8f3777a051df73e9505f4f54dd3224d61ad6-1536x2048.jpg"
-      },
-      "crop": null,
-      "hotspot": null
+      "hotspot": {
+        "_type": "sanity.imageHotspot",
+        "height": 1,
+        "width": 0.9650460340971798,
+        "x": 0.4825230170485899,
+        "y": 0.5
+      }
     },
     {
       "_key": "eda06238-89c",
@@ -170,8 +118,20 @@
         },
         "url": "https://cdn.sanity.io/images/tftcitbh/production/197d56ed7530c63215e80c9cfef9f033ee59d1c4-2048x1536.jpg"
       },
-      "crop": null,
-      "hotspot": null
+      "crop": {
+        "_type": "sanity.imageCrop",
+        "bottom": 0,
+        "left": 0.05258405778573255,
+        "right": 0.07343070825875735,
+        "top": 0.10219040313645274
+      },
+      "hotspot": {
+        "_type": "sanity.imageHotspot",
+        "height": 0.8978095968635472,
+        "width": 0.8739852339555101,
+        "x": 0.4895766747634876,
+        "y": 0.5510952015682263
+      }
     },
     {
       "_key": "bf072876-f0c",
@@ -188,25 +148,6 @@
           "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAwADAAAAAAAAAAAAAAAAAAYHAgUI/8QAKBAAAgEEAgEBCQEAAAAAAAAAAQIDAAQFERIhBjEHExQWIjJBUXGh/8QAFwEBAQEBAAAAAAAAAAAAAAAAAwIAAf/EAB0RAQACAgIDAAAAAAAAAAAAAAEAAgMRIUESMVH/2gAMAwEAAhEDEQA/AFMpkMlNh8bej3l1ZB4mRB9XFfTdUK1x93mbtLW4tHhaOPfAHi3HWu6RhdTv5df5LDzyhpoxykaPvZ9eqe8H5beLZQxSSSz3jgrI6qAQo/2tW9e5xrZ0kxnzFlgiuPeQxPEumVH63RU78qeB85cPPC7Mx3st+KKBy33xJ19jBcZZMWFnt0CNvRLLoa/lbDxi2OWu55kl+HkVdllH3bqU39xM8pV5GZVl0AT6V0FjkRPEomRVVhaqdga7p8urWF9HUXHRdI6SJuYu8bBetHeRo0ygAltbNFSH2mu/zdcnm3aqT2f1RU+A8kdzNXST/9k="
         },
         "url": "https://cdn.sanity.io/images/tftcitbh/production/cebc9a6062dbf1ffc80a78b42977fa3242998280-1536x2048.jpg"
-      },
-      "crop": null,
-      "hotspot": null
-    },
-    {
-      "_key": "e17620e0-547",
-      "altText": null,
-      "aspectRatio": null,
-      "asset": {
-        "_id": "image-d09a59379f949158e106837974991a08f8ac13b6-1536x2048-jpg",
-        "altText": null,
-        "metadata": {
-          "dimensions": {
-            "height": 2048,
-            "width": 1536
-          },
-          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAwADAAAAAAAAAAAAAAAAAAYHAwUI/8QAKBAAAQMDAwMDBQAAAAAAAAAAAgEDBAAFERIhUQYHMSJBYRMUFSMy/8QAGAEAAgMAAAAAAAAAAAAAAAAAAgQBAwX/xAAbEQACAwEBAQAAAAAAAAAAAAABAgADERIEBf/aAAwDAQACEQMRAD8AY3J1ubVNU1jfgs1li3GA4BkxIB7R/SAvik8uj7YLDky1zBCPJwraKepE5wtLcdyFAv6W5bjmO8Ki2YrjUXytatn1rCmosQp+fWWALSsyOoIccxADaJNKLuWFT4orny9EIXWUDE2QDYnhEzmiqh672Gwz461ObKnAsiQLBZrU84T0c2v2G0XpTPFTvuZaYli/ERIPqJFU0NPPnytV+3ppjoA7CAIIpwlIXdOMydj+6JtFkNvIIn7onFLO+Wcx2pNr6iCzGOZrecNdakuc7UVsYyJ9ENvaip0wuQZ//9k="
-        },
-        "url": "https://cdn.sanity.io/images/tftcitbh/production/d09a59379f949158e106837974991a08f8ac13b6-1536x2048.jpg"
       },
       "crop": null,
       "hotspot": null
@@ -231,44 +172,6 @@
       "hotspot": null
     },
     {
-      "_key": "17e2c779-1d1",
-      "altText": null,
-      "aspectRatio": null,
-      "asset": {
-        "_id": "image-55464a63117aef7273993c54f874306a121ed73b-1536x2048-jpg",
-        "altText": null,
-        "metadata": {
-          "dimensions": {
-            "height": 2048,
-            "width": 1536
-          },
-          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAQUBAAAAAAAAAAAAAAAAAAECBAUGB//EACMQAAEDBAEEAwAAAAAAAAAAAAIAAQMEBREhEhMiMUEjcXL/xAAXAQADAQAAAAAAAAAAAAAAAAACBAYF/8QAIBEAAQMEAgMAAAAAAAAAAAAAAQACEQMEIUETURIx8P/aAAwDAQACEQMRAD8AvjdN5YbLp91mp7bH1Ks+I+NbSi8RywgOxlHLF6VsbimMTlS3g8iYwoxT70yE6opujMQvEBe88kJE3jgYJTAogiQFm7xLcrPbacJRasknwTibZcH9qoud4rqO526mkHgzi0j4fPnwt7XfJdLa0nc3fp/pQ6GCGofqTxAcgAPEibbYPSnuWGhpHqc7+C1qcOz3rSrq6WrkmYhmMMi2W452hdAMRIsuAu/5ZCXh/aDmaNL/2Q=="
-        },
-        "url": "https://cdn.sanity.io/images/tftcitbh/production/55464a63117aef7273993c54f874306a121ed73b-1536x2048.jpg"
-      },
-      "crop": null,
-      "hotspot": null
-    },
-    {
-      "_key": "f501f7fd-3a8",
-      "altText": null,
-      "aspectRatio": null,
-      "asset": {
-        "_id": "image-0f0d08d869f1ecf4503d12d7846702d2289e6c83-1536x2048-jpg",
-        "altText": null,
-        "metadata": {
-          "dimensions": {
-            "height": 2048,
-            "width": 1536
-          },
-          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAwADAAAAAAAAAAAAAAAAAAYHAwQF/8QAKRAAAQMDAgUDBQAAAAAAAAAAAQIDBAAFEQYSBxMhQVExMmEUFSJxgf/EABYBAQEBAAAAAAAAAAAAAAAAAAMEAv/EAB4RAAICAgIDAAAAAAAAAAAAAAACAQMREzFBBBIU/9oADAMBAAIRAxEAPwBYgsPsITyCW2c/ipHt/lbswERlvzpbikp7EZyfFdbicYNjDbMWQliUtAQGU+3p8dqSkawu94ctdpfYiRuU9uDqkYSsjzSrY0xLdB2UKrQscmFu/W8AiSiQ04DgpIop9OgJNzUqW7MjqLhyMsdqKx9K9yJPhzngi2obxNvFxcn3B9Tr/k9vgVSrVCGrbVbG5CVhuKgK3tgDr+6kl5G1p3b06mqzwdcWNDXBQUdyScHPp0prm1rhQ6l92yxUbaRHhtshS0pQNoClZOKKRfuc3lNH6heSgE+lFQai7Yf/2Q=="
-        },
-        "url": "https://cdn.sanity.io/images/tftcitbh/production/0f0d08d869f1ecf4503d12d7846702d2289e6c83-1536x2048.jpg"
-      },
-      "crop": null,
-      "hotspot": null
-    },
-    {
       "_key": "62eba731-9a1",
       "altText": null,
       "aspectRatio": null,
@@ -284,62 +187,887 @@
         },
         "url": "https://cdn.sanity.io/images/tftcitbh/production/20acb8d48fd38fb6fc595be5e3d989781f3b3bf2-2048x1536.jpg"
       },
-      "crop": null,
-      "hotspot": null
+      "crop": {
+        "_type": "sanity.imageCrop",
+        "bottom": 0,
+        "left": 0.1133261953464587,
+        "right": 0.2693284965481974,
+        "top": 0
+      },
+      "hotspot": {
+        "_type": "sanity.imageHotspot",
+        "height": 1,
+        "width": 0.6173453081053439,
+        "x": 0.42199884939913057,
+        "y": 0.5
+      }
     },
     {
-      "_key": "b5a828bc-a5e",
-      "altText": null,
+      "_key": "3a8c10c4198c",
+      "altText": "Loglee Wedding",
       "aspectRatio": null,
       "asset": {
-        "_id": "image-642f5ddb230220ebe031aa4f3122d08f0769a77e-1536x2048-jpg",
+        "_id": "image-f09b52d59a8a28f11cff5a6e5e699e2d74a53e82-4032x3024-jpg",
         "altText": null,
         "metadata": {
           "dimensions": {
-            "height": 2048,
-            "width": 1536
+            "height": 3024,
+            "width": 4032
           },
-          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAYCBAcF/8QAJxAAAgIBAwMCBwAAAAAAAAAAAQIDBAAFBhEhMUESEwgVJDIzQlL/xAAXAQADAQAAAAAAAAAAAAAAAAACAwQB/8QAHREAAgMAAgMAAAAAAAAAAAAAAAECESEDEiJB0f/aAAwDAQACEQMRAD8AZRt7TFsLE9zjr9/p6HI/JK1K4GZjYi7gx9MrXKx0+ET3LFkr4QEE5Xta6YDWi0+SSzPYUssbkDhR5OUN1rEKLliGeabS5GDCu6DjjjDOJpmoxX6izM7QuCVdG45BHfDNsB5jDdiXtQSKYU2E9dvaaP8AoH9sy/fN+XaO5tILxM0qRkyN6vyKx7AeOM1jVLU/t6mfdfmOYBevYc5kHxEMW3LpnJ5+kXAfWTeFnWXHCMr9/Bfu71uvesSU3EcMjlgpHbDEpSevXzhhJUqEvyds/9k="
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAPABQDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAYHA//EACIQAAEDBAICAwAAAAAAAAAAAAECAwQABQYREiEiMQcTM//EABUBAQEAAAAAAAAAAAAAAAAAAAIE/8QAHxEAAgICAQUAAAAAAAAAAAAAAQIAEQMEEiIxUXKh/9oADAMBAAIRAxEAPwBQxW2xr4ZLSpCPrS15aOz3SHc8XTDslzcSjchqUEJ2PLhWuBSpMeVNjwv1eaASSfR5DurFLsS28bl3GQtDkhawFkDXXqmz88nX2luztPnUBRZuqkkxv4wevFpamuSQwXCfBXRop2aub7TaUJ1xSNCiiSPPyRMm6CQMAr2n/9k="
         },
-        "url": "https://cdn.sanity.io/images/tftcitbh/production/642f5ddb230220ebe031aa4f3122d08f0769a77e-1536x2048.jpg"
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/f09b52d59a8a28f11cff5a6e5e699e2d74a53e82-4032x3024.jpg"
+      },
+      "crop": {
+        "_type": "sanity.imageCrop",
+        "bottom": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0
+      },
+      "hotspot": {
+        "_type": "sanity.imageHotspot",
+        "height": 1,
+        "width": 1,
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "_key": "78400f908900",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-25a8dd8bfb627ae418b3692ce49bc8731e79b668-3282x4377-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4377,
+            "width": 3282
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAgIDAAAAAAAAAAAAAAAAAAYBAwQFB//EACcQAAIBBAECBQUAAAAAAAAAAAECAwAEBREGEiEHEyJRYSNBcXKR/8QAGAEAAgMAAAAAAAAAAAAAAAAAAgMBBAX/xAAfEQABAwQDAQAAAAAAAAAAAAAAAQIDERMhURIUYTH/2gAMAwEAAhEDEQA/AGXit0s+TsPLUhhINijmgSDP3CMdbfez9hWBw6N4M5ZO0b9HmADftVfi/bzz8muEt36UZQTo/FZ8bXSR52FXYt3+ZskuWUCRv0OxRS2MZPH6etx+KKbaQLkdL4vygXVhDfSCER6+mrdmFaTBZCfJZLJSZKNulX9ALb7fBpZ4yxHkKD29qlpHTKThXYAnuAfmmNejUwhYSBUxX6N7JFI7MGtkG+wc99UUqlm2fUf7RUXvAup6f//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/25a8dd8bfb627ae418b3692ce49bc8731e79b668-3282x4377.jpg"
       },
       "crop": null,
       "hotspot": null
     },
     {
-      "_key": "13cb1505-86c",
-      "altText": null,
+      "_key": "33c488a3537e",
+      "altText": "Loglee Wedding",
       "aspectRatio": null,
       "asset": {
-        "_id": "image-03bfaab388442dd85744ac95b1eb007335fee83f-1536x2048-jpg",
+        "_id": "image-c3f1e7a9ec011088430743203a54912945dd61fb-4284x5712-jpg",
         "altText": null,
         "metadata": {
           "dimensions": {
-            "height": 2048,
-            "width": 1536
+            "height": 5712,
+            "width": 4284
           },
-          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAgIDAAAAAAAAAAAAAAAAAAYFBwIDBP/EACQQAAEDBAICAgMAAAAAAAAAAAIBAwQABREhBhITQQciFTFx/8QAGAEAAgMAAAAAAAAAAAAAAAAAAwYAAgT/xAAeEQACAgICAwAAAAAAAAAAAAAAAQIDERMEIQYSQf/aAAwDAQACEQMRAD8AgXJLsfrl8AUlwnb3UzZI0ufJRpZYtLjWs5pUuROOzRltwHZMXxqA/XQmvum7kkcYvH4C25TZn+MTOUh4wi/tET3QlmXUWGnVKprYjnuhSIU5xhJaOIK6JFxRSZIHqeFdNxcbIlyqrRV9bBey+G4L1OkQnHnXfCI6FsdaqH5JfQCasaA++bAMimTPt9lTdYmS9VTOqTpCr+Qk791KoqL6G/ybjqqmtosW1cV5DNt0eTGEXGnA7CXairf+FgF749t5Op2LJJlf7RWjSn2JLuw8H//Z"
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGwAAAgEFAAAAAAAAAAAAAAAAAAcDAQQFBgj/xAAnEAACAQQCAQIHAQAAAAAAAAABAgMABBEhBQYSBzEiMkFCUWFxgf/EABgBAAIDAAAAAAAAAAAAAAAAAAEDAgQG/8QAHREBAAMAAQUAAAAAAAAAAAAAAQACAxIREzFBUf/aAAwDAQACEQMRAD8AX3Pd65TmLiWW5u2y5B8V0Bj9U+fR/tB7D1aKOd2MtqRG+fc/iuVW4bkUuQ0jKEb5iN4p/wDp/bv1K0mni8HtLkJjf3Y2aVTQqcnxCUVjuNyFwI/hUfSiltN3aGNgJZ0ViM4CE4opxpR9yM1HtdvbrwV0saIjsviCFGd1kus2otug8creUjeZLO2/5UHLwxzpEsqhlLexqO1mkjiFsjsIFOkzoVn8WtMXP7HOXREl8yHOgo/yiqpsboqt2yHjP//Z"
         },
-        "url": "https://cdn.sanity.io/images/tftcitbh/production/03bfaab388442dd85744ac95b1eb007335fee83f-1536x2048.jpg"
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/c3f1e7a9ec011088430743203a54912945dd61fb-4284x5712.jpg"
       },
       "crop": null,
       "hotspot": null
     },
     {
-      "_key": "0b4bc613-c25",
-      "altText": null,
+      "_key": "1fde331427bf",
+      "altText": "Loglee Wedding",
       "aspectRatio": null,
       "asset": {
-        "_id": "image-83b43bc2a66062d29997fae0ef865f681bd9f8b1-1600x896-jpg",
+        "_id": "image-f62207b9eb1e6a1e918f206e84c21321c8398d9c-4284x5712-jpg",
         "altText": null,
         "metadata": {
           "dimensions": {
-            "height": 896,
-            "width": 1600
+            "height": 5712,
+            "width": 4284
           },
-          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAALABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAACAAEB//EACMQAAEDBAEEAwAAAAAAAAAAAAECAwQABQYRIQcSMUETIjL/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A5h04zRdhZhxbVGbemvAocKx+RukjPlQ7ljjYmBsKWkfN28A8c80UensZlxDjy2wXUK+qvYpLvADFZaQBpNu7wNe9eaAyZ5EhxMnltQxtkHadDxVWC4POPyluPLK1nyTVQf/Z"
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAgIDAAAAAAAAAAAAAAAAAAYFBwEDBP/EACoQAAEDAwIFAgcAAAAAAAAAAAIBAwQABREGIRITIjFBB2EUFSMzQlHB/8QAFwEBAQEBAAAAAAAAAAAAAAAABAMABf/EAB8RAAICAgEFAAAAAAAAAAAAAAABAhIRIRMDMWHR4f/aAAwDAQACEQMRAD8A4PVJyM3IZbnA4UZA6kb7qtV/Acsr0mM1AgyWn1Pd0i2SnC6fH3k5RNso8xHFW1MvGPNR8WwXG4W+FMjsA00iqnGn5L70WLeHgdVNoXr+GnYt3kszlU5Al1kJbLRSTrEXI+o5jUkVR0SwWaKrFaQWXdlyPSnAt05yKfJaD7vlDz/azY9YJb7IsZiSrpL9LkmOwJ34kqG024TzRx3V42Tc6gXsu1K9qJV1M40q5bV/h4fGM9q0YV0Oh1ocWK7S9/DZrC1/P747ceYDSuimR/WNqKsuyW6G7bxNyOBEpFuqe9FXqc3k8H//2Q=="
         },
-        "url": "https://cdn.sanity.io/images/tftcitbh/production/83b43bc2a66062d29997fae0ef865f681bd9f8b1-1600x896.jpg"
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/f62207b9eb1e6a1e918f206e84c21321c8398d9c-4284x5712.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "790175747ff8",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-95e8b9c8685aa8a717701b89c9182e9d4e47abb8-2868x3824-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 3824,
+            "width": 2868
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAgIDAAAAAAAAAAAAAAAAAAcBBgIEBf/EACYQAAICAQQABQUAAAAAAAAAAAECAwQABQYRIRIVMUGhCENRVIH/xAAWAQEBAQAAAAAAAAAAAAAAAAAGAwT/xAAgEQACAgEEAwEAAAAAAAAAAAABAgADEQQFEiEiMXEy/9oADAMBAAIRAxEAPwDZN3ROO5wP5mBvaGPv/GLmvRvz2Y45I3RGPBb8ZYqG2UlsNXmmYMR4g7ddYlt3iuo45Z+Q5Xt7WdgY+yyeYaH+x8YYstwINM1SWrFMJUT0YYZddYWAYH3JNQqnBjMh0HUKlMWC6GULyAw9cje+spR0bTLVirHUtshU8Dtj74zII0KDlQeMUn1DyN5LGOekYFevTAtXieosuqVkKn1FzIk9t2mhTxIx5BPvhnf2XEkm3KjOoLEHk4Zns3e5GK8j1Mw0NOPyJ//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/95e8b9c8685aa8a717701b89c9182e9d4e47abb8-2868x3824.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "f74b5c447507",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-acd5a4617e9b08bbfdfe0c4f59739b99d6d6be65-3672x4896-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4896,
+            "width": 3672
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGAABAAMBAAAAAAAAAAAAAAAAAAMFBwb/xAAmEAACAQMDAwQDAAAAAAAAAAABAgMABBEFEiEGE0EIIjFRIzLh/8QAFgEBAQEAAAAAAAAAAAAAAAAABAUC/8QAIhEAAgECBgMBAAAAAAAAAAAAAQIAAxEEEhMhQVEiMXHw/9oADAMBAAIRAxEAPwDk7WSXvJI0sLKy7+E8/VWOm3IunEVzsjiGSzBearMGSQphFaI7HJByePkD6qWwknuy8ERj7iMQqgHLVPV6zDMOfksOyFioFuv1ovNcltZzFEY5I1/VmHOKUOi3N0S64UqdpGM80rJx+XZvcVp0juFk2uR3VtGt4jNH239gZcdxfIqk6e1meXVY7we13uAzIB8AVqfqM/HbaWsYCrsfgDFY90cAwiJ5P9piIr0QehAYcFqpUmbV0zprarYSXW4KDMygEeBildJ0qqx6LCEAUHnj7pUnSV/I8xzCoptef//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/acd5a4617e9b08bbfdfe0c4f59739b99d6d6be65-3672x4896.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "cb2bed5be308",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-27ed24ce4183dcebb54192a5c02ae2be7567e7fe-3024x4032-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4032,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAABgAHAQT/xAAoEAACAQMDAgUFAAAAAAAAAAABAgMABBEFEiEGBxUiIzFBExRCUnH/xAAYAQACAwAAAAAAAAAAAAAAAAACAwABBP/EAB0RAAICAgMBAAAAAAAAAAAAAAABAhETUQMSITH/2gAMAwEAAhEDEQA/AAvcmBhI7Sryp8xxjminQ15H4n6iggnb5jgVoXWd5Dqpa2SL6pkwpUHJoRf6DPpF3b2yIQjAuG/X+1i4r6Dmk3ZqfhlzcqskdyYlIwEX2FVChrOu6eiQC7GAoIwM8VUDi9ko5Do+oC5guoDsdW3Dn2NLR0/dXkzz6zMk4kAClBjFe6/ARlKADB4pT29AvYrprr1WVTt3fFPjKl78LcNGeaj09fLdsIkWWP8AFiPiqmd7NJ91IN5wDgVUzFEDIz//2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/27ed24ce4183dcebb54192a5c02ae2be7567e7fe-3024x4032.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "7b80c7122e33",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-b8df1e76d9f9208463043694caa0efd8f64fa8c2-3024x4032-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4032,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAYCAwUE/8QAJBAAAgICAQQCAwEAAAAAAAAAAQIDBAAFEQYSMUEHIRQiUVL/xAAXAQADAQAAAAAAAAAAAAAAAAACAwQG/8QAHREAAgIDAQEBAAAAAAAAAAAAAQIAEQMEIRIiof/aAAwDAQACEQMRAD8Av1ly/OOKkwsFz3BQO7ge8jttvs6yS9kXDJ5ATxmDNWm1yRUtHsfwnJKmwg+if8gn1nZ0lvNjep3q1zZR2pEftHEYLSgeuckO3seeZDGJoY26y0ZZF1BJMgedwsh8qTxxhmfsEjNpjb1oWX2GUjDJi2duljJfWFeV+TQj2EHUEFPuaKRVWSSUr9AY0fHVHW0tYk1CmpHcVZiOTz/cRqNCrWnuRwRCNBZZQFJ8ceMbvjWeQdMW/wBz9W2Awc6BE+TNDhcu1sI5iepOztZrguG4Heo54wxfvuxn5LHkjDEKpIu45goNVP/Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/b8df1e76d9f9208463043694caa0efd8f64fa8c2-3024x4032.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "c457d7426345",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-c1fceb327682e75933c0dc712b43163a4515be52-2242x2990-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2990,
+            "width": 2242
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAYEBQcI/8QAJhAAAgIBAwMEAwEAAAAAAAAAAQIDBAAFERIGBzETIUFRFCJSYf/EABcBAAMBAAAAAAAAAAAAAAAAAAIDBAX/xAAeEQABBQACAwAAAAAAAAAAAAABAAIDBBESMRRBUf/aAAwDAQACEQMRAD8A1+1olW2GNORCw+FAOLGo0BSDtYYhB5LDbF/pqhq35xU33jPEglN/OStYqajdvGkb81lkHIIw9jjY7T2j6hmrAOxRZNQ05HILE/6MMobMM1OZobEgSQeQVGGF5Nr0Ap+EA71KPTXca0NOswao5R0G8cinZi30ceO2+qXr7z3ZLJcgcW3/AJPvuDmGWkUWyOI850P25rQnp6gPSTYod/bzks+MbrB2tGM8zj0wTdO6Tq7i5Mzeo4/bifnDLqxBHWKRwII04A7D7wxYsHEt1dur/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/c1fceb327682e75933c0dc712b43163a4515be52-2242x2990.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "c99860f82879",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-e74ac6fe47945e43bec34dbde17db379b3626fce-4032x3024-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 3024,
+            "width": 4032
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAPABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAABwABBf/EACUQAAIBBAAFBQEAAAAAAAAAAAECAwAEBREGFCEiMQcSExVBUf/EABYBAQEBAAAAAAAAAAAAAAAAAAQDBf/EABkRAAMBAQEAAAAAAAAAAAAAAAECEQADBP/aAAwDAQACEQMRAD8AVswslni7uVB7wsZKFm0CfwUfcM8fOJ2xOYgbmDIFWaFe3r+GubPkc9lrNFuZvkgM5WNCwB0P6a3KYVLHl5ow65FXTbB+3Ro7BAYupz85K1hmiK/NrDHEiOwVfKjpVR3f+ruMwk/193ZXDzwqA7LrROvNVaKsIJiMjAw7/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/e74ac6fe47945e43bec34dbde17db379b3626fce-4032x3024.jpg"
+      },
+      "crop": {
+        "_type": "sanity.imageCrop",
+        "bottom": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0.13064646722918263
+      },
+      "hotspot": {
+        "_type": "sanity.imageHotspot",
+        "height": 0.8693535327708174,
+        "width": 1,
+        "x": 0.5,
+        "y": 0.5653232336145912
+      }
+    },
+    {
+      "_key": "8713261c0b4f",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-6dff5d3ace9b8075d7ba0eff47df10f88a73d66d-2316x3088-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 3088,
+            "width": 2316
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAUEBgcI/8QAKBAAAgEDAwQBBAMAAAAAAAAAAQIDAAQFBhEhEhMxQVEUIjKBYXGR/8QAFgEBAQEAAAAAAAAAAAAAAAAABAUD/8QAHxEAAgMAAQUBAAAAAAAAAAAAAQIAAxGREhQxQfCx/9oADAMBAAIRAxEAPwB9qXVGIyON6cbJJHddQDEjY+eRv8VNurpVvsU1rdFV7RMgGxUnb2fRqhahxrWGMN1A0DOjBpOkjx/VLsZj7rKrJLJJJGofaOXpIDDbk/qjraqnBNqk7hOtTL/fZnUXdX6WYiLp45A9mikU+OsoCkb30zOEHU2++5/2inKysN37iCap1JGfcxXiYtTZOYRSYi3s8ex3dnQ8L+/NGY1XK1q9pYMLe2EnaICj8V+P5Na5ip5LlrxZ2LqiuFB9cVz1rdVhsIe0Am87+KnLjuGIl1FCUWD2M/Y8w2usVZ2zw5C1EsyyH7m5JHG1FY/MxMrEkk70VuawTuyeLiB4n//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/6dff5d3ace9b8075d7ba0eff47df10f88a73d66d-2316x3088.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "d0c6466068c0",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-7db08be5c1bf31dad5a5f01f4b7b03addfd3fe6c-1465x1465-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1465,
+            "width": 1465
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAUABQDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAUGBwME/8QAJxAAAQQCAQMCBwAAAAAAAAAAAQACAwQFERIGIVEiMQcTFSNBYYH/xAAXAQADAQAAAAAAAAAAAAAAAAABAgQF/8QAHxEAAgEDBQEAAAAAAAAAAAAAAAEDAhOBBBESISJx/9oADAMBAAIRAxEAPwDS8j1nhoqU9mSpFOK7C9sYHqJ8BeOXq/EZHG411l0dE2vXHXeO5I8qD6mux2KNJjYWNZI/crYxskBReE+nZDOQ2BFDNXpgtbyPdp/QU60nm4qsFCk72ayXFnUGOawA5fjr8N9gi5yXKQeftQfyMInUTEuFZqzF1/IDi0fKbJw0PZZn8MdtzObs8nGRu9bOx3PhEWlMko6frIY2+TLXkJZJJI3ukftzATo68oiJAn//2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/7db08be5c1bf31dad5a5f01f4b7b03addfd3fe6c-1465x1465.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "93d3e7530bf5",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-95d8a450aa6a69c9c87fa2e3614b0f84aa34a609-3672x4896-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4896,
+            "width": 3672
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAcBBQYE/8QAJRAAAgEEAQMEAwAAAAAAAAAAAQIDAAQFEQYHEzESFCEjQVFh/8QAFwEBAQEBAAAAAAAAAAAAAAAAAgMEBf/EACERAAICAQIHAAAAAAAAAAAAAAECAAMRBCEFEhMUMUFR/9oADAMBAAIRAxEAPwDb8p5/mLTIpBjcWbiIptiqlvmrHDc1lnxRkusbOl56gO2EOjSEPWrKT3PaxOMjiUnQ9Q2xrli6t8ksbmWCGBF+37O4NgGiHsDZ5pM1AiP/ACMtzfXJnkYoSNBV8AUUoouseQjQLc4yCSQeWQ6BoqvVU75g8bYl9xfB8euchDFa2Cbc+QPAFa/lfFcJDZe6jx0RVT9mh8kfuqrpxBGuUuGCDax/H8rfXKLJZTpIAylDsGnZUisBiZtLqLbqS5beJ2S144raW0jUD8BaKiWKNZGAUaBNFW7ZPk5J4nePc//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/95d8a450aa6a69c9c87fa2e3614b0f84aa34a609-3672x4896.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "1a55e5d448aa",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-3f2f166d7fcdb97431da0ae75c3e5e6a7b051c66-2154x2154-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2154,
+            "width": 2154
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAUABQDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAUHAgb/xAAnEAACAQMCBAcBAAAAAAAAAAABAgMABAURQQYSITEHEyJCUXGRof/EABcBAQEBAQAAAAAAAAAAAAAAAAMCAAT/xAAdEQACAgIDAQAAAAAAAAAAAAAAAQIRAxIhMTJR/9oADAMBAAIRAxEAPwDdZIra3geaeREiQasxPQCsB8Zc1e5jMJaYe7CYmJRq6tort81V4h45luMYsNwRH5pKlRvXipOEcrLYl4S7vKfTC6kBt9damOXdVYssGj5ICYGB11uLrWTcmMt/aVavsbmBKqREwKiBeT6pW3h8CcafohY2WQ5OKd3Z5Ob39R+Vr1pfXMlvGWmftsaUojpl2cGyjmYvIXLHuealKUbSIo//2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/3f2f166d7fcdb97431da0ae75c3e5e6a7b051c66-2154x2154.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "f39e648c8fb5",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-0895fa2d99adae9f8f036de5bcb085c1d986723e-3024x4032-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4032,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAYDBQcE/8QAJRAAAgEEAQIHAQAAAAAAAAAAAQIDAAQFESEGEhQiIzFBUXFC/8QAGAEAAgMAAAAAAAAAAAAAAAAAAgQAAwX/xAAfEQABBAICAwAAAAAAAAAAAAABAAIEEQMhEjEiYcH/2gAMAwEAAhEDEQA/AFY4to8i1za2RlVJBuNTwd1peca1HTU7XEvh2MXmUe68e1Zv1Z1PDbZDESWd0zK8vqJCB5j8bpqmysEVowv7UPG57tSc7P1Scec+Li1vkoYzX+ZPSxzK5SGK7KesQoAXu+qKc+qMZjsrk/FWoRY2jUa17HmiiEgOF0Ud+1DZ9M49Wt3nIkddnZ/n6q+kE88ccQcsicga3v8ATXNZcjmrvFADuYAbA4rNdmcRSXbncAWhV8PdFGFksmLfPavFFN1v549sAT+UVR3v6hpf/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/0895fa2d99adae9f8f036de5bcb085c1d986723e-3024x4032.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "f32d5ae1247c",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-16f0e33832899c29120cb2c82607a6bc5ce383e9-4140x5520-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 5520,
+            "width": 4140
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAUEBgf/xAAoEAACAQMDAwIHAAAAAAAAAAABAgMABBEFEiEGE2ExUQcWIjJBQnH/xAAYAQACAwAAAAAAAAAAAAAAAAACBAABBf/EAB8RAAEDBAMBAAAAAAAAAAAAAAEAAhEDEjFBBBMiUf/aAAwDAQACEQMRAD8ATfO11Ee5E1sH/GIQDzVW1LSSjtrEkkyXEpLMkh21aOm+mG1eA3rqIoYzhVI5Yj2p/edOy3NtNHeSLPJNHtRJBkr/ACl3tdRlrok7C0nP41UA0A4Dcnax97m3ZiwKjPON4opvf/D/AEy0uDDcvMJV9fPmirFIfUgc4WvuyLb2sNo00KwLtKqn3H3qZDeHvbdrthM/UoznxRPEgBIUA1FjUbWOOaKz0HE4RXwCAMpTLbahO5kubGORz+zEZxRTRnZcAMfSip1hBcSv/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/16f0e33832899c29120cb2c82607a6bc5ce383e9-4140x5520.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "8705fb98fef6",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-156d05d4af6ba338c49d6792987c658f5e77475e-3024x4032-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4032,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAcEBQYD/8QAJxAAAQQCAAUDBQAAAAAAAAAAAQIDBAUAEQYSISIxBxNBI1FiscH/xAAWAQEBAQAAAAAAAAAAAAAAAAADAgT/xAAfEQACAgEEAwAAAAAAAAAAAAABAgARBAMSEyEiMZH/2gAMAwEAAhEDEQA/AMDxPAmWtGoIY5o7etKA2pZ/mLFTCmXFocBSQdHfxj7jON1VMYMlXLIkjnSSd8o+2sy9pUtyKSTGjhpyQ+4ko0juJ+O7ICOnsRjxuPE993LiFQC1q696BcMMsojpbKfyHn94YvjwjxVXqLCY7qQDvSF9MMNkcGt0VWQi9kdHqJUxF8SRVRuxpDRJGceCoynIDkhwD20KUEJ0CDrwd5T+psyQzcR0NuqSlZCVAfIJyJcSn6iwEaudWxH5U/TSdjqOvnNGNk8empbsmUMA5Ws6IaoX8lJe2V4i0f8AYfJbKiR0wycjuBKupJwwjqkmzAC0Kn//2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/156d05d4af6ba338c49d6792987c658f5e77475e-3024x4032.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "bcba9ef13c63",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-169faee811ef23ef9b730df68e2b239699554f64-3763x3763-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 3763,
+            "width": 3763
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAUABQDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAcFAwb/xAAlEAABBAEDAgcAAAAAAAAAAAABAAIDBAUGERIhYRQiIzEyUVL/xAAYAQADAQEAAAAAAAAAAAAAAAABAgUDBP/EAB8RAAIBAwUBAAAAAAAAAAAAAAABAxESUQIEITEyQf/aAAwDAQACEQMRAD8A8zqnCS05yyaPZ2+w+is2xjqgEbIJQbDG+tGT1BVE1zaDMNasODXPibyaXD2Kj1KePJ5ShLQmkknmeBO7jsA/sp8FZFVlGZqPhGz4AflFQI9ON4DzE99kQvWQ2s6a4oRHF5MOdIWti6NLuikOh67Ispyj5MLZwBseyIn2/hnNK/pbqUJNZhM0xJG/yREWD0qvQ1zyf//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/169faee811ef23ef9b730df68e2b239699554f64-3763x3763.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "319d2d676b03",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-6cf839d102a1213566e6f9bb93d67fbff4c557cf-2316x3088-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 3088,
+            "width": 2316
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAQUBAAAAAAAAAAAAAAAAAAEEBQYHAv/EACMQAAIBBAICAgMAAAAAAAAAAAECAwAEBREGIRITFFEiMUH/xAAXAQADAQAAAAAAAAAAAAAAAAABAwQG/8QAJBEAAQIEBQUAAAAAAAAAAAAAAAECAxESQQQFExUhMVFhgdH/2gAMAwEAAhEDEQA/AGN7ze9yuOt7ifUV5HJ5xlV0FI/VXPgfJ7/NrkZLy+PrTQZN9d1lmJ9kdotvPcK0ocFYwm9tS8hyN7aRQQ3dm0ZWYNKlkpjMi/bVHCeiu6j6FVKrG9wAqmlQeO+tmimGNDHG2jQwuY2iVl23etf2irJiTJ7XkuTu5kkazsXkQ+Qf1dg1LDld2DNbZuxhlgnUp7o4wHQH6Nd4O2hWwUrGoJPdO8xBF8IHwXZFUuhN7GRhZhiE5r+E1hoMG2MtwvIMgqqviFZ9ECiqGPwGl6FFDR8jN7fdiT9n/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/6cf839d102a1213566e6f9bb93d67fbff4c557cf-2316x3088.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "93fb6539ce62",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-b6294123629fff595031cb0d706db16bcf9fad95-3024x4032-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4032,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAPABQDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAYHBf/EACMQAAEDAwMFAQAAAAAAAAAAAAECAwQABREGEkETFCExYSL/xAAWAQEBAQAAAAAAAAAAAAAAAAAEAwX/xAAeEQACAQMFAAAAAAAAAAAAAAAAAQIDERMEMUFRYf/aAAwDAQACEQMRAD8AmOn5z1rurUZthl1jOSVJJ2A+6pSrlAcaZlyEdVQAS0tpQ3JI5rJ0eqG9qS4FqKUpMVWAsg8e/lEO0mQ5GiohMFKPylzcRlX0c0GqlFtdDNG729HKLqi4IZALqFDgqJBxRSbfb1crVO7SUI6XG0Dw2nIxRUccnsaGSPJ//9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/b6294123629fff595031cb0d706db16bcf9fad95-3024x4032.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "363da415dbce",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-213a1421ab66c57ea90007ef4bcd6612b49b5d61-3884x2913-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2913,
+            "width": 3884
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAPABQDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAYEBQf/xAAkEAABAwMEAQUAAAAAAAAAAAABAgMEAAURBgcSIUETIjFhgf/EABUBAQEAAAAAAAAAAAAAAAAAAAIE/8QAHhEBAAICAQUAAAAAAAAAAAAAAQACAxEhEhMxQVH/2gAMAwEAAhEDEQA/AHuDrubboKpMuGh7iQDwyOs/NRNVa3N4amQHG2kskJU2rPY+zWWq3Cubr02M3BZSY6+CgCD+90uXnVj7t8SRHQA+z7U+CoeTUeC2e7bugHrncoQK8HiXUu1qlyFuolZST1hNFKcTcG4wmvQaS2UJJxkUU+l+Qmk3P//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/213a1421ab66c57ea90007ef4bcd6612b49b5d61-3884x2913.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "d6ab2c6e778a",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-f7896782068c7775ed13964c0c946c89841a3ed5-3024x4032-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4032,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAPABQDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAUHA//EACMQAAEEAgEDBQAAAAAAAAAAAAIBAwQFABEhBjFBByIyUXH/xAAVAQEBAAAAAAAAAAAAAAAAAAABBP/EAB0RAAIBBAMAAAAAAAAAAAAAAAABEgIDESIxQVL/2gAMAwEAAhEDEQA/ADqQRWqcRda13Xxifp+TKqIpjRMDLsJQqKmHYU7Y5tgR9EaP4Lrf5mrDh0BRnmGAeiOjxv2qK/XGGLkM0DS7ct+SVrX3Ne44zMfdB5TUyFPG8Mp1j6hUbcswl0QG+PBEq72uGTtvtlSj5P/Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/f7896782068c7775ed13964c0c946c89841a3ed5-3024x4032.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "8e7ab76933b3",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-330239dc7b6f4e26717aa4b3f3eb7d3b81a8cf7e-2316x2316-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2316,
+            "width": 2316
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAUABQDASIAAhEBAxEB/8QAGgABAAIDAQAAAAAAAAAAAAAAAAUGAwQHCP/EACQQAAEEAgEEAgMAAAAAAAAAAAIAAQMEBREhBhITMRSBFUFh/8QAGAEAAwEBAAAAAAAAAAAAAAAAAgMEAQX/xAAeEQACAgICAwAAAAAAAAAAAAAAAQIEAxETIiExQf/aAAwDAQACEQMRAD8A1sX0U+gPJT8e3iBTcH4+C58WjVYSEfTNrf2sp5DH14pXisea0wuWnfgeP2uOY3q3OXOoLUQdk5bfsJ300fKRCxOxGT9RDVSEGtvbPQcdcvGGgk9IoMMzNFXrsfeRlEJE/wDXRczz8RZtFePpujXv3Zgedy7H4I9s/wBKq4HGVaMtievHqQ327vyiKjI3wM2qlyEhfydvzC3lfQizMiIgguqFZH2Z/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/330239dc7b6f4e26717aa4b3f3eb7d3b81a8cf7e-2316x2316.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "2e50776bb209",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-43e8e83c4ccbb38bdd2c178efe81b95c7b0a6821-3696x2772-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2772,
+            "width": 3696
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAPABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAABQADB//EACQQAAIBAwMDBQAAAAAAAAAAAAECAwAEBRESIQZBURMUFTFh/8QAFgEBAQEAAAAAAAAAAAAAAAAABAIF/8QAGREAAwEBAQAAAAAAAAAAAAAAAQIRAAQh/9oADAMBAAIRAxEAPwDkje6+OhtZIXVi+qk96Sy+Cv8AExWs1yQw0WXb3ANGSZea8gtwy7ih1HP1SN/nsnlLX0b2ZDsQImi9h5NEBAt2qOJnWrbsp+n8rlJWvEhZUl5UHxVSKdVXEMUUSkgIgXj8qqwRMc8b31Tv/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/43e8e83c4ccbb38bdd2c178efe81b95c7b0a6821-3696x2772.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "dc57d0012bff",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-daaebeb83f5faa3e089712f1f4e022be59d7d56c-3024x3024-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 3024,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAUABQDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAUEAQb/xAAoEAABBAEDAgUFAAAAAAAAAAABAAIDBAUREiEGBxMUIjFBI2FxgcH/xAAWAQEBAQAAAAAAAAAAAAAAAAAEAwX/xAAeEQACAgICAwAAAAAAAAAAAAABAgARAxIhMTIzcf/aAAwDAQACEQMRAD8AkCzZxjw+zE2uXa+hrddo+5Wep1HLqYTdc2QklrGn2Co9ZxvGRZE/eBuB3D5C87gcS+5nHlgjdWkdubz6tw/iy8OMBLPZjnYs+q9CXhHNc+tJdtAn4DkXMnXdHbdHvfAW8FgciSNqhCwuYO512w3qSONshDBGSAPwsHbjK2/K22mQHwgS06cj9oinj8FiW9jfBImXzF29eknsS6yO9yOEREkHiGYC5//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/daaebeb83f5faa3e089712f1f4e022be59d7d56c-3024x3024.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "295c0f10ee25",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-f55d9d71a8d256d5dbc090161e62906916d76422-3024x2419-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2419,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAQABQDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAYDBAX/xAAjEAABBAIBBAMBAAAAAAAAAAACAQMEBQAREgYUITETUWFx/8QAFQEBAQAAAAAAAAAAAAAAAAAAAwH/xAAaEQACAwEBAAAAAAAAAAAAAAABAgAREkFR/9oADAMBAAIRAxEAPwBeM6qeUedJjdi3wJAZDyKCnr+Yl2AxwsWnIXyLyNERFH3m5AsbRKuO0dF3BaUVVD1pP3GnoytAWuU6A8yfLknNEPWCi2baK5FUsjgW7DEYG3HNGntPpcMpW3RZlYvnGsRBoyUkEg8pvDLtx2BgeT//2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/f55d9d71a8d256d5dbc090161e62906916d76422-3024x2419.jpg"
+      },
+      "crop": {
+        "_type": "sanity.imageCrop",
+        "bottom": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0
+      },
+      "hotspot": {
+        "_type": "sanity.imageHotspot",
+        "height": 1,
+        "width": 1,
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "_key": "927a3d0df59e",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-32147f8152794be236836757d1a39d40487cdb83-3024x3024-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 3024,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAUABQDASIAAhEBAxEB/8QAGQABAQEAAwAAAAAAAAAAAAAAAAcCAwYI/8QAJRAAAgEEAgEDBQAAAAAAAAAAAQIDAAQFEQYhYRMxQQcSIiNR/8QAFgEBAQEAAAAAAAAAAAAAAAAABAUD/8QAHhEAAgICAgMAAAAAAAAAAAAAAQIAAxESITJhcYH/2gAMAwEAAhEDEQA/AKzkubY7H2ZnmikcbChY+ySa0nNcM9skzl4wzhGDDtT5qGWOFisMa98MjkpXhbqK5Gl3/fNbt1bKPEvqMtvL27a0VbxQ7CFbAMfTTsuzT0A+YsFPbH237UqLrxjLlFaLk0wRhsfcNnVK1FDHkMYU2gHBUTm+o/6seVj/ABBk1oV0fBX1y1vZxGU+mJj0PmlKKBlmz5lNeET5LDhUVsZAWGzr5pSlWqugki3ufc//2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/32147f8152794be236836757d1a39d40487cdb83-3024x3024.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "6c91e5905d03",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-769a30a59f8f98ae6e5efc2eca009025edc6d660-3024x4032-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4032,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAPABQDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAQFAQb/xAAiEAABBAICAgMBAAAAAAAAAAABAgMEEQAFEiEGEzNBUXH/xAAXAQADAQAAAAAAAAAAAAAAAAAAAgMF/8QAGhEAAwEAAwAAAAAAAAAAAAAAAAECEQQSE//aAAwDAQACEQMRAD8A4bVx5caEh2HGTLccPEN8qv8AuNa/zAaqe5B2UJTD4+Rts8qzddEtKAVrAu6Sfv8AcXT4dH2u9VJU7IbHC1qSvsnK8yH61NBGVKwvuz0yV+5kL9a+xYo4ZDlPStc8YqXCtLY4pJPdYZmOXo3eUf/Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/769a30a59f8f98ae6e5efc2eca009025edc6d660-3024x4032.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "25a3659478b2",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-ce7ad7d5af7b9fed28de576e246b4f183050e798-3760x5017-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 5017,
+            "width": 3760
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGQAAAwADAAAAAAAAAAAAAAAAAAUGAQME/8QAJhAAAgEEAgECBwAAAAAAAAAAAQMCAAQFERIhBlFhExQiMUGBof/EABcBAAMBAAAAAAAAAAAAAAAAAAADBAL/xAAbEQACAgMBAAAAAAAAAAAAAAAAAQIRAyExQf/aAAwDAQACEQMRAD8AkPILTF5e4SfmAHkaDOPevf1pRYeGqXdykcqmMNEDY2aF5mcbxVy5MIwhCXESA2f1XXlGW2OwbMgG/FbckagSPpJ9qhlmWNxV90UqKd2qKzFTxthZLt4ygzh0ZetFRGPvIvs1MEdchs9/mitPJvoKCFUfFsvkGtdKMXagSDBg/lbrLx9+TyVzzsbpaVrGiexsCs4S4cnCGSmzjLZGwaYeK5W+jfMXG6ZwlrY396bQu/CVetto2SOTIcDrietUU2z05Oy91Np5SMz2aKKQH//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/ce7ad7d5af7b9fed28de576e246b4f183050e798-3760x5017.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "d4b9e0295bf4",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-c546c2ffb4f40850a65361e4e86876e7912a1b70-3024x4032-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 4032,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAPABQDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQGBf/EACEQAAEEAgIDAQEAAAAAAAAAAAECAwQFABIREwYhYTFB/8QAFQEBAQAAAAAAAAAAAAAAAAAABQT/xAAeEQACAQMFAAAAAAAAAAAAAAAAAgEDBVEREhMUMf/aAAwDAQACEQMRAD8AbrmVPVb/AFg9iE7JIPsZOz7d9mLJelRZT+g0K+NvZ/M3JExVfQ2HQCl7oUEK+5AVV6uR4jMjVk6UqQSHHUr/AIofTiV5hWqxt9JLTqqtMk0/5zOivOMqgNjRXAC0kED7hisittZrhkSdHHV+yokcnDCuuuBDnbJ//9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/c546c2ffb4f40850a65361e4e86876e7912a1b70-3024x4032.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "f28369036c2b",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-c339fbd5cc72bf3b472ccafbf812d5aabbece2fb-3024x2419-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 2419,
+            "width": 3024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAQABQDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAUGAgf/xAAkEAACAgEDBAIDAAAAAAAAAAABAgMEAAUREwYHEiEUcTFygf/EABcBAAMBAAAAAAAAAAAAAAAAAAECAwT/xAAbEQEAAgIDAAAAAAAAAAAAAAABAAIDBBQhUv/aAAwDAQACEQMRAD8AY3OtCschj0mFlUEyEDfElHuC1fShfmpB3lnKRop2CD6zKi3Z5LcFJ6cUO6JCG35vvJb4Ml7UqlZYwtfmKOFPvyP5P8wGxlBW7Fphp0JOmV+5MKxAT1U8/wB8MkqnTGlVYeHVY7EllCQWQEgjf1hmflPplXWJ/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/c339fbd5cc72bf3b472ccafbf812d5aabbece2fb-3024x2419.jpg"
+      },
+      "crop": {
+        "_type": "sanity.imageCrop",
+        "bottom": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0
+      },
+      "hotspot": {
+        "_type": "sanity.imageHotspot",
+        "height": 1,
+        "width": 1,
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "_key": "8ac4496e0273",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-4a0eeced0f5fb2781acecec39d316dbcf9171a5b-1536x1536-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1536,
+            "width": 1536
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAUABQDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAYEBwX/xAAlEAACAgEDBAEFAAAAAAAAAAABAwIEAAUREgYhIjFBBxNRYXH/xAAXAQEBAQEAAAAAAAAAAAAAAAADBAEF/8QAHhEAAgICAgMAAAAAAAAAAAAAAQIAEQMSITEEUXH/2gAMAwEAAhEDEQA/AM6YJhYPJg4RWZARl62+Tm3Q7j31GynBbmgBiQsjzj+M4tpWtWK1ewxDeRnAxPPuCM9/p+6KWm1rCWMk3bwBJ9g78RkOXAVazOsrq6agczriadi2mDbCShpHlDf1jIJX1G1ZwJVo9iYieJPH5GME43JviGDQqQHTsYmlCvKEZKnsTyHfLrQdJqfZewwJlEGMdz2j/P3jGb5BpzKE6T5JOxqN5D2LVcdGIkQADjGMbUeoJZr7n//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/4a0eeced0f5fb2781acecec39d316dbcf9171a5b-1536x1536.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "29c07f9e74f4",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-7b2d2b26a8fbf40a6bd4900de7ebaf3d6b33e871-1878x1878-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1878,
+            "width": 1878
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAUABQDASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAYFBP/EACYQAAICAQMDAwUAAAAAAAAAAAECAwQABRESBiFBBxQxIiNhcYH/xAAYAQACAwAAAAAAAAAAAAAAAAADBQECBP/EAB4RAQACAQQDAAAAAAAAAAAAAAEAAhEDBBIhMVHx/9oADAMBAAIRAxEAPwDn6Y0ySCKZ7BjkSBiyPGeW4I75Pdee71nUqkGmRbV60QLu52Vf2cpdOnFCOtT0+39l04yybdyT8/zMC/0nqc0NyOs9qQSyFkcD6GX84upoCdeSa+fCpmQerapGl1kqMHjQBeQ+CfJxm3F6cXVTaZbHPzxXtjDG2YB3Pf2Wmk1Un6havIWMJbfjvl6tGNZY0R5VQdgFfbGMYUqBFGrZUyyhFONFABc9vLYxjL4JHJ9z/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/7b2d2b26a8fbf40a6bd4900de7ebaf3d6b33e871-1878x1878.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "79e365360eb3",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-87a64ad12d3e342fc3fab337fedde7bd05cefcc2-1440x1920-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1920,
+            "width": 1440
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAQUBAAAAAAAAAAAAAAAAAAECBAUGB//EACUQAAEDAwMFAAMAAAAAAAAAAAECAwQABRESIUEGExQiUQcxkf/EABcBAAMBAAAAAAAAAAAAAAAAAAIDBQH/xAAeEQACAQUAAwAAAAAAAAAAAAAAAQIDBBESIQUTFf/aAAwDAQACEQMRAD8A5NDdjzmvZ/QtaxuRnAq1twtNvuJ7LiFBwYU7nmm9PWJuFIkOy4ijHZb2dKtieTUbw4LbqGGY6nFuq1I34p0LydJKUUuCp2qnlNmkeuEJtwpSsLA5Boq6sX45bvNvTL1drKinSVHbFFF9e4fUKXj6S4TnorKYjhcQlLYScjUcVk7gwz5UCZBaKglXuADkCts4AY+CMj4abESAMADHzFRVVljpY9azkWD1MzEY7bPkoTnJBSf3RUjA+D+UUO5up//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/87a64ad12d3e342fc3fab337fedde7bd05cefcc2-1440x1920.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "c01cf296220b",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-a8d89ac071368f779a904cb764a75860f26fe534-768x1024-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1024,
+            "width": 768
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGAAAAwEBAAAAAAAAAAAAAAAAAAUHBgj/xAAiEAABAwQCAgMAAAAAAAAAAAABAgMEAAUREgYhMVEHMkH/xAAXAQADAQAAAAAAAAAAAAAAAAACAwQB/8QAHREAAQQDAQEAAAAAAAAAAAAAAQACAxESIUEEUf/aAAwDAQACEQMRAD8A5thQRLktoaSoBztKlDGad222vsztG8hWdcpGdaacLs8y6obLJSG2AUI2T7NbG4Mt8amIc1ZRKQgqUrfIUSPJFCXY1Soh8rp8seC1guRRk2W4mIJSZOEBW4Hv8opVeb449OUvRByPVFHZHVNQ+LU/GfOoNkjuxrqFhHlBSM075ddYd/Q6LIlMwyGu1HotY/ailV74Ugxn2nXXWgpwrKCST9ceKyr0mxyuiJLe6UwkNuFz6noY8UVYb9aICbvJCYrYG3gdUUdApVlf/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/a8d89ac071368f779a904cb764a75860f26fe534-768x1024.jpg"
+      },
+      "crop": {
+        "_type": "sanity.imageCrop",
+        "bottom": 0,
+        "left": 0.24556359095001598,
+        "right": 0,
+        "top": 0
+      },
+      "hotspot": {
+        "_type": "sanity.imageHotspot",
+        "height": 1,
+        "width": 0.754436409049984,
+        "x": 0.622781795475008,
+        "y": 0.5
+      }
+    },
+    {
+      "_key": "d384406bd809",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-e20c8f10356193a8efe50730986517ba95847649-1440x1164-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1164,
+            "width": 1440
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAQABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAUCAwQG/8QAIxAAAgEEAQQDAQAAAAAAAAAAAQIEAAMFERIGEyFBIjFhcf/EABYBAQEBAAAAAAAAAAAAAAAAAAMCBP/EABoRAAICAwAAAAAAAAAAAAAAAAABAhETFFH/2gAMAwEAAhEDEQA/AOxiSJGMhxEfiyyn7TePkRTXMT412VYw8trnN14qR9b1SK9JAmtd7ZZbKl0Q+jWXHK+TzaZiRcD9hN21DeSfex+VGynNtD4KgrKsh0tEMpywXf8AdUVPI9aY23LuJbvWDxOm5EbB90U+3Dpkxvh//9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/e20c8f10356193a8efe50730986517ba95847649-1440x1164.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "f47897dea71a",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-1888d68283b10bf6d884a586acbb3e9162eeb8b3-1067x1600-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1600,
+            "width": 1067
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAeABQDASIAAhEBAxEB/8QAGgAAAgIDAAAAAAAAAAAAAAAAAAcDCAQFBv/EACYQAAICAQMDAwUAAAAAAAAAAAECAwQABQYREyExFEFRBxIicYH/xAAYAQACAwAAAAAAAAAAAAAAAAACBAABA//EACARAAMAAQIHAAAAAAAAAAAAAAABAgMhUQQSExQiI0H/2gAMAwEAAhEDEQA/AK12NMs1kBliZeRz3GYPBPgY+tiadPu/YtqWaWAmJemhkQAgge5ziKW0rNfVjYlrFKiP3dl/E8eT+sVnJaXsQ48U0/Bi84+cMYjbe0wyO6z9RHYsrKR4OGV3C2DXC1uQ/TTftvb1OfSa9ZJ/WOAv3twFJ7Y3txXKm2tiilal9TenU9RieeCe/wDAMrtplcIY5F7OxBVvdeDjF3rPLd0FZLDlpDEAfYdh5zZ3L0Fpilr8FmbEis3Tk4TkkDDNZyfnDC5ETqs//9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/1888d68283b10bf6d884a586acbb3e9162eeb8b3-1067x1600.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "bd72a5ab1ccc",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-7f5ef892ea655ec40a188ddc4359cd643d3bc2ee-1321x1721-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1721,
+            "width": 1321
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAaABQDASIAAhEBAxEB/8QAGgAAAgIDAAAAAAAAAAAAAAAAAAUGBwIDBP/EACcQAAEDAgQGAwEAAAAAAAAAAAECAwQAEQUGEiETFBUxQWEiMjPR/8QAFwEAAwEAAAAAAAAAAAAAAAAAAQQFAv/EABsRAAIDAQEBAAAAAAAAAAAAAAECAAMRMSEE/9oADAMBAAIRAxEAPwBXhr5kRGXgdlpBpvG1G3yNQ7LkmS3gTXNJ0vJuLEWroOJ4rCkKal8Fs6QpFt737UgxCnI2ilx5J4I6ykHUe1FPsNw5TmGxHXyOI40FG3uijkzsrnLsVrE5Ko8lQSyod/JPqteaMqR0S0uolPvuCwO/1sf5TDJ6RwHFWGoK2Nt+1YyVK61I+R/MefdIXWOtxw8lj5qUagaOyyIMgdPieLNJFFKYxPKMbn6CiqI5I5Hs/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/7f5ef892ea655ec40a188ddc4359cd643d3bc2ee-1321x1721.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "cb729ee36d93",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-f07c91e43a299c7265dbbec19809284bc992dcdb-480x640-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 640,
+            "width": 480
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAbABQDASIAAhEBAxEB/8QAGgAAAgIDAAAAAAAAAAAAAAAAAAQGBwECA//EACUQAAEDAwQBBQEAAAAAAAAAAAECAwQABREGEyExEhQiQVFhI//EABcBAAMBAAAAAAAAAAAAAAAAAAABAwT/xAAeEQADAAEEAwAAAAAAAAAAAAAAAQIRAxIiYRMhQf/aAAwDAQACEQMRAD8ArzQumn348q8yY7DtvZbUn+hx5Kx8Vi3tJg7AaUVtSApaE4xtkHr9qw73d7LYNuytx1N29zJJPuPP5W7ESA+7a0xC2lMYlxaijoHpIrHWilPJl4hVHr4VDKLgfX6hS0uE5wfqip/ftPs3C7yZPlgLVxx8UVDKDwMf1Pp2ZLu5Ja3lNoSVeCeBk9VIYVqf3EoUjwGBk1NpCQHDgDnv9pKT7euKd1ux0Wjin2cW4DCUJCgkkD6ophHKRmikI//Z"
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/f07c91e43a299c7265dbbec19809284bc992dcdb-480x640.jpg"
+      },
+      "crop": {
+        "_type": "sanity.imageCrop",
+        "bottom": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0
+      },
+      "hotspot": {
+        "_type": "sanity.imageHotspot",
+        "height": 0.8495251372309837,
+        "width": 0.7724724811942724,
+        "x": 0.43046963492201784,
+        "y": 0.43734207545525833
+      }
+    },
+    {
+      "_key": "33126d338e66",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-f344425b3a0c1183a1dc19cf09a19cca05454103-937x1406-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1406,
+            "width": 937
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAeABQDASIAAhEBAxEB/8QAGQAAAwEBAQAAAAAAAAAAAAAAAAYHBAMF/8QAJhAAAgICAgAFBQEAAAAAAAAAAQIDBAAFERIGEyExQQcUFVFxMv/EABcBAAMBAAAAAAAAAAAAAAAAAAECAwT/xAAaEQACAwEBAAAAAAAAAAAAAAAAARESIQIx/9oADAMBAAIRAxEAPwCO7JoqG5jayyyK/U8fB4OdItXDttrZZw3kMS8SD4zL43giuWo7NEyurHoS68euUT6S1W/Hfd3a4MMKFWYjnt+gMy1dc9K8xEMnO1jiSWFO/wDmIL6/04Zn30iy7Ww3dVHc8D9Dk4YyWE5HjxC8ceirQpAEcuSD/ceNBXkpeHbdOu/WVoAylffnjnFXb69rNuKCWQdOhII9xnoRPsKtRmitKWVeo7LjLCr0le11Ng35TIkndjycMbrtmQznzD2fj1OGCWLU/9k="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/f344425b3a0c1183a1dc19cf09a19cca05454103-937x1406.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "e7f0fce16bfa",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-f622944f1958e276ea148fbbf4a445b0814af84a-1440x1440-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1440,
+            "width": 1440
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAUABQDASIAAhEBAxEB/8QAGAABAQADAAAAAAAAAAAAAAAAAAcCBgj/xAAkEAABBAIBBAIDAAAAAAAAAAABAgMEBQARBhIhMXEHE0FRUv/EABcBAAMBAAAAAAAAAAAAAAAAAAEDBQT/xAAfEQACAQQCAwAAAAAAAAAAAAAAAQIDERIxEyEUUZH/2gAMAwEAAhEDEQA/ANh4uaLkbtjHmy+gt6UAT4KfxmCrZqdW230yFNojLDbYY0FE/s5HqyWKHlk1x1C0sSwVo2reveUXj8SLyqDHcpm11zanNSF+ft9ZMclisd+y04NSlyvq+iO8icedtnjJQC4k9PUO2xvzjL/P+DaiwkmQmbLaKwOpKe43jGRhKwPMoo5pkWEmzTIeluErP89tessfxhNfZiQ2W1aQBvGMTUVvoajbu2XqnsZBr2iSNkb8YxjN6fRFez//2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/f622944f1958e276ea148fbbf4a445b0814af84a-1440x1440.jpg"
+      },
+      "crop": null,
+      "hotspot": null
+    },
+    {
+      "_key": "d043efd39632",
+      "altText": "Loglee Wedding",
+      "aspectRatio": null,
+      "asset": {
+        "_id": "image-4e67cb7c7eed4aaefee1e7624d041cc3e3868201-1024x1536-jpg",
+        "altText": null,
+        "metadata": {
+          "dimensions": {
+            "height": 1536,
+            "width": 1024
+          },
+          "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAeABQDASIAAhEBAxEB/8QAGQAAAgMBAAAAAAAAAAAAAAAAAAYDBAcF/8QAJBAAAQMDBQACAwAAAAAAAAAAAQIDBAAFEQYSEyExBxRBYXH/xAAXAQADAQAAAAAAAAAAAAAAAAAAAQMC/8QAGhEAAwEBAQEAAAAAAAAAAAAAAAECEQMSE//aAAwDAQACEQMRAD8Acb1qTn41R97LRBCgPaXZ0h+4x1RWJDxKs4B6qC7sq4m0tZGVfiq9laWbo2lal4HRBqHurWMV85V4WbZ8dN/VCplz2vKJUQg9UU2COnAxiin8yuSKz8hs7VE9pORVeLcI7l/42xtcRjeP2RWTWbXE9E1pS0ocQPUqHtdq+azeWUyIsKPHeHq0js0pkLxvTafutDorAP8AaKTtFzjd7G3MlNpLq1HJorb6pFFxbWn/2Q=="
+        },
+        "url": "https://cdn.sanity.io/images/tftcitbh/production/4e67cb7c7eed4aaefee1e7624d041cc3e3868201-1024x1536.jpg"
       },
       "crop": null,
       "hotspot": null

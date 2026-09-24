@@ -559,6 +559,17 @@ their region on the thank-you page — the Australian account when Nationality i
 Wise otherwise (`paymentRegionOf`). Their row's RSVP status is updated when they reply. The pure logic
 is in `tools/helpers/guests.ts` and `guestSession.ts`, with unit tests.
 
+**Invitations and reminders** are sent from the Studio's **Guest emails** list: create one, pick
+Invitation or Reminder (or a test address), publish. The Sanity webhook reaches `/api/revalidate/`,
+which hands `guestEmailSend` documents to `tools/guests/emailSend.ts` instead of revalidating. It
+sends Loops an event per eligible guest (`send_invitation` / `send_reminder`) — Loops workflows
+triggered by those events send the emails, designed in Loops, and track opens and clicks — in batches
+of ten, each batch's progress write firing the webhook for the next. `eligibleFor`
+(`tools/helpers/guestEmails.ts`) decides who: an invitation never goes to a guest whose Invite sent
+cell is filled, a reminder never to one who has replied (sheet status, or a Sanity reply by guest ID
+or email) or was never invited. Each guest's Invite sent / Reminder sent cell is written as their
+email goes. `SANITY_WRITE_TOKEN` is production-only on Netlify, so only the live site can send.
+
 ### Environment Variables
 
 Required in `.env.development` (see `.env.template` for full list):
@@ -569,6 +580,7 @@ Required in `.env.development` (see `.env.template` for full list):
 - `SANITY_API_READ_TOKEN`
 - `SANITY_WEBHOOK_SECRET`
 - `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`, `GUEST_SHEET_ID` — the service account that reads and writes the guest sheet (`tools/guests/sheet.ts`)
+- `LOOP_API_KEY` — Loops, which sends the invitation and reminder emails
 - `COUPLE_PASSWORD` — typed on the entry page instead of a guest ID, lets the couple in (signed in as `COUPLE`, no prefill)
 - `GUEST_SESSION_SECRET` — signs the guest cookie. **Unset means nobody can enter the site**, so set it on every Netlify deploy context
 
