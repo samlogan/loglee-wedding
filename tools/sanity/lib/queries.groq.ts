@@ -178,3 +178,17 @@ export const PAYMENT_DETAILS_QUERY = groq`
     paymentDetailsInternational[]${blockContentProjection}
   }
 `;
+
+/**
+ * The entry page's slice of Wedding Settings: the names, the dates and venue for its bar and footer,
+ * and its photo. The page is outside the guest gate, so this is all it may show.
+ */
+export const ENTRY_PAGE_QUERY = groq`
+  *[_type == "weddingSettings" && _id == "weddingSettings"][0]{
+    coupleNames,
+    startDate,
+    endDate,
+    "venueName": venue.name,
+    entryImage${imageProjection}
+  }
+`;

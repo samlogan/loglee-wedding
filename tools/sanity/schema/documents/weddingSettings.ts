@@ -24,6 +24,8 @@ interface IWeddingSettingsDocument {
     mapUrl?: string;
     location?: MapLocation | null;
   };
+  /** The photo on the entry page, under the couple's names. */
+  entryImage?: SanityImageSimple;
   rsvpDeadline?: string;
   rsvpLabel?: string;
   /** The note under the RSVP heading, e.g. the reply-by date and why it matters. */
@@ -153,6 +155,15 @@ const weddingSettings = defineType({
       },
       title: `Venue`,
       type: `object`
+    },
+    {
+      description:
+        'The photo on the page guests see first, where they enter their guest ID — under the couple’s names, as in the invitation email.',
+      group: 'data',
+      name: 'entryImage',
+      options: { hotspot: true },
+      title: 'Entry Page Photo',
+      type: 'image'
     },
     {
       description: 'The date guests need to have replied by.',

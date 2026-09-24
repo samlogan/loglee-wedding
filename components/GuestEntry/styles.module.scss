@@ -1,16 +1,73 @@
 /*
- * The entry page: centred, the couple's names over one field. Kept deliberately bare — it is the
- * first thing a guest sees, and the only job is to get them in.
+ * The entry page, drawn like the invitation email the guest arrives from (tools/emails): a narrow
+ * column, the couple's names stacked in display type with the handwritten plum byline, the photo,
+ * then a raised card holding the one field. Narrow on purpose — the page has one job.
  */
 @layer defaults {
   .entry {
+    container-type: inline-size;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--spacing-md);
-    max-inline-size: var(--container-xs);
+    max-inline-size: 560px;
     margin-inline: auto;
-    text-align: center;
+  }
+
+  // The email's top bar: the couple's initials and the date, in the mono micro-label.
+  .bar {
+    display: flex;
+    justify-content: space-between;
+    margin-block-end: var(--spacing-xl);
+    color: var(--fg-default);
+    @include mono-font();
+    // The mono micro-label size; `Text` has no mono variant at this step. See CLAUDE.md on --body-2xs.
+    font-size: var(--body-2xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /*
+   * Sized to the column, not the viewport: the names fill the 560px column the way the email's
+   * header fills its 600px. Neither display step does — `--display-md` reaches 132px, which puts
+   * "LAUREN" past the column's edge — so this is the one raw font-size here, in container units.
+   */
+  .names {
+    font-size: 17.5cqi;
+    // Normally set by `Text`'s size class, which is not used here — without them the names inherit body leading.
+    line-height: var(--display-line-height);
+    letter-spacing: var(--display-letter-spacing);
+  }
+
+  .name {
+    display: block;
+  }
+
+  // The hero's handwritten byline, as drawn in the email's header.
+  .byline {
+    margin-block-start: -0.1em;
+    color: var(--button-accent-bg);
+    font-family: var(--script-font), cursive;
+    letter-spacing: 0;
+    text-transform: none;
+    rotate: -2deg;
+    transform-origin: left center;
+  }
+
+  .photo {
+    overflow: hidden;
+    margin-block-start: var(--spacing-xl);
+    border-radius: var(--radius-md);
+  }
+
+  // The email's card: raised, with a soft stone border (the divider stroke, not the dark card stroke).
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-block-start: var(--spacing-md);
+    padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-lg);
+    border: 1px solid var(--stroke-divider);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-raised);
   }
 
   .eyebrow {
@@ -18,13 +75,12 @@
   }
 
   .intro {
-    color: var(--fg-muted);
+    color: var(--fg-default);
   }
 
   .form {
     width: 100%;
-    margin-block-start: var(--spacing-lg);
-    text-align: start;
+    margin-block-start: var(--spacing-sm);
   }
 
   // Holds its height so the button does not jump when a message appears.
@@ -36,5 +92,11 @@
 
   .submit {
     width: 100%;
+  }
+
+  .summary {
+    margin-block-start: var(--spacing-lg);
+    color: var(--fg-muted);
+    text-align: center;
   }
 }
