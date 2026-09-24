@@ -72,3 +72,6 @@ docs/screaming-frog.csv
 
 # Batch manifest — transient, deleted at the end of a run
 .claude/skills/batch-tickets/tickets.json
+
+# Built guest emails — `yarn emails:build`
+tools/emails/dist/
