@@ -13,9 +13,21 @@ export const GET = async (request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const guest = guestSessionSecret() ? await findGuest(decodeURIComponent(id)).catch(() => undefined) : undefined;
 
+  /*
+   * From `nextUrl`, not `request.url`. On Netlify `request.url` carries the deploy's internal
+   * hostname (`<deploy-id>--site.netlify.app`) rather than the address the guest used, so a redirect
+   * built from it lands on another host — where the cookie just set does not apply.
+   */
+  const to = (pathname: string) => {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname;
+    url.search = '';
+    return url;
+  };
+
   if (!guest) {
-    return NextResponse.redirect(new URL('/enter/', request.url));
+    return NextResponse.redirect(to('/enter/'));
   }
   await signIn(guest);
-  return NextResponse.redirect(new URL('/rsvp/', request.url));
+  return NextResponse.redirect(to('/rsvp/'));
 };
