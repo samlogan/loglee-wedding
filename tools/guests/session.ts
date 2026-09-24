@@ -16,6 +16,12 @@ export const guestSessionSecret = () => process.env.GUEST_SESSION_SECRET;
 export const COUPLE_ID = 'COUPLE';
 
 /**
+ * The ID a Sanity editor is signed in as when the Studio's visual editor opens the site
+ * (`app/api/draft`). Like `COUPLE`, not a row in the sheet.
+ */
+export const EDITOR_ID = 'EDITOR';
+
+/**
  * Whether a typed value is the couple's password (`COUPLE_PASSWORD`), however it was cased or spaced.
  * `false` whenever the variable is unset, so a blank password can never open the site.
  */
