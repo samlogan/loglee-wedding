@@ -172,7 +172,7 @@ export const RSVP_PAGE_QUERY = groq`
 /**
  * What a guest sees once they have replied, on the thank-you page and in the thank-you email: both
  * versions of the payment details — the page picks the guest's — and the travel note for their
- * nationality, `$noteId` (`nationalityNoteId`), or `""` for none. Only ever fetched behind the guest
+ * nationality, `$noteId` (`nationalityNoteId`), or `""` for none — and the thank-you email's intro. Only ever fetched behind the guest
  * gate or on the server, and never in the layout's query.
  */
 export const GUEST_REPLY_EXTRAS_QUERY = groq`{
@@ -183,7 +183,8 @@ export const GUEST_REPLY_EXTRAS_QUERY = groq`{
   "travel": *[_type == "nationalityNote" && _id == $noteId][0]{
     title,
     content[]${blockContentProjection}
-  }
+  },
+  "emailIntro": *[_type == "weddingSettings" && _id == "weddingSettings"][0].thankYouEmail.intro
 }`;
 
 /** The invitation email's opening paragraphs, sent to Loops with each invitation. */

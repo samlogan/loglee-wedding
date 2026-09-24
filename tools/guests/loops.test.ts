@@ -147,6 +147,8 @@ describe('sendGuestEmail', () => {
 
 describe('sendThankYouEmail', () => {
   it('is only sent once Loops has the key and the transactional email’s ID', () => {
+    // Cleared first: `.env.development`, which the tests load, may hold the real ID.
+    vi.stubEnv('LOOPS_THANK_YOU_ID', '');
     expect(hasThankYouEmail()).toBe(false);
     vi.stubEnv('LOOPS_THANK_YOU_ID', 'thank-you-id');
     expect(hasThankYouEmail()).toBe(true);

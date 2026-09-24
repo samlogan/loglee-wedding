@@ -76,6 +76,7 @@ const SAMPLE = {
 const SAMPLE_THANK_YOU = {
   firstName: 'Sam',
   homeLink: `${SITE}/g/SAM-6137/?to=/`,
+  intro: [{ text: 'Your reply is in, and we can’t wait to celebrate with you. Here’s what you need for the weekend.' }],
   payment: [
     { text: 'Account name: Sam Logan and Lauren Lee\nBSB: 062 000\nAccount: 1234 5678' },
     { text: 'Use your guest ID, SAM-6137, as the reference.' }
@@ -289,7 +290,8 @@ const EMAILS = {
     body: [
       eyebrow('RSVP received'),
       `<mj-text font-size="28px" font-weight="600" line-height="1.2" padding="0 0 18px">Thank you, ${dataVariable('firstName')}!</mj-text>`,
-      paragraph('Your reply is in, and we can’t wait to celebrate with you. Here’s what you need for the weekend.'),
+      // The intro, from Wedding Settings → Emails → Thank-you Email — one paragraph per item.
+      eachOf('intro', 'padding="0 0 16px"'),
       `<loops-array variable="stay" variable-type="DATA_VARIABLE">
             ${eyebrow('Your stay').replace('padding="0 0 14px"', 'padding="12px 0 14px"')}
             <mj-text font-weight="600" padding="0 0 4px">{DATA_VARIABLE:stay[].summary}</mj-text>

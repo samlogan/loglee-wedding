@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { paragraphsOf, thankYouVariables } from './thankYouEmail';
+import { THANK_YOU_INTRO_DEFAULT, paragraphsOf, thankYouVariables } from './thankYouEmail';
 
 const block = (text: string, listItem?: string): SanityTextBlock => ({
   _key: text,
@@ -44,6 +44,7 @@ describe('thankYouVariables', () => {
   it('leaves out every part the guest has nothing for — heading and all', () => {
     expect(thankYouVariables(BASE)).toEqual({
       ...BASE,
+      intro: [{ text: THANK_YOU_INTRO_DEFAULT[0] }],
       payment: [],
       paymentHeading: [],
       stay: [],
@@ -62,6 +63,19 @@ describe('thankYouVariables', () => {
     expect(variables.payment).toEqual([{ text: 'Wise: sam@example.com' }]);
     expect(variables.travelHeading).toEqual([{ text: 'Travelling from the UK' }]);
     expect(variables.travel).toEqual([{ text: 'You will need an ETA.' }]);
+  });
+
+  it('opens with the intro from Sanity, one item per paragraph, blanks dropped', () => {
+    expect(thankYouVariables({ ...BASE, intro: ['Thanks!', '  ', 'See you there.', 7] }).intro).toEqual([
+      { text: 'Thanks!' },
+      { text: 'See you there.' }
+    ]);
+  });
+
+  it('falls back to the words the email was written with when the intro is empty', () => {
+    for (const nothing of [undefined, null, [], ['  ']]) {
+      expect(thankYouVariables({ ...BASE, intro: nothing }).intro).toEqual([{ text: THANK_YOU_INTRO_DEFAULT[0] }]);
+    }
   });
 
   it('heads an untitled travel note "Travel tips"', () => {

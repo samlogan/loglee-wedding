@@ -47,6 +47,12 @@ describe('sendThankYou', () => {
     });
   });
 
+  it('opens with the intro from Wedding Settings', async () => {
+    vi.mocked(extras.replyExtrasFor).mockResolvedValue({ emailIntro: ['Thanks, legend.'] });
+    await sendThankYou(SAM, REPLY, AT);
+    expect(sent()?.dataVariables.intro).toEqual([{ text: 'Thanks, legend.' }]);
+  });
+
   it('prices the Sunday night in when the guest took it', async () => {
     await sendThankYou(SAM, { ...REPLY, extraNight: true }, AT);
     expect(sent()?.dataVariables.stay).toEqual([{ summary: 'King Room · 3 nights, Sunday included', total: '$450' }]);

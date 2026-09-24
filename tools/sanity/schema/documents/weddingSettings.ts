@@ -42,6 +42,10 @@ interface IWeddingSettingsDocument {
     /** The invitation's opening paragraphs, under "Hi {firstName},". Up to three. */
     intro?: string[];
   };
+  thankYouEmail?: {
+    /** The thank-you email's opening paragraphs, under "Thank you, {firstName}!". */
+    intro?: string[];
+  };
 }
 
 /** The editable words on the RSVP form. */
@@ -281,6 +285,23 @@ const weddingSettings = defineType({
       name: 'invitationEmail',
       options: { collapsible: false },
       title: 'Invitation Email',
+      type: 'object'
+    },
+    {
+      fields: [
+        {
+          description:
+            'The opening paragraphs, under “Thank you, {first name}!”. One item per paragraph. Sent to each guest the moment their RSVP is saved.',
+          name: 'intro',
+          of: [{ rows: 3, type: 'text' }],
+          title: 'Intro',
+          type: 'array'
+        }
+      ],
+      group: 'emails',
+      name: 'thankYouEmail',
+      options: { collapsible: false },
+      title: 'Thank-you Email',
       type: 'object'
     },
     {

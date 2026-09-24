@@ -27,6 +27,7 @@ export const sendThankYou = async (guest: Guest, reply: RsvpReply, submittedAt: 
       dataVariables: thankYouVariables({
         firstName: guest.firstName || reply.name.split(' ')[0],
         homeLink: guestHomeLinkFor(guest.id),
+        intro: extras.emailIntro,
         payment: extras.payment,
         stay: stayPriceOf(guest, { extraNight: reply.extraNight }),
         travel: extras.travel

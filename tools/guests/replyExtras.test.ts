@@ -40,6 +40,7 @@ describe('replyExtrasFor', () => {
   it('gives an Australian guest the Australian account, and no travel note', async () => {
     state.result = { payment: PAYMENT, travel: null };
     expect(await replyExtrasFor({ nationality: '', payment: 'au' })).toEqual({
+      emailIntro: undefined,
       payment: PAYMENT.australia,
       travel: undefined
     });
@@ -49,6 +50,7 @@ describe('replyExtrasFor', () => {
   it('gives everyone else Wise, and asks for the note for their nationality', async () => {
     state.result = { payment: PAYMENT, travel: { content: [block('Bring an adaptor.')], title: 'From the UK' } };
     expect(await replyExtrasFor({ nationality: 'British', payment: 'wise' })).toEqual({
+      emailIntro: undefined,
       payment: PAYMENT.international,
       travel: { content: [block('Bring an adaptor.')], title: 'From the UK' }
     });
@@ -58,9 +60,15 @@ describe('replyExtrasFor', () => {
   it('shows nothing that has not been written yet', async () => {
     state.result = { payment: { australia: [] }, travel: { content: [], title: 'From the US' } };
     expect(await replyExtrasFor({ nationality: 'American', payment: 'au' })).toEqual({
+      emailIntro: undefined,
       payment: undefined,
       travel: undefined
     });
+  });
+
+  it('carries the thank-you email’s intro', async () => {
+    state.result = { emailIntro: ['Thanks!'] };
+    expect((await replyExtrasFor({ nationality: '', payment: 'au' })).emailIntro).toEqual(['Thanks!']);
   });
 });
 
