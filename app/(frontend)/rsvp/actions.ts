@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import type { RsvpFormState } from '@/components/RsvpForm/contract';
 import { currentGuest } from '@/tools/guests/session';
 import { markReplied } from '@/tools/guests/sheet';
+import { sendThankYou } from '@/tools/guests/thankYou';
 import createRateLimiter from '@/tools/helpers/rateLimiter';
 import {
   isHoneypotFilled,
@@ -141,7 +142,8 @@ const storeRsvp = async (formData: FormData): Promise<RsvpFormState> => {
       : writeClient.create(document));
 
     if (guest) {
-      await markReplied(guest, now);
+      await markReplied(guest, now, { extraNight: reply.extraNight });
+      await sendThankYou(guest, reply, now);
     }
     return SAVED;
   } catch (error) {

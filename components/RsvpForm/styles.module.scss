@@ -264,4 +264,24 @@ $rsvp-inline-switch: 964px;
   .stayNote {
     color: var(--fg-muted);
   }
+
+  /*
+   * "Spend the Sunday evening with us" — its switch and the line under it. Inside the stay card it is
+   * set off from the price by the card's divider rule, above and below.
+   */
+  .extraNight {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+
+    .stay & {
+      margin-block: var(--spacing-sm);
+      padding-block: var(--spacing-md);
+      border-block: 1px solid var(--stroke-divider);
+    }
+  }
+
+  .extraNightDescription {
+    color: var(--fg-muted);
+  }
 }

@@ -60,6 +60,7 @@ describe('parseRsvpSubmission', () => {
       replyOf({
         dietary: 'Vegetarian',
         email: 'sam@example.com',
+        extraNight: 'on',
         kidsAges: '2 and 5',
         kidsCount: '2',
         name: 'Sam Logan',
@@ -72,6 +73,7 @@ describe('parseRsvpSubmission', () => {
     ).toEqual({
       dietary: 'Vegetarian',
       email: 'sam@example.com',
+      extraNight: true,
       kidsAges: '2 and 5',
       kidsCount: 2,
       name: 'Sam Logan',
@@ -85,6 +87,7 @@ describe('parseRsvpSubmission', () => {
     const reply = replyOf({});
     expect(reply).toEqual({
       email: 'sam@example.com',
+      extraNight: false,
       kidsCount: 0,
       name: 'Sam Logan',
       plusOne: { bringing: false }
@@ -320,6 +323,18 @@ describe('isRepeatTooSoon', () => {
   });
 });
 
+describe('the Sunday night', () => {
+  it('is a checkbox — taken when it is sent, not taken when it is absent', () => {
+    expect(replyOf({ extraNight: 'on' }).extraNight).toBe(true);
+    expect(replyOf({}).extraNight).toBe(false);
+  });
+
+  it('counts towards whether two replies are the same', () => {
+    expect(isSameRsvpReply(replyOf({}), replyOf({ extraNight: 'on' }))).toBe(false);
+    expect(isSameRsvpReply(replyOf({ extraNight: 'on' }), replyOf({ extraNight: 'on' }))).toBe(true);
+  });
+});
+
 describe('isSameRsvpReply', () => {
   const reply = replyOf({
     dietary: 'Vegetarian',
@@ -350,7 +365,8 @@ describe('isSameRsvpReply', () => {
     ['an answer removed', { dietary: undefined }],
     ['a plus one added', { plusOne: { bringing: true, name: 'Jo' } }],
     ['the plus one dropped', { plusOne: { bringing: false } }],
-    ['a different count', { kidsCount: 1 }]
+    ['a different count', { kidsCount: 1 }],
+    ['the Sunday night added', { extraNight: true }]
   ])('does not match after %s', (_, change) => {
     expect(isSameRsvpReply({ ...reply, ...change }, reply)).toBe(false);
   });

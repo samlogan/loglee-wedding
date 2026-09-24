@@ -171,6 +171,9 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
     fieldErrors[RSVP_FIELD.kidsCount] = `Enter a number from 0 to ${RSVP_KIDS_MAX}`;
   }
 
+  // Another native checkbox — the Sunday night, one more night on the guest's stay.
+  const extraNight = entries.get(RSVP_FIELD.extraNight) !== null;
+
   const dietary = text(RSVP_FIELD.dietary) || undefined;
   const kidsAges = text(RSVP_FIELD.kidsAges) || undefined;
   const songRequest = text(RSVP_FIELD.songRequest) || undefined;
@@ -185,6 +188,7 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
     reply: {
       dietary,
       email,
+      extraNight,
       kidsAges,
       kidsCount,
       name,
@@ -235,7 +239,8 @@ const replyKey = (reply: Partial<RsvpReply>) =>
     reply.kidsCount,
     reply.kidsAges,
     reply.songRequest,
-    reply.specialRequirements
+    reply.specialRequirements,
+    reply.extraNight ?? false
   ]);
 
 /** Whether a stored document already holds exactly this reply. */

@@ -15,6 +15,7 @@ import classNames from '@/helpers/classNames';
 import { DUET_BACK, DUET_FRONT } from '@/helpers/duetPlacement';
 import formatOrdinal from '@/helpers/formatOrdinal';
 import type { StayPrice } from '@/helpers/guests';
+import type { RsvpPlaceholder } from '@/tools/sanity/schema/documents/weddingSettings';
 
 import { RSVP_FIELD, RSVP_INITIAL_STATE, RSVP_KIDS_MAX } from './contract';
 import type { RsvpAction, RsvpFieldErrors, RsvpFormState } from './contract';
@@ -47,6 +48,13 @@ export interface RsvpFormProps {
   guest?: RsvpGuest;
   /** The note under the heading, from Wedding Settings — the reply-by date. */
   note?: SanityTextBlock[];
+  /** Under the guest's stay and price — how and when they pay. */
+  stayNote?: string;
+  /** The switch that adds the Sunday night to the guest's stay, and the line under it. */
+  extraNightLabel?: string;
+  extraNightDescription?: string;
+  /** The hint inside each empty answer. Any left out keep the form's own. */
+  placeholders?: Partial<Record<RsvpPlaceholder, string>>;
 }
 
 /** What the form knows about the guest filling it in. Every field optional: a row can be sparse. */
@@ -61,6 +69,7 @@ export interface RsvpGuest {
 export interface RsvpFormValues {
   dietary: string;
   email: string;
+  extraNight: boolean;
   kidsAges: string;
   // A number from the buttons, a string while it is being typed into. Both submit as the same text.
   kidsCount: number | string;
@@ -73,6 +82,7 @@ export interface RsvpFormValues {
 const DEFAULT_VALUES: RsvpFormValues = {
   dietary: '',
   email: '',
+  extraNight: false,
   kidsAges: '',
   kidsCount: 0,
   name: '',
@@ -85,11 +95,38 @@ const DEFAULT_VALUES: RsvpFormValues = {
 const formatAud = (amount: number) =>
   new Intl.NumberFormat('en-AU', { currency: 'AUD', maximumFractionDigits: 0, style: 'currency' }).format(amount);
 
+/*
+ * The form's own words. Every one can be replaced from Wedding Settings → RSVP → RSVP Form; these are
+ * what shows while a field there is blank.
+ */
 const DEFAULT_COPY = {
+  extraNightDescription: 'Add an extra night to your stay and recover in style by the pool.',
+  extraNightLabel: 'Spend the Sunday evening with us',
   heading: 'RSVP',
   intro: 'One form per guest.',
-  introDetail: "Tell us what you eat, who you're bringing and what you'd like to hear on the dancefloor."
+  introDetail: "Tell us what you eat, who you're bringing and what you'd like to hear on the dancefloor.",
+  stayNote: "You'll see how to pay as soon as you've replied."
 };
+
+const DEFAULT_PLACEHOLDERS: Record<RsvpPlaceholder, string> = {
+  dietary: 'Allergies, vego, vegan, none…',
+  email: 'name@example.com',
+  kidsAges: 'e.g. 2 and 5',
+  name: 'Full name',
+  plusOneDietary: 'Allergies, vego, vegan, none…',
+  plusOneName: 'Their full name',
+  songRequest: 'One song that gets you on the floor',
+  specialRequirements: 'Anything we should know? e.g. a cot for the baby'
+};
+
+/**
+ * The stay as the guest has it right now: the Sunday night added — one more night at the same price —
+ * while the switch is on. The page passes the stay from the sheet, without it.
+ */
+const withExtraNight = (stay: StayPrice, extraNight: boolean): StayPrice =>
+  extraNight
+    ? { ...stay, extraNight, nights: stay.nights + 1, total: stay.total + stay.perNight }
+    : { ...stay, extraNight };
 
 // Deliberately loose — `name@domain.tld` with no spaces. The server is the gate; this only catches a
 // typo before the round trip.
@@ -176,10 +213,14 @@ const RsvpForm = (props: RsvpFormProps) => {
     heading = DEFAULT_COPY.heading,
     intro = DEFAULT_COPY.intro,
     introDetail = DEFAULT_COPY.introDetail,
+    stayNote = DEFAULT_COPY.stayNote,
+    extraNightLabel = DEFAULT_COPY.extraNightLabel,
+    extraNightDescription = DEFAULT_COPY.extraNightDescription,
     guest,
     models,
     note
   } = props;
+  const placeholders = { ...DEFAULT_PLACEHOLDERS, ...props.placeholders };
 
   const [state, formAction, isPending] = useActionState(action, RSVP_INITIAL_STATE);
 
@@ -209,40 +250,73 @@ const RsvpForm = (props: RsvpFormProps) => {
       theme="underline"
     >
       <RsvpFormBody
+        extraNightDescription={extraNightDescription}
+        extraNightLabel={extraNightLabel}
         heading={heading}
         intro={intro}
         introDetail={introDetail}
         isPending={isPending}
         models={models}
         note={note}
+        placeholders={placeholders}
         sentValues={sentValues}
-        stay={guest?.stay}
         state={state}
+        stay={guest?.stay}
+        stayNote={stayNote}
       />
     </Form>
   );
 };
 
 interface RsvpFormBodyProps {
+  extraNightDescription: string;
+  extraNightLabel: string;
   heading: string;
   intro: string;
   introDetail?: string;
   isPending: boolean;
   models?: RsvpModelOption[];
   note?: SanityTextBlock[];
+  placeholders: Record<RsvpPlaceholder, string>;
   sentValues: string | null;
   stay?: StayPrice;
+  stayNote: string;
   state: RsvpFormState;
 }
 
 /** Everything inside the react-hook-form context — which is why it is a component of its own. */
 const RsvpFormBody = (props: RsvpFormBodyProps) => {
-  const { heading, intro, introDetail, isPending, models, note, sentValues, stay, state } = props;
+  const {
+    extraNightDescription,
+    extraNightLabel,
+    heading,
+    intro,
+    introDetail,
+    isPending,
+    models,
+    note,
+    placeholders,
+    sentValues,
+    state,
+    stayNote
+  } = props;
 
   const { control, resetField } = useFormContext<RsvpFormValues>();
   const values = useWatch({ control });
 
   const bringing = Boolean(values.plusOne?.bringing);
+  const stay = props.stay && withExtraNight(props.stay, Boolean(values.extraNight));
+
+  /*
+   * "Spend the Sunday evening with us". In the stay card when the guest has one, beside the price it
+   * changes; a numbered question like the rest when they do not, so it is asked either way.
+   */
+  const extraNightSwitch = (label: ReactNode) => (
+    <div className={styles.extraNight}>
+      <Field.Toggle checkedText="Yes" label={label} name={RSVP_FIELD.extraNight} uncheckedText="No" />
+      <Text as="p" className={styles.extraNightDescription} size="sm" text={extraNightDescription} />
+    </div>
+  );
   const isSaved = state.status === 'success' && !isPending && sentValues === JSON.stringify(values);
 
   /*
@@ -309,7 +383,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
           className={styles.nameField}
           label={label('Name')}
           name={RSVP_FIELD.name}
-          placeholder="Full name"
+          placeholder={placeholders.name}
           required
           validate={(value) => isFilled(value) || 'Enter your name'}
         />
@@ -321,7 +395,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
         <Field.Email
           label={label('Email')}
           name={RSVP_FIELD.email}
-          placeholder="name@example.com"
+          placeholder={placeholders.email}
           required
           validate={(value) => EMAIL_PATTERN.test(value.trim()) || 'Enter an email address, like name@example.com'}
         />
@@ -342,7 +416,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
             </>
           )}
           name={RSVP_FIELD.dietary}
-          placeholder="Allergies, vego, vegan, none…"
+          placeholder={placeholders.dietary}
         />
       )
     },
@@ -362,14 +436,14 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
               <Field.Text
                 label="Plus one name"
                 name={RSVP_FIELD.plusOneName}
-                placeholder="Their full name"
+                placeholder={placeholders.plusOneName}
                 required
                 validate={(value) => isFilled(value) || "Enter your plus one's name"}
               />
               <Field.Text
                 label="Plus one dietary requirements"
                 name={RSVP_FIELD.plusOneDietary}
-                placeholder="Allergies, vego, vegan, none…"
+                placeholder={placeholders.plusOneDietary}
               />
             </>
           )}
@@ -404,19 +478,27 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
                 </>
               }
               name={RSVP_FIELD.kidsAges}
-              placeholder="e.g. 2 and 5"
+              placeholder={placeholders.kidsAges}
             />
           </div>
         </div>
       )
     },
+    ...(stay
+      ? []
+      : [
+          {
+            key: 'extraNight',
+            render: (label: (title: ReactNode) => ReactNode) => extraNightSwitch(label(extraNightLabel))
+          }
+        ]),
     {
       key: 'specialRequirements',
       render: (label) => (
         <Field.TextArea
           label={label('Special requirements')}
           name={RSVP_FIELD.specialRequirements}
-          placeholder="Anything we should know? e.g. a cot for the baby"
+          placeholder={placeholders.specialRequirements}
         />
       )
     },
@@ -426,7 +508,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
         <Field.Text
           label={label('Song request')}
           name={RSVP_FIELD.songRequest}
-          placeholder="One song that gets you on the floor"
+          placeholder={placeholders.songRequest}
         />
       )
     }
@@ -459,13 +541,16 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
               />
               <Text as="p" size="lg" weight="medium">
                 {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
+                {stay.extraNight && ', Sunday included'}
               </Text>
-              <Text as="p" className={styles.stayPrice}>
-                {formatAud(stay.perNight)} per room, per night · <strong>{formatAud(stay.total)}</strong> in total
-              </Text>
-              <Text as="p" className={styles.stayNote} size="sm">
-                You'll see how to pay as soon as you've replied.
-              </Text>
+              {/* Polite and atomic, so switching the Sunday night on or off is heard as the new total. */}
+              <div aria-atomic="true" aria-live="polite">
+                <Text as="p" className={styles.stayPrice}>
+                  {formatAud(stay.perNight)} per room, per night · <strong>{formatAud(stay.total)}</strong> in total
+                </Text>
+              </div>
+              {extraNightSwitch(extraNightLabel)}
+              <Text as="p" className={styles.stayNote} size="sm" text={stayNote} />
             </section>
           )}
           {questions.map(({ key, render }, index) => (

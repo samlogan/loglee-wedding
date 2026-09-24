@@ -9,6 +9,7 @@ import { PLAYER_SLUGS } from '@/templates/PlayerTemplate';
 import { currentGuest } from '@/tools/guests/session';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
 import { RSVP_MODELS_QUERY, RSVP_PAGE_QUERY } from '@/tools/sanity/lib/queries.groq';
+import type { RsvpFormCopy } from '@/tools/sanity/schema/documents/weddingSettings';
 
 import { submitRsvp } from './actions';
 
@@ -25,6 +26,9 @@ import { submitRsvp } from './actions';
  * `sm`, and 64px under the button, which is `md`. `lg` caps the content at the frame's 1200px, the
  * width the rail and the questions were drawn against.
  */
+/** A field's text, or `undefined` when it is blank — so the form's own words stand in. */
+const filled = (value?: string | null) => value?.trim() || undefined;
+
 const RsvpPage = async () => {
   const [models, page, signedIn] = await Promise.all([
     // The players' models, for the pair walking side by side in the rail.
@@ -33,7 +37,10 @@ const RsvpPage = async () => {
       query: RSVP_MODELS_QUERY,
       tags: ['player']
     }),
-    sanityFetch<{ rsvpNote?: SanityTextBlock[] | null } | null>({ query: RSVP_PAGE_QUERY, tags: ['weddingSettings'] }),
+    sanityFetch<{ rsvpNote?: SanityTextBlock[] | null; rsvpForm?: RsvpFormCopy | null } | null>({
+      query: RSVP_PAGE_QUERY,
+      tags: ['weddingSettings']
+    }),
     // The guest from their cookie — prefills the form and shows their stay. The sheet being down
     // should cost the personal touches, not the form.
     currentGuest().catch(() => undefined)
@@ -45,9 +52,27 @@ const RsvpPage = async () => {
     stay: stayPriceOf(signedIn)
   };
 
+  // The form's words from Wedding Settings. A blank field is left out, so the form keeps its own.
+  const copy = page?.rsvpForm;
+  const placeholders = Object.fromEntries(
+    Object.entries(copy?.placeholders ?? {}).flatMap(([key, value]) => (filled(value) ? [[key, filled(value)]] : []))
+  );
+
   return (
     <Section containerWidth="lg" name="rsvp" spacing={['sm', 'md']} theme="light">
-      <RsvpForm action={submitRsvp} guest={guest} models={models ?? []} note={page?.rsvpNote ?? undefined} />
+      <RsvpForm
+        action={submitRsvp}
+        extraNightDescription={filled(copy?.extraNightDescription)}
+        extraNightLabel={filled(copy?.extraNightLabel)}
+        guest={guest}
+        heading={filled(copy?.heading)}
+        intro={filled(copy?.intro)}
+        introDetail={filled(copy?.introDetail)}
+        models={models ?? []}
+        note={page?.rsvpNote ?? undefined}
+        placeholders={placeholders}
+        stayNote={filled(copy?.stayNote)}
+      />
     </Section>
   );
 };

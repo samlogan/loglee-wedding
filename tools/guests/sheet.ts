@@ -105,7 +105,7 @@ export const findGuest = async (id?: string | null): Promise<Guest | undefined> 
  * Mark a guest's row as replied, with the date. Best effort: the reply is already saved in Sanity,
  * so a failure here is logged and never reaches the guest.
  */
-export const markReplied = async (guest: Guest, at: Date) => {
+export const markReplied = async (guest: Guest, at: Date, { extraNight = false }: { extraNight?: boolean } = {}) => {
   try {
     const { values = [] } = await request<{ values?: string[][] }>('values/1:1');
     const column = guestColumnsOf(values[0] ?? []).rsvpStatus;
@@ -113,7 +113,9 @@ export const markReplied = async (guest: Guest, at: Date) => {
       return;
     }
     const day = at.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' });
-    await writeCells([{ range: `${columnLetter(column)}${guest.row}`, value: `Replied ${day}` }]);
+    await writeCells([
+      { range: `${columnLetter(column)}${guest.row}`, value: `Replied ${day}${extraNight ? ' · + Sunday night' : ''}` }
+    ]);
   } catch (error) {
     console.error('[Guest sheet] Could not mark the reply in the sheet.', error);
   }

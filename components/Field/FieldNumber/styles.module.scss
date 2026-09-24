@@ -16,7 +16,7 @@
     // box is 54px tall, the 52px buttons plus the border.
     border: var(--button-border-width) solid var(--input-border);
     border-radius: var(--radius-md);
-    background-color: transparent;
+    background-color: var(--bg-raised);
     color: var(--fg-default);
 
     &.error {

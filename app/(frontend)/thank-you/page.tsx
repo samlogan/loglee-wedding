@@ -6,9 +6,11 @@ import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import coupleNames from '@/helpers/coupleNames';
 import { stayPriceOf } from '@/helpers/guests';
+import { replyExtrasFor, takesExtraNight } from '@/tools/guests/replyExtras';
+import type { ReplyExtras } from '@/tools/guests/replyExtras';
 import { currentGuest } from '@/tools/guests/session';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
-import { PAYMENT_DETAILS_QUERY, WEDDING_SETTINGS_QUERY } from '@/tools/sanity/lib/queries.groq';
+import { WEDDING_SETTINGS_QUERY } from '@/tools/sanity/lib/queries.groq';
 import type { IWeddingSettingsDocument } from '@/tools/sanity/schema/documents/weddingSettings';
 
 import styles from './styles.module.scss';
@@ -46,29 +48,26 @@ import styles from './styles.module.scss';
  */
 
 const ThankYouPage = async () => {
-  const [settings, payment, guest] = await Promise.all([
+  const [settings, guest] = await Promise.all([
     sanityFetch<Partial<IWeddingSettingsDocument> | null>({
       query: WEDDING_SETTINGS_QUERY,
-      tags: ['weddingSettings']
-    }),
-    sanityFetch<{
-      paymentDetailsAustralia?: SanityTextBlock[];
-      paymentDetailsInternational?: SanityTextBlock[];
-    } | null>({
-      query: PAYMENT_DETAILS_QUERY,
       tags: ['weddingSettings']
     }),
     currentGuest().catch(() => undefined)
   ]);
 
   /*
-   * How the guest pays their room contribution: the Australian account for guests whose Nationality
-   * in the sheet is blank or Australian, Wise for everyone else (`paymentRegionOf`). Shown only here,
+   * How the guest pays their room contribution — the Australian account for guests whose Nationality
+   * in the sheet is blank or Australian, Wise for everyone else (`paymentRegionOf`) — and the travel
+   * note for their nationality, both from Nationalities & payment in the Studio. The total includes
+   * the Sunday night when their saved reply takes it. Shown only here and in the thank-you email,
    * after they have replied, and only to a signed-in guest — never in a page-builder section.
    */
-  const stay = guest && stayPriceOf(guest);
-  const paymentDetails =
-    guest && (guest.payment === 'au' ? payment?.paymentDetailsAustralia : payment?.paymentDetailsInternational);
+  const noExtras: ReplyExtras = {};
+  const [{ payment: paymentDetails, travel }, extraNight] = guest
+    ? await Promise.all([replyExtrasFor(guest).catch(() => noExtras), takesExtraNight(guest.id)])
+    : [noExtras, false];
+  const stay = guest && stayPriceOf(guest, { extraNight });
   const total =
     stay &&
     new Intl.NumberFormat('en-AU', { currency: 'AUD', maximumFractionDigits: 0, style: 'currency' }).format(stay.total);
@@ -135,10 +134,25 @@ const ThankYouPage = async () => {
             />
             {stay && total && (
               <Text as="p" size="lg" weight="medium">
-                {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'} · {total}
+                {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
+                {stay.extraNight && ', Sunday included'} · {total}
               </Text>
             )}
             {paymentDetails && paymentDetails.length > 0 && <TextBlock blocks={paymentDetails} />}
+          </section>
+        )}
+        {travel && (
+          <section aria-labelledby="thank-you-travel" className={styles.payment}>
+            <Text
+              as="h2"
+              className={styles.paymentLabel}
+              id="thank-you-travel"
+              size="2xs"
+              text={travel.title || 'Travel tips'}
+              textTransform="uppercase"
+              variant="mono"
+            />
+            <TextBlock blocks={travel.content} />
           </section>
         )}
         <Text

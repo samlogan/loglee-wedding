@@ -100,18 +100,30 @@ export const numberCell = (value?: string | null): number | undefined => {
 
 export interface StayPrice {
   stay: string;
+  /** Every night they stay, the Sunday included when they have added it. */
   nights: number;
   perNight: number;
   total: number;
+  /** Whether the Sunday night is in `nights` and `total`. */
+  extraNight: boolean;
 }
 
-/** The guest's stay and what it comes to, or `undefined` when the sheet does not say enough. */
-export const stayPriceOf = (guest: Pick<Guest, 'stay' | 'nights' | 'perNight'>): StayPrice | undefined => {
-  const { nights, perNight, stay } = guest;
-  if (!stay.trim() || !nights || perNight === undefined) {
+/**
+ * The guest's stay and what it comes to, or `undefined` when the sheet does not say enough.
+ *
+ * `extraNight` is the RSVP form's "Spend the Sunday evening with us": one more night, at the same
+ * price per night, on top of the nights in the sheet.
+ */
+export const stayPriceOf = (
+  guest: Pick<Guest, 'stay' | 'nights' | 'perNight'>,
+  { extraNight = false }: { extraNight?: boolean } = {}
+): StayPrice | undefined => {
+  const { perNight, stay } = guest;
+  if (!stay.trim() || !guest.nights || perNight === undefined) {
     return undefined;
   }
-  return { nights, perNight, stay: stay.trim(), total: nights * perNight };
+  const nights = guest.nights + (extraNight ? 1 : 0);
+  return { extraNight, nights, perNight, stay: stay.trim(), total: nights * perNight };
 };
 
 /** The sheet's columns, found by how each header starts — so reordering or relabelling the rest is safe. */

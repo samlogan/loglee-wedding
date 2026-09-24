@@ -7,7 +7,9 @@ vi.mock('./sheet', () => ({
   guestLinkFor: (id: string) => `https://samandlauren.wedding/g/${id}/`
 }));
 
-const { ensureContactProperties, hasLoopsKey, sendGuestEmail } = await import('./loops');
+const { ensureContactProperties, hasLoopsKey, hasThankYouEmail, sendGuestEmail, sendThankYouEmail } =
+  await import('./loops');
+const { thankYouVariables } = await import('@/helpers/thankYouEmail');
 
 const SAM: Guest = {
   email: 'sam@example.com',
@@ -68,7 +70,15 @@ describe('ensureContactProperties', () => {
     const created = spy.mock.calls
       .filter(([, init]) => (init as RequestInit)?.method === 'POST')
       .map((call) => bodyOf(call).name);
-    expect(created).toEqual(['homeLink', 'stayOption', 'nights', 'contributionTotal']);
+    expect(created).toEqual([
+      'homeLink',
+      'stayOption',
+      'nights',
+      'contributionTotal',
+      'inviteIntro1',
+      'inviteIntro2',
+      'inviteIntro3'
+    ]);
   });
 });
 
@@ -118,6 +128,12 @@ describe('sendGuestEmail', () => {
     expect(bodyOf(spy.mock.calls[0])).not.toHaveProperty('contributionTotal');
   });
 
+  it('adds the email’s own properties — the invitation’s intro — to the guest’s', async () => {
+    const spy = stubLoops(() => ({ body: { success: true }, status: 200 }));
+    await sendGuestEmail('invitation', SAM, { idempotencyKey: 'k', properties: { inviteIntro1: 'Hello' } });
+    expect(bodyOf(spy.mock.calls[0])).toMatchObject({ guestId: 'SAM-4821', inviteIntro1: 'Hello' });
+  });
+
   it('treats a repeated idempotency key (409) as sent — the email already went', async () => {
     stubLoops(() => ({ body: { message: 'Duplicate request' }, status: 409 }));
     await expect(sendGuestEmail('invitation', SAM, { idempotencyKey: 'k' })).resolves.toBeUndefined();
@@ -126,5 +142,29 @@ describe('sendGuestEmail', () => {
   it('throws on any other failure, with Loops’s message', async () => {
     stubLoops(() => ({ body: { message: 'Invalid API key' }, status: 401 }));
     await expect(sendGuestEmail('invitation', SAM, { idempotencyKey: 'k' })).rejects.toThrow('Invalid API key');
+  });
+});
+
+describe('sendThankYouEmail', () => {
+  it('is only sent once Loops has the key and the transactional email’s ID', () => {
+    expect(hasThankYouEmail()).toBe(false);
+    vi.stubEnv('LOOPS_THANK_YOU_ID', 'thank-you-id');
+    expect(hasThankYouEmail()).toBe(true);
+  });
+
+  it('sends the transactional email with the guest’s variables and an idempotency key', async () => {
+    vi.stubEnv('LOOPS_THANK_YOU_ID', 'thank-you-id');
+    const spy = stubLoops(() => ({ body: { success: true }, status: 200 }));
+    const dataVariables = thankYouVariables({ firstName: 'Sam', homeLink: 'https://samandlauren.wedding/' });
+    await sendThankYouEmail({ dataVariables, idempotencyKey: 'thank-you-SAM-4821', to: 'sam@example.com' });
+
+    const [url, init] = spy.mock.calls[0];
+    expect(url).toBe('https://app.loops.so/api/v1/transactional');
+    expect(init?.headers).toMatchObject({ 'Idempotency-Key': 'thank-you-SAM-4821' });
+    expect(bodyOf(spy.mock.calls[0])).toEqual({
+      dataVariables,
+      email: 'sam@example.com',
+      transactionalId: 'thank-you-id'
+    });
   });
 });
