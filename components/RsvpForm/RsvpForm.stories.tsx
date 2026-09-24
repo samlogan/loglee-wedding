@@ -292,6 +292,17 @@ export const FreeStay: Story = {
   }
 };
 
+/** Both halves of the intro cleared in Wedding Settings: the rail keeps its heading and note, and no intro. */
+export const IntroCleared: Story = {
+  args: { intro: '', introDetail: '' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByText(COPY.intro, { exact: false })).toBeNull();
+    await expect(canvas.queryByText(/what you eat/)).toBeNull();
+    await expect(canvas.getByRole('heading', { level: 1, name: COPY.heading })).toBeInTheDocument();
+  }
+};
+
 /**
  * The optional lines cleared in Wedding Settings — the rest of the intro, the stay note and the
  * Sunday night's description. An empty string hides each one rather than bringing the form's own back.

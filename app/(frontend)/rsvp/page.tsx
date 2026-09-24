@@ -30,7 +30,7 @@ import { submitRsvp } from './actions';
 const filled = (value?: string | null) => value?.trim() || undefined;
 
 /**
- * For a line the form can do without — the rest of the intro, the stay note, the Sunday night's
+ * For a line the form can do without — the intro and the rest of it, the stay note, the Sunday night's
  * description — blank means *none*: an editor who clears it wants it gone, and Sanity cannot tell a
  * cleared field from one never filled in. Only when the RSVP Form fields have never been saved at all
  * does the form keep its own words.
@@ -75,7 +75,7 @@ const RsvpPage = async () => {
         extraNightLabel={filled(copy?.extraNightLabel)}
         guest={guest}
         heading={filled(copy?.heading)}
-        intro={filled(copy?.intro)}
+        intro={optional(copy, copy?.intro)}
         introDetail={optional(copy, copy?.introDetail)}
         models={models ?? []}
         note={page?.rsvpNote ?? undefined}

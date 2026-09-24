@@ -218,7 +218,7 @@ const weddingSettings = defineType({
     },
     {
       description:
-        'The words on the RSVP form. Clear Intro (continued), Stay Note or the Sunday Night description to hide it; leave any other field blank to use the form’s own words.',
+        'The words on the RSVP form. Clear Intro, Intro (continued), Stay Note or the Sunday Night description to hide it; leave any other field blank to use the form’s own words.',
       fields: [
         { description: 'The big heading, e.g. “RSVP”.', name: 'heading', title: 'Heading', type: 'string' },
         {
