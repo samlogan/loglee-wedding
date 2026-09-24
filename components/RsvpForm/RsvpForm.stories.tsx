@@ -268,6 +268,16 @@ export const NotStaying: Story = {
   }
 };
 
+/** A guest outside Australia: every price says "AUD", so a bare "$" is not read as their own dollar. */
+export const InternationalGuest: Story = {
+  args: { guest: { email: 'sam@example.com', name: 'Sam Logan', stay: SAM_STAY, withCurrency: true } },
+  play: async ({ canvasElement }) => {
+    const stay = within(canvasElement).getByRole('region', { name: /your stay/i });
+    await expect(stay).toHaveTextContent('$150 AUD per room, per night');
+    await expect(stay).toHaveTextContent('$300 AUD in total');
+  }
+};
+
 /**
  * A stay the couple are covering — a contribution of 0 in the sheet. The stay and the Sunday night
  * are shown; nothing about paying is, even with the Sunday night added.

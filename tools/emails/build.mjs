@@ -83,7 +83,7 @@ const SAMPLE_THANK_YOU = {
   ],
   paymentHeading: [{ text: 'How to pay' }],
   stay: [{ summary: 'King Room · 3 nights, Sunday included' }],
-  stayTotal: [{ total: '$450' }],
+  stayTotal: [{ total: '$450 AUD' }],
   travel: [
     { text: 'You’ll need an ETA to visit Australia — apply on the Australian ETA app a few weeks ahead.' },
     { text: 'Sydney is 11 hours ahead of London in February.' }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import formatAmount from './formatAmount';
+import formatAmount, { showsCurrency } from './formatAmount';
 
 describe('formatAmount', () => {
   it('renders a whole number with no cents', () => {
@@ -30,5 +30,17 @@ describe('formatAmount', () => {
      * or the runtime's ICU data did — not the amount.
      */
     expect(formatAmount(120).startsWith('$')).toBe(true);
+  });
+});
+
+describe('the currency', () => {
+  it('is named, after the figure, when asked for', () => {
+    expect(formatAmount(450, { withCurrency: true })).toBe('$450 AUD');
+    expect(formatAmount(120.5, { withCurrency: true })).toBe('$120.50 AUD');
+  });
+
+  it('is shown to every guest outside Australia, and not to Australians', () => {
+    expect(showsCurrency({ payment: 'wise' })).toBe(true);
+    expect(showsCurrency({ payment: 'au' })).toBe(false);
   });
 });
