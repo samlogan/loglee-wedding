@@ -21,6 +21,12 @@ export interface Guest {
   /** The contribution per room, per night, in AUD. */
   perNight?: number;
   payment: PaymentRegion;
+  /** The Invite sent cell — blank until the invitation email has gone. */
+  inviteSent: string;
+  /** The Reminder sent cell — blank until a reminder has gone. */
+  reminderSent: string;
+  /** The RSVP status cell — "Replied …" once they have replied through the site. */
+  rsvpStatus: string;
 }
 
 /** Four digits after the name: 9,000 IDs per first name — plenty for one guest list. */
@@ -113,10 +119,12 @@ export const GUEST_COLUMNS = {
   email: 'email',
   firstName: 'first name',
   id: 'guest id',
+  inviteSent: 'invite sent',
   lastName: 'last name',
   nationality: 'nationality',
   nights: 'nights',
   perNight: 'contribution',
+  reminderSent: 'reminder sent',
   rsvpLink: 'rsvp link',
   rsvpStatus: 'rsvp status',
   stay: 'stay option'
@@ -181,12 +189,15 @@ export const guestsFromRows = (
       email: cellOf(row, columns.email),
       firstName,
       id,
+      inviteSent: cellOf(row, columns.inviteSent),
       lastName: cellOf(row, columns.lastName),
       nationality,
       nights: numberCell(cellOf(row, columns.nights)),
       payment: paymentRegionOf(nationality),
       perNight: numberCell(cellOf(row, columns.perNight)),
+      reminderSent: cellOf(row, columns.reminderSent),
       row: sheetRow,
+      rsvpStatus: cellOf(row, columns.rsvpStatus),
       stay: cellOf(row, columns.stay)
     });
   }

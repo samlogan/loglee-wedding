@@ -1,5 +1,6 @@
 import type { SchemaTypeDefinition } from 'sanity';
 
+import guestEmailSend from './documents/guestEmailSend';
 import headerDocument from './documents/headerDocument';
 // Documents
 import nationalityNote from './documents/nationalityNote';
@@ -51,6 +52,7 @@ import { twoColumnListSection } from './sections/twoColumnListSection';
 
 const schema: SchemaTypeDefinition[] = [
   // Documents
+  guestEmailSend,
   headerDocument,
   nationalityNote,
   page,

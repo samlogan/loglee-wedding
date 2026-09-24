@@ -60,11 +60,12 @@ const writeCells = async (cells: { range: string; value: string }[]) => {
  * link, before this returns. `[]` when the sheet is not configured, so the rest of the site still
  * renders on a machine without the credentials.
  */
-export const readGuests = async (): Promise<Guest[]> => {
+export const readGuests = async ({ fresh = false }: { fresh?: boolean } = {}): Promise<Guest[]> => {
   if (!hasGoogleCredentials()) {
     return [];
   }
-  if (memo && Date.now() - memo.at < TTL_MS) {
+  // `fresh` for anything that decides who gets an email: a minute-old copy could miss an Invite sent.
+  if (!fresh && memo && Date.now() - memo.at < TTL_MS) {
     return memo.guests;
   }
 
@@ -113,4 +114,36 @@ export const markReplied = async (guest: Guest, at: Date) => {
   } catch (error) {
     console.error('[Guest sheet] Could not mark the reply in the sheet.', error);
   }
+};
+
+/** The columns the email sender writes, and the header each gets if the sheet does not have it yet. */
+const SENT_COLUMN_HEADERS = {
+  inviteSent: 'Invite sent (filled by the site)',
+  reminderSent: 'Reminder sent (filled by the site)'
+} as const;
+
+/**
+ * The 0-based index of the column recording an email of this kind, adding the column to the end of
+ * the header row first if the sheet does not have it. Resolved once per batch.
+ */
+export const sentColumn = async (column: keyof typeof SENT_COLUMN_HEADERS): Promise<number> => {
+  const { values = [] } = await request<{ values?: string[][] }>('values/1:1');
+  const header = values[0] ?? [];
+  const index = guestColumnsOf(header)[column];
+  if (index >= 0) {
+    return index;
+  }
+  await writeCells([{ range: `${columnLetter(header.length)}1`, value: SENT_COLUMN_HEADERS[column] }]);
+  return header.length;
+};
+
+/**
+ * Record in a guest's row that an email went — "Invite sent 24 Sept". Called straight after each
+ * email, one guest at a time, so a send interrupted partway leaves the sheet exact: whoever is marked
+ * got it, and an invitation is never sent to them again.
+ */
+export const markSent = async (guest: Guest, columnIndex: number, label: string, at: Date) => {
+  const day = at.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' });
+  await writeCells([{ range: `${columnLetter(columnIndex)}${guest.row}`, value: `${label} ${day}` }]);
+  memo = undefined;
 };

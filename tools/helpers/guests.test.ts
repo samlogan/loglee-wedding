@@ -119,10 +119,12 @@ describe('guestColumnsOf', () => {
       email: 3,
       firstName: 1,
       id: 0,
+      inviteSent: -1,
       lastName: 2,
       nationality: 4,
       nights: 6,
       perNight: 7,
+      reminderSent: -1,
       rsvpLink: 8,
       rsvpStatus: 9,
       stay: 5
@@ -168,24 +170,30 @@ describe('guestsFromRows', () => {
         email: 'sam@example.com',
         firstName: 'Sam',
         id: 'SAM-4821',
+        inviteSent: '',
         lastName: 'Logan',
         nationality: '',
         nights: 2,
         payment: 'au',
         perNight: 150,
+        reminderSent: '',
         row: 2,
+        rsvpStatus: '',
         stay: 'King Room'
       },
       {
         email: 'lauren@example.com',
         firstName: 'Lauren',
         id: 'LAUREN-1234',
+        inviteSent: '',
         lastName: 'Lee',
         nationality: 'US',
         nights: undefined,
         payment: 'wise',
         perNight: undefined,
+        reminderSent: '',
         row: 3,
+        rsvpStatus: '',
         stay: ''
       }
     ]);

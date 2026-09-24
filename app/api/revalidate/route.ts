@@ -40,6 +40,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
+import { processEmailSend } from '@/tools/guests/emailSend';
 import { SANITY_CACHE_TAG } from '@/tools/sanity/lib/fetch';
 
 import { validateWebhookAuth } from '../_helpers/auth';
@@ -65,6 +66,16 @@ export const POST = async (req: NextRequest) => {
     if (type === 'sanity.imageAsset' || type === 'sanity.fileAsset') {
       console.log(`${logPrefix}Skipping asset change.`);
       return NextResponse.json({ revalidated: true });
+    }
+
+    // A guest email send is not content: it changes nothing on the site, and publishing it sends the
+    // email. Its batches arrive here too, one webhook call each.
+    if (type === 'guestEmailSend') {
+      const id = (data as { _id?: string })._id;
+      if (id) {
+        await processEmailSend(id);
+      }
+      return NextResponse.json({ revalidated: false, sending: true });
     }
 
     revalidateTag(SANITY_CACHE_TAG, { expire: 0 });
