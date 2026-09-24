@@ -21,7 +21,8 @@
  *
  * ## Placeholders
  *
- * Loops fills `{firstName}`, `{guestId}` and `{rsvpLink}` from the contact properties the site sets
+ * Loops fills `{firstName}`, `{guestId}`, `{rsvpLink}` and `{homeLink}` (the same sign-in, landing on the
+ * homepage — the header and the site links use it) from the contact properties the site sets
  * when it sends (`tools/guests/loops.ts` on the guest-emails branch), and requires
  * `{unsubscribe_link}`. The subject and preview line are set in Loops; suggestions are in `EMAILS`.
  */
@@ -53,7 +54,13 @@ const SITE = 'https://samandlauren.wedding';
 let SIGNOFF_WIDTH = 240;
 
 /** Sample values for the preview only — Loops fills the real ones. */
-const SAMPLE = { firstName: 'Sam', guestId: 'SAM-6137', rsvpLink: `${SITE}/g/SAM-6137/`, unsubscribe_link: '#' };
+const SAMPLE = {
+  firstName: 'Sam',
+  guestId: 'SAM-6137',
+  homeLink: `${SITE}/g/SAM-6137/?to=/`,
+  rsvpLink: `${SITE}/g/SAM-6137/`,
+  unsubscribe_link: '#'
+};
 
 const eyebrow = (text) =>
   `<mj-text font-family="${MONO}" font-size="12px" font-weight="500" letter-spacing="1.2px" color="${C.accent}" padding="0 0 14px">${text.toUpperCase()}</mj-text>`;
@@ -122,7 +129,7 @@ const layout = ({ title, preheader, body, withPhoto = false }) => `<mjml>
   <mj-body background-color="${C.page}" width="600px">
     <mj-section padding="16px 0 0">
       <mj-column>
-        <mj-image src="img/header.png" alt="Sam &amp; Lauren are getting married" width="600px" padding="0" href="${SITE}" />
+        <mj-image src="img/header.png" alt="Sam &amp; Lauren are getting married" width="600px" padding="0" href="{homeLink}" />
       </mj-column>
     </mj-section>
 ${withPhoto ? photo : ''}
@@ -139,7 +146,7 @@ ${body}
       <mj-column>
         <mj-text align="center" font-family="${MONO}" font-size="11px" letter-spacing="1.1px" line-height="1.8" color="${C.muted}" padding="0">
           <span style="white-space:nowrap;">12–14&#8288; FEB&#8288; 2027</span> · THE LODGE JAMBEROO<br />
-          <a href="${SITE}" style="color:${C.muted};white-space:nowrap;">SAMANDLAUREN.WEDDING</a> · <a href="{unsubscribe_link}" style="color:${C.muted};">UNSUBSCRIBE</a>
+          <a href="{homeLink}" style="color:${C.muted};white-space:nowrap;">SAMANDLAUREN.WEDDING</a> · <a href="{unsubscribe_link}" style="color:${C.muted};">UNSUBSCRIBE</a>
         </mj-text>
       </mj-column>
     </mj-section>
@@ -150,7 +157,7 @@ ${body}
 const button = (label) =>
   `<mj-button href="{rsvpLink}" align="left" background-color="${C.button}" color="#ffffff" font-size="17px" font-weight="600" border-radius="8px" inner-padding="16px 30px" padding="0 0 18px">${label} →</mj-button>`;
 
-const guestIdNote = `<mj-text font-size="14px" line-height="1.5" color="${C.muted}" padding="0">The button signs you straight in. On another device, go to <a href="${SITE}" style="white-space:nowrap;">samandlauren.wedding</a> and enter your guest ID: <span style="font-family:${MONO};font-size:13px;color:${C.text};letter-spacing:0.5px;">{guestId}</span></mj-text>`;
+const guestIdNote = `<mj-text font-size="14px" line-height="1.5" color="${C.muted}" padding="0">The button signs you straight in, and so does <a href="{homeLink}" style="white-space:nowrap;">samandlauren.wedding</a> here. On another device, go to the site and enter your guest ID: <span style="font-family:${MONO};font-size:13px;color:${C.text};letter-spacing:0.5px;">{guestId}</span></mj-text>`;
 
 const WHEN = 'Friday 12 – Sunday 14 February 2027';
 const WHERE =
