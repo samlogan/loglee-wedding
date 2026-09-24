@@ -58,10 +58,10 @@
   }
 
   /*
-   * The guest's contribution and how to pay it — their total from the guest sheet and the bank or Wise
-   * details for their region. Left-aligned inside the centred page: account numbers are read, not scanned.
+   * The guest's travel note — visas, flights, the time difference. Left-aligned inside the centred
+   * page: it is read, not scanned.
    */
-  .payment {
+  .travel {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
@@ -74,16 +74,11 @@
     text-align: start;
   }
 
-  .paymentLabel {
+  .travelLabel {
     color: var(--fg-accent);
   }
 
   .headingLine {
     display: block;
-  }
-
-  // Where the bank details went: the thank-you email, not this page.
-  .paymentNote {
-    color: var(--fg-muted);
   }
 }

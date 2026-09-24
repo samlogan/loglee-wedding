@@ -5,8 +5,7 @@ import Section from '@/components/Section';
 import Text from '@/components/Text';
 import TextBlock from '@/components/TextBlock';
 import coupleNames from '@/helpers/coupleNames';
-import { isFreeStay, stayPriceOf } from '@/helpers/guests';
-import { replyExtrasFor, savedStayOf } from '@/tools/guests/replyExtras';
+import { replyExtrasFor } from '@/tools/guests/replyExtras';
 import type { ReplyExtras } from '@/tools/guests/replyExtras';
 import { currentGuest } from '@/tools/guests/session';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
@@ -57,25 +56,13 @@ const ThankYouPage = async () => {
   ]);
 
   /*
-   * The guest's stay and total — the Sunday night included when their saved reply takes it — and the
-   * travel note for their nationality, from Nationalities & payment in the Studio. Only to a
+   * The travel note for the guest's nationality, from Nationalities & payment in the Studio — only to a
    * signed-in guest who has replied, never in a page-builder section.
    *
-   * The bank details are **not** shown here: they go in the thank-you email only (`sendThankYou`).
+   * Their stay, total and bank details are **not** shown here: they go in the thank-you email
+   * (`sendThankYou`).
    */
-  const noExtras: ReplyExtras = {};
-  const [extras, saved] = guest
-    ? await Promise.all([replyExtrasFor(guest).catch(() => noExtras), savedStayOf(guest.id)])
-    : [noExtras, { extraNight: false, staying: true }];
-  const { travel } = extras;
-  // Not staying at the venue: no stay and no total — only the travel note.
-  const stay = guest && saved.staying ? stayPriceOf(guest, { extraNight: saved.extraNight }) : undefined;
-  // A stay the couple are covering: the stay is shown, and nothing about paying for it.
-  const free = isFreeStay(stay);
-  const total =
-    stay &&
-    !free &&
-    new Intl.NumberFormat('en-AU', { currency: 'AUD', maximumFractionDigits: 0, style: 'currency' }).format(stay.total);
+  const { travel } = guest ? await replyExtrasFor(guest).catch((): ReplyExtras => ({})) : {};
 
   /*
    * "Sam & Lauren", one partner alone with no dangling ampersand, or the fallback names when neither
@@ -133,46 +120,11 @@ const ThankYouPage = async () => {
           className={styles.scene}
         />
 
-        {stay && free && (
-          <section aria-labelledby="thank-you-stay" className={styles.payment}>
-            <Text
-              as="h2"
-              className={styles.paymentLabel}
-              id="thank-you-stay"
-              size="2xs"
-              text="Your stay"
-              textTransform="uppercase"
-              variant="mono"
-            />
-            <Text as="p" size="lg" weight="medium">
-              {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
-              {stay.extraNight && ', Sunday included'}
-            </Text>
-          </section>
-        )}
-        {stay && total && (
-          <section aria-labelledby="thank-you-payment" className={styles.payment}>
-            <Text
-              as="h2"
-              className={styles.paymentLabel}
-              id="thank-you-payment"
-              size="2xs"
-              text="Your room contribution"
-              textTransform="uppercase"
-              variant="mono"
-            />
-            <Text as="p" size="lg" weight="medium">
-              {stay.stay} · {stay.nights} {stay.nights === 1 ? 'night' : 'nights'}
-              {stay.extraNight && ', Sunday included'} · {total}
-            </Text>
-            <Text as="p" className={styles.paymentNote} size="sm" text="How to pay is in your thank-you email." />
-          </section>
-        )}
         {travel && (
-          <section aria-labelledby="thank-you-travel" className={styles.payment}>
+          <section aria-labelledby="thank-you-travel" className={styles.travel}>
             <Text
               as="h2"
-              className={styles.paymentLabel}
+              className={styles.travelLabel}
               id="thank-you-travel"
               size="2xs"
               text={travel.title || 'Travel tips'}
