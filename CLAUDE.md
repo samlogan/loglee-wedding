@@ -556,7 +556,14 @@ Guests live in a Google Sheet, read by a service account (`tools/guests/`). A ro
 no ID is given one (`SAM-4821`) and a personal link on the next read. The signed-in guest prefills the
 RSVP form, sees their stay and price (`stayPriceOf`), and after replying sees the payment details for
 their region on the thank-you page — the Australian account when Nationality is blank or Australian,
-Wise otherwise (`paymentRegionOf`). Their row's RSVP status is updated when they reply. The pure logic
+Wise otherwise (`paymentRegionOf`). When they reply, their row gets the RSVP status and every answer
+from the form, one "Reply:" column each (`REPLY_COLUMNS`, `tools/helpers/rsvpSheet.ts` — a test fails
+if a form field has no column, or no field on the Sanity `rsvp` document).
+
+The sheet's columns are found by header, so their order is free. The couple's come first (names,
+email, nationality, stay, nights, contribution, notes) and the site's after them, greyed
+(`tools/helpers/guestSheetLayout.ts`); any column the site adds goes on the end, greyed the same way,
+widening the sheet if it has to. The pure logic
 is in `tools/helpers/guests.ts` and `guestSession.ts`, with unit tests.
 
 **Invitations and reminders** are sent from the Studio's **Guest emails** list: create one, pick
