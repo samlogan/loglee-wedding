@@ -21,8 +21,12 @@ interface IGuestEmailSend {
   _id: string;
   _rev: string;
   _type: 'guestEmailSend';
-  kind?: 'invitation' | 'reminder';
+  kind?: 'invitation' | 'reminder' | 'thankYou';
   testEmail?: string;
+  /** Fill a test in with this guest's details rather than the first guest's. */
+  testGuestId?: string;
+  /** A thank-you test: price in the Sunday night, as if the guest had taken it. */
+  testExtraNight?: boolean;
   /** The typed confirmation a send to the guest list needs — see `sendConfirmationPhrase`. */
   confirm?: string;
   status?: 'requested' | 'sending' | 'done' | 'failed';
@@ -33,6 +37,8 @@ interface IGuestEmailSend {
   summary?: string;
   finishedAt?: string;
 }
+
+const KIND_TITLES: Record<string, string> = { invitation: 'Invitation', reminder: 'Reminder', thankYou: 'Thank-you' };
 
 const lockedOnceStarted = ({ document }: ConditionalPropertyCallbackContext) => Boolean(document?.status);
 
@@ -45,7 +51,11 @@ const guestEmailSend = defineType({
         layout: 'radio',
         list: [
           { title: 'Invitation — to guests not yet invited', value: 'invitation' },
-          { title: 'Reminder — to invited guests who have not replied', value: 'reminder' }
+          { title: 'Reminder — to invited guests who have not replied', value: 'reminder' },
+          {
+            title: 'Thank-you — test only. Guests are sent it automatically when they RSVP.',
+            value: 'thankYou'
+          }
         ]
       },
       readOnly: lockedOnceStarted,
@@ -55,23 +65,47 @@ const guestEmailSend = defineType({
     },
     {
       description:
-        'Send a test to this address only, filled in with the first guest’s details. Leave blank to send to the guest list.',
+        'Send a test to this address only, filled in with one guest’s details. Leave blank to send to the guest list.',
       name: 'testEmail',
       readOnly: lockedOnceStarted,
       title: 'Test Address',
-      type: 'email'
+      type: 'email',
+      validation: (Rule) =>
+        Rule.custom((value, { document }) =>
+          document?.kind === 'thankYou' && !value
+            ? 'The thank-you email can only be sent as a test — guests get it when they RSVP'
+            : true
+        )
+    },
+    {
+      description:
+        'Fill the test in with this guest’s details — their name, stay, payment details and travel note. Leave blank for the first guest in the sheet.',
+      hidden: ({ document }) => !document?.testEmail,
+      name: 'testGuestId',
+      readOnly: lockedOnceStarted,
+      title: 'Test As Guest ID',
+      type: 'string'
+    },
+    {
+      description: 'Price the Sunday night into the stay, as if the guest had switched it on.',
+      hidden: ({ document }) => document?.kind !== 'thankYou' || !document?.testEmail,
+      initialValue: false,
+      name: 'testExtraNight',
+      readOnly: lockedOnceStarted,
+      title: 'With The Sunday Night',
+      type: 'boolean'
     },
     {
       description:
         'A send to the guest list emails real guests. Type SEND INVITATIONS (or SEND REMINDERS) to confirm — it cannot be published without it. Not needed for a test.',
-      hidden: ({ document }) => Boolean(document?.testEmail || document?.status),
+      hidden: ({ document }) => Boolean(document?.testEmail || document?.status || document?.kind === 'thankYou'),
       name: 'confirm',
       readOnly: lockedOnceStarted,
       title: 'Confirm Sending to Guests',
       type: 'string',
       validation: (Rule) =>
         Rule.custom((value, { document }) => {
-          if (document?.testEmail || document?.status) {
+          if (document?.testEmail || document?.status || document?.kind === 'thankYou') {
             return true;
           }
           const kind = document?.kind === 'reminder' ? 'reminder' : 'invitation';
@@ -176,7 +210,7 @@ const guestEmailSend = defineType({
       status?: string;
       testEmail?: string;
     }) {
-      const what = kind === 'reminder' ? 'Reminder' : kind === 'invitation' ? 'Invitation' : 'Email';
+      const what = (kind && KIND_TITLES[kind]) || 'Email';
       let subtitle = 'Not sent — publish to send';
       if (status === 'done') {
         subtitle = testEmail ? `Test sent to ${testEmail}` : `Sent to ${sent?.length ?? 0}`;
