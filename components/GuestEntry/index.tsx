@@ -109,7 +109,7 @@ const GuestEntry = (props: GuestEntryProps) => {
             <Field.Text
               label="Guest ID"
               name={GUEST_ID_FIELD}
-              placeholder="e.g. SAM-4821"
+              placeholder="HEY-1263"
               required
               validate={(value) => Boolean(value?.trim()) || 'Enter your guest ID'}
             />
