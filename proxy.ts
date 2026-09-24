@@ -13,15 +13,16 @@ import { GUEST_COOKIE, verifyGuestSession } from '@/helpers/guestSession';
  * Checking the signature is enough — the proxy never looks the guest up. It runs on every request,
  * and the cookie can only have been written by the site, after it had checked the ID.
  *
- * Draft mode passes too: the Studio's visual editor loads the site in an iframe with its own cookie,
- * and editors are not guests. The matcher below keeps out everything that is not a page: the entry
+ * Editors get in through the Studio's visual editor, which opens the site via `/api/draft`: once
+ * Sanity has validated its secret, that route sets the same signed cookie, as `EDITOR`. Next's
+ * draft-mode cookie is **not** trusted on its own — its presence proves nothing, since anyone can
+ * set a cookie called `__prerender_bypass` by hand.
+ *
+ * The matcher below keeps out everything that is not a page: the entry
  * page and personal links themselves, `/api/*` (the Sanity webhook must reach `/api/revalidate/`),
  * the Studio, Next's own assets and any file with an extension (models, icons, `robots.txt`).
  */
 export const proxy = (request: NextRequest) => {
-  if (request.cookies.has('__prerender_bypass')) {
-    return NextResponse.next();
-  }
   if (verifyGuestSession(request.cookies.get(GUEST_COOKIE)?.value, process.env.GUEST_SESSION_SECRET)) {
     return NextResponse.next();
   }

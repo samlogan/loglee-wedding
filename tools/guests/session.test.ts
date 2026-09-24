@@ -15,7 +15,7 @@ vi.mock('./sheet', () => ({
   )
 }));
 
-const { COUPLE_ID, currentGuest, isCouplePassword, signIn } = await import('./session');
+const { COUPLE_ID, EDITOR_ID, currentGuest, isCouplePassword, signIn } = await import('./session');
 
 beforeEach(() => {
   jar.set.mockClear();
@@ -49,6 +49,11 @@ describe('signIn', () => {
     expect(name).toBe(GUEST_COOKIE);
     expect(value).toBe(signGuestSession('SAM-4821', 'secret'));
     expect(options).toMatchObject({ httpOnly: true, path: '/', sameSite: 'lax' });
+  });
+
+  it('signs an editor in as EDITOR — a signed cookie like any guest’s, not a bypass', async () => {
+    await signIn({ id: EDITOR_ID });
+    expect(jar.set.mock.calls[0][1]).toBe(signGuestSession('EDITOR', 'secret'));
   });
 
   it('signs the couple in as COUPLE', async () => {
