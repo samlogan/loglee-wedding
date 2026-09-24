@@ -214,7 +214,7 @@ ${body}
 const button = (label, href = '{rsvpLink}') =>
   `<mj-button href="${href}" align="left" background-color="${C.button}" color="#ffffff" font-size="17px" font-weight="600" border-radius="8px" inner-padding="16px 30px" padding="0 0 18px">${label} →</mj-button>`;
 
-const guestIdNote = `<mj-text font-size="14px" line-height="1.5" color="${C.muted}" padding="0">The button signs you straight in, and so does <a href="{homeLink}" style="white-space:nowrap;">samandlauren.wedding</a> here. On another device, go to the site and enter your guest ID: <span style="font-family:${MONO};font-size:13px;color:${C.text};letter-spacing:0.5px;">{guestId}</span></mj-text>`;
+const guestIdNote = `<mj-text font-size="14px" line-height="1.5" color="${C.muted}" padding="0">The button signs you straight in. On another device, go to <a href="{homeLink}" style="white-space:nowrap;">samandlauren.wedding</a> and enter your guest ID: <span style="font-family:${MONO};font-size:13px;color:${C.text};letter-spacing:0.5px;">{guestId}</span></mj-text>`;
 
 /**
  * The invitation's opening paragraphs, from Wedding Settings → Emails, as the three contact properties
@@ -261,7 +261,8 @@ const EMAILS = {
         ['Where', WHERE],
         ['RSVP by', '30 November 2026']
       ]),
-      button('RSVP now'),
+      // The homepage, signed in — the weekend, then the RSVP from the site's own header.
+      button('See the weekend', '{homeLink}'),
       guestIdNote
     ].join('\n          ')
   },
