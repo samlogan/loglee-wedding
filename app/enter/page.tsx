@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import CSSLayerDefinitions from '@/components/AaCSSLayerDefinitions';
 import GuestEntry from '@/components/GuestEntry';
 import Section from '@/components/Section';
+import siteMetadata from '@/config/metadata';
 import { couplePartners } from '@/helpers/coupleNames';
 import formatDateRange from '@/helpers/formatDateRange';
 import { sanityFetch } from '@/tools/sanity/lib/fetch';
@@ -47,9 +48,21 @@ const EnterPage = async ({ searchParams }: { searchParams: Promise<{ next?: stri
   );
 };
 
+/*
+ * The link preview. Every page is behind the guest gate, so WhatsApp, iMessage and the rest — which
+ * fetch a shared link without a guest cookie — are redirected here whichever page was shared, and
+ * this page's Open Graph tags are the preview everyone sees. It sits outside the `(frontend)` layout,
+ * so it states them itself rather than inheriting the site's.
+ */
+const PREVIEW_TITLE = 'Sam & Lauren are getting married';
+
 export const metadata: Metadata = {
+  description: siteMetadata.description,
+  metadataBase: siteMetadata.metadataBase,
+  openGraph: { ...siteMetadata.openGraph, title: PREVIEW_TITLE },
   robots: { follow: false, googleBot: { follow: false, index: false }, index: false },
-  title: 'Welcome'
+  title: 'Welcome',
+  twitter: { ...siteMetadata.twitter, title: PREVIEW_TITLE }
 };
 
 export default EnterPage;

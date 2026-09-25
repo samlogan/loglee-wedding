@@ -24,7 +24,7 @@ const website: WebsiteConfig = {
     'Everything you need for our wedding weekend at The Lodge Jamberoo, 12–14 February 2027 — the plan, your room, and your RSVP.', // Default Site Decription used for SEO
   siteName: 'Sam & Lauren', // Sitename for Facebook
   siteLanguage: 'en', // Language Tag on <html> element
-  banner: '/open-graph.png', // Default OpenGraph image
+  banner: '/open-graph.jpg', // Default OpenGraph image — assets/images/open-graph.jpg, built by `yarn og:build`
   ogLanguage: 'en_AU', // Facebook Language
   icon: 'src/assets/images/icon.png', // Used for manifest favicon, splash screen, and icon generation
   shortName: 'Sam+Lauren', // shortname for manifest. MUST be shorter than 12 characters

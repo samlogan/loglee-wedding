@@ -39,7 +39,8 @@
     "figma:tokens:sync": "echo 'Use /sync-design-system command in Claude Code instead'",
     "check": "ultracite check .",
     "fix": "ultracite fix .",
-    "emails:build": "node tools/emails/build.mjs"
+    "emails:build": "node tools/emails/build.mjs",
+    "og:build": "node tools/og/build.mjs"
   },
   "dependencies": {
     "@next/bundle-analyzer": "^16.1.6",
