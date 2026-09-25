@@ -6,7 +6,7 @@
   The link preview — what WhatsApp, iMessage, Slack and the rest show when someone shares the site.
   Rendered to assets/images/open-graph.jpg by `yarn og:build`, at the 1200×630 every platform crops
   to. Drawn like the invitation email (tools/emails/header.html): the names in heavy Archivo capitals,
-  the handwritten plum byline, the mono date bar, and the proposal photo.
+  the handwritten plum byline, the mono date bar, and a photo of the two of them (photo.jpg).
 -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
@@ -69,7 +69,7 @@
         width: 470px;
         flex-shrink: 0;
         border-radius: 16px;
-        background: url('../emails/img/photo.jpg') 46% center / cover no-repeat;
+        background: url('photo.jpg') 50% 22% / cover no-repeat;
       }
     </style>
   </head>
@@ -81,7 +81,7 @@
         <div class="byline">are getting married</div>
         <div class="mono foot">12–14 Feb 2027 · The Lodge Jamberoo NSW</div>
       </div>
-      <div class="photo" role="img" aria-label="Sam proposing to Lauren under a green garden arch by the water"></div>
+      <div class="photo" role="img" aria-label="Sam and Lauren embracing, foreheads together, by the water"></div>
     </div>
   </body>
 </html>
