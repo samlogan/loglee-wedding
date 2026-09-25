@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import openGraphImage from '@/assets/images/open-graph.png';
+import openGraphImage from '@/assets/images/open-graph.jpg';
 
 import website from './website';
 
@@ -32,6 +32,13 @@ const metadata: Metadata = {
     url: process.env.NEXT_PUBLIC_SITE_URL
   },
   publisher: website.author,
+  // The large card, so a shared link shows the whole image rather than a thumbnail beside the title.
+  twitter: {
+    card: 'summary_large_image',
+    description: website.description,
+    images: [process.env.NEXT_PUBLIC_SITE_URL + openGraphImage.src],
+    title: website.title
+  },
   referrer: 'origin-when-cross-origin',
   robots: {
     follow: true,

@@ -1,6 +1,6 @@
 import type { ResolvingMetadata, Metadata } from 'next';
 
-import defaultOgImage from '@/assets/images/open-graph.png';
+import defaultOgImage from '@/assets/images/open-graph.jpg';
 import metadata from '@/config/metadata';
 
 interface CustomMetadata {
