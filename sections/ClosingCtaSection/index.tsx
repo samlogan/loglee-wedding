@@ -99,8 +99,9 @@ const ClosingCtaSection: FC<IClosingCtaSection> = (props) => {
              * First, because the comp reads "The Weekend" and then the RSVP action — DOM order is the
              * visual order at every width, so the tab order is too.
              *
-             * `theme="secondary" outline` draws the comp's ink border and ink label (#131412 on
-             * light, node 1:75) out of `--button-secondary-bg`, and fills with it on hover.
+             * `theme="primary" outline` draws a dark green border and label out of
+             * `--button-primary-bg` — pine, beside the filled pine RSVP pill, where the comp drew ink
+             * (node 1:75) — and fills with it on hover.
              *
              * `styles.phoneHidden` takes it off a phone, and **only when there is an RSVP action to
              * stand alone** — the phone comp (node 1:119) is the RSVP action alone at full width, and
@@ -115,7 +116,7 @@ const ClosingCtaSection: FC<IClosingCtaSection> = (props) => {
                 className={classNames({ [styles.phoneHidden]: Boolean(primary) })}
                 outline
                 size="md"
-                theme="secondary"
+                theme="primary"
                 variant="pill"
               >
                 {secondary.label}
