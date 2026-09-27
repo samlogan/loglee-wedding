@@ -560,8 +560,13 @@ Wise otherwise (`paymentRegionOf`). When they reply, their row gets the RSVP sta
 from the form, one "Reply:" column each (`REPLY_COLUMNS`, `tools/helpers/rsvpSheet.ts` — a test fails
 if a form field has no column, or no field on the Sanity `rsvp` document).
 
+A guest is offered a plus one only when their row's **Plus one name** is filled in: the form then asks
+"Bringing a plus one?" switched on, with that name, for them to switch off if they are coming alone.
+With it blank the question is not asked, and the action stores any plus one posted anyway as coming
+alone (`withInvitedPlusOne`).
+
 The sheet's columns are found by header, so their order is free. The couple's come first (names,
-email, nationality, stay, nights, contribution, notes) and the site's after them, greyed
+email, plus one name, nationality, stay, nights, contribution, notes) and the site's after them, greyed
 (`tools/helpers/guestSheetLayout.ts`); any column the site adds goes on the end, greyed the same way,
 widening the sheet if it has to. The pure logic
 is in `tools/helpers/guests.ts` and `guestSession.ts`, with unit tests.

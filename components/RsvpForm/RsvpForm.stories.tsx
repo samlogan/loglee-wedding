@@ -66,6 +66,12 @@ const atWidth: Decorator = (Story, { parameters }) => (
   </div>
 );
 
+/**
+ * A guest the sheet invites with a plus one, and nothing else — so the name and email are still typed,
+ * as the stories below do, and the plus-one question is asked, switched on with this name filled in.
+ */
+const INVITED_WITH_PLUS_ONE = { plusOneName: 'Charles Babbage' };
+
 /** A signed-in guest's stay, as `stayPriceOf` gives it from the sheet — without the Sunday night. */
 const SAM_STAY = { extraNight: false, nights: 2, perNight: 150, stay: 'King Room', total: 300 };
 
@@ -146,12 +152,13 @@ export const Empty: Story = {
     // No game-layer copy anywhere — the comp's "PLAYER NAME", "LOADOUT", "PRESS START" and its ▸.
     await expect(canvasElement.textContent).not.toMatch(/player|loadout|press start|[▶▸]/i);
 
-    // The ordinals, in document order, are 01–08 and hidden from assistive technology. With no stay
-    // card to sit in, the Sunday night is one of the numbered questions.
+    // The ordinals, in document order, are 01–07 and hidden from assistive technology.
     const ordinals = [...canvasElement.querySelectorAll('span[aria-hidden="true"]')]
       .map((span) => span.textContent ?? '')
       .filter((text) => /^\d{2} · $/.test(text));
-    await expect(ordinals).toEqual(['01 · ', '02 · ', '03 · ', '04 · ', '05 · ', '06 · ', '07 · ', '08 · ']);
+    await expect(ordinals).toEqual(['01 · ', '02 · ', '03 · ', '04 · ', '05 · ', '06 · ', '07 · ']);
+    // No plus one in the sheet, so none is offered.
+    await expect(canvas.queryByRole('switch', { name: /bringing a plus one/i })).toBeNull();
     await expect(nameInput(canvas)).toHaveAccessibleName(/^name/i);
 
     // Neither dropped question is asked any more.
@@ -394,14 +401,13 @@ export const WithoutModel: Story = {
  * action gets carries the schema's names, and the values the comp's controls produce.
  */
 export const Filled: Story = {
-  args: { action: actionReturning({ status: 'success' }) },
+  args: { action: actionReturning({ status: 'success' }), guest: INVITED_WITH_PLUS_ONE },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
 
     await fillRequired(canvas);
     await userEvent.type(canvas.getByRole('textbox', { name: /^dietary requirements/i }), 'Vegetarian');
-    await userEvent.click(plusOneSwitch(canvas));
-    await userEvent.type(canvas.getByRole('textbox', { name: /^plus one name/i }), 'Charles Babbage');
+    // The plus one from the sheet is already on, with their name.
     await userEvent.type(canvas.getByRole('textbox', { name: /^plus one dietary/i }), 'None');
     await userEvent.click(canvas.getByRole('button', { name: 'Add a child' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Add a child' }));
@@ -604,37 +610,31 @@ export const RefusedTooSoon: Story = {
  * A name typed, switched off and switched back on comes back empty, and is never submitted.
  */
 export const PlusOne: Story = {
-  args: { action: actionReturning({ status: 'success' }) },
+  args: { action: actionReturning({ status: 'success' }), guest: INVITED_WITH_PLUS_ONE },
   play: async ({ args, canvasElement, step }) => {
     const canvas = within(canvasElement);
     const toggle = plusOneSwitch(canvas);
 
-    await step('Off: no plus-one fields', async () => {
-      await expect(toggle).not.toBeChecked();
-      await expect(canvas.queryByRole('textbox', { name: /^plus one name/i })).toBeNull();
-    });
-
-    await step('On: both fields appear, and the name is required', async () => {
-      await userEvent.click(toggle);
+    await step('On, from the sheet: their name is filled in', async () => {
       await expect(toggle).toBeChecked();
-      await userEvent.type(canvas.getByRole('textbox', { name: /^plus one name/i }), 'Charles Babbage');
+      await expect(canvas.getByRole('textbox', { name: /^plus one name/i })).toHaveValue('Charles Babbage');
       await userEvent.type(canvas.getByRole('textbox', { name: /^plus one dietary/i }), 'None');
     });
 
-    await step('Off again: gone', async () => {
+    await step('Off — coming alone: both fields go', async () => {
       await userEvent.click(toggle);
+      await expect(toggle).not.toBeChecked();
       await expect(canvas.queryByRole('textbox', { name: /^plus one name/i })).toBeNull();
       await expect(canvas.queryByRole('textbox', { name: /^plus one dietary/i })).toBeNull();
     });
 
-    await step('On again: cleared, not restored', async () => {
+    await step('On again: the invited name is back, and the dietary answer is cleared', async () => {
       await userEvent.click(toggle);
-      await expect(canvas.getByRole('textbox', { name: /^plus one name/i })).toHaveValue('');
+      await expect(canvas.getByRole('textbox', { name: /^plus one name/i })).toHaveValue('Charles Babbage');
       await expect(canvas.getByRole('textbox', { name: /^plus one dietary/i })).toHaveValue('');
     });
 
     await step('Off, then sent: nothing about a plus one is submitted', async () => {
-      await userEvent.type(canvas.getByRole('textbox', { name: /^plus one name/i }), 'Stale Name');
       await userEvent.click(toggle);
       await fillRequired(canvas);
       await userEvent.click(submitButton(canvas));
@@ -647,6 +647,16 @@ export const PlusOne: Story = {
   }
 };
 
+/** A guest with no plus one in the sheet: the question is not asked at all. */
+export const NoPlusOne: Story = {
+  args: { guest: { email: 'jo@example.com', name: 'Jo Smith' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('switch', { name: /bringing a plus one/i })).toBeNull();
+    await expect(canvas.queryByRole('textbox', { name: /^plus one name/i })).toBeNull();
+  }
+};
+
 /**
  * The whole form, completed and sent from the keyboard alone — every field, the switch, the stepper
  * and the button, reached in order by Tab.
@@ -656,7 +666,7 @@ export const KeyboardOnly: Story = {
    * Without the character, whose canvas has nothing a keyboard reaches but is the heaviest thing on
    * the page to load — this story is about the questions.
    */
-  args: { action: actionReturning({ status: 'success' }), models: undefined },
+  args: { action: actionReturning({ status: 'success' }), guest: INVITED_WITH_PLUS_ONE, models: undefined },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -672,14 +682,13 @@ export const KeyboardOnly: Story = {
     await expect(canvas.getByRole('textbox', { name: /^dietary requirements/i })).toHaveFocus();
     await userEvent.keyboard('Coeliac');
 
+    // The plus one from the sheet: on already, their name filled in.
     await userEvent.tab();
     await expect(plusOneSwitch(canvas)).toHaveFocus();
-    await userEvent.keyboard('[Space]');
     await expect(plusOneSwitch(canvas)).toBeChecked();
 
     await userEvent.tab();
-    await expect(canvas.getByRole('textbox', { name: /^plus one name/i })).toHaveFocus();
-    await userEvent.keyboard('Charles Babbage');
+    await expect(canvas.getByRole('textbox', { name: /^plus one name/i })).toHaveValue('Charles Babbage');
     await userEvent.tab();
     await expect(canvas.getByRole('textbox', { name: /^plus one dietary/i })).toHaveFocus();
 

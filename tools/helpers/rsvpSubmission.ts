@@ -203,6 +203,14 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
 };
 
 /**
+ * The reply with its plus one only if the guest was invited with one — the Plus one name column in
+ * the guest sheet. The form does not offer a plus one otherwise, but the action is a public endpoint,
+ * so a post that adds one anyway is stored as coming alone.
+ */
+export const withInvitedPlusOne = (reply: RsvpReply, invited: boolean): RsvpReply =>
+  invited || !reply.plusOne?.bringing ? reply : { ...reply, plusOne: { bringing: false } };
+
+/**
  * The document to write. `submittedAt` is the server's clock, never the client's — the parser drops
  * any entry of that name — so the Studio's timestamp is when the reply actually arrived.
  */

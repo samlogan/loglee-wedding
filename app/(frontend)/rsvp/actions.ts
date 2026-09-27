@@ -14,7 +14,8 @@ import {
   isSameRsvpReply,
   parseRsvpSubmission,
   rsvpDocumentId,
-  toRsvpDocument
+  toRsvpDocument,
+  withInvitedPlusOne
 } from '@/tools/helpers/rsvpSubmission';
 import type { RsvpReply } from '@/tools/helpers/rsvpSubmission';
 import writeClient from '@/tools/sanity/lib/writeClient';
@@ -118,7 +119,10 @@ const storeRsvp = async (formData: FormData): Promise<RsvpFormState> => {
     return notSaved(MESSAGE.failed);
   }
 
-  const { reply } = parsed;
+  // Whose reply this is, from the guest cookie. A sheet error must not stop a reply being saved.
+  const guest = await currentGuest().catch(() => undefined);
+  // A plus one only for a guest the sheet invites with one — see `withInvitedPlusOne`.
+  const reply = withInvitedPlusOne(parsed.reply, Boolean(guest?.plusOneName));
   const id = rsvpDocumentId(reply.email);
   const now = new Date();
 
@@ -129,8 +133,6 @@ const storeRsvp = async (formData: FormData): Promise<RsvpFormState> => {
       return isSameRsvpReply(stored, reply) ? SAVED : notSaved(MESSAGE.tooSoon);
     }
 
-    // Whose reply this is, from the guest cookie. A sheet error must not stop a reply being saved.
-    const guest = await currentGuest().catch(() => undefined);
     const document = toRsvpDocument(reply, now, guest?.id);
 
     await (stored

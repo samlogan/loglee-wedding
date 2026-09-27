@@ -70,6 +70,11 @@ export interface RsvpGuest {
   stay?: StayPrice;
   /** Say "AUD" after every price — for a guest outside Australia (`showsCurrency`). */
   withCurrency?: boolean;
+  /**
+   * The plus one the guest sheet invites them with. Given, the plus-one question is asked, switched on
+   * with this name filled in; absent, the guest has no plus one and the question is not asked at all.
+   */
+  plusOneName?: string;
 }
 
 /** What react-hook-form holds — one key per name in `RSVP_FIELD`, nested where the name is dotted. */
@@ -249,7 +254,12 @@ const RsvpForm = (props: RsvpFormProps) => {
       className={classNames(styles.form, className)}
       // Spread, because `Form` types its defaults as `Record<string, unknown>` and an interface carries
       // no index signature; the copy is also what react-hook-form is free to mutate.
-      defaultValues={{ ...DEFAULT_VALUES, email: guest?.email ?? '', name: guest?.name ?? '' }}
+      defaultValues={{
+        ...DEFAULT_VALUES,
+        email: guest?.email ?? '',
+        name: guest?.name ?? '',
+        plusOne: guest?.plusOneName ? { bringing: true, dietary: '', name: guest.plusOneName } : DEFAULT_VALUES.plusOne
+      }}
       errors={serverErrors}
       layout="normal"
       onSubmit={(values) => setSentValues(JSON.stringify(values))}
@@ -266,6 +276,7 @@ const RsvpForm = (props: RsvpFormProps) => {
         models={models}
         note={note}
         placeholders={placeholders}
+        plusOneName={guest?.plusOneName}
         sentValues={sentValues}
         state={state}
         stay={guest?.stay}
@@ -287,6 +298,8 @@ interface RsvpFormBodyProps {
   models?: RsvpModelOption[];
   note?: SanityTextBlock[];
   placeholders: Record<RsvpPlaceholder, string>;
+  /** The invited plus one's name, from the sheet. Absent: no plus-one question. */
+  plusOneName?: string;
   sentValues: string | null;
   stay?: StayPrice;
   stayNote: string;
@@ -307,13 +320,14 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
     models,
     note,
     placeholders,
+    plusOneName,
     sentValues,
     state,
     stayNote,
     stayingLabel
   } = props;
 
-  const { control, resetField } = useFormContext<RsvpFormValues>();
+  const { control, resetField, setValue } = useFormContext<RsvpFormValues>();
   const values = useWatch({ control });
 
   const bringing = Boolean(values.plusOne?.bringing);
@@ -365,11 +379,13 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
    * Hiding alone is not enough, and not only for tidiness: react-hook-form keeps an unmounted field's
    * value, so a name typed, switched off and switched back on would reappear — and a stale plus-one
    * name is exactly the reply nobody meant to send. The fields unmount as well, so they are absent
-   * from the `FormData` either way; resetting them here is what makes switching back on start blank.
-   * An event handler rather than an effect, because the switch is the cause.
+   * from the `FormData` either way. Switching back on starts from the invited plus one's name again,
+   * as the form first opened. An event handler rather than an effect, because the switch is the cause.
    */
   const onPlusOneChange = ({ checked }: { checked: boolean }) => {
-    if (!checked) {
+    if (checked) {
+      setValue(RSVP_FIELD.plusOneName, plusOneName ?? '');
+    } else {
       resetField(RSVP_FIELD.plusOneName, { defaultValue: '' });
       resetField(RSVP_FIELD.plusOneDietary, { defaultValue: '' });
     }
@@ -446,36 +462,44 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
         />
       )
     },
-    {
-      key: 'plusOne',
-      render: (label) => (
-        <div className={styles.group}>
-          <Field.Toggle
-            checkedText="Yes"
-            label={label('Bringing a plus one?')}
-            name={RSVP_FIELD.plusOneBringing}
-            onChange={onPlusOneChange}
-            uncheckedText="No"
-          />
-          {bringing && (
-            <>
-              <Field.Text
-                label="Plus one name"
-                name={RSVP_FIELD.plusOneName}
-                placeholder={placeholders.plusOneName}
-                required
-                validate={(value) => isFilled(value) || "Enter your plus one's name"}
-              />
-              <Field.Text
-                label="Plus one dietary requirements"
-                name={RSVP_FIELD.plusOneDietary}
-                placeholder={placeholders.plusOneDietary}
-              />
-            </>
-          )}
-        </div>
-      )
-    },
+    /*
+     * Asked only of a guest the sheet invites with a plus one — switched on, their name filled in, for
+     * the guest to switch off if they are coming alone. Everyone else is never offered one.
+     */
+    ...(plusOneName
+      ? [
+          {
+            key: 'plusOne',
+            render: (label: (title: ReactNode) => ReactNode) => (
+              <div className={styles.group}>
+                <Field.Toggle
+                  checkedText="Yes"
+                  label={label('Bringing a plus one?')}
+                  name={RSVP_FIELD.plusOneBringing}
+                  onChange={onPlusOneChange}
+                  uncheckedText="No"
+                />
+                {bringing && (
+                  <>
+                    <Field.Text
+                      label="Plus one name"
+                      name={RSVP_FIELD.plusOneName}
+                      placeholder={placeholders.plusOneName}
+                      required
+                      validate={(value) => isFilled(value) || "Enter your plus one's name"}
+                    />
+                    <Field.Text
+                      label="Plus one dietary requirements"
+                      name={RSVP_FIELD.plusOneDietary}
+                      placeholder={placeholders.plusOneDietary}
+                    />
+                  </>
+                )}
+              </div>
+            )
+          }
+        ]
+      : []),
     {
       key: 'kids',
       render: (label) => (
