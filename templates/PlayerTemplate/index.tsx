@@ -61,8 +61,9 @@ const PlayerTemplate = async (props: PlayerTemplateProps) => {
   }
 
   /*
-   * The player's photo strip, from the Gallery tab of their document, under the showcase. The
-   * section renders nothing without images, so a player with an empty gallery gets no strip.
+   * The player's photo strip, under the showcase: the shared photos (Global → Photos) when their
+   * Gallery tab has "Use the shared photos" on, their own gallery otherwise. The section renders
+   * nothing without images, so a player with an empty gallery gets no strip.
    */
   return (
     <>

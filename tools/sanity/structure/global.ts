@@ -1,4 +1,4 @@
-import { TbWorld, TbLayoutNavbar, TbBrandInstagram } from 'react-icons/tb';
+import { TbWorld, TbLayoutNavbar, TbBrandInstagram, TbPhoto } from 'react-icons/tb';
 import type { StructureBuilder } from 'sanity/structure';
 
 const GlobalMenuItem = (S: StructureBuilder) =>
@@ -29,7 +29,12 @@ const GlobalMenuItem = (S: StructureBuilder) =>
           S.listItem()
             .title('Social Media')
             .child(S.document().schemaType('socialMediaDocument').documentId('socialMediaDocument'))
-            .icon(TbBrandInstagram)
+            .icon(TbBrandInstagram),
+          // The shared photos, for carousels and player galleries with "Use the shared photos" on
+          S.listItem()
+            .title('Photos')
+            .child(S.document().schemaType('photoLibrary').documentId('photoLibrary'))
+            .icon(TbPhoto)
         ])
     );
 

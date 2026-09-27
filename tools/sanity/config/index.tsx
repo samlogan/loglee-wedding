@@ -23,6 +23,7 @@ const singletonTypes = new Set([
   'headerDocument',
   'nationalityNote',
   'paymentDetails',
+  'photoLibrary',
   'settings',
   'socialMediaDocument',
   'weddingSettings'

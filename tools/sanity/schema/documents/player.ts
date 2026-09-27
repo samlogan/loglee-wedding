@@ -53,6 +53,8 @@ interface IPlayerDocument {
   level?: string;
   stats: IPlayerStat[];
   /** The photo strip under the player card — drawn by `ImageCarouselSection`. */
+  /** Show the shared photos (Global → Photos) instead of `gallery`. */
+  useSharedPhotos?: boolean;
   gallery?: (SanityImageSimple & { _key?: string })[];
 }
 
@@ -262,8 +264,18 @@ const player = defineType({
     },
     {
       description:
+        'On: the strip under the player card shows the shared photos from Global → Photos, the same as the homepage. Off: the photos below.',
+      group: 'gallery',
+      initialValue: true,
+      name: 'useSharedPhotos',
+      title: 'Use the shared photos',
+      type: 'boolean'
+    },
+    {
+      description:
         'The strip of photos under the player card. Each is cropped to a different shape as it scrolls, so set hotspots to keep faces in frame. Leave empty for no strip.',
       group: 'gallery',
+      hidden: ({ document }) => document?.useSharedPhotos === true,
       name: `gallery`,
       of: [{ type: 'imageElementSimple' }],
       options: { layout: 'grid' },

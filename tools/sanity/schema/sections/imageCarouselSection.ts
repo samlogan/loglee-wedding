@@ -11,7 +11,9 @@ import internalLabelField from '../common/internalLabelField';
  * own shape but never the same as its neighbours. No controls — it moves on its own.
  */
 interface IImageCarouselSection {
+  /** From the projection: the shared photos when `useSharedPhotos` is on, the section's own otherwise. */
   images?: (SanityImageSimple & { _key?: string })[] | null;
+  useSharedPhotos?: boolean | null;
   speed?: 'slow' | 'medium' | 'fast' | null;
   /** Pick up to 12 at random each visit. Off: every photo, in the order above. Unset counts as on. */
   shuffle?: boolean | null;
@@ -32,16 +34,35 @@ const imageCarouselSection = defineType({
     },
     {
       description:
+        'On: show the shared photos from Global → Photos — edit them once, and every carousel and player gallery using them updates. Off: the images below.',
+      group: 'data',
+      initialValue: false,
+      name: 'useSharedPhotos',
+      title: 'Use the shared photos',
+      type: 'boolean'
+    },
+    {
+      description:
         'Each photo keeps close to its own shape, nudged so no two neighbours match — set the hotspot to keep the subject in frame. Drag to reorder. At least three reads as a strip rather than a repeat.',
       group: 'data',
+      hidden: ({ parent }) => parent?.useSharedPhotos === true,
       name: 'images',
       of: [{ type: 'imageElementSimple' }],
       options: { layout: 'grid' },
       title: 'Images',
       type: 'array',
+      // Only while the section uses its own images; with the shared photos on, this list is unused.
       validation: (Rule) => [
-        Rule.required().min(2).error('Add at least two images.'),
-        Rule.min(3).warning('With fewer than three, the same photos come round again quickly.')
+        Rule.custom((images: unknown[] | undefined, { parent }) =>
+          (parent as { useSharedPhotos?: boolean })?.useSharedPhotos || (images?.length ?? 0) >= 2
+            ? true
+            : 'Add at least two images, or use the shared photos.'
+        ),
+        Rule.custom((images: unknown[] | undefined, { parent }) =>
+          (parent as { useSharedPhotos?: boolean })?.useSharedPhotos || (images?.length ?? 0) !== 2
+            ? true
+            : 'With fewer than three, the same photos come round again quickly.'
+        ).warning()
       ]
     },
     {

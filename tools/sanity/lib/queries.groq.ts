@@ -111,7 +111,8 @@ export const SITEMAP_QUERY = groq`
  *
  * `gallery` sits beside `player` rather than inside it because it is not the showcase's — the
  * template hands it to `ImageCarouselSection` under the showcase, so `PlayerShowcasePlayer` does not
- * grow a field it never reads.
+ * grow a field it never reads. It is the shared photos (Global → Photos) when the player has "Use the
+ * shared photos" on, and their own gallery otherwise.
  *
  * `modelLabel` and `modelBadge` are the 3D panel's corner label and chip, authored per player. The
  * chip used to be read from the model file's `originalFilename`; it is plain text now, so it can say
@@ -136,10 +137,18 @@ export const PLAYER_PAGE_QUERY = groq`{
     selectLabel,
     eyebrow
   },
-  "gallery": *[_type == "player" && slug.current == $slug && defined(name)][0].gallery[]{
-    _key,
-    ...@${imageProjection}
-  }
+  "gallery": *[_type == "player" && slug.current == $slug && defined(name)][0]{
+    "images": select(
+      useSharedPhotos == true => *[_type == "photoLibrary" && _id == "photoLibrary"][0].images[]{
+        _key,
+        ...@${imageProjection}
+      },
+      gallery[]{
+        _key,
+        ...@${imageProjection}
+      }
+    )
+  }.images
 }`;
 
 /**
