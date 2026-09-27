@@ -133,14 +133,13 @@ ${rows
         </mj-table>`;
 
 /**
- * The proposal photo, above the card in the invitation. From the Sanity asset, as a 1120px JPEG — the
- * original is a 3.2 MB PNG, far too heavy for an inbox — twice the 560px it shows at, for retina.
- * Kept in the repo (`img/photo.jpg`) so the build does not depend on the network.
+ * The photo above the card in the invitation — the two of them before the lattice-domed pavilion. A
+ * 1120px JPEG, twice the 560px it shows at, for retina; compressed to about 200 KB, since it is the
+ * one heavy thing in the email. Kept in the repo (`img/photo.jpg`) so the build does not depend on
+ * the network.
  */
 const PHOTO = {
-  alt: 'Sam proposing to Lauren under a green garden arch by the water',
-  source:
-    'https://cdn.sanity.io/images/tftcitbh/production/3a01e4a145e85516c9e54974b8aa9c02f191178d-2038x1172.png?w=1120&fm=jpg&q=78'
+  alt: 'Sam and Lauren on a stone bridge before a white pavilion with a green lattice dome, by the water'
 };
 
 const photo = `
