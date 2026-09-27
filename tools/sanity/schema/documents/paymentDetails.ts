@@ -26,7 +26,8 @@ const paymentDetails = defineType({
       type: 'blockContentStandard'
     },
     {
-      description: 'Wise details. Shown to every other guest.',
+      description:
+        'Wise details. Shown to every other guest — unless their country (United States, United Kingdom, France) has payment details of its own.',
       name: 'international',
       title: 'International guests — Wise',
       type: 'blockContentStandard'

@@ -584,8 +584,10 @@ email goes. `SANITY_WRITE_TOKEN` is production-only on Netlify, so only the live
 invitation's opening paragraphs come from Wedding Settings → Emails, sent as contact properties.
 
 **After a guest replies** they are emailed a thank-you (`tools/guests/thankYou.ts`, a Loops
-transactional email built by `yarn emails:build`) with their stay and total, the payment details for
-their region and the travel note for their nationality. The thank-you page shows only the travel
+transactional email built by `yarn emails:build`) with their stay and total, their payment details and
+the travel note for their nationality. Payment details are their country's own when its nationality
+document (US, UK, France) has them, otherwise their region's — Australian account or Wise
+(`replyExtrasFor`). The thank-you page shows only the travel
 note. Both come from **Nationalities & payment** in the Studio. (The form once offered a Sunday night;
 replies that took it keep `extraNight: true`, shown in the Studio, and nothing else reads it.) The RSVP form's words and placeholders are in Wedding
 Settings → RSVP.
