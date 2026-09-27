@@ -12,7 +12,8 @@ const imageCarouselSectionProjection = groq`
       _key,
       ...@${imageProjection}
     },
-    speed
+    speed,
+    shuffle
   },
 `;
 
