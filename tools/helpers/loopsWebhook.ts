@@ -1,16 +1,14 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import type { GuestEmailKind } from './guestEmails';
-
 /*=============================================>>>>>
-= Opens and clicks, from Loops's webhooks =
+= What happened to each email, from Loops's webhooks =
 ===============================================>>>>>*/
 
 /**
- * Loops cannot be asked who opened an email — its API has no such query — but it can tell the site as
- * it happens: a webhook per `email.opened` and `email.clicked` on a workflow email (the invitation and
- * the reminder; transactional emails, like the thank-you, are not tracked). `app/api/loops/webhook`
- * checks the signature here, and writes what happened into the guest's row (`markEmailActivity`).
+ * Loops cannot be asked what happened to an email — its API has no such query — but it tells the site
+ * as it happens, with a webhook per event: delivered, opened, clicked, bounced (soft or hard), marked
+ * as spam. `app/api/loops/webhook` checks the signature here, and writes the latest into the guest's
+ * row, one column per email (`markEmailActivity`).
  */
 
 /** How old a webhook may be before it is refused, so a captured request cannot be replayed later. */
@@ -52,13 +50,35 @@ export const isLoopsSignatureValid = ({
   });
 };
 
-export type EmailActivity = 'opened' | 'clicked';
+/** Which of the guest emails a webhook is about. The thank-you is the one transactional email. */
+export type TrackedEmail = 'invitation' | 'reminder' | 'thankYou';
 
-/** What one webhook says happened: which email, to whom, and whether it was opened or clicked. */
+/**
+ * What happened to an email, in the order a guest's cell moves through them — see `nextActivityCell`.
+ * A soft bounce is a temporary failure that Loops retries, so a delivery after it replaces it; a hard
+ * bounce (the address does not exist) and a spam report are what the couple most need to see, so
+ * nothing replaces them.
+ */
+export const EMAIL_ACTIVITY = {
+  softBounced: { event: 'email.softBounced', label: 'Soft bounce', rank: 1 },
+  delivered: { event: 'email.delivered', label: 'Delivered', rank: 2 },
+  opened: { event: 'email.opened', label: 'Opened', rank: 3 },
+  clicked: { event: 'email.clicked', label: 'Clicked', rank: 4 },
+  hardBounced: { event: 'email.hardBounced', label: 'Bounced', rank: 5 },
+  spamReported: { event: 'email.spamReported', label: 'Marked spam', rank: 6 }
+} as const;
+
+export type EmailActivity = keyof typeof EMAIL_ACTIVITY;
+
+const ACTIVITY_BY_EVENT = new Map(
+  Object.entries(EMAIL_ACTIVITY).map(([activity, { event }]) => [event as string, activity as EmailActivity])
+);
+
+/** What one webhook says happened: which email, to whom, and what. */
 export interface EmailActivityEvent {
   activity: EmailActivity;
   email: string;
-  kind: GuestEmailKind;
+  kind: TrackedEmail;
 }
 
 interface LoopsWebhookPayload {
@@ -70,34 +90,50 @@ interface LoopsWebhookPayload {
 }
 
 /**
- * The open or click a webhook reports, or `undefined` for anything else — another event, a campaign,
- * a contact with no address.
+ * The event a webhook reports, or `undefined` for anything else — an event not listed in
+ * `EMAIL_ACTIVITY`, a campaign, a contact with no address.
  *
- * Which email it was is read from the workflow's name, then the subject: anything mentioning a
- * reminder is the reminder, every other workflow email the invitation. Name the reminder workflow in
- * Loops with "reminder" in it (the subject already has it).
+ * Which email it was: a transactional email is the thank-you, the only one the site sends. A workflow
+ * email is the reminder when its workflow name or subject mentions a reminder, and otherwise the
+ * invitation — so name the reminder workflow in Loops with "reminder" in it (the subject already has
+ * it). Loops does not track opens or clicks on transactional emails, so the thank-you only ever gets
+ * delivered, bounced or marked as spam.
  */
 export const emailActivityOf = (payload: unknown): EmailActivityEvent | undefined => {
   const event = (payload ?? {}) as LoopsWebhookPayload;
-  const activity = ({ 'email.clicked': 'clicked', 'email.opened': 'opened' } as const)[event.eventName ?? ''];
+  const activity = ACTIVITY_BY_EVENT.get(event.eventName ?? '');
   const email = event.contactIdentity?.email?.trim().toLowerCase();
-  if (!activity || event.sourceType !== 'loop' || !email) {
+  if (!activity || !email) {
+    return undefined;
+  }
+  if (event.sourceType === 'transactional') {
+    return { activity, email, kind: 'thankYou' };
+  }
+  if (event.sourceType !== 'loop') {
     return undefined;
   }
   const label = `${event.loopName ?? ''} ${event.email?.subject ?? ''}`.toLowerCase();
   return { activity, email, kind: label.includes('remind') ? 'reminder' : 'invitation' };
 };
 
+/** The rank of what a cell already says — 0 for blank or anything the site did not write. */
+const rankOf = (cell: string) => {
+  const text = cell.trim().toLowerCase();
+  const match = Object.values(EMAIL_ACTIVITY).find(({ label }) => text.startsWith(label.toLowerCase()));
+  return match?.rank ?? 0;
+};
+
 /**
- * What to write into the guest's Opened cell, or `undefined` to leave it: "Opened 27 Sept" the first
- * time it is opened, "Clicked 27 Sept" when a link in it is clicked. A click is never downgraded by a
- * later open, and the first open's date is kept.
+ * What to write into the guest's cell for this email, or `undefined` to leave it — "Delivered 3 Oct",
+ * "Opened 3 Oct", "Clicked 3 Oct", "Soft bounce 3 Oct", "Bounced 3 Oct", "Marked spam 3 Oct". The cell
+ * only moves up `EMAIL_ACTIVITY`'s ranks: an open never replaces a click, and a repeat keeps the first
+ * date.
  */
 export const nextActivityCell = (current: string, activity: EmailActivity, at: Date): string | undefined => {
-  const was = current.trim().toLowerCase();
-  if (was.startsWith('clicked') || (activity === 'opened' && was.startsWith('opened'))) {
+  const { label, rank } = EMAIL_ACTIVITY[activity];
+  if (rank <= rankOf(current)) {
     return undefined;
   }
   const day = at.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' });
-  return `${activity === 'clicked' ? 'Clicked' : 'Opened'} ${day}`;
+  return `${label} ${day}`;
 };

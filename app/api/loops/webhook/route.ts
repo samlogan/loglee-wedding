@@ -6,12 +6,14 @@ import { hasGoogleCredentials } from '@/tools/guests/googleAuth';
 import { markEmailActivity } from '@/tools/guests/sheet';
 
 /**
- * Loops's webhook: an invitation or reminder opened, or a link in one clicked. Written into the guest's
- * row in the sheet — "Invite opened" / "Reminder opened" — by `markEmailActivity`.
+ * Loops's webhook: what happened to an invitation, reminder or thank-you email — delivered, opened,
+ * clicked, soft or hard bounced, marked as spam. Written into the guest's row in the sheet, one column
+ * per email ("Invite email", "Reminder email", "Thank-you email"), by `markEmailActivity`.
  *
  * Set up in Loops → Settings → Webhooks: this URL (the trailing slash matters — the site redirects
- * without it, and Loops does not follow redirects), the `email.opened` and `email.clicked` events,
- * and the signing secret as `LOOPS_WEBHOOK_SECRET` on Netlify. A request without a valid signature is
+ * without it, and Loops does not follow redirects), the Email events (`email.delivered`, `.opened`,
+ * `.clicked`, `.softBounced`, `.hardBounced`, `.spamReported`), and the signing secret as
+ * `LOOPS_WEBHOOK_SECRET` on Netlify. A request without a valid signature is
  * refused, so nobody else can write into the sheet through here.
  *
  * Every other outcome answers 200 — an event this does not record, a guest not in the sheet, even a

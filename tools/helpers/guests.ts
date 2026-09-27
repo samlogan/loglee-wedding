@@ -27,10 +27,14 @@ export interface Guest {
   reminderSent: string;
   /** The RSVP status cell — "Replied …" once they have replied through the site. */
   rsvpStatus: string;
-  /** The Invite opened cell — "Opened …" / "Clicked …", from Loops's webhooks. Absent before the column is. */
-  inviteOpened?: string;
-  /** The Reminder opened cell, the same for the reminder. */
-  reminderOpened?: string;
+  /**
+   * What happened to each email, from Loops's webhooks — "Delivered 3 Oct", "Opened …", "Clicked …",
+   * "Bounced …", "Marked spam …" (`nextActivityCell`). Blank until the first event, and absent until
+   * the column is.
+   */
+  inviteEmail?: string;
+  reminderEmail?: string;
+  thankYouEmail?: string;
 }
 
 /** Four digits after the name: 9,000 IDs per first name — plenty for one guest list. */
@@ -148,8 +152,9 @@ export const GUEST_COLUMNS = {
   nights: 'nights',
   perNight: 'contribution',
   reminderSent: 'reminder sent',
-  inviteOpened: 'invite opened',
-  reminderOpened: 'reminder opened',
+  inviteEmail: 'invite email',
+  reminderEmail: 'reminder email',
+  thankYouEmail: 'thank-you email',
   rsvpLink: 'rsvp link',
   rsvpStatus: 'rsvp status',
   stay: 'stay option'
@@ -223,8 +228,9 @@ export const guestsFromRows = (
       reminderSent: cellOf(row, columns.reminderSent),
       row: sheetRow,
       rsvpStatus: cellOf(row, columns.rsvpStatus),
-      inviteOpened: cellOf(row, columns.inviteOpened),
-      reminderOpened: cellOf(row, columns.reminderOpened),
+      inviteEmail: cellOf(row, columns.inviteEmail),
+      reminderEmail: cellOf(row, columns.reminderEmail),
+      thankYouEmail: cellOf(row, columns.thankYouEmail),
       stay: cellOf(row, columns.stay)
     });
   }

@@ -145,10 +145,18 @@ export const markReplied = async (guest: Guest, reply: RsvpReply, at: Date) => {
 
 /** The columns the email sender writes, and the header each gets if the sheet does not have it yet. */
 const SENT_COLUMN_HEADERS = {
-  inviteOpened: 'Invite opened (filled by the site)',
+  inviteEmail: 'Invite email (filled by the site)',
   inviteSent: 'Invite sent (filled by the site)',
-  reminderOpened: 'Reminder opened (filled by the site)',
-  reminderSent: 'Reminder sent (filled by the site)'
+  reminderEmail: 'Reminder email (filled by the site)',
+  reminderSent: 'Reminder sent (filled by the site)',
+  thankYouEmail: 'Thank-you email (filled by the site)'
+} as const;
+
+/** The column each email's delivery and opens go in. */
+const ACTIVITY_COLUMN = {
+  invitation: 'inviteEmail',
+  reminder: 'reminderEmail',
+  thankYou: 'thankYouEmail'
 } as const;
 
 /**
@@ -209,17 +217,17 @@ export const markSent = async (guest: Guest, columnIndex: number, label: string,
 };
 
 /**
- * Record in the guest's row that they opened, or clicked a link in, the invitation or the reminder —
- * reported by Loops's webhook (`app/api/loops/webhook`). Every row with that email address is marked,
- * since a couple can share one. The first open's date is kept, and a click is never downgraded
- * (`nextActivityCell`); an address with no row — a test send — changes nothing.
+ * Record in the guest's row what happened to one of their emails — delivered, opened, clicked,
+ * bounced, marked as spam — reported by Loops's webhook (`app/api/loops/webhook`), in that email's
+ * column. Every row with that email address is marked, since a couple can share one. The cell only
+ * moves forward (`nextActivityCell`); an address with no row — a test send — changes nothing.
  */
 export const markEmailActivity = async ({ activity, email, kind }: EmailActivityEvent, at: Date) => {
   const guests = (await readGuests({ fresh: true })).filter((guest) => guest.email.trim().toLowerCase() === email);
   if (guests.length === 0) {
     return;
   }
-  const field = kind === 'invitation' ? 'inviteOpened' : 'reminderOpened';
+  const field = ACTIVITY_COLUMN[kind];
   const cells = guests.flatMap((guest) => {
     const value = nextActivityCell(guest[field] ?? '', activity, at);
     return value ? [{ guest, value }] : [];
