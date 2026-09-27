@@ -205,8 +205,8 @@ describe('markReplied', () => {
     const { findGuest, markReplied } = await load();
     await markReplied(await requireGuest(findGuest, 'SAM-1000'), REPLY, AT);
 
-    // HEADER's 11 columns and 12 reply columns need 23; the sheet has 12.
-    expect(formatting(calls)).toContainEqual({ appendDimension: { dimension: 'COLUMNS', length: 11, sheetId: 0 } });
+    // HEADER's 11 columns and 11 reply columns need 22; the sheet has 12.
+    expect(formatting(calls)).toContainEqual({ appendDimension: { dimension: 'COLUMNS', length: 10, sheetId: 0 } });
   });
 
   it('writes into the reply columns the sheet already has, without adding them again', async () => {
@@ -223,14 +223,9 @@ describe('markReplied', () => {
     expect(cells).not.toHaveProperty('M1');
   });
 
-  it('notes the Sunday night when the guest takes it, and a guest who is not staying', async () => {
-    let calls = stubSheet([HEADER, ['SAM-1000', 'Sam']]);
-    let { findGuest, markReplied } = await load();
-    await markReplied(await requireGuest(findGuest, 'SAM-1000'), { ...REPLY, extraNight: true, staying: true }, AT);
-    expect(written(calls).J2).toBe('Replied 3 Oct · + Sunday night');
-
-    calls = stubSheet([HEADER, ['SAM-1000', 'Sam']]);
-    ({ findGuest, markReplied } = await load());
+  it('notes a guest who is not staying', async () => {
+    const calls = stubSheet([HEADER, ['SAM-1000', 'Sam']]);
+    const { findGuest, markReplied } = await load();
     await markReplied(await requireGuest(findGuest, 'SAM-1000'), { ...REPLY, staying: false }, AT);
     expect(written(calls).J2).toBe('Replied 3 Oct · Not staying');
   });

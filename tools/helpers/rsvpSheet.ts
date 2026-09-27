@@ -18,7 +18,6 @@ type Reply = Pick<
   | 'specialRequirements'
   | 'songRequest'
   | 'staying'
-  | 'extraNight'
 >;
 
 const yesNo = (value: boolean | undefined) => (value ? 'Yes' : 'No');
@@ -55,8 +54,7 @@ export const REPLY_COLUMNS: { field: RsvpFieldName; header: string; value: (repl
   },
   { field: RSVP_FIELD.songRequest, header: 'Reply: Song request', value: (reply) => reply.songRequest ?? '' },
   // Replies from before the form asked were all staying.
-  { field: RSVP_FIELD.staying, header: 'Reply: Staying', value: (reply) => yesNo(reply.staying !== false) },
-  { field: RSVP_FIELD.extraNight, header: 'Reply: Sunday night', value: (reply) => yesNo(reply.extraNight) }
+  { field: RSVP_FIELD.staying, header: 'Reply: Staying', value: (reply) => yesNo(reply.staying !== false) }
 ];
 
 const normalise = (header: string) => header.trim().toLowerCase();

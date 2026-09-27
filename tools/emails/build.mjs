@@ -82,8 +82,8 @@ const SAMPLE_THANK_YOU = {
     { text: 'Use your guest ID, SAM-6137, as the reference.' }
   ],
   paymentHeading: [{ text: 'How to pay' }],
-  stay: [{ summary: 'King Room · 3 nights, Sunday included' }],
-  stayTotal: [{ total: '$450 AUD' }],
+  stay: [{ summary: 'King Room · 2 nights' }],
+  stayTotal: [{ total: '$300 AUD' }],
   travel: [
     { text: 'You’ll need an ETA to visit Australia — apply on the Australian ETA app a few weeks ahead.' },
     { text: 'Sydney is 11 hours ahead of London in February.' }

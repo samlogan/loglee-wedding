@@ -18,12 +18,12 @@ import type { IRsvpDocument } from '@/tools/sanity/schema/documents/rsvp';
  */
 
 /**
- * A reply that passed every check, shaped exactly as the `rsvp` document stores it — less the two
- * questions the form no longer asks, which only replies sent before the change carry.
+ * A reply that passed every check, shaped exactly as the `rsvp` document stores it — less the three
+ * questions the form no longer asks, which only replies sent before each change carry.
  */
 export type RsvpReply = Omit<
   IRsvpDocument,
-  '_createdAt' | '_updatedAt' | 'submittedAt' | 'attending' | 'roomPreference'
+  '_createdAt' | '_updatedAt' | 'submittedAt' | 'attending' | 'roomPreference' | 'extraNight'
 >;
 
 export type RsvpParseResult = { ok: true; reply: RsvpReply } | { ok: false; fieldErrors: RsvpFieldErrors };
@@ -171,10 +171,8 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
     fieldErrors[RSVP_FIELD.kidsCount] = `Enter a number from 0 to ${RSVP_KIDS_MAX}`;
   }
 
-  // Two more native checkboxes: staying at the venue (ticked by default), and — only while they are —
-  // the Sunday night, one more night on their stay.
+  // Another native checkbox: staying at the venue, ticked by default.
   const staying = entries.get(RSVP_FIELD.staying) !== null;
-  const extraNight = staying && entries.get(RSVP_FIELD.extraNight) !== null;
 
   const dietary = text(RSVP_FIELD.dietary) || undefined;
   const kidsAges = text(RSVP_FIELD.kidsAges) || undefined;
@@ -190,7 +188,6 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
     reply: {
       dietary,
       email,
-      extraNight,
       kidsAges,
       kidsCount,
       name,
@@ -251,7 +248,6 @@ const replyKey = (reply: Partial<RsvpReply>) =>
     reply.kidsAges,
     reply.songRequest,
     reply.specialRequirements,
-    reply.extraNight ?? false,
     // Replies from before the question was asked were all staying.
     reply.staying ?? true
   ]);

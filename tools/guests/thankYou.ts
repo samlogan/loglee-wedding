@@ -10,17 +10,13 @@ import { replyExtrasFor } from './replyExtras';
 import { guestHomeLinkFor } from './sheet';
 
 /**
- * What one guest's thank-you email says: their stay (with the Sunday night when `extraNight`), the
+ * What one guest's thank-you email says: their stay, the
  * payment details for their region, their travel note and the intro, from Sanity. Shared by the real
  * send and the Studio's test send, so a test shows exactly what that guest would get.
  */
 export const thankYouVariablesFor = async (
   guest: Guest,
-  {
-    extraNight = false,
-    firstName,
-    staying = true
-  }: { extraNight?: boolean; firstName?: string; staying?: boolean } = {}
+  { firstName, staying = true }: { firstName?: string; staying?: boolean } = {}
 ) => {
   const extras = await replyExtrasFor(guest);
   return thankYouVariables({
@@ -28,7 +24,7 @@ export const thankYouVariablesFor = async (
     homeLink: guestHomeLinkFor(guest.id),
     intro: extras.emailIntro,
     payment: extras.payment,
-    stay: stayPriceOf(guest, { extraNight }),
+    stay: stayPriceOf(guest),
     staying,
     travel: extras.travel,
     withCurrency: showsCurrency(guest)
@@ -36,8 +32,8 @@ export const thankYouVariablesFor = async (
 };
 
 /**
- * Email a guest their thank-you once their reply is saved: their stay and total (the Sunday night
- * included when they took it), how to pay, and their travel note. To the address on the reply, which
+ * Email a guest their thank-you once their reply is saved: their stay and total, how to pay, and their
+ * travel note. To the address on the reply, which
  * the form prefills from the sheet.
  *
  * Best effort, like `markReplied`: the reply is already saved, so a failure is logged and never
@@ -51,7 +47,6 @@ export const sendThankYou = async (guest: Guest, reply: RsvpReply, submittedAt: 
   try {
     await sendThankYouEmail({
       dataVariables: await thankYouVariablesFor(guest, {
-        extraNight: reply.extraNight,
         firstName: reply.name.split(' ')[0],
         staying: reply.staying
       }),

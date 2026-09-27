@@ -53,8 +53,6 @@ interface RsvpFormCopy {
   introDetail?: string;
   stayNote?: string;
   stayingLabel?: string;
-  extraNightLabel?: string;
-  extraNightDescription?: string;
   placeholders?: Partial<Record<RsvpPlaceholder, string>>;
 }
 
@@ -218,7 +216,7 @@ const weddingSettings = defineType({
     },
     {
       description:
-        'The words on the RSVP form. Clear Intro, Intro (continued), Stay Note or the Sunday Night description to hide it; leave any other field blank to use the form’s own words.',
+        'The words on the RSVP form. Clear Intro, Intro (continued) or Stay Note to hide it; leave any other field blank to use the form’s own words.',
       fields: [
         { description: 'The big heading, e.g. “RSVP”.', name: 'heading', title: 'Heading', type: 'string' },
         {
@@ -246,20 +244,6 @@ const weddingSettings = defineType({
           name: 'stayingLabel',
           title: 'Staying — Label',
           type: 'string'
-        },
-        {
-          description:
-            'The switch that adds the Sunday night to a guest’s stay, e.g. “Spend the Sunday evening with us”.',
-          name: 'extraNightLabel',
-          title: 'Sunday Night — Label',
-          type: 'string'
-        },
-        {
-          description: 'Under that switch, e.g. “Add an extra night to your stay and recover in style by the pool.”',
-          name: 'extraNightDescription',
-          rows: 2,
-          title: 'Sunday Night — Description',
-          type: 'text'
         },
         {
           description: 'The grey hint text inside each empty answer.',

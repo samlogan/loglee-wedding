@@ -583,11 +583,11 @@ or email) or was never invited. Each guest's Invite sent / Reminder sent cell is
 email goes. `SANITY_WRITE_TOKEN` is production-only on Netlify, so only the live site can send. The
 invitation's opening paragraphs come from Wedding Settings → Emails, sent as contact properties.
 
-**After a guest replies** they can add the Sunday night (one more night at their nightly price, in the
-stay card), and are emailed a thank-you (`tools/guests/thankYou.ts`, a Loops transactional email
-built by `yarn emails:build`) with their stay and total, the payment details for their region and the
-travel note for their nationality — the same things the thank-you page shows. Both come from
-**Nationalities & payment** in the Studio. The RSVP form's words and placeholders are in Wedding
+**After a guest replies** they are emailed a thank-you (`tools/guests/thankYou.ts`, a Loops
+transactional email built by `yarn emails:build`) with their stay and total, the payment details for
+their region and the travel note for their nationality. The thank-you page shows only the travel
+note. Both come from **Nationalities & payment** in the Studio. (The form once offered a Sunday night;
+replies that took it keep `extraNight: true`, shown in the Studio, and nothing else reads it.) The RSVP form's words and placeholders are in Wedding
 Settings → RSVP.
 
 ### Environment Variables

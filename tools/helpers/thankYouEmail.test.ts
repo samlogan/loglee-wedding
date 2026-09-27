@@ -34,27 +34,27 @@ describe('paragraphsOf', () => {
 });
 
 describe('thankYouVariables', () => {
-  it('gives the stay one line and the total, with the Sunday night named when taken', () => {
-    const stay = { extraNight: true, nights: 3, perNight: 150, stay: 'King Room', total: 450 };
+  it('gives the stay one line and the total', () => {
+    const stay = { nights: 3, perNight: 150, stay: 'King Room', total: 450 };
     const variables = thankYouVariables({ ...BASE, stay });
-    expect(variables.stay).toEqual([{ summary: 'King Room · 3 nights, Sunday included' }]);
+    expect(variables.stay).toEqual([{ summary: 'King Room · 3 nights' }]);
     expect(variables.stayTotal).toEqual([{ total: '$450' }]);
   });
 
   it('says nothing about a stay, or paying, for a guest not staying at the venue', () => {
-    const stay = { extraNight: false, nights: 2, perNight: 150, stay: 'King Room', total: 300 };
+    const stay = { nights: 2, perNight: 150, stay: 'King Room', total: 300 };
     const variables = thankYouVariables({ ...BASE, payment: [block('Wise')], stay, staying: false });
     expect(variables).toMatchObject({ payment: [], paymentHeading: [], stay: [], stayTotal: [] });
   });
 
   it('says "AUD" after the total when asked to, for a guest outside Australia', () => {
-    const stay = { extraNight: false, nights: 2, perNight: 150, stay: 'King Room', total: 300 };
+    const stay = { nights: 2, perNight: 150, stay: 'King Room', total: 300 };
     expect(thankYouVariables({ ...BASE, stay, withCurrency: true }).stayTotal).toEqual([{ total: '$300 AUD' }]);
     expect(thankYouVariables({ ...BASE, stay }).stayTotal).toEqual([{ total: '$300' }]);
   });
 
   it('says nothing about paying for a stay the couple are covering', () => {
-    const stay = { extraNight: false, nights: 2, perNight: 0, stay: 'Twin Double', total: 0 };
+    const stay = { nights: 2, perNight: 0, stay: 'Twin Double', total: 0 };
     const variables = thankYouVariables({ ...BASE, payment: [block('Wise: sam@example.com')], stay });
     expect(variables.stay).toEqual([{ summary: 'Twin Double · 2 nights' }]);
     expect(variables.stayTotal).toEqual([]);

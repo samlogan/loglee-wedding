@@ -72,8 +72,8 @@ const atWidth: Decorator = (Story, { parameters }) => (
  */
 const INVITED_WITH_PLUS_ONE = { plusOneName: 'Charles Babbage' };
 
-/** A signed-in guest's stay, as `stayPriceOf` gives it from the sheet — without the Sunday night. */
-const SAM_STAY = { extraNight: false, nights: 2, perNight: 150, stay: 'King Room', total: 300 };
+/** A signed-in guest's stay, as `stayPriceOf` gives it from the sheet. */
+const SAM_STAY = { nights: 2, perNight: 150, stay: 'King Room', total: 300 };
 
 /** The two players' models, as the page fetches them — the committed GLBs in `public/`. */
 const MODELS = [
@@ -216,37 +216,13 @@ export const GuestWithoutStay: Story = {
     const canvas = within(canvasElement);
     await expect(nameInput(canvas)).toHaveValue('Lauren Lee');
     await expect(canvas.queryByRole('region', { name: /your stay/i })).toBeNull();
-    // Still asked, as a numbered question of its own.
-    await expect(canvas.getByRole('switch', { name: /spend the sunday evening with us/i })).toBeInTheDocument();
-  }
-};
-
-/**
- * "Spend the Sunday evening with us", in the stay card: switching it on adds a night at the same
- * price, and the total follows. It submits as `extraNight`.
- */
-export const SundayNight: Story = {
-  args: { guest: { email: 'sam@example.com', name: 'Sam Logan', stay: SAM_STAY } },
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
-    const stay = canvas.getByRole('region', { name: /your stay/i });
-    const sunday = within(stay).getByRole('switch', { name: /spend the sunday evening with us/i });
-
-    await expect(stay).toHaveTextContent('Add an extra night to your stay and recover in style by the pool.');
-    await userEvent.click(sunday);
-    await expect(stay).toHaveTextContent('King Room · 3 nights, Sunday included');
-    await expect(stay).toHaveTextContent('$450 in total');
-
-    await userEvent.click(submitButton(canvas));
-    await waitFor(() => expect(callsOf(args.action)).toHaveLength(1), ROUND_TRIP);
-    await expect(callsOf(args.action)[0][1].get('extraNight')).toBe('on');
   }
 };
 
 /**
  * "Want to stay with us at The Lodge?" — the last question, on by default, with the stay card under
- * it and the button directly below. Switched off, the stay, the price, the Sunday night and the
- * payment note all go, and neither the stay nor the Sunday night is sent.
+ * it and the button directly below. Switched off, the stay, the price and the payment note all go,
+ * and it is not sent.
  */
 export const NotStaying: Story = {
   args: { guest: { email: 'sam@example.com', name: 'Sam Logan', stay: SAM_STAY } },
@@ -261,17 +237,14 @@ export const NotStaying: Story = {
     await expect(stay.getBoundingClientRect().top).toBeGreaterThan(song.bottom);
     await expect(submitButton(canvas).getBoundingClientRect().top).toBeGreaterThan(stay.getBoundingClientRect().bottom);
 
-    await userEvent.click(within(stay).getByRole('switch', { name: /spend the sunday evening with us/i }));
     await userEvent.click(staying);
     await expect(canvas.queryByRole('region', { name: /your stay/i })).toBeNull();
     await expect(canvas.queryByText(/per room, per night/)).toBeNull();
-    await expect(canvas.queryByRole('switch', { name: /spend the sunday evening/i })).toBeNull();
 
     await userEvent.click(submitButton(canvas));
     await waitFor(() => expect(callsOf(args.action)).toHaveLength(1), ROUND_TRIP);
     const [, formData] = callsOf(args.action)[0];
     await expect(formData.has('staying')).toBe(false);
-    await expect(formData.has('extraNight')).toBe(false);
   }
 };
 
@@ -286,15 +259,15 @@ export const InternationalGuest: Story = {
 };
 
 /**
- * A stay the couple are covering — a contribution of 0 in the sheet. The stay and the Sunday night
- * are shown; nothing about paying is, even with the Sunday night added.
+ * A stay the couple are covering — a contribution of 0 in the sheet. The stay is shown; nothing about
+ * paying is.
  */
 export const FreeStay: Story = {
   args: {
     guest: {
       email: 'sam@example.com',
       name: 'Sam Logan',
-      stay: { extraNight: false, nights: 2, perNight: 0, stay: 'Twin Double', total: 0 }
+      stay: { nights: 2, perNight: 0, stay: 'Twin Double', total: 0 }
     }
   },
   play: async ({ canvasElement }) => {
@@ -302,8 +275,6 @@ export const FreeStay: Story = {
     const stay = canvas.getByRole('region', { name: /your stay/i });
 
     await expect(stay).toHaveTextContent('Twin Double · 2 nights');
-    await userEvent.click(within(stay).getByRole('switch', { name: /spend the sunday evening with us/i }));
-    await expect(stay).toHaveTextContent('Twin Double · 3 nights, Sunday included');
     await expect(stay).not.toHaveTextContent('$');
     await expect(stay).not.toHaveTextContent(/how to pay/i);
   }
@@ -321,12 +292,11 @@ export const IntroCleared: Story = {
 };
 
 /**
- * The optional lines cleared in Wedding Settings — the rest of the intro, the stay note and the
- * Sunday night's description. An empty string hides each one rather than bringing the form's own back.
+ * The optional lines cleared in Wedding Settings — the rest of the intro and the stay note. An empty
+ * string hides each one rather than bringing the form's own back.
  */
 export const OptionalCopyCleared: Story = {
   args: {
-    extraNightDescription: '',
     guest: { email: 'sam@example.com', name: 'Sam Logan', stay: SAM_STAY },
     introDetail: '',
     stayNote: ''
@@ -337,7 +307,6 @@ export const OptionalCopyCleared: Story = {
 
     await expect(canvas.getByText(COPY.intro, { exact: false })).toBeInTheDocument();
     await expect(canvas.queryByText(/what you eat/)).toBeNull();
-    await expect(stay).not.toHaveTextContent(/recover in style/);
     await expect(stay).not.toHaveTextContent(/how to pay/);
     // The price is still there — only the notes went.
     await expect(stay).toHaveTextContent('$300 in total');
@@ -347,8 +316,6 @@ export const OptionalCopyCleared: Story = {
 /** The words from Wedding Settings → RSVP → RSVP Form, replacing the form's own. */
 export const EditedCopy: Story = {
   args: {
-    extraNightDescription: 'Stay on for a lazy Monday breakfast.',
-    extraNightLabel: 'Stay Sunday night too',
     guest: { email: 'sam@example.com', name: 'Sam Logan', stay: SAM_STAY },
     placeholders: { songRequest: 'Something by ABBA' },
     stayNote: 'Bank details arrive by email once you reply.'
@@ -357,8 +324,6 @@ export const EditedCopy: Story = {
     const canvas = within(canvasElement);
     const stay = canvas.getByRole('region', { name: /your stay/i });
 
-    await expect(within(stay).getByRole('switch', { name: /stay sunday night too/i })).toBeInTheDocument();
-    await expect(stay).toHaveTextContent('Stay on for a lazy Monday breakfast.');
     await expect(stay).toHaveTextContent('Bank details arrive by email once you reply.');
     await expect(canvas.getByRole('textbox', { name: /^song request/i })).toHaveAttribute(
       'placeholder',
@@ -431,8 +396,6 @@ export const Filled: Story = {
     await expect(formData.get('kidsCount')).toBe('2');
     await expect(formData.get('kidsAges')).toBe('2 and 5');
     await expect(formData.get('songRequest')).toBe('September');
-    // The Sunday night was left off, so its checkbox sends nothing.
-    await expect(formData.has('extraNight')).toBe(false);
     // The honeypot is present in the form and was left alone, so it submits nothing.
     await expect(formData.has('_gotcha')).toBe(false);
   }
@@ -715,12 +678,10 @@ export const KeyboardOnly: Story = {
     await expect(canvas.getByRole('textbox', { name: /^song request/i })).toHaveFocus();
     await userEvent.keyboard('Dancing Queen');
 
-    // Staying with us is the last question, on by default, with the Sunday night under it.
+    // Staying with us is the last question, on by default.
     await userEvent.tab();
+    await expect(canvas.getByRole('switch', { name: /want to stay with us at the lodge/i })).toHaveFocus();
     await expect(canvas.getByRole('switch', { name: /want to stay with us at the lodge/i })).toBeChecked();
-    await userEvent.tab();
-    await expect(canvas.getByRole('switch', { name: /spend the sunday evening with us/i })).toHaveFocus();
-    await userEvent.keyboard('[Space]');
 
     await userEvent.tab();
     await expect(submitButton(canvas)).toHaveFocus();
@@ -730,7 +691,6 @@ export const KeyboardOnly: Story = {
     const [, formData] = callsOf(args.action)[0];
     await expect(formData.get('kidsCount')).toBe('2');
     await expect(formData.get('plusOne.name')).toBe('Charles Babbage');
-    await expect(formData.get('extraNight')).toBe('on');
     await expect(await canvas.findByRole('button', { name: 'Saved' }, ROUND_TRIP)).toHaveFocus();
   }
 };
