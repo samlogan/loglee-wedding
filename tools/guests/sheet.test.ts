@@ -30,10 +30,10 @@ const stubSheet = (values: string[][], columnCount = 26) => {
     const path = url.replace(/^https:\/\/sheets\.googleapis\.com\/v4\/spreadsheets\/sheet-id\/?/, '');
     calls.push({ body: init?.body ? JSON.parse(String(init.body)) : undefined, method: init?.method ?? 'GET', path });
     const body = path.startsWith('?fields=')
-      ? { sheets: [{ properties: { gridProperties: { columnCount }, sheetId: 0 } }] }
+      ? { sheets: [{ properties: { gridProperties: { columnCount }, sheetId: 0, title: 'Room RSVPs' } }] }
       : path.startsWith('values/1:1')
         ? { values: [values[0]] }
-        : path.startsWith('values/A:Z')
+        : path.startsWith("values/'Room%20RSVPs'")
           ? { values }
           : {};
     return { json: async () => body, ok: true, status: 200, text: async () => '' } as unknown as Response;
@@ -105,6 +105,21 @@ describe('readGuests', () => {
     });
   });
 
+  it('reads the whole tab, so a column past Z — where the site adds its own — is seen', async () => {
+    const wide = [
+      ...HEADER,
+      ...Array.from({ length: 20 }, (_, index) => `Other ${index}`),
+      'Thank-you email (filled by the site)'
+    ];
+    const row = ['SAM-1000', 'Sam', ...Array.from({ length: wide.length - 3 }, () => ''), 'Delivered 1 Oct'];
+    stubSheet([wide, row]);
+    const { readGuests } = await load();
+    const [sam] = await readGuests();
+    // HEADER's 11 columns and 20 more put this one at AF, the 32nd.
+    expect(wide.length).toBe(32);
+    expect(sam.thankYouEmail).toBe('Delivered 1 Oct');
+  });
+
   it('writes nothing when every row has an ID', async () => {
     const calls = stubSheet([HEADER, ['SAM-1000', 'Sam']]);
     const { readGuests } = await load();
@@ -117,9 +132,9 @@ describe('readGuests', () => {
     const { readGuests } = await load();
     await readGuests();
     await readGuests();
-    expect(calls.filter((call) => call.path.startsWith('values/A:Z'))).toHaveLength(1);
+    expect(calls.filter((call) => call.path.startsWith("values/'Room%20RSVPs'"))).toHaveLength(1);
     await readGuests({ fresh: true });
-    expect(calls.filter((call) => call.path.startsWith('values/A:Z'))).toHaveLength(2);
+    expect(calls.filter((call) => call.path.startsWith("values/'Room%20RSVPs'"))).toHaveLength(2);
   });
 });
 

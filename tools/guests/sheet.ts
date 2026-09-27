@@ -78,7 +78,17 @@ export const readGuests = async ({ fresh = false }: { fresh?: boolean } = {}): P
     return memo.guests;
   }
 
-  const { values = [] } = await request<{ values?: string[][] }>('values/A:Z');
+  /*
+   * The whole first tab, by name, rather than a fixed `A:Z`: the site's columns go on the end, and the
+   * sheet is past Z already — a guest's email status beyond it would read as blank, and a late
+   * "Delivered" could overwrite a "Clicked". A range of just the tab returns every cell it uses.
+   */
+  const { sheets = [] } = await request<{ sheets?: { properties: { title: string } }[] }>(
+    '?fields=sheets.properties(title)'
+  );
+  const tab = sheets[0]?.properties.title;
+  const range = tab ? `'${tab.replaceAll("'", "''")}'` : 'A:ZZ';
+  const { values = [] } = await request<{ values?: string[][] }>(`values/${encodeURIComponent(range)}`);
   const { guests, missingIds } = guestsFromRows(values);
 
   if (missingIds.length > 0) {
