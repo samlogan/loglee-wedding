@@ -2,6 +2,8 @@ import 'server-only';
 import { columnLetter, guestColumnsOf, guestsFromRows, normaliseGuestId } from '@/helpers/guests';
 import type { Guest } from '@/helpers/guests';
 import { siteColumnRequests } from '@/helpers/guestSheetLayout';
+import { nextActivityCell } from '@/helpers/loopsWebhook';
+import type { EmailActivityEvent } from '@/helpers/loopsWebhook';
 import { replyCellsOf, replyColumnsIn } from '@/helpers/rsvpSheet';
 import type { RsvpReply } from '@/tools/helpers/rsvpSubmission';
 
@@ -143,7 +145,9 @@ export const markReplied = async (guest: Guest, reply: RsvpReply, at: Date) => {
 
 /** The columns the email sender writes, and the header each gets if the sheet does not have it yet. */
 const SENT_COLUMN_HEADERS = {
+  inviteOpened: 'Invite opened (filled by the site)',
   inviteSent: 'Invite sent (filled by the site)',
+  reminderOpened: 'Reminder opened (filled by the site)',
   reminderSent: 'Reminder sent (filled by the site)'
 } as const;
 
@@ -202,4 +206,27 @@ export const markSent = async (guest: Guest, columnIndex: number, label: string,
   const day = at.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' });
   await writeCells([{ range: `${columnLetter(columnIndex)}${guest.row}`, value: `${label} ${day}` }]);
   memo = undefined;
+};
+
+/**
+ * Record in the guest's row that they opened, or clicked a link in, the invitation or the reminder —
+ * reported by Loops's webhook (`app/api/loops/webhook`). Every row with that email address is marked,
+ * since a couple can share one. The first open's date is kept, and a click is never downgraded
+ * (`nextActivityCell`); an address with no row — a test send — changes nothing.
+ */
+export const markEmailActivity = async ({ activity, email, kind }: EmailActivityEvent, at: Date) => {
+  const guests = (await readGuests({ fresh: true })).filter((guest) => guest.email.trim().toLowerCase() === email);
+  if (guests.length === 0) {
+    return;
+  }
+  const field = kind === 'invitation' ? 'inviteOpened' : 'reminderOpened';
+  const cells = guests.flatMap((guest) => {
+    const value = nextActivityCell(guest[field] ?? '', activity, at);
+    return value ? [{ guest, value }] : [];
+  });
+  if (cells.length === 0) {
+    return;
+  }
+  const column = await sentColumn(field);
+  await writeCells(cells.map(({ guest, value }) => ({ range: `${columnLetter(column)}${guest.row}`, value })));
 };
