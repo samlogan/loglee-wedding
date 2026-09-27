@@ -592,10 +592,11 @@
   --stroke-divider: var(--stone-300);
 
   /*
-   * Button - Primary — the design's filled pine pill. 9.40:1 against its off-white label.
+   * Button - Primary — the design's filled pine pill. 9.40:1 against its off-white label. Hover and
+   * press stay green, a step darker each (pine/700, pine/800), rather than turning to ink.
    */
   --button-primary-bg: var(--pine-600);
-  --button-primary-bg-hover: var(--stone-900);
+  --button-primary-bg-hover: var(--pine-700);
   --button-primary-bg-active: var(--pine-800);
   --button-primary-bg-disabled: var(--stone-200);
   --button-primary-fg: var(--stone-50);
