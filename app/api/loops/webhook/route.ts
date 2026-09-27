@@ -16,8 +16,9 @@ import { markEmailActivity } from '@/tools/guests/sheet';
  * `LOOPS_WEBHOOK_SECRET` on Netlify. A request without a valid signature is
  * refused, so nobody else can write into the sheet through here.
  *
- * Every other outcome answers 200 — an event this does not record, a guest not in the sheet, even a
- * sheet error (logged) — because Loops retries anything else, and a retry could not do better.
+ * An event this does not record, or a guest not in the sheet, answers 200. A sheet error answers 503
+ * so Loops retries it later — the sheet's per-minute quota is the usual cause, and a retry a minute on
+ * succeeds.
  */
 export const POST = async (request: NextRequest) => {
   const body = await request.text();
@@ -45,6 +46,11 @@ export const POST = async (request: NextRequest) => {
       await markEmailActivity(event, new Date());
     } catch (error) {
       console.error(`[Loops webhook] Not recorded: ${error instanceof Error ? error.message : 'unknown error'}`);
+      /*
+       * Not recorded, so ask Loops to try again later rather than lose it: during a bulk send the sheet
+       * runs out of its minute's quota, and the event is fine a minute on.
+       */
+      return NextResponse.json({ recorded: false }, { status: 503 });
     }
   }
   return NextResponse.json({ recorded: Boolean(event) });
