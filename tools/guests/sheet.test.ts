@@ -346,3 +346,42 @@ describe('markEmailActivity', () => {
     expect(calls.some((call) => call.method === 'POST')).toBe(false);
   });
 });
+
+describe('markEmailStatusSent', () => {
+  const AT = new Date('2026-10-03T00:00:00Z');
+  const SAM = { row: 2 } as Guest;
+
+  /** A sheet whose header has the Invite email column at L, and whose L2 reads `cell`. */
+  const stubWithCell = (cell: string) => {
+    const calls = stubSheet([
+      [...HEADER, 'Invite email (filled by the site)'],
+      ['SAM-1000', 'Sam']
+    ]);
+    const spy = vi.mocked(fetch);
+    const answer = spy.getMockImplementation();
+    spy.mockImplementation(async (url, init) => {
+      if (String(url).endsWith('values/L2')) {
+        calls.push({ method: 'GET', path: 'values/L2' });
+        return { json: async () => ({ values: cell ? [[cell]] : [] }), ok: true, status: 200 } as Response;
+      }
+      return (answer as NonNullable<typeof answer>)(url, init);
+    });
+    return calls;
+  };
+
+  it('writes "Sent" into a blank status cell', async () => {
+    const calls = stubWithCell('');
+    const { markEmailStatusSent } = await load();
+    await markEmailStatusSent(SAM, 'invitation', AT);
+    expect(calls.findLast((call) => call.path === 'values:batchUpdate')?.body).toMatchObject({
+      data: [{ range: 'L2', values: [['Sent 3 Oct']] }]
+    });
+  });
+
+  it('leaves a cell a webhook has already moved on', async () => {
+    const calls = stubWithCell('Delivered 3 Oct');
+    const { markEmailStatusSent } = await load();
+    await markEmailStatusSent(SAM, 'invitation', AT);
+    expect(calls.some((call) => call.path === 'values:batchUpdate')).toBe(false);
+  });
+});

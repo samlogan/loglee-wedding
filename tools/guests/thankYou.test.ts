@@ -4,11 +4,15 @@ import type { Guest } from '@/helpers/guests';
 
 vi.mock('./loops', () => ({ hasThankYouEmail: vi.fn(() => true), sendThankYouEmail: vi.fn(async () => undefined) }));
 vi.mock('./replyExtras', () => ({ replyExtrasFor: vi.fn(async () => ({})) }));
-vi.mock('./sheet', () => ({ guestHomeLinkFor: (id: string) => `https://samandlauren.wedding/g/${id}/?to=/` }));
+vi.mock('./sheet', () => ({
+  guestHomeLinkFor: (id: string) => `https://samandlauren.wedding/g/${id}/?to=/`,
+  markEmailStatusSent: vi.fn(async () => undefined)
+}));
 
 const { sendThankYou, thankYouVariablesFor } = await import('./thankYou');
 const loops = await import('./loops');
 const extras = await import('./replyExtras');
+const sheet = await import('./sheet');
 
 const SAM: Guest = {
   email: 'sam@example.com',
@@ -98,6 +102,21 @@ describe('sendThankYou', () => {
       stayTotal: [{ total: '$300 AUD' }]
     });
     expect((await thankYouVariablesFor(SAM)).stayTotal).toEqual([{ total: '$300 AUD' }]);
+  });
+
+  it('marks the Thank-you email column "Sent" once Loops has it', async () => {
+    await sendThankYou(SAM, REPLY, AT);
+    expect(sheet.markEmailStatusSent).toHaveBeenCalledWith(SAM, 'thankYou', AT);
+  });
+
+  it('marks nothing when the send fails, and a sheet error does not throw', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(loops.sendThankYouEmail).mockRejectedValueOnce(new Error('Loops /transactional failed: 500'));
+    await sendThankYou(SAM, REPLY, AT);
+    expect(sheet.markEmailStatusSent).not.toHaveBeenCalled();
+
+    vi.mocked(sheet.markEmailStatusSent).mockRejectedValueOnce(new Error('sheet down'));
+    await expect(sendThankYou(SAM, REPLY, AT)).resolves.toBeUndefined();
   });
 
   it('sends nothing when the thank-you email is not set up', async () => {

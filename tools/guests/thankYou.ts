@@ -7,7 +7,7 @@ import type { RsvpReply } from '@/tools/helpers/rsvpSubmission';
 
 import { hasThankYouEmail, sendThankYouEmail } from './loops';
 import { replyExtrasFor } from './replyExtras';
-import { guestHomeLinkFor } from './sheet';
+import { guestHomeLinkFor, markEmailStatusSent } from './sheet';
 
 /**
  * What one guest's thank-you email says: their stay, the
@@ -56,5 +56,10 @@ export const sendThankYou = async (guest: Guest, reply: RsvpReply, submittedAt: 
   } catch (error) {
     // The message only — never the error object, which can carry the request and its key.
     console.error(`[Thank-you email] Not sent: ${error instanceof Error ? error.message : 'unknown error'}`);
+    return;
   }
+  // "Sent" in the guest's Thank-you email column, until Loops reports it delivered.
+  await markEmailStatusSent(guest, 'thankYou', submittedAt).catch((error: unknown) =>
+    console.error(`[Thank-you email] Sent, not marked in the sheet: ${error instanceof Error ? error.message : error}`)
+  );
 };

@@ -15,7 +15,7 @@ import type { IGuestEmailSend } from '@/tools/sanity/schema/documents/guestEmail
 
 import { hasGoogleCredentials } from './googleAuth';
 import { ensureContactProperties, hasLoopsKey, hasThankYouEmail, sendGuestEmail, sendThankYouEmail } from './loops';
-import { markSent, readGuests, sentColumn } from './sheet';
+import { markEmailStatusSent, markSent, readGuests, sentColumn } from './sheet';
 import { thankYouVariablesFor } from './thankYou';
 
 /**
@@ -184,6 +184,12 @@ export const processEmailSend = async (id: string) => {
         await sendGuestEmail(kind, guest, { idempotencyKey, properties });
         sentNow.push(guest.id);
         await markSent(guest, column, label, new Date());
+        // "Sent" in the email's status column too, until Loops reports it delivered or opened.
+        await markEmailStatusSent(guest, kind, new Date()).catch((error: unknown) =>
+          console.error(
+            `[Guest emails] Could not mark ${guest.id} sent: ${error instanceof Error ? error.message : error}`
+          )
+        );
       } catch (error) {
         failed.push({
           _key: keyOf(`${guest.id}-${failed.length}`),
