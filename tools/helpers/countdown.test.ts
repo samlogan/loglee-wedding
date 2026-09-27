@@ -7,8 +7,8 @@ const SECOND = 1000;
 const DAY = 86_400 * SECOND;
 
 describe('WEDDING_COUNTDOWN_TARGET', () => {
-  it('is 3pm in Sydney on Friday 12 February 2027 — 4am UTC', () => {
-    expect(new Date(target).toISOString()).toBe('2027-02-12T04:00:00.000Z');
+  it('is the ceremony, 2pm in Sydney on Saturday 13 February 2027 — 3am UTC', () => {
+    expect(new Date(target).toISOString()).toBe('2027-02-13T03:00:00.000Z');
   });
 });
 

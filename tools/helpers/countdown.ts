@@ -1,9 +1,10 @@
 /**
- * The ceremony weekend's start — 3pm on Friday 12 February 2027 in Jamberoo. February is daylight
- * saving in NSW, so the offset is AEDT's +11:00. Stated as an instant with its offset, so the
- * countdown is right whatever time zone the guest's device is in.
+ * The wedding itself — the ceremony, 2pm on Saturday 13 February 2027 in Jamberoo. Guests arrive the
+ * day before (the weekend runs 12–14 February); the countdown is to the wedding, not the check-in.
+ * February is daylight saving in NSW, so the offset is AEDT's +11:00. Stated as an instant with its
+ * offset, so the countdown is right whatever time zone the guest's device is in.
  */
-export const WEDDING_COUNTDOWN_TARGET = '2027-02-12T15:00:00+11:00';
+export const WEDDING_COUNTDOWN_TARGET = '2027-02-13T14:00:00+11:00';
 
 export interface CountdownParts {
   days: number;

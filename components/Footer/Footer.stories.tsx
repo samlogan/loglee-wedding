@@ -43,7 +43,7 @@ const FALLBACK_HEADER: IHeaderObject = {
   button: mockButton('RSVP', navItem('RSVP', '/rsvp/').link)
 };
 
-/** Figma dates the wordmark "12.02.27" (node 1:46), so the weekend either side of it. */
+/** The wordmark dates the wedding day, "13.02.27"; the weekend runs either side of it. */
 const FALLBACK_START_DATE = '2027-02-12';
 const FALLBACK_END_DATE = '2027-02-14';
 const FALLBACK_VENUE_NAME = 'Kangaroo Valley';
