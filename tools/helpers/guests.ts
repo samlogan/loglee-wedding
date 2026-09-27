@@ -27,6 +27,10 @@ export interface Guest {
   reminderSent: string;
   /** The RSVP status cell — "Replied …" once they have replied through the site. */
   rsvpStatus: string;
+  /** The Invite opened cell — "Opened …" / "Clicked …", from Loops's webhooks. Absent before the column is. */
+  inviteOpened?: string;
+  /** The Reminder opened cell, the same for the reminder. */
+  reminderOpened?: string;
 }
 
 /** Four digits after the name: 9,000 IDs per first name — plenty for one guest list. */
@@ -144,6 +148,8 @@ export const GUEST_COLUMNS = {
   nights: 'nights',
   perNight: 'contribution',
   reminderSent: 'reminder sent',
+  inviteOpened: 'invite opened',
+  reminderOpened: 'reminder opened',
   rsvpLink: 'rsvp link',
   rsvpStatus: 'rsvp status',
   stay: 'stay option'
@@ -217,6 +223,8 @@ export const guestsFromRows = (
       reminderSent: cellOf(row, columns.reminderSent),
       row: sheetRow,
       rsvpStatus: cellOf(row, columns.rsvpStatus),
+      inviteOpened: cellOf(row, columns.inviteOpened),
+      reminderOpened: cellOf(row, columns.reminderOpened),
       stay: cellOf(row, columns.stay)
     });
   }

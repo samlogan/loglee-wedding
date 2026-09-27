@@ -122,7 +122,7 @@ All in `/components`:
 - **`Form`**: Form container
 - **`Footer`**: Site footer
 - **`Header`**: Site header
-- **`CountdownBanner`**: Slim dark band above the header counting down to `WEDDING_COUNTDOWN_TARGET` (`tools/helpers/countdown`) — 3pm Friday 12 February 2027, Sydney time
+- **`CountdownBanner`**: Slim dark band above the header counting down to `WEDDING_COUNTDOWN_TARGET` (`tools/helpers/countdown`) — the ceremony, 2pm Saturday 13 February 2027, Sydney time. The weekend runs 12–14 February; the logo's "13.02.27" is the wedding day
 - **`Logo`**: Logo component
 - **`Map`**: Live Google map (`@vis.gl/react-google-maps`) centred on a Sanity `geopoint`, with a marker. Fills its parent; loads the Maps API only as it nears the viewport. Styled in the site's stone/pine palette by a JSON style (`components/Map/mapStyle.ts`, colours read from the tokens) with a custom pin — unless `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` is set, when the Cloud style and an `AdvancedMarker` take over (Google allows one or the other). Props: `location`, `label` (accessible name), `variant` (`default`/`compact`), `theme`. Drawn through `MapCard` by `MapSection` (`fill`) and the FAQ and RSVP rails
 - **`MapCard`**: The compact map card — live `Map` (or an image), a corner badge and an address bar with an "Open in maps" link. Fields are the `mapCard` schema object. Used by the FAQ's rail and the RSVP page's rail (built from `weddingSettings.venue`)
@@ -604,6 +604,7 @@ Required in `.env.development` (see `.env.template` for full list):
 Optional:
 
 - `LOOPS_THANK_YOU_ID` — the Loops transactional email sent when a guest's RSVP is saved. Unset, no thank-you email is sent
+- `LOOPS_WEBHOOK_SECRET` — the signing secret of the Loops webhook to `https://samandlauren.wedding/api/loops/webhook/` (`email.opened`, `email.clicked`). Each open or click is written into the guest's row as "Invite opened" / "Reminder opened" — "Opened 3 Oct", then "Clicked 3 Oct". Unset, every webhook is refused
 - `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` — Cloud map ID. Unset (the default) uses the repo's JSON style; set, the Cloud console's style replaces it
 - `NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID` — GTM container ID
 - `LINEAR_TEAM_ID` / `LINEAR_PROJECT_ID` — Linear integration for slash commands

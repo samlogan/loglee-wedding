@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>;
 
 const inFromNow = (ms: number) => new Date(Date.now() + ms).toISOString();
 
-/** The wedding itself — 3pm on Friday 12 February 2027, Sydney time. */
+/** The wedding itself — the ceremony, 2pm on Saturday 13 February 2027, Sydney time. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const banner = within(canvasElement).getByRole('complementary', { name: 'Countdown to the wedding' });

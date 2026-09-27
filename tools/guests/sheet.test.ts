@@ -261,3 +261,67 @@ describe('sentColumn and markSent', () => {
     });
   });
 });
+
+describe('markEmailActivity', () => {
+  const AT = new Date('2026-10-03T00:00:00Z');
+  const OPENED = { activity: 'opened' as const, email: 'sam@example.com', kind: 'invitation' as const };
+  const row = (id: string, first: string, email: string, ...rest: string[]) => [id, first, '', email, ...rest];
+
+  /** The values written into guest rows, by A1 range. */
+  const rowWrites = (calls: ReturnType<typeof stubSheet>) =>
+    calls
+      .filter((call) => call.path === 'values:batchUpdate')
+      .flatMap((call) => (call.body as { data: { range: string; values: string[][] }[] }).data)
+      .filter(({ range }) => !range.endsWith('1'))
+      .map(({ range, values }) => [range, values[0][0]]);
+
+  it('adds an Invite opened column, greyed, and writes the first open into every row with that email', async () => {
+    const calls = stubSheet([
+      HEADER,
+      row('SAM-1000', 'Sam', 'Sam@Example.com'),
+      row('ALEX-1001', 'Alex', 'sam@example.com'),
+      row('JO-1002', 'Jo', 'jo@example.com')
+    ]);
+    const { markEmailActivity } = await load();
+    await markEmailActivity(OPENED, AT);
+
+    // HEADER runs A–K, so the new column is L.
+    expect(calls.some((call) => call.path === ':batchUpdate')).toBe(true);
+    expect(rowWrites(calls)).toEqual([
+      ['L2', 'Opened 3 Oct'],
+      ['L3', 'Opened 3 Oct']
+    ]);
+  });
+
+  it('upgrades an open to a click, and leaves a click alone when it is opened again', async () => {
+    const header = [...HEADER, 'Invite opened (filled by the site)'];
+    const blanks = Array.from({ length: 7 }, () => '');
+    let calls = stubSheet([header, row('SAM-1000', 'Sam', 'sam@example.com', ...blanks, 'Opened 1 Oct')]);
+    let { markEmailActivity } = await load();
+    await markEmailActivity({ ...OPENED, activity: 'clicked' }, AT);
+    expect(rowWrites(calls)).toEqual([['L2', 'Clicked 3 Oct']]);
+
+    calls = stubSheet([header, row('SAM-1000', 'Sam', 'sam@example.com', ...blanks, 'Clicked 1 Oct')]);
+    ({ markEmailActivity } = await load());
+    await markEmailActivity(OPENED, AT);
+    expect(calls.some((call) => call.method === 'POST')).toBe(false);
+  });
+
+  it('writes the reminder into its own column', async () => {
+    const calls = stubSheet([HEADER, row('SAM-1000', 'Sam', 'sam@example.com')]);
+    const { markEmailActivity } = await load();
+    await markEmailActivity({ ...OPENED, kind: 'reminder' }, AT);
+    expect(
+      calls
+        .filter((call) => call.path === 'values:batchUpdate')
+        .flatMap((call) => (call.body as { data: { range: string; values: string[][] }[] }).data)
+    ).toContainEqual({ range: 'L1', values: [['Reminder opened (filled by the site)']] });
+  });
+
+  it('changes nothing for an address with no row — a test send', async () => {
+    const calls = stubSheet([HEADER, row('SAM-1000', 'Sam', 'sam@example.com')]);
+    const { markEmailActivity } = await load();
+    await markEmailActivity({ ...OPENED, email: 'me@example.com' }, AT);
+    expect(calls.some((call) => call.method === 'POST')).toBe(false);
+  });
+});

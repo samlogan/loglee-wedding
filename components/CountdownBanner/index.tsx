@@ -12,7 +12,7 @@ import styles from './styles.module.scss';
 
 export interface CountdownBannerProps {
   className?: string;
-  /** An ISO instant with its offset. Defaults to 3pm Friday 12 February 2027, Sydney time. */
+  /** An ISO instant with its offset. Defaults to the ceremony, 2pm Saturday 13 February 2027, Sydney time. */
   target?: string;
   /** Shown instead of the numbers once the moment has passed. */
   arrivedLabel?: string;
