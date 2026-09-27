@@ -147,17 +147,18 @@ describe('guestColumnsOf', () => {
       email: 3,
       firstName: 1,
       id: 0,
-      inviteOpened: -1,
+      inviteEmail: -1,
       inviteSent: -1,
       lastName: 2,
       nationality: 4,
       nights: 6,
       perNight: 7,
-      reminderOpened: -1,
+      reminderEmail: -1,
       reminderSent: -1,
       rsvpLink: 8,
       rsvpStatus: 9,
-      stay: 5
+      stay: 5,
+      thankYouEmail: -1
     });
   });
 
@@ -200,7 +201,7 @@ describe('guestsFromRows', () => {
         email: 'sam@example.com',
         firstName: 'Sam',
         id: 'SAM-4821',
-        inviteOpened: '',
+        inviteEmail: '',
         inviteSent: '',
         lastName: 'Logan',
         nationality: '',
@@ -209,7 +210,8 @@ describe('guestsFromRows', () => {
         perNight: 150,
         reminderSent: '',
         row: 2,
-        reminderOpened: '',
+        reminderEmail: '',
+        thankYouEmail: '',
         rsvpStatus: '',
         stay: 'King Room'
       },
@@ -217,7 +219,7 @@ describe('guestsFromRows', () => {
         email: 'lauren@example.com',
         firstName: 'Lauren',
         id: 'LAUREN-1234',
-        inviteOpened: '',
+        inviteEmail: '',
         inviteSent: '',
         lastName: 'Lee',
         nationality: 'US',
@@ -226,7 +228,8 @@ describe('guestsFromRows', () => {
         perNight: undefined,
         reminderSent: '',
         row: 3,
-        reminderOpened: '',
+        reminderEmail: '',
+        thankYouEmail: '',
         rsvpStatus: '',
         stay: ''
       }

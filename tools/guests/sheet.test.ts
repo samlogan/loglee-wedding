@@ -275,7 +275,7 @@ describe('markEmailActivity', () => {
       .filter(({ range }) => !range.endsWith('1'))
       .map(({ range, values }) => [range, values[0][0]]);
 
-  it('adds an Invite opened column, greyed, and writes the first open into every row with that email', async () => {
+  it('adds an Invite email column, greyed, and writes the first open into every row with that email', async () => {
     const calls = stubSheet([
       HEADER,
       row('SAM-1000', 'Sam', 'Sam@Example.com'),
@@ -294,7 +294,7 @@ describe('markEmailActivity', () => {
   });
 
   it('upgrades an open to a click, and leaves a click alone when it is opened again', async () => {
-    const header = [...HEADER, 'Invite opened (filled by the site)'];
+    const header = [...HEADER, 'Invite email (filled by the site)'];
     const blanks = Array.from({ length: 7 }, () => '');
     let calls = stubSheet([header, row('SAM-1000', 'Sam', 'sam@example.com', ...blanks, 'Opened 1 Oct')]);
     let { markEmailActivity } = await load();
@@ -315,7 +315,18 @@ describe('markEmailActivity', () => {
       calls
         .filter((call) => call.path === 'values:batchUpdate')
         .flatMap((call) => (call.body as { data: { range: string; values: string[][] }[] }).data)
-    ).toContainEqual({ range: 'L1', values: [['Reminder opened (filled by the site)']] });
+    ).toContainEqual({ range: 'L1', values: [['Reminder email (filled by the site)']] });
+  });
+
+  it('writes the thank-you into its own column', async () => {
+    const calls = stubSheet([HEADER, row('SAM-1000', 'Sam', 'sam@example.com')]);
+    const { markEmailActivity } = await load();
+    await markEmailActivity({ ...OPENED, activity: 'delivered', kind: 'thankYou' }, AT);
+    const writes = calls
+      .filter((call) => call.path === 'values:batchUpdate')
+      .flatMap((call) => (call.body as { data: { range: string; values: string[][] }[] }).data);
+    expect(writes).toContainEqual({ range: 'L1', values: [['Thank-you email (filled by the site)']] });
+    expect(writes).toContainEqual({ range: 'L2', values: [['Delivered 3 Oct']] });
   });
 
   it('changes nothing for an address with no row — a test send', async () => {

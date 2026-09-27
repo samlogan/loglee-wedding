@@ -604,7 +604,7 @@ Required in `.env.development` (see `.env.template` for full list):
 Optional:
 
 - `LOOPS_THANK_YOU_ID` — the Loops transactional email sent when a guest's RSVP is saved. Unset, no thank-you email is sent
-- `LOOPS_WEBHOOK_SECRET` — the signing secret of the Loops webhook to `https://samandlauren.wedding/api/loops/webhook/` (`email.opened`, `email.clicked`). Each open or click is written into the guest's row as "Invite opened" / "Reminder opened" — "Opened 3 Oct", then "Clicked 3 Oct". Unset, every webhook is refused
+- `LOOPS_WEBHOOK_SECRET` — the signing secret of the Loops webhook to `https://samandlauren.wedding/api/loops/webhook/` (the Email events: delivered, opened, clicked, soft/hard bounced, spam reported). Each is written into the guest's row, one column per email — "Invite email", "Reminder email", "Thank-you email" — as "Delivered 3 Oct", "Opened …", "Clicked …", "Soft bounce …", "Bounced …" or "Marked spam …", only ever moving forward (`nextActivityCell`). Unset, every webhook is refused
 - `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` — Cloud map ID. Unset (the default) uses the repo's JSON style; set, the Cloud console's style replaces it
 - `NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID` — GTM container ID
 - `LINEAR_TEAM_ID` / `LINEAR_PROJECT_ID` — Linear integration for slash commands
