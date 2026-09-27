@@ -60,8 +60,9 @@ vi.mock('./thankYou', () => ({
 }));
 
 vi.mock('./sheet', () => ({
-  markEmailStatusSent: vi.fn(async () => undefined),
   markSent: vi.fn(async () => undefined),
+  statusColumnFor: vi.fn(async () => 20),
+  statusFieldFor: (kind: string) => ({ invitation: 'inviteEmail', reminder: 'reminderEmail' })[kind],
   readGuests: vi.fn(async () => [] as Guest[]),
   sentColumn: vi.fn(async () => 10)
 }));
@@ -282,13 +283,16 @@ describe('an invitation', () => {
     });
   });
 
-  it('marks each guest’s Invite email "Sent" as their email goes', async () => {
+  it('marks each guest’s Invite email "Sent" in the same write, from the batch’s own read', async () => {
     state.document = send({});
-    vi.mocked(sheet.readGuests).mockResolvedValue([guest('SAM-1'), guest('ALEX-3')]);
+    vi.mocked(sheet.readGuests).mockResolvedValue([
+      guest('SAM-1'),
+      guest('ALEX-3', { inviteEmail: 'Delivered 1 Oct' })
+    ]);
     await processEmailSend('send-1');
-    expect(vi.mocked(sheet.markEmailStatusSent).mock.calls.map(([marked, kind]) => [marked.id, kind])).toEqual([
-      ['SAM-1', 'invitation'],
-      ['ALEX-3', 'invitation']
+    expect(vi.mocked(sheet.markSent).mock.calls.map(([marked, , , , status]) => [marked.id, status])).toEqual([
+      ['SAM-1', { column: 20, current: '' }],
+      ['ALEX-3', { column: 20, current: 'Delivered 1 Oct' }]
     ]);
   });
 

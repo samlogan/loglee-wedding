@@ -37,17 +37,47 @@ let memo: { at: number; guests: Guest[] } | undefined;
 const sheetUrl = (path: string) =>
   `https://sheets.googleapis.com/v4/spreadsheets/${process.env.GUEST_SHEET_ID}${/^[:?]/.test(path) ? '' : '/'}${path}`;
 
+/**
+ * Google allows 60 reads and 60 writes a minute. A bulk send meets that limit — every email sent and
+ * every Loops event reaches the sheet — so a 429 is waited out and retried, twice, before it counts
+ * as a failure. Kept short: the send runs inside a request with a time limit of its own.
+ */
+const RETRY_AFTER_MS = [3000, 6000];
+
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
-  const token = await googleAccessToken();
-  const response = await fetch(sheetUrl(path), {
-    ...init,
-    cache: 'no-store',
-    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', ...init?.headers }
-  });
-  if (!response.ok) {
-    throw new Error(`Guest sheet request failed: ${response.status} ${await response.text()}`);
+  for (let attempt = 0; ; attempt += 1) {
+    const token = await googleAccessToken();
+    const response = await fetch(sheetUrl(path), {
+      ...init,
+      cache: 'no-store',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', ...init?.headers }
+    });
+    if (response.status === 429 && attempt < RETRY_AFTER_MS.length) {
+      await new Promise((resolve) => setTimeout(resolve, RETRY_AFTER_MS[attempt]));
+      continue;
+    }
+    if (!response.ok) {
+      throw new Error(`Guest sheet request failed: ${response.status} ${await response.text()}`);
+    }
+    return (await response.json()) as T;
   }
-  return (await response.json()) as T;
+};
+
+/** Kept for a few minutes: tab names and column positions change rarely, and each lookup is a read. */
+const LAYOUT_TTL_MS = 5 * 60_000;
+let firstTab: { at: number; title: string | undefined } | undefined;
+const columnCache = new Map<string, { at: number; index: number }>();
+
+/** The first tab's name — the guest list — without a read each time. */
+const firstTabTitle = async () => {
+  if (firstTab && Date.now() - firstTab.at < LAYOUT_TTL_MS) {
+    return firstTab.title;
+  }
+  const { sheets = [] } = await request<{ sheets?: { properties: { title: string } }[] }>(
+    '?fields=sheets.properties(title)'
+  );
+  firstTab = { at: Date.now(), title: sheets[0]?.properties.title };
+  return firstTab.title;
 };
 
 /** Write several single cells in one call. */
@@ -83,10 +113,7 @@ export const readGuests = async ({ fresh = false }: { fresh?: boolean } = {}): P
    * sheet is past Z already — a guest's email status beyond it would read as blank, and a late
    * "Delivered" could overwrite a "Clicked". A range of just the tab returns every cell it uses.
    */
-  const { sheets = [] } = await request<{ sheets?: { properties: { title: string } }[] }>(
-    '?fields=sheets.properties(title)'
-  );
-  const tab = sheets[0]?.properties.title;
+  const tab = await firstTabTitle();
   const range = tab ? `'${tab.replaceAll("'", "''")}'` : 'A:ZZ';
   const { values = [] } = await request<{ values?: string[][] }>(`values/${encodeURIComponent(range)}`);
   const { guests, missingIds } = guestsFromRows(values);
@@ -200,14 +227,19 @@ const addSiteColumns = async (columns: { index: number; header: string }[]) => {
  * the header row first if the sheet does not have it. Resolved once per batch.
  */
 export const sentColumn = async (column: keyof typeof SENT_COLUMN_HEADERS): Promise<number> => {
+  const cached = columnCache.get(column);
+  if (cached && Date.now() - cached.at < LAYOUT_TTL_MS) {
+    return cached.index;
+  }
   const { values = [] } = await request<{ values?: string[][] }>('values/1:1');
   const header = values[0] ?? [];
-  const index = guestColumnsOf(header)[column];
-  if (index >= 0) {
-    return index;
+  let index = guestColumnsOf(header)[column];
+  if (index < 0) {
+    index = header.length;
+    await addSiteColumns([{ header: SENT_COLUMN_HEADERS[column], index }]);
   }
-  await addSiteColumns([{ header: SENT_COLUMN_HEADERS[column], index: header.length }]);
-  return header.length;
+  columnCache.set(column, { at: Date.now(), index });
+  return index;
 };
 
 /**
@@ -215,11 +247,29 @@ export const sentColumn = async (column: keyof typeof SENT_COLUMN_HEADERS): Prom
  * email, one guest at a time, so a send interrupted partway leaves the sheet exact: whoever is marked
  * got it, and an invitation is never sent to them again.
  */
-export const markSent = async (guest: Guest, columnIndex: number, label: string, at: Date) => {
+export const markSent = async (
+  guest: Guest,
+  columnIndex: number,
+  label: string,
+  at: Date,
+  /**
+   * The email's status column and what it says now (from the batch's own read), to mark it "Sent" in
+   * the same write — no read of its own, where a read per guest is what ran out the minute's quota.
+   */
+  status?: { column: number; current: string }
+) => {
   const day = at.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' });
-  await writeCells([{ range: `${columnLetter(columnIndex)}${guest.row}`, value: `${label} ${day}` }]);
+  const sent = status && nextActivityCell(status.current, 'sent', at);
+  await writeCells([
+    { range: `${columnLetter(columnIndex)}${guest.row}`, value: `${label} ${day}` },
+    ...(status && sent ? [{ range: `${columnLetter(status.column)}${guest.row}`, value: sent }] : [])
+  ]);
   memo = undefined;
 };
+
+/** The status column each email's delivery and opens go in, for `markSent`'s `status`. */
+export const statusColumnFor = (kind: TrackedEmail) => sentColumn(ACTIVITY_COLUMN[kind]);
+export const statusFieldFor = (kind: TrackedEmail) => ACTIVITY_COLUMN[kind];
 
 /**
  * Record in the guest's row what happened to one of their emails — delivered, opened, clicked,

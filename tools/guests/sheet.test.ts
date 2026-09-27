@@ -67,6 +67,29 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+describe('rate limits', () => {
+  it('waits out a 429 and retries, rather than failing the send', async () => {
+    vi.useFakeTimers();
+    const calls = stubSheet([HEADER, ['SAM-1000', 'Sam']]);
+    const spy = vi.mocked(fetch);
+    const answer = spy.getMockImplementation() as NonNullable<ReturnType<typeof spy.getMockImplementation>>;
+    let refused = false;
+    spy.mockImplementation(async (url, init) => {
+      if (!refused && String(url).includes('values/')) {
+        refused = true;
+        return { ok: false, status: 429, text: async () => 'quota' } as Response;
+      }
+      return answer(url, init);
+    });
+    const { readGuests } = await load();
+    const read = readGuests();
+    await vi.advanceTimersByTimeAsync(3000);
+    expect((await read).map((guest) => guest.id)).toEqual(['SAM-1000']);
+    expect(calls.filter((call) => call.path.startsWith("values/'Room%20RSVPs'"))).toHaveLength(1);
+    vi.useRealTimers();
+  });
+});
+
 describe('guestLinkFor', () => {
   it('points at the live site, never at wherever the code runs', async () => {
     const { guestLinkFor } = await load();
@@ -260,6 +283,29 @@ describe('sentColumn and markSent', () => {
       expect.objectContaining({ repeatCell: expect.anything() }),
       expect.objectContaining({ repeatCell: expect.anything() })
     ]);
+  });
+
+  it('marks the email "Sent" in its status column in the same write, unless it has moved on', async () => {
+    let calls = stubSheet([HEADER, ['SAM-1000', 'Sam']]);
+    let { findGuest, markSent } = await load();
+    const sam = await requireGuest(findGuest, 'SAM-1000');
+    await markSent(sam, 10, 'Invite sent', new Date('2026-10-01T00:00:00Z'), { column: 20, current: '' });
+    expect(calls.findLast((call) => call.path === 'values:batchUpdate')?.body).toMatchObject({
+      data: [
+        { range: 'K2', values: [['Invite sent 1 Oct']] },
+        { range: 'U2', values: [['Sent 1 Oct']] }
+      ]
+    });
+
+    calls = stubSheet([HEADER, ['SAM-1000', 'Sam']]);
+    ({ findGuest, markSent } = await load());
+    await markSent(await requireGuest(findGuest, 'SAM-1000'), 10, 'Invite sent', new Date('2026-10-01T00:00:00Z'), {
+      column: 20,
+      current: 'Opened 1 Oct'
+    });
+    expect(calls.findLast((call) => call.path === 'values:batchUpdate')?.body).toMatchObject({
+      data: [{ range: 'K2', values: [['Invite sent 1 Oct']] }]
+    });
   });
 
   it('writes the label and the date into the guest’s row', async () => {

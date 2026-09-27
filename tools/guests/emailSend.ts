@@ -15,7 +15,7 @@ import type { IGuestEmailSend } from '@/tools/sanity/schema/documents/guestEmail
 
 import { hasGoogleCredentials } from './googleAuth';
 import { ensureContactProperties, hasLoopsKey, hasThankYouEmail, sendGuestEmail, sendThankYouEmail } from './loops';
-import { markEmailStatusSent, markSent, readGuests, sentColumn } from './sheet';
+import { markSent, readGuests, sentColumn, statusColumnFor, statusFieldFor } from './sheet';
 import { thankYouVariablesFor } from './thankYou';
 
 /**
@@ -171,6 +171,7 @@ export const processEmailSend = async (id: string) => {
     const batch = remaining.slice(0, BATCH);
 
     const column = await sentColumn(kind === 'invitation' ? 'inviteSent' : 'reminderSent');
+    const statusColumn = await statusColumnFor(kind);
     const label = kind === 'invitation' ? 'Invite sent' : 'Reminder sent';
     const sentNow: string[] = [];
     const failed = [...(send.failed ?? [])];
@@ -183,13 +184,12 @@ export const processEmailSend = async (id: string) => {
           kind === 'invitation' ? `invitation-${keyOf(guest.id)}` : `reminder-${keyOf(guest.id)}-${keyOf(id)}`;
         await sendGuestEmail(kind, guest, { idempotencyKey, properties });
         sentNow.push(guest.id);
-        await markSent(guest, column, label, new Date());
-        // "Sent" in the email's status column too, until Loops reports it delivered or opened.
-        await markEmailStatusSent(guest, kind, new Date()).catch((error: unknown) =>
-          console.error(
-            `[Guest emails] Could not mark ${guest.id} sent: ${error instanceof Error ? error.message : error}`
-          )
-        );
+        // "Invite sent …" and, in the same write, "Sent …" in the email's status column — from the
+        // batch's own read of the row, so marking a guest costs no read.
+        await markSent(guest, column, label, new Date(), {
+          column: statusColumn,
+          current: guest[statusFieldFor(kind)] ?? ''
+        });
       } catch (error) {
         failed.push({
           _key: keyOf(`${guest.id}-${failed.length}`),
