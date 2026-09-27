@@ -13,6 +13,8 @@ import internalLabelField from '../common/internalLabelField';
 interface IImageCarouselSection {
   images?: (SanityImageSimple & { _key?: string })[] | null;
   speed?: 'slow' | 'medium' | 'fast' | null;
+  /** Pick up to 12 at random each visit. Off: every photo, in the order above. Unset counts as on. */
+  shuffle?: boolean | null;
 }
 
 const imageCarouselSection = defineType({
@@ -41,6 +43,15 @@ const imageCarouselSection = defineType({
         Rule.required().min(2).error('Add at least two images.'),
         Rule.min(3).warning('With fewer than three, the same photos come round again quickly.')
       ]
+    },
+    {
+      description:
+        'On: up to 12 of the photos, picked and shuffled for each visit. Off: every photo, in the order above.',
+      group: 'data',
+      initialValue: true,
+      name: 'shuffle',
+      title: 'Shuffle Photos',
+      type: 'boolean'
     },
     {
       description: 'How quickly the strip moves.',

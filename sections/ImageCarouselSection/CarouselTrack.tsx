@@ -73,6 +73,11 @@ export interface CarouselTrackProps {
   images: CarouselImage[];
   /** Seconds each slide takes to pass, from the editor's speed setting. */
   secondsPerSlide: number;
+  /**
+   * Up to `MAX_SLIDES`, picked and shuffled per visit — the default. `false` shows every photograph in
+   * its published order, as the editor arranged them.
+   */
+  shuffle?: boolean;
 }
 
 /**
@@ -80,10 +85,10 @@ export interface CarouselTrackProps {
  * to its own shape and different from its neighbours. See the section's `index.tsx` for the design.
  */
 const CarouselTrack = (props: CarouselTrackProps) => {
-  const { className, images, secondsPerSlide } = props;
+  const { className, images, secondsPerSlide, shuffle = true } = props;
 
   const seed = useSyncExternalStore(subscribe, getRoll, getServerRoll);
-  const slides = pickSlides(images, MAX_SLIDES, seed);
+  const slides = shuffle ? pickSlides(images, MAX_SLIDES, seed) : images;
 
   // Repeated within one copy until it is wide enough to hide the seam. Only the first run is read.
   const repeats = Math.ceil(MIN_SLIDES_PER_COPY / slides.length);

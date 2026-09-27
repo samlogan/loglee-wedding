@@ -35,7 +35,8 @@ const SECONDS_PER_SLIDE = { fast: 3, medium: 5, slow: 8 } as const;
  * ## Twelve at most, a different twelve each visit
  *
  * A published list can run to fifty. `CarouselTrack` shows up to `MAX_SLIDES` (12), chosen and
- * ordered at random per visit (`tools/helpers/pickSlides`). The page is cached and served
+ * ordered at random per visit (`tools/helpers/pickSlides`) — unless the editor turns Shuffle Photos
+ * off, when it shows every photo in the order they arranged them. The page is cached and served
  * statically, so the pick has to happen in the browser: the server renders the first twelve in
  * published order, and the browser swaps in its own twelve as it hydrates — before any of them
  * has downloaded, since the images load lazily.
@@ -49,7 +50,7 @@ const SECONDS_PER_SLIDE = { fast: 3, medium: 5, slow: 8 } as const;
  * reader should meet each once.
  */
 const ImageCarouselSection: FC<IImageCarouselSection> = (props) => {
-  const { images, speed } = props;
+  const { images, shuffle, speed } = props;
 
   const slides = (images ?? []).filter((image) => Boolean(image?.asset?.url));
 
@@ -67,7 +68,8 @@ const ImageCarouselSection: FC<IImageCarouselSection> = (props) => {
       {...getSectionSpacingProps(props)}
     >
       <div className={styles.viewport}>
-        <CarouselTrack images={slides} secondsPerSlide={secondsPerSlide} />
+        {/* Unset — a section saved before the switch existed — keeps the shuffle it always had. */}
+        <CarouselTrack images={slides} secondsPerSlide={secondsPerSlide} shuffle={shuffle !== false} />
       </div>
     </Section>
   );

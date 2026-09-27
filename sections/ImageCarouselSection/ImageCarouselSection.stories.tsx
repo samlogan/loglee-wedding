@@ -123,6 +123,28 @@ export const AtMostTwelve: Story = {
   }
 };
 
+/**
+ * Shuffle Photos off: every photograph, in the order the editor arranged them in the Studio — not
+ * twelve, and not shuffled.
+ */
+export const InStudioOrder: Story = {
+  args: { ...PUBLISHED, shuffle: false },
+  globals: { viewport: { value: 'desktop' } },
+  play: async ({ canvasElement }) => {
+    // Each photograph by its Sanity file name, which the image URL carries.
+    const fileOf = (url: string) => url.match(/[\da-f]{40}-\d+x\d+/)?.[0];
+    const expected = (PUBLISHED.images ?? []).flatMap((image) => {
+      const file = image?.asset?.url && fileOf(image.asset.url);
+      return file ? [file] : [];
+    });
+    const shown = slidesOf(canvasElement)
+      .filter((slide) => slide.getAttribute('aria-hidden') !== 'true')
+      .map((slide) => fileOf(decodeURIComponent(slide.querySelector('img')?.getAttribute('src') ?? '')));
+
+    await expect(shown).toEqual(expected);
+  }
+};
+
 /** Landscape slides are wider than portrait ones, and shorter. */
 export const LandscapeWider: Story = {
   args: {
