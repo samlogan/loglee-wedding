@@ -18,13 +18,13 @@ const NationalityNotesMenuItem = (S: StructureBuilder) =>
         .title('Nationalities & payment')
         .items([
           S.listItem()
-            .title('Payment details')
+            .title('Payment details — Australia & everyone else')
             .icon(TbBuildingBank)
             .child(S.document().schemaType('paymentDetails').documentId('paymentDetails')),
           S.divider(),
           ...NATIONALITIES.map((nationality) =>
             S.listItem()
-              .title(`Travel note — ${NATIONALITY_TITLES[nationality]}`)
+              .title(`${NATIONALITY_TITLES[nationality]} — travel note & payment`)
               .icon(TbPlaneArrival)
               .child(S.document().schemaType('nationalityNote').documentId(nationalityNoteId(nationality)))
           )

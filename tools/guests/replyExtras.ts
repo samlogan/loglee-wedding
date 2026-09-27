@@ -6,8 +6,11 @@ import { GUEST_REPLY_EXTRAS_QUERY } from '@/tools/sanity/lib/queries.groq';
 
 /**
  * What a guest is shown once they have replied — on the thank-you page and in the thank-you email:
- * the payment details for their region (`paymentRegionOf`: the Australian account, or Wise) and the
- * travel note for their nationality, when there is one.
+ * the payment details for their country and the travel note for their nationality, when there is one.
+ *
+ * Payment details are their country's own when its nationality document has them (the US, the UK and
+ * France — `NATIONALITIES`), and otherwise their region's (`paymentRegionOf`): the Australian account
+ * for a blank or Australian nationality, the international (Wise) details for everyone else.
  */
 export interface ReplyExtras {
   payment?: SanityTextBlock[];
@@ -18,7 +21,11 @@ export interface ReplyExtras {
 
 interface ReplyExtrasResult {
   payment?: { australia?: SanityTextBlock[] | null; international?: SanityTextBlock[] | null } | null;
-  travel?: { title?: string | null; content?: SanityTextBlock[] | null } | null;
+  travel?: {
+    title?: string | null;
+    content?: SanityTextBlock[] | null;
+    paymentDetails?: SanityTextBlock[] | null;
+  } | null;
   emailIntro?: string[] | null;
 }
 
@@ -30,8 +37,9 @@ export const replyExtrasFor = async (guest: Pick<Guest, 'nationality' | 'payment
     tags: ['paymentDetails', 'nationalityNote']
   });
 
-  const payment = guest.payment === 'au' ? result?.payment?.australia : result?.payment?.international;
   const travel = result?.travel;
+  const byRegion = guest.payment === 'au' ? result?.payment?.australia : result?.payment?.international;
+  const payment = travel?.paymentDetails?.length ? travel.paymentDetails : byRegion;
   return {
     emailIntro: result?.emailIntro ?? undefined,
     payment: payment?.length ? payment : undefined,

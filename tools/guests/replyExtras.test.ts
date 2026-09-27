@@ -51,6 +51,33 @@ describe('replyExtrasFor', () => {
     expect(state.params).toEqual({ noteId: 'nationalityNote-uk' });
   });
 
+  it('gives a guest their own country’s payment details when it has them', async () => {
+    state.result = {
+      payment: PAYMENT,
+      travel: {
+        content: [block('Bring an adaptor.')],
+        paymentDetails: [block('UK account: 12-34-56')],
+        title: 'From the UK'
+      }
+    };
+    expect((await replyExtrasFor({ nationality: 'British', payment: 'wise' })).payment).toEqual([
+      block('UK account: 12-34-56')
+    ]);
+  });
+
+  it('falls back to the international details when their country has none', async () => {
+    state.result = { payment: PAYMENT, travel: { content: [block('Bring an adaptor.')], paymentDetails: [] } };
+    expect((await replyExtrasFor({ nationality: 'British', payment: 'wise' })).payment).toEqual(PAYMENT.international);
+  });
+
+  it('uses the country’s payment details even with no travel note written', async () => {
+    state.result = { payment: PAYMENT, travel: { content: [], paymentDetails: [block('USD account')] } };
+    expect(await replyExtrasFor({ nationality: 'American', payment: 'wise' })).toMatchObject({
+      payment: [block('USD account')],
+      travel: undefined
+    });
+  });
+
   it('shows nothing that has not been written yet', async () => {
     state.result = { payment: { australia: [] }, travel: { content: [], title: 'From the US' } };
     expect(await replyExtrasFor({ nationality: 'American', payment: 'au' })).toEqual({

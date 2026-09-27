@@ -182,7 +182,8 @@ export const GUEST_REPLY_EXTRAS_QUERY = groq`{
   },
   "travel": *[_type == "nationalityNote" && _id == $noteId][0]{
     title,
-    content[]${blockContentProjection}
+    content[]${blockContentProjection},
+    paymentDetails[]${blockContentProjection}
   },
   "emailIntro": *[_type == "weddingSettings" && _id == "weddingSettings"][0].thankYouEmail.intro
 }`;
