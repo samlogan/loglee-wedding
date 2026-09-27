@@ -59,11 +59,13 @@ export const normaliseGuestId = (value?: string | null): string =>
     .replaceAll(/^-|-$/g, '');
 
 /**
- * The name half of an ID: the first name in upper-case ASCII letters, accents stripped
- * ("Zoë" → "ZOE", "Jean-Luc" → "JEANLUC"). `GUEST` when nothing usable is left.
+ * The name half of an ID: the first word of the first name in upper-case ASCII letters, accents
+ * stripped ("Zoë" → "ZOE", "Jean-Luc" → "JEANLUC"). The first word only, so a cell holding a pair —
+ * "Sam & Roni", "Mum and Dad" — gives a short ID ("SAM", "MUM") rather than the whole cell run
+ * together. `GUEST` when nothing usable is left.
  */
-const namePart = (firstName: string) =>
-  firstName
+export const namePart = (firstName: string) =>
+  (firstName.trim().split(/\s+/)[0] ?? '')
     .normalize('NFD')
     .replaceAll(/\p{M}/gu, '')
     .toUpperCase()
