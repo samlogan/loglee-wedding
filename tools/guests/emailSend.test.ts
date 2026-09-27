@@ -290,7 +290,7 @@ describe('an invitation', () => {
       guest('ALEX-3', { inviteEmail: 'Delivered 1 Oct' })
     ]);
     await processEmailSend('send-1');
-    expect(vi.mocked(sheet.markSent).mock.calls.map(([marked, , , , status]) => [marked.id, status])).toEqual([
+    expect(vi.mocked(sheet.markSent).mock.calls.map((call) => [call[0].id, call[4]])).toEqual([
       ['SAM-1', { column: 20, current: '' }],
       ['ALEX-3', { column: 20, current: 'Delivered 1 Oct' }]
     ]);

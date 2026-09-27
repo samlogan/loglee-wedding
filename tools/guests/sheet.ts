@@ -1,4 +1,6 @@
 import 'server-only';
+import { setTimeout as wait } from 'node:timers/promises';
+
 import { columnLetter, guestColumnsOf, guestsFromRows, normaliseGuestId } from '@/helpers/guests';
 import type { Guest } from '@/helpers/guests';
 import { siteColumnRequests } from '@/helpers/guestSheetLayout';
@@ -53,7 +55,7 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
       headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', ...init?.headers }
     });
     if (response.status === 429 && attempt < RETRY_AFTER_MS.length) {
-      await new Promise((resolve) => setTimeout(resolve, RETRY_AFTER_MS[attempt]));
+      await wait(RETRY_AFTER_MS[attempt]);
       continue;
     }
     if (!response.ok) {

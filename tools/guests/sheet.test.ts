@@ -3,8 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Guest } from '@/helpers/guests';
 
 vi.mock('./googleAuth', () => ({ default: vi.fn(async () => 'token'), hasGoogleCredentials: vi.fn(() => true) }));
+// A 429 is waited out before a retry; the tests do not wait.
+vi.mock('node:timers/promises', () => ({ setTimeout: vi.fn(async () => undefined) }));
 
 const auth = await import('./googleAuth');
+const timers = await import('node:timers/promises');
 
 const HEADER = [
   'Guest ID',
@@ -69,7 +72,6 @@ afterEach(() => {
 
 describe('rate limits', () => {
   it('waits out a 429 and retries, rather than failing the send', async () => {
-    vi.useFakeTimers();
     const calls = stubSheet([HEADER, ['SAM-1000', 'Sam']]);
     const spy = vi.mocked(fetch);
     const answer = spy.getMockImplementation() as NonNullable<ReturnType<typeof spy.getMockImplementation>>;
@@ -82,11 +84,9 @@ describe('rate limits', () => {
       return answer(url, init);
     });
     const { readGuests } = await load();
-    const read = readGuests();
-    await vi.advanceTimersByTimeAsync(3000);
-    expect((await read).map((guest) => guest.id)).toEqual(['SAM-1000']);
+    expect((await readGuests()).map((guest) => guest.id)).toEqual(['SAM-1000']);
+    expect(timers.setTimeout).toHaveBeenCalledWith(3000);
     expect(calls.filter((call) => call.path.startsWith("values/'Room%20RSVPs'"))).toHaveLength(1);
-    vi.useRealTimers();
   });
 });
 
