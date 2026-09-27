@@ -59,6 +59,7 @@ const RsvpPage = async () => {
   const guest: RsvpGuest | undefined = signedIn && {
     email: signedIn.email,
     name: [signedIn.firstName, signedIn.lastName].filter(Boolean).join(' '),
+    plusOneName: signedIn.plusOneName || undefined,
     stay: stayPriceOf(signedIn),
     withCurrency: showsCurrency(signedIn)
   };

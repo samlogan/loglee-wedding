@@ -153,6 +153,7 @@ describe('guestColumnsOf', () => {
       nationality: 4,
       nights: 6,
       perNight: 7,
+      plusOneName: -1,
       reminderEmail: -1,
       reminderSent: -1,
       rsvpLink: 8,
@@ -160,6 +161,12 @@ describe('guestColumnsOf', () => {
       stay: 5,
       thankYouEmail: -1
     });
+  });
+
+  it('finds the Plus one name column the couple fill in', () => {
+    expect(
+      guestColumnsOf(['First name', 'Last name', 'Email', 'Plus one name (leave blank for none)']).plusOneName
+    ).toBe(3);
   });
 
   it('reports a missing column as -1', () => {
@@ -207,6 +214,7 @@ describe('guestsFromRows', () => {
         nationality: '',
         nights: 2,
         payment: 'au',
+        plusOneName: '',
         perNight: 150,
         reminderSent: '',
         row: 2,
@@ -225,6 +233,7 @@ describe('guestsFromRows', () => {
         nationality: 'US',
         nights: undefined,
         payment: 'wise',
+        plusOneName: '',
         perNight: undefined,
         reminderSent: '',
         row: 3,

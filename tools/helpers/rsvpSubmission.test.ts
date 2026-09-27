@@ -13,7 +13,8 @@ import {
   normaliseRsvpEmail,
   parseRsvpSubmission,
   rsvpDocumentId,
-  toRsvpDocument
+  toRsvpDocument,
+  withInvitedPlusOne
 } from './rsvpSubmission';
 import type { RsvpReply } from './rsvpSubmission';
 
@@ -413,5 +414,22 @@ describe('RSVP_ID_PREFIX', () => {
 
   it('is the prefix every reply is filed under', () => {
     expect(rsvpDocumentId('sam@example.com').startsWith(RSVP_ID_PREFIX)).toBe(true);
+  });
+});
+
+describe('withInvitedPlusOne', () => {
+  const bringing = () => replyOf({ 'plusOne.bringing': 'on', 'plusOne.name': 'Alex Lee' });
+
+  it('keeps the plus one of a guest invited with one', () => {
+    expect(withInvitedPlusOne(bringing(), true).plusOne).toEqual({ bringing: true, name: 'Alex Lee' });
+  });
+
+  it('stores a guest invited without one as coming alone, whatever was posted', () => {
+    expect(withInvitedPlusOne(bringing(), false).plusOne).toEqual({ bringing: false });
+  });
+
+  it('leaves a reply without a plus one as it is', () => {
+    const reply = replyOf({});
+    expect(withInvitedPlusOne(reply, false)).toBe(reply);
   });
 });

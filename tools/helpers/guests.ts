@@ -13,6 +13,11 @@ export interface Guest {
   firstName: string;
   lastName: string;
   email: string;
+  /**
+   * The Plus one name cell — who the guest is invited with, filled in by the couple. Blank: no plus
+   * one, and the RSVP form does not offer one. Optional only so fixtures can leave it out.
+   */
+  plusOneName?: string;
   /** The Nationality cell as typed. See `@/helpers/nationality` for the three that have a note. */
   nationality: string;
   /** The Stay option cell as typed — "King Room", "Twin Double", "Family Room" — or blank. */
@@ -151,6 +156,7 @@ export const GUEST_COLUMNS = {
   nationality: 'nationality',
   nights: 'nights',
   perNight: 'contribution',
+  plusOneName: 'plus one name',
   reminderSent: 'reminder sent',
   inviteEmail: 'invite email',
   reminderEmail: 'reminder email',
@@ -228,6 +234,7 @@ export const guestsFromRows = (
       reminderSent: cellOf(row, columns.reminderSent),
       row: sheetRow,
       rsvpStatus: cellOf(row, columns.rsvpStatus),
+      plusOneName: cellOf(row, columns.plusOneName),
       inviteEmail: cellOf(row, columns.inviteEmail),
       reminderEmail: cellOf(row, columns.reminderEmail),
       thankYouEmail: cellOf(row, columns.thankYouEmail),
