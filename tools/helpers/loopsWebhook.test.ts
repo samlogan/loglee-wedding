@@ -102,6 +102,14 @@ describe('emailActivityOf', () => {
 describe('nextActivityCell', () => {
   const AT = new Date('2026-10-03T00:00:00Z');
 
+  it('starts at "Sent", which every event after replaces and nothing replaces back', () => {
+    expect(nextActivityCell('', 'sent', AT)).toBe('Sent 3 Oct');
+    expect(nextActivityCell('Sent 1 Oct', 'softBounced', AT)).toBe('Soft bounce 3 Oct');
+    expect(nextActivityCell('Sent 1 Oct', 'delivered', AT)).toBe('Delivered 3 Oct');
+    expect(nextActivityCell('Delivered 1 Oct', 'sent', AT)).toBeUndefined();
+    expect(nextActivityCell('Sent 1 Oct', 'sent', AT)).toBeUndefined();
+  });
+
   it('moves forward — delivered, opened, clicked — keeping the first date on a repeat', () => {
     expect(nextActivityCell('', 'delivered', AT)).toBe('Delivered 3 Oct');
     expect(nextActivityCell('Delivered 1 Oct', 'opened', AT)).toBe('Opened 3 Oct');

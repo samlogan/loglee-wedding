@@ -3,7 +3,7 @@ import { columnLetter, guestColumnsOf, guestsFromRows, normaliseGuestId } from '
 import type { Guest } from '@/helpers/guests';
 import { siteColumnRequests } from '@/helpers/guestSheetLayout';
 import { nextActivityCell } from '@/helpers/loopsWebhook';
-import type { EmailActivityEvent } from '@/helpers/loopsWebhook';
+import type { EmailActivityEvent, TrackedEmail } from '@/helpers/loopsWebhook';
 import { replyCellsOf, replyColumnsIn } from '@/helpers/rsvpSheet';
 import type { RsvpReply } from '@/tools/helpers/rsvpSubmission';
 
@@ -242,4 +242,20 @@ export const markEmailActivity = async ({ activity, email, kind }: EmailActivity
   }
   const column = await sentColumn(field);
   await writeCells(cells.map(({ guest, value }) => ({ range: `${columnLetter(column)}${guest.row}`, value })));
+};
+
+/**
+ * Mark one of a guest's emails "Sent 27 Sept" in its status column (Invite email, Reminder email,
+ * Thank-you email), the moment Loops has accepted it — so a sent email shows before any webhook
+ * reports it delivered or opened. The cell is read just before the write, and left alone if a
+ * webhook has already moved it on (`nextActivityCell`): the two can race.
+ */
+export const markEmailStatusSent = async (guest: Guest, kind: TrackedEmail, at: Date) => {
+  const column = await sentColumn(ACTIVITY_COLUMN[kind]);
+  const range = `${columnLetter(column)}${guest.row}`;
+  const { values = [] } = await request<{ values?: string[][] }>(`values/${range}`);
+  const value = nextActivityCell(values[0]?.[0] ?? '', 'sent', at);
+  if (value) {
+    await writeCells([{ range, value }]);
+  }
 };

@@ -55,23 +55,28 @@ export type TrackedEmail = 'invitation' | 'reminder' | 'thankYou';
 
 /**
  * What happened to an email, in the order a guest's cell moves through them — see `nextActivityCell`.
+ * "Sent" first: the site writes it when Loops accepts the email, and every event after replaces it.
  * A soft bounce is a temporary failure that Loops retries, so a delivery after it replaces it; a hard
  * bounce (the address does not exist) and a spam report are what the couple most need to see, so
  * nothing replaces them.
  */
 export const EMAIL_ACTIVITY = {
-  softBounced: { event: 'email.softBounced', label: 'Soft bounce', rank: 1 },
-  delivered: { event: 'email.delivered', label: 'Delivered', rank: 2 },
-  opened: { event: 'email.opened', label: 'Opened', rank: 3 },
-  clicked: { event: 'email.clicked', label: 'Clicked', rank: 4 },
-  hardBounced: { event: 'email.hardBounced', label: 'Bounced', rank: 5 },
-  spamReported: { event: 'email.spamReported', label: 'Marked spam', rank: 6 }
+  // Written by the site itself the moment Loops accepts the email — no webhook reports it.
+  sent: { event: null, label: 'Sent', rank: 1 },
+  softBounced: { event: 'email.softBounced', label: 'Soft bounce', rank: 2 },
+  delivered: { event: 'email.delivered', label: 'Delivered', rank: 3 },
+  opened: { event: 'email.opened', label: 'Opened', rank: 4 },
+  clicked: { event: 'email.clicked', label: 'Clicked', rank: 5 },
+  hardBounced: { event: 'email.hardBounced', label: 'Bounced', rank: 6 },
+  spamReported: { event: 'email.spamReported', label: 'Marked spam', rank: 7 }
 } as const;
 
 export type EmailActivity = keyof typeof EMAIL_ACTIVITY;
 
 const ACTIVITY_BY_EVENT = new Map(
-  Object.entries(EMAIL_ACTIVITY).map(([activity, { event }]) => [event as string, activity as EmailActivity])
+  Object.entries(EMAIL_ACTIVITY).flatMap(([activity, { event }]) =>
+    event ? [[event as string, activity as EmailActivity] as const] : []
+  )
 );
 
 /** What one webhook says happened: which email, to whom, and what. */
@@ -124,7 +129,7 @@ const rankOf = (cell: string) => {
 };
 
 /**
- * What to write into the guest's cell for this email, or `undefined` to leave it — "Delivered 3 Oct",
+ * What to write into the guest's cell for this email, or `undefined` to leave it — "Sent 3 Oct", "Delivered 3 Oct",
  * "Opened 3 Oct", "Clicked 3 Oct", "Soft bounce 3 Oct", "Bounced 3 Oct", "Marked spam 3 Oct". The cell
  * only moves up `EMAIL_ACTIVITY`'s ranks: an open never replaces a click, and a repeat keeps the first
  * date.

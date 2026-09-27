@@ -60,6 +60,7 @@ vi.mock('./thankYou', () => ({
 }));
 
 vi.mock('./sheet', () => ({
+  markEmailStatusSent: vi.fn(async () => undefined),
   markSent: vi.fn(async () => undefined),
   readGuests: vi.fn(async () => [] as Guest[]),
   sentColumn: vi.fn(async () => 10)
@@ -279,6 +280,16 @@ describe('an invitation', () => {
       inviteIntro2: '',
       inviteIntro3: ''
     });
+  });
+
+  it('marks each guest’s Invite email "Sent" as their email goes', async () => {
+    state.document = send({});
+    vi.mocked(sheet.readGuests).mockResolvedValue([guest('SAM-1'), guest('ALEX-3')]);
+    await processEmailSend('send-1');
+    expect(vi.mocked(sheet.markEmailStatusSent).mock.calls.map(([marked, kind]) => [marked.id, kind])).toEqual([
+      ['SAM-1', 'invitation'],
+      ['ALEX-3', 'invitation']
+    ]);
   });
 
   it('carries a per-guest idempotency key, so no two sends can invite anyone twice', async () => {
