@@ -128,6 +128,11 @@
     "title": "Sam & Lauren",
     "venue": {
       "address": "406 Jamberoo Mountain Rd\nJamberoo NSW 2533",
+      "location": {
+        "_type": "geopoint",
+        "lat": -34.6549374,
+        "lng": 150.733635
+      },
       "mapUrl": "https://www.google.com/maps/search/?api=1&query=406+Jamberoo+Mountain+Rd+Jamberoo+NSW+2533",
       "name": "The Lodge Jamberoo",
       "travelNote": "90 min south of Sydney"

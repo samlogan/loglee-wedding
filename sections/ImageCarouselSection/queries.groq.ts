@@ -8,10 +8,16 @@ import imageProjection from '@/tools/sanity/projections/common/image.groq';
  */
 const imageCarouselSectionProjection = groq`
   _type == 'imageCarouselSection' => {
-    images[]{
-      _key,
-      ...@${imageProjection}
-    },
+    "images": select(
+      useSharedPhotos == true => *[_type == "photoLibrary" && _id == "photoLibrary"][0].images[]{
+        _key,
+        ...@${imageProjection}
+      },
+      images[]{
+        _key,
+        ...@${imageProjection}
+      }
+    ),
     speed,
     shuffle
   },

@@ -27,19 +27,19 @@
         "Last orders 8:30pm"
       ],
       "image": {
-        "altText": "Lulu",
+        "altText": "Lulus",
         "aspectRatio": "4-3",
         "asset": {
-          "_id": "image-5d8240ad6d7df651b89e09e494f0646bf124b7ca-528x922-avif",
+          "_id": "image-55ef658a2717e7e6912d14cbe6197f03248a6d8b-530x377-jpg",
           "altText": null,
           "metadata": {
             "dimensions": {
-              "height": 922,
-              "width": 528
+              "height": 377,
+              "width": 530
             },
-            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAjABQDASIAAhEBAxEB/8QAGwABAAICAwAAAAAAAAAAAAAAAAUGAgcDBAj/xAAlEAABAwMCBwEBAAAAAAAAAAABAgMEAAURBjESEyEiQVFhFBX/xAAZAQACAwEAAAAAAAAAAAAAAAACAwAEBQb/xAAjEQABAwMDBQEAAAAAAAAAAAABAAIRAxIhFEGRBCJhodFS/9oADAMBAAIRAxEAPwDdK5DKpAJcUlA2JqDuOp7WxcRH/oNfoOwUrzWpNd64kPtNN2+alpuQMnlpyoj5VSg6fEtxtx6Y8y471CndyaxqldrWy45nyuhpdHVee0YjwvS0S7RlMA3EcMg74VkEeDStHxLXqVlkNsTea0nohXF4pSNQTm4cotGRgtPCgtMtRU3dptlCpcgngSpaexHo1eYmk0TLimTd5wf4D2MRkEgVGaXxBukeOGedG4ghD2PP33V9eFxcBbZw2M7NpxQPdaMiVoUzeZY63Anb6s2osSKgNIaaQkbB13upXQFrAyJctCHc9UqPWlKud+B6RxR3qH39UNpdIMSNkDtSCPhq02ZSiy5lSujmN6UqExKqOEjhcklCXH1KWlKj7IpSlVyUTRgL/9k="
+            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAOABQDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAUHAf/EACQQAAIBBAECBwAAAAAAAAAAAAEDAgAEBRESE0EGFCIyQlFh/8QAFQEBAQAAAAAAAAAAAAAAAAAAAwT/xAAbEQACAwADAAAAAAAAAAAAAAAAAQIRIQMiQf/aAAwDAQACEQMRAD8AW4nAWHhe2WqV9Nj36A5jY39AU8Y5Fk9KbhyjN3t0Br9qam+uRjereM67YHcCfjqtx2VfkGjzghziPQVjWqjvdKk+toouQxOPddSmyInI9xGipFkcrmV3rgnITjAy2Ae1FOoxrWC+SXlH/9k="
           },
-          "url": "https://cdn.sanity.io/images/tftcitbh/production/5d8240ad6d7df651b89e09e494f0646bf124b7ca-528x922.avif"
+          "url": "https://cdn.sanity.io/images/tftcitbh/production/55ef658a2717e7e6912d14cbe6197f03248a6d8b-530x377.jpg"
         },
         "crop": null,
         "hotspot": null
@@ -75,16 +75,16 @@
         "altText": "Fin's Bar",
         "aspectRatio": "4-3",
         "asset": {
-          "_id": "image-b991f80c7472d0d08ccd9c5d7d7a19ed5127dd78-528x922-avif",
+          "_id": "image-1505d4861f8938f70e5f55774e34538b113aa1ec-1392x928-avif",
           "altText": null,
           "metadata": {
             "dimensions": {
-              "height": 922,
-              "width": 528
+              "height": 928,
+              "width": 1392
             },
-            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAjABQDASIAAhEBAxEB/8QAGgABAQACAwAAAAAAAAAAAAAAAAQDBQIGCP/EACQQAAIBAwQCAgMAAAAAAAAAAAECAwAEEQUSEyEGgTFBI1Fx/8QAFgEBAQEAAAAAAAAAAAAAAAAAAwIE/8QAHREAAgICAwEAAAAAAAAAAAAAAAECEQMhEhMxYf/aAAwDAQACEQMRAD8A83SwKmpSCBhxZyCayygEjdKuP7W50rTYI/JBb3H5olbBP7rL5tZWsGq2otoOJHxlfdByqSh8G67g52dalklaQ8Wdg6FK3F7AiXkyou1Q3Q9ClImqDcdnLSLS6nuS0chRwO3+aaxbzLIvPM80+7ERHxUED3Frv45CYyduM491FNOxhcSTMSGyveamDvYklx0WXT3aTtzhxIezSpjqYKoCCSqgEn7pTA2WXCgmQY6zWplReNjj7pSs+PwfJ6Rt0aUpTgH/2Q=="
+            "lqip": "data:image/jpeg;base64,/9j/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAANABQDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAYHA//EACIQAAIBBAIBBQAAAAAAAAAAAAECAwAEBRESITETFBZBUf/EABUBAQEAAAAAAAAAAAAAAAAAAAQF/8QAHREAAgIBBQAAAAAAAAAAAAAAAQIAAyIREiExsf/aAAwDAQACEQMRAD8AjeJhtMatrcI3bc0Yb139Gq3FnMZhIVI5+7eFSQra5bFQuZ9PDA6h0TxvzTXh7f5C4N3I6mNQoK/gHVDZ1YZCPNZ5CnvSa5D18lkLq4GWSBTIQqP51RSPmIngyU8QmchWI2aKWu0gGTXrcMcvJ//Z"
           },
-          "url": "https://cdn.sanity.io/images/tftcitbh/production/b991f80c7472d0d08ccd9c5d7d7a19ed5127dd78-528x922.avif"
+          "url": "https://cdn.sanity.io/images/tftcitbh/production/1505d4861f8938f70e5f55774e34538b113aa1ec-1392x928.avif"
         },
         "crop": null,
         "hotspot": null

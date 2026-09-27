@@ -6,6 +6,7 @@ import headerDocument from './documents/headerDocument';
 import nationalityNote from './documents/nationalityNote';
 import page from './documents/page';
 import paymentDetails from './documents/paymentDetails';
+import photoLibrary from './documents/photoLibrary';
 import { player, playerMeterStat, playerTextStat } from './documents/player';
 import route from './documents/route';
 import rsvp from './documents/rsvp';
@@ -58,6 +59,7 @@ const schema: SchemaTypeDefinition[] = [
   nationalityNote,
   page,
   paymentDetails,
+  photoLibrary,
   player,
   route,
   rsvp,
