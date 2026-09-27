@@ -55,7 +55,7 @@ describe('sendThankYou', () => {
   });
 
   it('says nothing about a stay or paying when the guest is not staying', async () => {
-    await sendThankYou(SAM, { ...REPLY, extraNight: true, staying: false }, AT);
+    await sendThankYou(SAM, { ...REPLY, staying: false }, AT);
     expect(sent()?.dataVariables).toMatchObject({ payment: [], stay: [], stayTotal: [] });
   });
 
@@ -66,12 +66,6 @@ describe('sendThankYou', () => {
     vi.mocked(loops.sendThankYouEmail).mockClear();
     await sendThankYou({ ...SAM, nationality: 'Australian', payment: 'au' }, REPLY, AT);
     expect(sent()?.dataVariables.stayTotal).toEqual([{ total: '$300' }]);
-  });
-
-  it('prices the Sunday night in when the guest took it', async () => {
-    await sendThankYou(SAM, { ...REPLY, extraNight: true }, AT);
-    expect(sent()?.dataVariables.stay).toEqual([{ summary: 'King Room · 3 nights, Sunday included' }]);
-    expect(sent()?.dataVariables.stayTotal).toEqual([{ total: '$450 AUD' }]);
   });
 
   it('carries the payment details and travel note for this guest', async () => {
@@ -96,12 +90,12 @@ describe('sendThankYou', () => {
     });
   });
 
-  it('builds the same email for a Studio test, with the Sunday night when asked', async () => {
-    const variables = await thankYouVariablesFor(SAM, { extraNight: true });
+  it('builds the same email for a Studio test', async () => {
+    const variables = await thankYouVariablesFor(SAM);
     expect(variables).toMatchObject({
       firstName: 'Sam',
-      stay: [{ summary: 'King Room · 3 nights, Sunday included' }],
-      stayTotal: [{ total: '$450 AUD' }]
+      stay: [{ summary: 'King Room · 2 nights' }],
+      stayTotal: [{ total: '$300 AUD' }]
     });
     expect((await thankYouVariablesFor(SAM)).stayTotal).toEqual([{ total: '$300 AUD' }]);
   });

@@ -25,8 +25,6 @@ interface IGuestEmailSend {
   testEmail?: string;
   /** Fill a test in with this guest's details rather than the first guest's. */
   testGuestId?: string;
-  /** A thank-you test: price in the Sunday night, as if the guest had taken it. */
-  testExtraNight?: boolean;
   /** The typed confirmation a send to the guest list needs — see `sendConfirmationPhrase`. */
   confirm?: string;
   status?: 'requested' | 'sending' | 'done' | 'failed';
@@ -85,15 +83,6 @@ const guestEmailSend = defineType({
       readOnly: lockedOnceStarted,
       title: 'Test As Guest ID',
       type: 'string'
-    },
-    {
-      description: 'Price the Sunday night into the stay, as if the guest had switched it on.',
-      hidden: ({ document }) => document?.kind !== 'thankYou' || !document?.testEmail,
-      initialValue: false,
-      name: 'testExtraNight',
-      readOnly: lockedOnceStarted,
-      title: 'With The Sunday Night',
-      type: 'boolean'
     },
     {
       description:

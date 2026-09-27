@@ -61,7 +61,6 @@ describe('parseRsvpSubmission', () => {
       replyOf({
         dietary: 'Vegetarian',
         email: 'sam@example.com',
-        extraNight: 'on',
         kidsAges: '2 and 5',
         kidsCount: '2',
         name: 'Sam Logan',
@@ -74,7 +73,6 @@ describe('parseRsvpSubmission', () => {
     ).toEqual({
       dietary: 'Vegetarian',
       email: 'sam@example.com',
-      extraNight: true,
       kidsAges: '2 and 5',
       kidsCount: 2,
       name: 'Sam Logan',
@@ -89,7 +87,6 @@ describe('parseRsvpSubmission', () => {
     const reply = replyOf({});
     expect(reply).toEqual({
       email: 'sam@example.com',
-      extraNight: false,
       kidsCount: 0,
       name: 'Sam Logan',
       plusOne: { bringing: false },
@@ -334,28 +331,9 @@ describe('staying at the venue', () => {
     });
   });
 
-  it('drops the Sunday night for a guest who is not staying', () => {
-    const reply = parseRsvpSubmission(
-      form({ email: 'sam@example.com', extraNight: 'on', kidsCount: '0', name: 'Sam' })
-    );
-    expect(reply).toMatchObject({ reply: { extraNight: false, staying: false } });
-  });
-
   it('treats a stored reply from before the question as staying', () => {
     const { staying: _, ...before } = replyOf({});
     expect(isSameRsvpReply(before, replyOf({}))).toBe(true);
-  });
-});
-
-describe('the Sunday night', () => {
-  it('is a checkbox — taken when it is sent, not taken when it is absent', () => {
-    expect(replyOf({ extraNight: 'on' }).extraNight).toBe(true);
-    expect(replyOf({}).extraNight).toBe(false);
-  });
-
-  it('counts towards whether two replies are the same', () => {
-    expect(isSameRsvpReply(replyOf({}), replyOf({ extraNight: 'on' }))).toBe(false);
-    expect(isSameRsvpReply(replyOf({ extraNight: 'on' }), replyOf({ extraNight: 'on' }))).toBe(true);
   });
 });
 
@@ -390,7 +368,6 @@ describe('isSameRsvpReply', () => {
     ['a plus one added', { plusOne: { bringing: true, name: 'Jo' } }],
     ['the plus one dropped', { plusOne: { bringing: false } }],
     ['a different count', { kidsCount: 1 }],
-    ['the Sunday night added', { extraNight: true }],
     ['no longer staying', { staying: false }]
   ])('does not match after %s', (_, change) => {
     expect(isSameRsvpReply({ ...reply, ...change }, reply)).toBe(false);
@@ -431,5 +408,15 @@ describe('withInvitedPlusOne', () => {
   it('leaves a reply without a plus one as it is', () => {
     const reply = replyOf({});
     expect(withInvitedPlusOne(reply, false)).toBe(reply);
+  });
+});
+
+describe('the Sunday night, no longer asked', () => {
+  it('is not read from a post, and not stored', () => {
+    expect(replyOf({ extraNight: 'on' })).not.toHaveProperty('extraNight');
+  });
+
+  it('does not stop a stored reply from before it was dropped matching the same reply', () => {
+    expect(isSameRsvpReply({ ...replyOf({}), extraNight: true } as never, replyOf({}))).toBe(true);
   });
 });

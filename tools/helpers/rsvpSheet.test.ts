@@ -8,7 +8,6 @@ import { REPLY_COLUMNS, replyCellsOf, replyColumnsIn } from './rsvpSheet';
 const REPLY = {
   dietary: 'Vegetarian',
   email: 'sam@example.com',
-  extraNight: true,
   kidsAges: '2 and 5',
   kidsCount: 2,
   name: 'Sam Logan',
@@ -52,14 +51,13 @@ describe('replyCellsOf', () => {
       '2 and 5',
       'A cot',
       'September',
-      'Yes',
       'Yes'
     ]);
   });
 
   it('writes blanks for unanswered questions, and a reply from before the staying question as staying', () => {
     const cells = replyCellsOf({ email: 'a@b.co', kidsCount: 0, name: 'A', plusOne: { bringing: false } });
-    expect(cells).toEqual(['A', 'a@b.co', '', 'No', '', '', '0', '', '', '', 'Yes', 'No']);
+    expect(cells).toEqual(['A', 'a@b.co', '', 'No', '', '', '0', '', '', '', 'Yes']);
   });
 });
 

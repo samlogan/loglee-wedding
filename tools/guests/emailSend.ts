@@ -126,7 +126,7 @@ export const processEmailSend = async (id: string) => {
       }
       const sample = testGuestOf(guests, send.testGuestId);
       await sendThankYouEmail({
-        dataVariables: await thankYouVariablesFor(sample, { extraNight: send.testExtraNight }),
+        dataVariables: await thankYouVariablesFor(sample),
         idempotencyKey: `test-thank-you-${keyOf(id)}`,
         to: send.testEmail
       });

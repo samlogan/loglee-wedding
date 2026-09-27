@@ -119,7 +119,7 @@ export const findGuest = async (id?: string | null): Promise<Guest | undefined> 
 
 /**
  * Record a guest's reply in their row: "Replied 3 Oct" in RSVP status — noting a guest who is not
- * staying, or who takes the Sunday night — and every answer from the form in its own "Reply:"
+ * staying — and every answer from the form in its own "Reply:"
  * column (`REPLY_COLUMNS`), added at the end — greyed as the site's — the first time it is needed.
  * One write for all of the row's cells, so a row is never left half updated.
  *
@@ -135,12 +135,7 @@ export const markReplied = async (guest: Guest, reply: RsvpReply, at: Date) => {
     const { add, indexes } = replyColumnsIn(header);
 
     const day = at.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' });
-    let note = '';
-    if (reply.staying === false) {
-      note = ' · Not staying';
-    } else if (reply.extraNight) {
-      note = ' · + Sunday night';
-    }
+    const note = reply.staying === false ? ' · Not staying' : '';
 
     const answers = replyCellsOf(reply);
     await addSiteColumns(add);

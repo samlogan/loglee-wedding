@@ -32,7 +32,7 @@ export interface ThankYouEmailInput {
   homeLink: string;
   /** The opening paragraphs, from Sanity. Blank ones are dropped; none at all is the default. */
   intro?: unknown;
-  /** Their stay and total, the Sunday night included when they took it. */
+  /** Their stay and total. */
   stay?: StayPrice;
   /** Say "AUD" after the total — for a guest outside Australia (`showsCurrency`). */
   withCurrency?: boolean;
@@ -105,7 +105,7 @@ export const thankYouVariables = (input: ThankYouEmailInput): ThankYouEmailVaria
     stay: stay
       ? [
           {
-            summary: `${stay.stay} · ${stay.nights} ${stay.nights === 1 ? 'night' : 'nights'}${stay.extraNight ? ', Sunday included' : ''}`
+            summary: `${stay.stay} · ${stay.nights} ${stay.nights === 1 ? 'night' : 'nights'}`
           }
         ]
       : [],

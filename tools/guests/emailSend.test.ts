@@ -56,10 +56,7 @@ vi.mock('./loops', () => ({
 }));
 
 vi.mock('./thankYou', () => ({
-  thankYouVariablesFor: vi.fn(async (guest: Guest, options?: { extraNight?: boolean }) => ({
-    extraNight: options?.extraNight ?? false,
-    guestId: guest.id
-  }))
+  thankYouVariablesFor: vi.fn(async (guest: Guest) => ({ guestId: guest.id }))
 }));
 
 vi.mock('./sheet', () => ({
@@ -199,19 +196,18 @@ describe('a test as a chosen guest', () => {
 describe('a thank-you test', () => {
   const thankYouSent = () => vi.mocked(loops.sendThankYouEmail).mock.calls.map(([options]) => options);
 
-  it('goes to the test address with the chosen guest’s details, Sunday night and all', async () => {
+  it('goes to the test address with the chosen guest’s details', async () => {
     state.document = send({
       confirm: undefined,
       kind: 'thankYou',
       testEmail: 'me@example.com',
-      testExtraNight: true,
       testGuestId: 'LAUREN-2'
     });
     vi.mocked(sheet.readGuests).mockResolvedValue([guest('SAM-1'), guest('LAUREN-2')]);
     await processEmailSend('send-1');
 
     expect(thankYouSent()).toEqual([
-      expect.objectContaining({ dataVariables: { extraNight: true, guestId: 'LAUREN-2' }, to: 'me@example.com' })
+      expect.objectContaining({ dataVariables: { guestId: 'LAUREN-2' }, to: 'me@example.com' })
     ]);
     expect(loops.sendGuestEmail).not.toHaveBeenCalled();
     expect(sheet.markSent).not.toHaveBeenCalled();

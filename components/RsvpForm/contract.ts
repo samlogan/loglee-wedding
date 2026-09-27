@@ -26,8 +26,6 @@
  *   name, email, dietary, kidsAges, songRequest   one string each, possibly empty
  *   plusOne.bringing     present (value "on") when ticked, **absent** when not — a native checkbox
  *   staying              the same, and ticked by default: present when the guest is staying at the venue
- *   extraNight           the same: present when the guest is staying the Sunday night too — sent
- *                        only while `staying` is ticked
  *   plusOne.name,
  *   plusOne.dietary      present **only** while `plusOne.bringing` is ticked; see `RsvpForm`
  *   kidsCount            a whole number from 0 to `RSVP_KIDS_MAX`, as a string — "0" by default. The
@@ -39,7 +37,6 @@
 export const RSVP_FIELD = {
   dietary: 'dietary',
   email: 'email',
-  extraNight: 'extraNight',
   kidsAges: 'kidsAges',
   kidsCount: 'kidsCount',
   name: 'name',
