@@ -9,6 +9,7 @@ import {
   numberCell,
   paymentRegionOf,
   isFreeStay,
+  namePart,
   stayPriceOf
 } from './guests';
 
@@ -17,6 +18,25 @@ const sequence = (...values: number[]) => {
   let index = 0;
   return () => values[index++ % values.length];
 };
+
+describe('namePart', () => {
+  it('is the first word of the first name, upper-case and unaccented', () => {
+    expect(namePart('Zoë')).toBe('ZOE');
+    expect(namePart('Jean-Luc')).toBe('JEANLUC');
+    expect(namePart('  Lauren ')).toBe('LAUREN');
+  });
+
+  it('takes only the first name from a cell holding two', () => {
+    expect(namePart('Sam & Roni')).toBe('SAM');
+    expect(namePart('Mum and Dad')).toBe('MUM');
+    expect(namePart('Ashley Rae')).toBe('ASHLEY');
+  });
+
+  it('falls back to GUEST when nothing usable is left', () => {
+    expect(namePart('')).toBe('GUEST');
+    expect(namePart('& Co')).toBe('GUEST');
+  });
+});
 
 describe('guestIdFor', () => {
   it('makes a name and four digits from the first name', () => {
