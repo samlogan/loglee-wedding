@@ -1,7 +1,7 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 
-import { RSVP_FIELD, RSVP_KIDS_MAX } from '@/components/RsvpForm/contract';
+import { RSVP_COMING_ASKED, RSVP_FIELD, RSVP_KIDS_MAX } from '@/components/RsvpForm/contract';
 import type { RsvpFieldErrors, RsvpFieldName } from '@/components/RsvpForm/contract';
 import type { IRsvpDocument } from '@/tools/sanity/schema/documents/rsvp';
 
@@ -63,6 +63,7 @@ export const RSVP_TEXT_MAX_LENGTH = {
   [RSVP_FIELD.dietary]: 1000,
   [RSVP_FIELD.email]: 254,
   [RSVP_FIELD.kidsAges]: 200,
+  [RSVP_FIELD.message]: 1000,
   [RSVP_FIELD.name]: 200,
   [RSVP_FIELD.plusOneDietary]: 1000,
   [RSVP_FIELD.plusOneName]: 200,
@@ -117,6 +118,13 @@ export const isHoneypotFilled = (entries: Pick<FormData, 'get'>): boolean => {
 };
 
 /**
+ * Whether a submitted form says the guest can make it: its `coming` box ticked, or no `comingAsked`
+ * marker at all — a form loaded before the question existed, from a guest who was coming.
+ */
+export const isComing = (entries: Pick<FormData, 'get'>): boolean =>
+  entries.get(RSVP_COMING_ASKED) === null || entries.get(RSVP_FIELD.coming) !== null;
+
+/**
  * Validates a submitted form and returns either the reply to store or a message per failing field,
  * keyed by the name the control submits under — see `contract.ts`.
  *
@@ -150,6 +158,24 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
   const email = normaliseRsvpEmail(text(RSVP_FIELD.email));
   if (!fieldErrors[RSVP_FIELD.email] && !EMAIL_PATTERN.test(email)) {
     fieldErrors[RSVP_FIELD.email] = 'Enter an email address, like name@example.com';
+  }
+
+  /*
+   * "Can you make it?" — a checkbox, so "No" is its absence, but only from a form that asked
+   * (`RSVP_COMING_ASKED`): a form loaded before the question existed sends neither, and is coming.
+   * A guest who can't make it is asked nothing else: their name, email and an optional note are all
+   * that is read, and the reply records them as bringing no one and not staying.
+   */
+  const coming = isComing(entries);
+  if (!coming) {
+    const message = text(RSVP_FIELD.message) || undefined;
+    if (Object.keys(fieldErrors).length > 0) {
+      return { fieldErrors, ok: false };
+    }
+    return {
+      ok: true,
+      reply: { coming, email, kidsCount: 0, message, name, plusOne: { bringing: false }, staying: false }
+    };
   }
 
   // A native checkbox: present when ticked, absent when not. The plus one's own answers are read only
@@ -186,6 +212,7 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
   return {
     ok: true,
     reply: {
+      coming,
       dietary,
       email,
       kidsAges,
@@ -206,6 +233,12 @@ export const parseRsvpSubmission = (entries: RsvpFormEntries): RsvpParseResult =
  */
 export const withInvitedPlusOne = (reply: RsvpReply, invited: boolean): RsvpReply =>
   invited || !reply.plusOne?.bringing ? reply : { ...reply, plusOne: { bringing: false } };
+
+/**
+ * Whether a saved reply gets the thank-you email. Not a guest who can't make it: the email is their
+ * stay, its price and how to pay, none of which applies.
+ */
+export const shouldSendThankYou = (reply: Pick<RsvpReply, 'coming'>): boolean => reply.coming !== false;
 
 /**
  * The document to write. `submittedAt` is the server's clock, never the client's — the parser drops
@@ -249,7 +282,10 @@ const replyKey = (reply: Partial<RsvpReply>) =>
     reply.songRequest,
     reply.specialRequirements,
     // Replies from before the question was asked were all staying.
-    reply.staying ?? true
+    reply.staying ?? true,
+    // …and all coming.
+    reply.coming ?? true,
+    reply.message
   ]);
 
 /** Whether a stored document already holds exactly this reply. */

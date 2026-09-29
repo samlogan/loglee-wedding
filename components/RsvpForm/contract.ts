@@ -26,6 +26,10 @@
  *   name, email, dietary, kidsAges, songRequest   one string each, possibly empty
  *   plusOne.bringing     present (value "on") when ticked, **absent** when not — a native checkbox
  *   staying              the same, and ticked by default: present when the guest is staying at the venue
+ *   coming               the same, ticked by default: absent when the guest can't make it — and then,
+ *                        with `comingAsked` (see `RSVP_COMING_ASKED`), only name, email and `message`
+ *                        are read
+ *   message              a note to the couple, sent only by a guest who can't make it
  *   plusOne.name,
  *   plusOne.dietary      present **only** while `plusOne.bringing` is ticked; see `RsvpForm`
  *   kidsCount            a whole number from 0 to `RSVP_KIDS_MAX`, as a string — "0" by default. The
@@ -35,10 +39,12 @@
  *   _gotcha              the honeypot from `Form` — present (value "on") only if something ticked it
  */
 export const RSVP_FIELD = {
+  coming: 'coming',
   dietary: 'dietary',
   email: 'email',
   kidsAges: 'kidsAges',
   kidsCount: 'kidsCount',
+  message: 'message',
   name: 'name',
   plusOneBringing: 'plusOne.bringing',
   plusOneDietary: 'plusOne.dietary',
@@ -49,6 +55,16 @@ export const RSVP_FIELD = {
 } as const;
 
 export type RsvpFieldName = (typeof RSVP_FIELD)[keyof typeof RSVP_FIELD];
+
+/**
+ * A hidden input the form sends alongside `coming`, saying the question was asked at all.
+ *
+ * `coming` is a checkbox, so "No" is its *absence* — and a form loaded before the question existed
+ * sends no `coming` either. Without this marker, a guest who opened the RSVP page before the deploy
+ * and sent it after would be stored as declining. With it, only a form that asked and got "No"
+ * declines. Not a field of the reply: nothing stores it.
+ */
+export const RSVP_COMING_ASKED = 'comingAsked';
 
 /*
  * The form no longer asks which days a guest is coming or which room they would like. Both fields

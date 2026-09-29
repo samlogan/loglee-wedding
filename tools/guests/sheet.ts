@@ -164,12 +164,15 @@ export const markReplied = async (guest: Guest, reply: RsvpReply, at: Date) => {
     const { add, indexes } = replyColumnsIn(header);
 
     const day = at.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' });
+    // "Declined 29 Sept" for a guest who can't make it — what the sheet's Declined tab filters on —
+    // and "Replied …" for everyone coming.
     const note = reply.staying === false ? ' · Not staying' : '';
+    const statusCell = reply.coming === false ? `Declined ${day}` : `Replied ${day}${note}`;
 
     const answers = replyCellsOf(reply);
     await addSiteColumns(add);
     await writeCells([
-      ...(status >= 0 ? [{ range: `${columnLetter(status)}${guest.row}`, value: `Replied ${day}${note}` }] : []),
+      ...(status >= 0 ? [{ range: `${columnLetter(status)}${guest.row}`, value: statusCell }] : []),
       ...indexes.map((index, position) => ({ range: `${columnLetter(index)}${guest.row}`, value: answers[position] }))
     ]);
   } catch (error) {

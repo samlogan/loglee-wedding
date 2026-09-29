@@ -19,7 +19,7 @@ import { isFreeStay } from '@/helpers/guests';
 import type { StayPrice } from '@/helpers/guests';
 import type { RsvpPlaceholder } from '@/tools/sanity/schema/documents/weddingSettings';
 
-import { RSVP_FIELD, RSVP_INITIAL_STATE, RSVP_KIDS_MAX } from './contract';
+import { RSVP_COMING_ASKED, RSVP_FIELD, RSVP_INITIAL_STATE, RSVP_KIDS_MAX } from './contract';
 import type { RsvpAction, RsvpFieldErrors, RsvpFormState } from './contract';
 import RsvpModel from './RsvpModel';
 import type { RsvpModelOption } from './RsvpModel';
@@ -55,6 +55,8 @@ export interface RsvpFormProps {
   stayNote?: string;
   /** The switch asking whether the guest is staying at the venue at all. On by default. */
   stayingLabel?: string;
+  /** The first question — can they make it? On by default; switched off, the form asks only who and a note. */
+  comingLabel?: string;
   /** The hint inside each empty answer. Any left out keep the form's own. */
   placeholders?: Partial<Record<RsvpPlaceholder, string>>;
 }
@@ -86,6 +88,8 @@ export interface RsvpFormValues {
   songRequest: string;
   specialRequirements: string;
   staying: boolean;
+  coming: boolean;
+  message: string;
 }
 
 const DEFAULT_VALUES: RsvpFormValues = {
@@ -96,6 +100,8 @@ const DEFAULT_VALUES: RsvpFormValues = {
   name: '',
   plusOne: { bringing: false, dietary: '', name: '' },
   songRequest: '',
+  coming: true,
+  message: '',
   specialRequirements: '',
   staying: true
 };
@@ -106,6 +112,7 @@ const DEFAULT_VALUES: RsvpFormValues = {
  */
 const DEFAULT_COPY = {
   stayingLabel: 'Want to stay with us at The Lodge?',
+  comingLabel: 'Can you make it?',
   heading: 'RSVP',
   intro: 'One form per guest.',
   introDetail: "Tell us what you eat, who you're bringing and what you'd like to hear on the dancefloor.",
@@ -120,6 +127,7 @@ const DEFAULT_PLACEHOLDERS: Record<RsvpPlaceholder, string> = {
   plusOneDietary: 'Allergies, vego, vegan, none…',
   plusOneName: 'Their full name',
   songRequest: 'One song that gets you on the floor',
+  message: 'Anything you’d like to tell us',
   specialRequirements: 'Anything we should know? e.g. a cot for the baby'
 };
 
@@ -210,6 +218,7 @@ const RsvpForm = (props: RsvpFormProps) => {
     introDetail = DEFAULT_COPY.introDetail,
     stayNote = DEFAULT_COPY.stayNote,
     stayingLabel = DEFAULT_COPY.stayingLabel,
+    comingLabel = DEFAULT_COPY.comingLabel,
     guest,
     models,
     note
@@ -262,6 +271,7 @@ const RsvpForm = (props: RsvpFormProps) => {
         stay={guest?.stay}
         withCurrency={guest?.withCurrency}
         stayingLabel={stayingLabel}
+        comingLabel={comingLabel}
         stayNote={stayNote}
       />
     </Form>
@@ -283,6 +293,7 @@ interface RsvpFormBodyProps {
   stayNote: string;
   withCurrency?: boolean;
   stayingLabel: string;
+  comingLabel: string;
   state: RsvpFormState;
 }
 
@@ -300,7 +311,8 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
     sentValues,
     state,
     stayNote,
-    stayingLabel
+    stayingLabel,
+    comingLabel
   } = props;
 
   const { control, resetField, setValue } = useFormContext<RsvpFormValues>();
@@ -308,6 +320,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
 
   const bringing = Boolean(values.plusOne?.bringing);
   const staying = values.staying !== false;
+  const coming = values.coming !== false;
   const { stay } = props;
   const price = (amount: number) => formatAmount(amount, { withCurrency: props.withCurrency });
 
@@ -371,7 +384,7 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
    * the map below — so adding, removing or moving one renumbers everything after it, and the page
    * can never show two "04"s or skip one.
    */
-  const questions: { key: string; render: (label: (title: ReactNode) => ReactNode) => ReactNode }[] = [
+  const everyQuestion: { key: string; render: (label: (title: ReactNode) => ReactNode) => ReactNode }[] = [
     {
       key: 'name',
       render: (label) => (
@@ -545,6 +558,42 @@ const RsvpFormBody = (props: RsvpFormBodyProps) => {
       )
     }
   ];
+
+  /*
+   * First, and on by default: can they make it? The hidden input says the question was asked, so the
+   * server can tell a "No" from a form loaded before the question existed (`RSVP_COMING_ASKED`).
+   */
+  const comingQuestion = {
+    key: 'coming',
+    render: (label: (title: ReactNode) => ReactNode) => (
+      <>
+        <input name={RSVP_COMING_ASKED} type="hidden" value="1" />
+        <Field.Toggle checkedText="Yes" label={label(comingLabel)} name={RSVP_FIELD.coming} uncheckedText="No" />
+      </>
+    )
+  };
+
+  /*
+   * Switched off, the form asks only who they are and, if they like, a note — everything else is about
+   * a guest who is coming. The other questions unmount, so they are not sent; react-hook-form keeps
+   * their values, so switching back to "Yes" brings a guest's answers back.
+   */
+  const questions = coming
+    ? [comingQuestion, ...everyQuestion]
+    : [
+        comingQuestion,
+        ...everyQuestion.filter(({ key }) => key === 'name' || key === 'email'),
+        {
+          key: 'message',
+          render: (label: (title: ReactNode) => ReactNode) => (
+            <Field.TextArea
+              label={label('Leave us a note')}
+              name={RSVP_FIELD.message}
+              placeholder={placeholders.message}
+            />
+          )
+        }
+      ];
 
   return (
     <div className={styles.rsvp} onFocusCapture={warmThankYou}>

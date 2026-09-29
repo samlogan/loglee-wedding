@@ -12,6 +12,10 @@ interface IRsvpDocument {
   // Defined fields
   name: string;
   email: string;
+  /** Whether they can make it. Absent on replies sent before the form asked — all of which were yes. */
+  coming?: boolean;
+  /** A note to the couple, from a guest who can't make it. */
+  message?: string;
   /** No longer asked — present only on replies sent before the form dropped the question. */
   attending?: IRsvpDay[];
   dietary?: string;
@@ -54,6 +58,23 @@ const rsvp = defineType({
       title: `Email`,
       type: `string`,
       validation: (Rule) => Rule.required().email()
+    },
+    {
+      description: 'Whether this guest can make it. Replies sent before the form asked this were all coming.',
+      group: 'response',
+      initialValue: true,
+      name: `coming`,
+      title: `Coming`,
+      type: `boolean`
+    },
+    {
+      description: 'A note from a guest who can’t make it.',
+      group: 'response',
+      hidden: ({ value }) => !value,
+      name: `message`,
+      rows: 3,
+      title: `Message`,
+      type: `text`
     },
     {
       description:
@@ -208,7 +229,7 @@ const rsvp = defineType({
   ],
   preview: {
     prepare(selection) {
-      const { name, submittedAt } = selection;
+      const { coming, name, submittedAt } = selection;
       // Deliberately not formatDate: that helper pins Sanity `date` fields to UTC so a calendar date
       // reads the same everywhere. `submittedAt` is a `datetime` — a real instant — so it should
       // render in the reader's own zone, or a 9am Sydney reply would show as the previous evening.
@@ -222,11 +243,12 @@ const rsvp = defineType({
           })
         : 'Not submitted';
       return {
-        subtitle: submitted,
+        subtitle: coming === false ? `Can’t make it · ${submitted}` : submitted,
         title: name || 'RSVP'
       };
     },
     select: {
+      coming: 'coming',
       name: 'name',
       submittedAt: 'submittedAt'
     }

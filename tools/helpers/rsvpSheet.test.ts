@@ -6,6 +6,7 @@ import { guestColumnsOf } from './guests';
 import { REPLY_COLUMNS, replyCellsOf, replyColumnsIn } from './rsvpSheet';
 
 const REPLY = {
+  coming: true,
   dietary: 'Vegetarian',
   email: 'sam@example.com',
   kidsAges: '2 and 5',
@@ -41,6 +42,7 @@ describe('REPLY_COLUMNS', () => {
 describe('replyCellsOf', () => {
   it('writes every answer, in column order', () => {
     expect(replyCellsOf(REPLY)).toEqual([
+      'Yes',
       'Sam Logan',
       'sam@example.com',
       'Vegetarian',
@@ -51,13 +53,28 @@ describe('replyCellsOf', () => {
       '2 and 5',
       'A cot',
       'September',
-      'Yes'
+      'Yes',
+      ''
     ]);
+  });
+
+  it('writes a guest who can’t make it as not coming, with their note', () => {
+    const cells = replyCellsOf({
+      coming: false,
+      email: 'a@b.co',
+      kidsCount: 0,
+      message: 'Sorry!',
+      name: 'A',
+      plusOne: { bringing: false },
+      staying: false
+    });
+    expect(cells[0]).toBe('No');
+    expect(cells.at(-1)).toBe('Sorry!');
   });
 
   it('writes blanks for unanswered questions, and a reply from before the staying question as staying', () => {
     const cells = replyCellsOf({ email: 'a@b.co', kidsCount: 0, name: 'A', plusOne: { bringing: false } });
-    expect(cells).toEqual(['A', 'a@b.co', '', 'No', '', '', '0', '', '', '', 'Yes']);
+    expect(cells).toEqual(['Yes', 'A', 'a@b.co', '', 'No', '', '', '0', '', '', '', 'Yes', '']);
   });
 });
 
@@ -65,16 +82,18 @@ describe('replyColumnsIn', () => {
   it('adds every reply column after the last header when the sheet has none', () => {
     const { add, indexes } = replyColumnsIn(['Guest ID', 'First name']);
     expect(indexes).toEqual(REPLY_COLUMNS.map((_, index) => 2 + index));
-    expect(add[0]).toEqual({ header: 'Reply: Name', index: 2 });
+    expect(add[0]).toEqual({ header: 'Reply: Coming', index: 2 });
     expect(add).toHaveLength(REPLY_COLUMNS.length);
   });
 
   it('finds the columns it already added, wherever they were moved, and adds only the missing', () => {
     const header = ['Guest ID', ' reply: email ', 'Reply: Name'];
     const { add, indexes } = replyColumnsIn(header);
-    expect(indexes.slice(0, 3)).toEqual([2, 1, 3]);
+    // Coming (missing, so added at 3), then Name at 2 and Email at 1, as they already are.
+    expect(indexes.slice(0, 3)).toEqual([3, 2, 1]);
     expect(add.map((column) => column.header)).not.toContain('Reply: Name');
-    expect(add[0]).toEqual({ header: 'Reply: Dietary', index: 3 });
+    expect(add[0]).toEqual({ header: 'Reply: Coming', index: 3 });
+    expect(add[1]).toEqual({ header: 'Reply: Dietary', index: 4 });
   });
 });
 

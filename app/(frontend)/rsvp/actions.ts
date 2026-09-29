@@ -9,11 +9,13 @@ import { markReplied } from '@/tools/guests/sheet';
 import { sendThankYou } from '@/tools/guests/thankYou';
 import createRateLimiter from '@/tools/helpers/rateLimiter';
 import {
+  isComing,
   isHoneypotFilled,
   isRepeatTooSoon,
   isSameRsvpReply,
   parseRsvpSubmission,
   rsvpDocumentId,
+  shouldSendThankYou,
   toRsvpDocument,
   withInvitedPlusOne
 } from '@/tools/helpers/rsvpSubmission';
@@ -145,7 +147,10 @@ const storeRsvp = async (formData: FormData): Promise<RsvpFormState> => {
 
     if (guest) {
       await markReplied(guest, reply, now);
-      await sendThankYou(guest, reply, now);
+      // Not to a guest who can't make it: the email is their stay, its price and how to pay.
+      if (shouldSendThankYou(reply)) {
+        await sendThankYou(guest, reply, now);
+      }
     }
     return SAVED;
   } catch (error) {
@@ -181,7 +186,8 @@ export const submitRsvp = async (_previousState: RsvpFormState, formData: FormDa
   const state = await storeRsvp(formData);
 
   if (state.status === 'success') {
-    redirect(THANK_YOU_PATH);
+    // A guest who can't make it gets the page's other words — see `app/(frontend)/thank-you`.
+    redirect(isComing(formData) ? THANK_YOU_PATH : `${THANK_YOU_PATH}?declined=1`);
   }
 
   return state;

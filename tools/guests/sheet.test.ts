@@ -209,9 +209,16 @@ describe('markReplied', () => {
     );
 
     const cells = written(calls);
-    // HEADER runs A–K, so the reply columns start at L.
-    expect(cells).toMatchObject({ L1: 'Reply: Name', L2: 'Sam Logan', M1: 'Reply: Email', M2: 'sam@example.com' });
-    expect(cells.N2).toBe('Vegetarian');
+    // HEADER runs A–K, so the reply columns start at L — Coming first, then Name, Email, Dietary.
+    expect(cells).toMatchObject({
+      L1: 'Reply: Coming',
+      L2: 'Yes',
+      M1: 'Reply: Name',
+      M2: 'Sam Logan',
+      N1: 'Reply: Email',
+      N2: 'sam@example.com'
+    });
+    expect(cells.O2).toBe('Vegetarian');
     expect(Object.values(cells)).toContain('September');
     // Every new column is greyed as the site's, starting at L; the sheet is wide enough already.
     const painted = formatting(calls);
@@ -219,7 +226,7 @@ describe('markReplied', () => {
     expect(painted.some((request) => 'appendDimension' in request)).toBe(false);
     // The guest's own cells go in one write.
     expect(calls.findLast((call) => call.path === 'values:batchUpdate')?.body).toMatchObject({
-      data: expect.arrayContaining([{ range: 'L2', values: [['Sam Logan']] }])
+      data: expect.arrayContaining([{ range: 'M2', values: [['Sam Logan']] }])
     });
   });
 
@@ -228,8 +235,8 @@ describe('markReplied', () => {
     const { findGuest, markReplied } = await load();
     await markReplied(await requireGuest(findGuest, 'SAM-1000'), REPLY, AT);
 
-    // HEADER's 11 columns and 11 reply columns need 22; the sheet has 12.
-    expect(formatting(calls)).toContainEqual({ appendDimension: { dimension: 'COLUMNS', length: 10, sheetId: 0 } });
+    // HEADER's 11 columns and 13 reply columns need 24; the sheet has 12.
+    expect(formatting(calls)).toContainEqual({ appendDimension: { dimension: 'COLUMNS', length: 12, sheetId: 0 } });
   });
 
   it('writes into the reply columns the sheet already has, without adding them again', async () => {
@@ -244,6 +251,17 @@ describe('markReplied', () => {
     expect(cells).toMatchObject({ L2: 'sam@example.com', M2: 'Sam Logan' });
     expect(cells).not.toHaveProperty('L1');
     expect(cells).not.toHaveProperty('M1');
+  });
+
+  it('marks a guest who can’t make it "Declined", which the Declined tab filters on', async () => {
+    const calls = stubSheet([HEADER, ['SAM-1000', 'Sam']]);
+    const { findGuest, markReplied } = await load();
+    await markReplied(
+      await requireGuest(findGuest, 'SAM-1000'),
+      { ...REPLY, coming: false, message: 'Sorry!', staying: false },
+      AT
+    );
+    expect(written(calls).J2).toBe('Declined 3 Oct');
   });
 
   it('notes a guest who is not staying', async () => {

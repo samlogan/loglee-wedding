@@ -46,7 +46,25 @@ import styles from './styles.module.scss';
  * two of them would be strictly better and the prop is already there for it.
  */
 
-const ThankYouPage = async () => {
+/*
+ * The page's words, for a guest who is coming and for one who can't make it. The action sends the
+ * second here as `?declined=1` (`app/(frontend)/rsvp/actions.ts`). It only chooses the words — a guest
+ * who types it in sees a kinder page, nothing more — so it needs no more trust than that.
+ */
+const COPY = {
+  coming: {
+    heading: ['Thank', 'you'],
+    text: 'Your reply is in. We cannot wait to celebrate with you.'
+  },
+  declined: {
+    heading: ['We’ll', 'miss', 'you'],
+    text: 'Thanks for letting us know. We’ll be thinking of you on the day.'
+  }
+};
+
+const ThankYouPage = async ({ searchParams }: { searchParams: Promise<{ declined?: string }> }) => {
+  const declined = (await searchParams).declined === '1';
+  const copy = declined ? COPY.declined : COPY.coming;
   const [settings, guest] = await Promise.all([
     sanityFetch<Partial<IWeddingSettingsDocument> | null>({
       query: WEDDING_SETTINGS_QUERY,
@@ -62,7 +80,8 @@ const ThankYouPage = async () => {
    * Their stay, total and bank details are **not** shown here: they go in the thank-you email
    * (`sendThankYou`).
    */
-  const { travel } = guest ? await replyExtrasFor(guest).catch((): ReplyExtras => ({})) : {};
+  const { travel } =
+    guest && !declined ? await replyExtrasFor(guest).catch((): ReplyExtras => ({})) : ({} as ReplyExtras);
 
   /*
    * "Sam & Lauren", one partner alone with no dangling ampersand, or the fallback names when neither
@@ -92,20 +111,20 @@ const ThankYouPage = async () => {
          * display tracking closes the space between them up until it reads as one word.
          */}
         <Text alignment="center" as="h1" size="md" spacing={['xs', 'sm']} textTransform="uppercase" variant="display">
-          <span className={styles.headingLine}>Thank</span> <span className={styles.headingLine}>you</span>
+          {copy.heading.map((line, index) => (
+            <span className={styles.headingLine} key={line}>
+              {index > 0 && ' '}
+              {line}
+            </span>
+          ))}
         </Text>
 
         <Text
           alignment="center"
           as="p"
           size="lg"
-          /*
-           * Deliberately does not repeat the guest's answer back to them. The page is reached by a
-           * redirect, so it has no access to what was submitted without threading it through a
-           * query string or the session — and a thank-you page that confidently says "see you on
-           * Saturday" to someone who declined is worse than one that says nothing about it.
-           */
-          text="Your reply is in. We cannot wait to celebrate with you."
+          // The reply's detail is not repeated back — only whether they are coming, from the redirect.
+          text={copy.text}
         />
 
         {/*
@@ -115,10 +134,13 @@ const ThankYouPage = async () => {
          * canvas this is the entire content of the block — the page's words are above it and do not
          * mention that there is a picture at all.
          */}
-        <ModelDuet
-          alt={`${names}, as 3D characters, dancing together to celebrate your reply`}
-          className={styles.scene}
-        />
+        {/* Not for a guest who can't make it: two characters dancing to celebrate a "no" reads wrong. */}
+        {!declined && (
+          <ModelDuet
+            alt={`${names}, as 3D characters, dancing together to celebrate your reply`}
+            className={styles.scene}
+          />
+        )}
 
         {travel && (
           <section aria-labelledby="thank-you-travel" className={styles.travel}>

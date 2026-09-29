@@ -53,6 +53,7 @@ interface RsvpFormCopy {
   introDetail?: string;
   stayNote?: string;
   stayingLabel?: string;
+  comingLabel?: string;
   placeholders?: Partial<Record<RsvpPlaceholder, string>>;
 }
 
@@ -65,7 +66,8 @@ const RSVP_PLACEHOLDERS = [
   { name: 'plusOneDietary', title: 'Plus one dietary requirements' },
   { name: 'kidsAges', title: 'Kids’ ages' },
   { name: 'specialRequirements', title: 'Special requirements' },
-  { name: 'songRequest', title: 'Song request' }
+  { name: 'songRequest', title: 'Song request' },
+  { name: 'message', title: 'Message (from a guest who can’t make it)' }
 ] as const;
 
 type RsvpPlaceholder = (typeof RSVP_PLACEHOLDERS)[number]['name'];
@@ -236,6 +238,13 @@ const weddingSettings = defineType({
           description: 'Under the guest’s stay and price, e.g. how and when they pay.',
           name: 'stayNote',
           title: 'Stay Note',
+          type: 'string'
+        },
+        {
+          description:
+            'The first question, on by default, e.g. “Can you make it?”. Switched off, the guest is asked only their name, email and an optional note.',
+          name: 'comingLabel',
+          title: 'Coming — Label',
           type: 'string'
         },
         {
