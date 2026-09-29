@@ -82,6 +82,7 @@ const RsvpPage = async () => {
         placeholders={placeholders}
         stayNote={optional(copy, copy?.stayNote)}
         stayingLabel={filled(copy?.stayingLabel)}
+        comingLabel={filled(copy?.comingLabel)}
       />
     </Section>
   );

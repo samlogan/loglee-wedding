@@ -560,6 +560,13 @@ Wise otherwise (`paymentRegionOf`). When they reply, their row gets the RSVP sta
 from the form, one "Reply:" column each (`REPLY_COLUMNS`, `tools/helpers/rsvpSheet.ts` — a test fails
 if a form field has no column, or no field on the Sanity `rsvp` document).
 
+The form's first question is **"Can you make it?"**, a switch on by default. Switched off, it asks only
+name, email and an optional note: the reply is stored as not coming (`coming: false`), the sheet's RSVP
+status reads "Declined 29 Sept" (the sheet's **Declined** tab filters on it; **RSVP'd** lists only the
+yeses), no thank-you email goes (`shouldSendThankYou`), and the thank-you page says "We'll miss you"
+(`?declined=1`). A hidden `comingAsked` input marks that the question was asked, so a form loaded before
+it existed is never read as a decline (`isComing`). Replies from before it count as coming.
+
 A guest is offered a plus one only when their row's **Plus one name** is filled in: the form then asks
 "Bringing a plus one?" switched on, with that name, for them to switch off if they are coming alone.
 With it blank the question is not asked, and the action stores any plus one posted anyway as coming

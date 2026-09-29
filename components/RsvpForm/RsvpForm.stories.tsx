@@ -156,7 +156,9 @@ export const Empty: Story = {
     const ordinals = [...canvasElement.querySelectorAll('span[aria-hidden="true"]')]
       .map((span) => span.textContent ?? '')
       .filter((text) => /^\d{2} · $/.test(text));
-    await expect(ordinals).toEqual(['01 · ', '02 · ', '03 · ', '04 · ', '05 · ', '06 · ', '07 · ']);
+    await expect(ordinals).toEqual(['01 · ', '02 · ', '03 · ', '04 · ', '05 · ', '06 · ', '07 · ', '08 · ']);
+    // The first question is whether they can make it, and it starts on "Yes".
+    await expect(canvas.getByRole('switch', { name: /can you make it/i })).toBeChecked();
     // No plus one in the sheet, so none is offered.
     await expect(canvas.queryByRole('switch', { name: /bringing a plus one/i })).toBeNull();
     await expect(nameInput(canvas)).toHaveAccessibleName(/^name/i);
@@ -610,6 +612,56 @@ export const PlusOne: Story = {
   }
 };
 
+/**
+ * "Can you make it?" switched off: the form asks only who they are and, if they like, a note. Nothing
+ * else is sent — no plus one, dietary, kids or stay — and switching back on brings the answers back.
+ */
+export const Declined: Story = {
+  args: {
+    action: actionReturning({ status: 'success' }),
+    guest: { email: 'sam@example.com', name: 'Sam Logan', plusOneName: 'Charles Babbage', stay: SAM_STAY }
+  },
+  play: async ({ args, canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const coming = canvas.getByRole('switch', { name: /can you make it/i });
+
+    await step('Coming: the whole form, with an answer given', async () => {
+      await userEvent.type(canvas.getByRole('textbox', { name: /^dietary requirements/i }), 'Vegan');
+    });
+
+    await step('Can’t make it: only name, email and a note', async () => {
+      await userEvent.click(coming);
+      await expect(coming).not.toBeChecked();
+      await expect(nameInput(canvas)).toBeInTheDocument();
+      await expect(emailInput(canvas)).toBeInTheDocument();
+      await expect(canvas.getByRole('textbox', { name: /leave us a note/i })).toBeInTheDocument();
+      await expect(canvas.queryByRole('textbox', { name: /^dietary requirements/i })).toBeNull();
+      await expect(canvas.queryByRole('switch', { name: /bringing a plus one/i })).toBeNull();
+      await expect(canvas.queryByRole('region', { name: /your stay/i })).toBeNull();
+    });
+
+    await step('Back on: the answer is still there', async () => {
+      await userEvent.click(coming);
+      await expect(canvas.getByRole('textbox', { name: /^dietary requirements/i })).toHaveValue('Vegan');
+      await userEvent.click(coming);
+    });
+
+    await step('Sent: who they are, the note, and that the question was asked', async () => {
+      await userEvent.type(canvas.getByRole('textbox', { name: /leave us a note/i }), 'So sorry to miss it!');
+      await userEvent.click(submitButton(canvas));
+      await waitFor(() => expect(callsOf(args.action)).toHaveLength(1), ROUND_TRIP);
+      const [, formData] = callsOf(args.action)[0];
+      await expect(formData.has('coming')).toBe(false);
+      await expect(formData.get('comingAsked')).toBe('1');
+      await expect(formData.get('message')).toBe('So sorry to miss it!');
+      await expect(formData.get('name')).toBe('Sam Logan');
+      for (const name of ['dietary', 'plusOne.bringing', 'kidsCount', 'staying', 'songRequest']) {
+        await expect(formData.has(name)).toBe(false);
+      }
+    });
+  }
+};
+
 /** A guest with no plus one in the sheet: the question is not asked at all. */
 export const NoPlusOne: Story = {
   args: { guest: { email: 'jo@example.com', name: 'Jo Smith' } },
@@ -632,6 +684,10 @@ export const KeyboardOnly: Story = {
   args: { action: actionReturning({ status: 'success' }), guest: INVITED_WITH_PLUS_ONE, models: undefined },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
+
+    // Can you make it? — first, and already on.
+    await userEvent.tab();
+    await expect(canvas.getByRole('switch', { name: /can you make it/i })).toHaveFocus();
 
     await userEvent.tab();
     await expect(nameInput(canvas)).toHaveFocus();

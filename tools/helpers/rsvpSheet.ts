@@ -18,6 +18,8 @@ type Reply = Pick<
   | 'specialRequirements'
   | 'songRequest'
   | 'staying'
+  | 'coming'
+  | 'message'
 >;
 
 const yesNo = (value: boolean | undefined) => (value ? 'Yes' : 'No');
@@ -31,6 +33,8 @@ const yesNo = (value: boolean | undefined) => (value ? 'Yes' : 'No');
  * column, so a new question cannot reach Sanity and quietly miss the sheet.
  */
 export const REPLY_COLUMNS: { field: RsvpFieldName; header: string; value: (reply: Reply) => string }[] = [
+  // Replies from before the form asked were all coming.
+  { field: RSVP_FIELD.coming, header: 'Reply: Coming', value: (reply) => yesNo(reply.coming !== false) },
   { field: RSVP_FIELD.name, header: 'Reply: Name', value: (reply) => reply.name },
   { field: RSVP_FIELD.email, header: 'Reply: Email', value: (reply) => reply.email },
   { field: RSVP_FIELD.dietary, header: 'Reply: Dietary', value: (reply) => reply.dietary ?? '' },
@@ -54,7 +58,8 @@ export const REPLY_COLUMNS: { field: RsvpFieldName; header: string; value: (repl
   },
   { field: RSVP_FIELD.songRequest, header: 'Reply: Song request', value: (reply) => reply.songRequest ?? '' },
   // Replies from before the form asked were all staying.
-  { field: RSVP_FIELD.staying, header: 'Reply: Staying', value: (reply) => yesNo(reply.staying !== false) }
+  { field: RSVP_FIELD.staying, header: 'Reply: Staying', value: (reply) => yesNo(reply.staying !== false) },
+  { field: RSVP_FIELD.message, header: 'Reply: Message', value: (reply) => reply.message ?? '' }
 ];
 
 const normalise = (header: string) => header.trim().toLowerCase();

@@ -7,12 +7,14 @@ import {
   RSVP_ID_PREFIX,
   RSVP_REPEAT_WINDOW_MS,
   RSVP_TEXT_MAX_LENGTH,
+  isComing,
   isHoneypotFilled,
   isRepeatTooSoon,
   isSameRsvpReply,
   normaliseRsvpEmail,
   parseRsvpSubmission,
   rsvpDocumentId,
+  shouldSendThankYou,
   toRsvpDocument,
   withInvitedPlusOne
 } from './rsvpSubmission';
@@ -71,6 +73,7 @@ describe('parseRsvpSubmission', () => {
         specialRequirements: 'A cot, please'
       })
     ).toEqual({
+      coming: true,
       dietary: 'Vegetarian',
       email: 'sam@example.com',
       kidsAges: '2 and 5',
@@ -86,6 +89,7 @@ describe('parseRsvpSubmission', () => {
   it('accepts the smallest reply: a name, an address and the default kids count', () => {
     const reply = replyOf({});
     expect(reply).toEqual({
+      coming: true,
       email: 'sam@example.com',
       kidsCount: 0,
       name: 'Sam Logan',
@@ -195,9 +199,14 @@ describe('parseRsvpSubmission', () => {
   });
 
   describe('length limits', () => {
-    // The plus one's fields are only read while the box is ticked, and then their name is required.
-    const context = (field: string): Entries =>
-      field.startsWith('plusOne.') ? { 'plusOne.bringing': 'on', 'plusOne.name': 'Alex Lee' } : {};
+    // The plus one's fields are only read while the box is ticked, and then their name is required;
+    // the message only from a guest who can't make it.
+    const context = (field: string): Entries => {
+      if (field.startsWith('plusOne.')) {
+        return { 'plusOne.bringing': 'on', 'plusOne.name': 'Alex Lee' };
+      }
+      return field === RSVP_FIELD.message ? { comingAsked: '1' } : {};
+    };
 
     it.each(Object.entries(RSVP_TEXT_MAX_LENGTH))('holds %s to %i characters', (field, max) => {
       expect(errorsOf({ ...context(field), [field]: sample(field, max) })).toEqual({});
@@ -418,5 +427,70 @@ describe('the Sunday night, no longer asked', () => {
 
   it('does not stop a stored reply from before it was dropped matching the same reply', () => {
     expect(isSameRsvpReply({ ...replyOf({}), extraNight: true } as never, replyOf({}))).toBe(true);
+  });
+});
+
+describe('a guest who can’t make it', () => {
+  const declined = (entries: Entries = {}) =>
+    parseRsvpSubmission(form({ comingAsked: '1', email: 'sam@example.com', name: 'Sam Logan', ...entries }));
+
+  it('declines when the form asked and the box was left unticked', () => {
+    expect(isComing(form({ comingAsked: '1' }))).toBe(false);
+    expect(isComing(form({ coming: 'on', comingAsked: '1' }))).toBe(true);
+  });
+
+  it('is coming when the form never asked — one loaded before the question existed', () => {
+    expect(isComing(form({}))).toBe(true);
+    expect(replyOf({}).coming).toBe(true);
+  });
+
+  it('stores only who they are and their note — bringing no one, not staying', () => {
+    expect(
+      declined({
+        dietary: 'Vegan',
+        kidsCount: '3',
+        message: 'So sorry to miss it!',
+        'plusOne.bringing': 'on',
+        'plusOne.name': 'Alex',
+        songRequest: 'September',
+        staying: 'on'
+      })
+    ).toEqual({
+      ok: true,
+      reply: {
+        coming: false,
+        email: 'sam@example.com',
+        kidsCount: 0,
+        message: 'So sorry to miss it!',
+        name: 'Sam Logan',
+        plusOne: { bringing: false },
+        staying: false
+      }
+    });
+  });
+
+  it('still needs a name and an email', () => {
+    expect(parseRsvpSubmission(form({ comingAsked: '1' }))).toMatchObject({
+      fieldErrors: { email: expect.any(String), name: 'Enter your name' },
+      ok: false
+    });
+  });
+
+  it('keeps no note from a guest who is coming', () => {
+    expect(replyOf({ message: 'Hello' })).not.toHaveProperty('message');
+  });
+
+  it('gets no thank-you email, which is about the stay and paying for it', () => {
+    expect(shouldSendThankYou({ coming: false })).toBe(false);
+    expect(shouldSendThankYou({ coming: true })).toBe(true);
+    expect(shouldSendThankYou({})).toBe(true);
+  });
+
+  it('counts towards whether two replies are the same, a reply from before the question as coming', () => {
+    const coming = replyOf({});
+    const { coming: _, ...before } = coming;
+    expect(isSameRsvpReply(before, coming)).toBe(true);
+    const decline = declined();
+    expect(decline.ok && isSameRsvpReply(decline.reply, coming)).toBe(false);
   });
 });
